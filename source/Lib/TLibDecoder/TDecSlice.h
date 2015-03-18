@@ -68,6 +68,17 @@ private:
   TDecSbac        m_lastSliceSegmentEndContextState;    ///< context storage for state at the end of the previous slice-segment (used for dependent slices only).
   TDecSbac        m_entropyCodingSyncContextState;      ///< context storate for state of contexts at the wavefront/WPP/entropy-coding-sync second CTU of tile-row
 
+  PaletteInfoBuffer m_lastSliceSegmentEndPaletteState;
+  PaletteInfoBuffer m_entropyCodingSyncPaletteState;
+
+#if SCM_T0048_PLT_PRED_IN_PPS
+  Void xSetPredFromPPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT],
+#if !SCM_T0064_REMOVE_PLT_SHARING
+                       UChar lastPLTUsedSize[MAX_NUM_COMPONENT],
+#endif
+                       const TComPPS *pcPPS, const TComSPS *pcSPS);
+#endif
+
 public:
   TDecSlice();
   virtual ~TDecSlice();

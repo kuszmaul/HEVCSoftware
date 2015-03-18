@@ -715,7 +715,11 @@ Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuvUser, TComPicYuv* pPicYuvTrueOrg, c
   for(UInt comp=0; comp<MAX_NUM_COMPONENT; comp++)
   {
     const ComponentID compID = ComponentID(comp);
-    const ChannelType chType=toChannelType(compID);
+    ChannelType chType = toChannelType(compID);
+    if ( ipcsc == IPCOLOURSPACE_RGBtoGBR )
+    {
+      chType = (comp == 1) ? CHANNEL_TYPE_LUMA : CHANNEL_TYPE_CHROMA;
+    }
 
     const Int desired_bitdepth = m_MSBExtendedBitDepth[chType] + m_bitdepthShift[chType];
 
@@ -819,7 +823,11 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUser, const InputColourSpaceConversi
     for(UInt comp=0; comp<dstPicYuv->getNumberValidComponents(); comp++)
     {
       const ComponentID compID=ComponentID(comp);
-      const ChannelType ch=toChannelType(compID);
+      ChannelType ch = toChannelType(compID);
+      if ( ipCSC == IPCOLOURSPACE_RGBtoGBR )
+      {
+        ch = (comp == 1) ? CHANNEL_TYPE_LUMA : CHANNEL_TYPE_CHROMA;
+      }
 #if !CLIP_TO_709_RANGE
       const Pel minval = 0;
       const Pel maxval = (1 << m_MSBExtendedBitDepth[ch]) - 1;
@@ -840,7 +848,11 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUser, const InputColourSpaceConversi
   for(UInt comp=0; retval && comp<dstPicYuv->getNumberValidComponents(); comp++)
   {
     const ComponentID compID = ComponentID(comp);
-    const ChannelType ch=toChannelType(compID);
+    ChannelType ch = toChannelType(compID);
+    if ( ipCSC == IPCOLOURSPACE_RGBtoGBR )
+    {
+      ch = (comp == 1) ? CHANNEL_TYPE_LUMA : CHANNEL_TYPE_CHROMA;
+    }
     const UInt csx = pPicYuv->getComponentScaleX(compID);
     const UInt csy = pPicYuv->getComponentScaleY(compID);
     const Int planeOffset =  (confLeft>>csx) + (confTop>>csy) * pPicYuv->getStride(compID);

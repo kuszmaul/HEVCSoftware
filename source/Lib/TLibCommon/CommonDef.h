@@ -48,6 +48,7 @@
 // disable Bool coercion "performance warning"
 #pragma warning( disable : 4800 )
 #endif // _MSC_VER > 1000
+
 #include "TypeDef.h"
 
 #ifdef _MSC_VER
@@ -63,7 +64,7 @@ inline Int64 abs (Int64 x) { return _abs64(x); };
 // Version information
 // ====================================================================================================================
 
-#define NV_VERSION        "16.4"                 ///< Current software version
+#define NV_VERSION        "16.4_SCM4.0"                 ///< Current software version
 
 // ====================================================================================================================
 // Platform information
@@ -133,6 +134,8 @@ inline Int64 abs (Int64 x) { return _abs64(x); };
 #define MAX_QP                      51
 
 #define NOT_VALID                   -1
+
+#define PLT_SIZE_INVALID            0xff
 
 // ====================================================================================================================
 // Macro functions

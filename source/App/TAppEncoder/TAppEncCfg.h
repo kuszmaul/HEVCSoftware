@@ -85,6 +85,7 @@ protected:
   Bool      m_printMSEBasedSequencePSNR;
   Bool      m_printFrameMSE;
   Bool      m_printSequenceMSE;
+  Bool      m_printClippedPSNR;
   Bool      m_cabacZeroWordPaddingEnabled;
 
   // profile/level
@@ -120,6 +121,20 @@ protected:
   Bool      m_enableAMP;
   Bool      m_useGolombRiceParameterAdaptation;               ///< control flag for Golomb-Rice parameter adaptation over each slice
   Bool      m_alignCABACBeforeBypass;
+  Bool      m_bRGBformat;
+  Bool      m_useColourTrans;
+  Bool      m_useLL;
+  Bool      m_usePaletteMode;
+  UInt      m_uiPLTMaxSize;
+  UInt      m_uiPLTMaxPredSize;
+#if SCM_T0069_AMVR_REFINEMENT
+  Int       m_motionVectorResolutionControlIdc;
+#else
+  Bool      m_useAdaptiveMvResolution;
+#endif
+#if SCM_T0048_PLT_PRED_IN_PPS
+  Bool      m_palettePredInPPSEnabled;
+#endif
 
   // coding quality
   Double    m_fQP;                                            ///< QP value of key-picture (floating point)
@@ -133,6 +148,12 @@ protected:
 
   Int       m_cbQpOffset;                                     ///< Chroma Cb QP Offset (0:default)
   Int       m_crQpOffset;                                     ///< Chroma Cr QP Offset (0:default)
+
+#if SCM_T0140_ACT_QP_OFFSET
+  Int       m_actYQpOffset;
+  Int       m_actCbQpOffset;
+  Int       m_actCrQpOffset;
+#endif
 
 #if ADAPTIVE_QP_SELECTION
   Bool      m_bUseAdaptQpSelect;
@@ -165,6 +186,7 @@ protected:
   Int       m_MSBExtendedBitDepth[MAX_NUM_CHANNEL_TYPE];      ///< bit-depth of input samples after MSB extension
   Int       m_internalBitDepth[MAX_NUM_CHANNEL_TYPE];         ///< bit-depth codec operates at (input/output files will be converted)
   Bool      m_useExtendedPrecision;
+  Bool      m_useIntraBlockCopy;
   Bool      m_useHighPrecisionPredictionWeighting;
 
   //coding tools (chroma format)
@@ -191,7 +213,7 @@ protected:
   UInt      m_uiPCMLog2MinSize;                               ///< log2 of minimum PCM block size
   Bool      m_bPCMFilterDisableFlag;                          ///< PCM filter disable flag
   Bool      m_enableIntraReferenceSmoothing;                  ///< flag for enabling(default)/disabling intra reference smoothing/filtering
-
+  Bool      m_disableIntraBoundaryFilter;                     ///  flag for enabling(default)/disabling intra boundary filtering
   // coding tools (encoder-only parameters)
   Bool      m_bUseASR;                                        ///< flag for using adaptive motion search range
   Bool      m_bUseHADME;                                      ///< flag for using HAD in sub-pel ME
@@ -201,9 +223,14 @@ protected:
   Bool      m_useSelectiveRDOQ;                               ///< flag for using selective RDOQ
 #endif
   Int       m_rdPenalty;                                      ///< RD-penalty for 32x32 TU for intra in non-intra slices (0: no RD-penalty, 1: RD-penalty, 2: maximum RD-penalty)
-  Int       m_iFastSearch;                                    ///< ME mode, 0 = full, 1 = diamond, 2 = PMVFAST
+  Int       m_iFastSearch;                                    ///< ME mode, 0 = Full search, 1 = TZ search, 2 = Selective search
+  Bool      m_useHashBasedIntraBlockCopySearch;               ///< Enable the use of hash based search for intra block copying on 8x8 blocks
+  Int       m_intraBlockCopySearchWidthInCTUs;                ///< Search range for IBC hash search method (-1: full frame search)
+  UInt      m_intraBlockCopyNonHashSearchWidthInCTUs;         ///< Search range for IBC non-hash search method (i.e., fast/full search)
+  Bool      m_useHashBasedME;                                 ///< flag for using hash based inter search
   Int       m_iSearchRange;                                   ///< ME search range
   Int       m_bipredSearchRange;                              ///< ME search range for bipred refinement
+  Bool      m_intraBlockCopyFastSearch;                       ///< Use a restricted search range for intra block-copy motion vectors to reduce the encoding time
   Bool      m_bUseFastEnc;                                    ///< flag for using fast encoder setting
   Bool      m_bUseEarlyCU;                                    ///< flag for using Early CU setting
   Bool      m_useFastDecisionForMerge;                        ///< flag for using Fast Decision Merge RD-Cost
@@ -314,6 +341,9 @@ protected:
 
   Bool      m_TransquantBypassEnableFlag;                     ///< transquant_bypass_enable_flag setting in PPS.
   Bool      m_CUTransquantBypassFlagForce;                    ///< if transquant_bypass_enable_flag, then, if true, all CU transquant bypass flags will be set to true.
+#if SCM_T0121_INFER_TU_SPLIT_ENCODER
+  Bool      m_bTransquantBypassInferTUSplit;                  ///< Infer TU splitting for transquant bypass CUs
+#endif
   CostMode  m_costMode;                                       ///< Cost mode to use
 
   Bool      m_recalculateQPAccordingToLambda;                 ///< recalculate QP value according to the lambda value

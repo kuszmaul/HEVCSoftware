@@ -229,13 +229,17 @@ Bool TComTU::useDST(const ComponentID compID)
         TComDataCU *const pcCU       = getCU();
   const UInt              absPartIdx = GetAbsPartIdxTU(compID);
 
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
   return isLuma(compID) && pcCU->isIntra(absPartIdx);
+#else
+  return isLuma(compID) && (pcCU->isIntra(absPartIdx) || pcCU->isIntraBC(absPartIdx));
+#endif
 }
 
 
 Bool TComTU::isNonTransformedResidualRotated(const ComponentID compID)
 {
-  // rotation only for 4x4 intra, and is only used for non-transformed blocks (the latter is not checked here)
+  // rotation only for 4x4 intra (not intra-bc), and is only used for non-transformed blocks (the latter is not checked here)
   return    getCU()->getSlice()->getSPS()->getUseResidualRotation()
          && mRect[compID].width == 4
          && getCU()->isIntra(GetAbsPartIdxTU());

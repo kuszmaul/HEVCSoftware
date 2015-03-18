@@ -39,6 +39,7 @@
 #include "TComPrediction.h"
 #include "TComPic.h"
 #include "TComTU.h"
+#include "TComTrQuant.h"
 
 //! \ingroup TLibCommon
 //! \{
@@ -81,6 +82,7 @@ TComPrediction::TComPrediction()
       m_piYuvExt[ch][buf] = NULL;
     }
   }
+  m_iPLTErrLimit = 3;
 }
 
 TComPrediction::~TComPrediction()
@@ -478,15 +480,15 @@ Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel
       // Create the prediction
             TComDataCU *const pcCU              = rTu.getCU();
       const UInt              uiAbsPartIdx      = rTu.GetAbsPartIdxTU();
-      const Bool              enableEdgeFilters = !(pcCU->isRDPCMEnabled(uiAbsPartIdx) && pcCU->getCUTransquantBypass(uiAbsPartIdx));
+      const Bool              enableEdgeFilters = !(pcCU->isRDPCMEnabled(uiAbsPartIdx) && pcCU->getCUTransquantBypass(uiAbsPartIdx)) && !pcCU->getSlice()->getSPS()->getDisableIntraBoundaryFilter();
 #if O0043_BEST_EFFORT_DECODING
       const Int channelsBitDepthForPrediction = rTu.getCU()->getSlice()->getSPS()->getStreamBitDepth(channelType);
 #else
       const Int channelsBitDepthForPrediction = rTu.getCU()->getSlice()->getSPS()->getBitDepth(channelType);
 #endif
       xPredIntraAng( channelsBitDepthForPrediction, ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, format, uiDirMode, bAbove, bLeft, enableEdgeFilters );
-
-      if(( uiDirMode == DC_IDX ) && bAbove && bLeft )
+      
+      if(( uiDirMode == DC_IDX ) && bAbove && bLeft && enableEdgeFilters)
       {
         xDCPredFiltering( ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType );
       }
@@ -514,6 +516,37 @@ Bool TComPrediction::xCheckIdenticalMotion ( TComDataCU* pcCU, UInt PartAddr )
   }
   return false;
 }
+
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+Void TComPrediction::intraBlockCopy ( TComDataCU* pcCU, TComYuv* pcYuvPred, Int iPartIdx )
+{
+  Int         iWidth;
+  Int         iHeight;
+  UInt        uiPartAddr;
+
+  pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iWidth, iHeight );
+
+  TComMv      cMv         = pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->getMv( uiPartAddr );
+
+  xPredIntraBCBlk( COMPONENT_Y, pcCU, pcCU->getPic()->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred );
+
+  if( pcYuvPred->getChromaFormat() != CHROMA_400 )
+  {
+    if( pcCU->getWidth(0) == 8 && pcCU->getPartitionSize(0) != SIZE_2Nx2N && pcYuvPred->getChromaFormat() != CHROMA_444 )
+    {
+      // the chroma PU will be smaller than 4x4, so join with neighbouring chroma PU(s) to form a bigger block
+      // chroma PUs will use the luma MV from the bottom right most of the merged chroma PUs.
+      UInt uiMvSrcAddr = ( pcYuvPred->getChromaFormat() == CHROMA_422 && iPartIdx < ( pcCU->getNumPartitions() >> 1 ) ? 1 : 3 );
+      cMv = pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->getMv( uiMvSrcAddr );
+    }
+
+    xPredIntraBCBlk( COMPONENT_Cb, pcCU, pcCU->getPic()->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred );
+    xPredIntraBCBlk( COMPONENT_Cr, pcCU, pcCU->getPic()->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred );
+  }
+
+  return;
+}
+#endif
 
 Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, RefPicList eRefPicList, Int iPartIdx )
 {
@@ -591,12 +624,28 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
 {
   Int         iRefIdx     = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );           assert (iRefIdx >= 0);
   TComMv      cMv         = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr );
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+  Bool isIntraBC = false;
+  if ( pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPOC() == pcCU->getSlice()->getPOC() )
+  {
+    isIntraBC = true;
+  }
+  else
+#endif
+  if ( pcCU->getSlice()->getUseIntegerMv() )
+  {
+    cMv <<= 2;
+  }
   pcCU->clipMv(cMv);
 
   for (UInt comp=COMPONENT_Y; comp<pcYuvPred->getNumberValidComponents(); comp++)
   {
     const ComponentID compID=ComponentID(comp);
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+    xPredInterBlk  (compID,  pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred, bi, pcCU->getSlice()->getSPS()->getBitDepth(toChannelType(compID)), isIntraBC);
+#else
     xPredInterBlk  (compID,  pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, pcYuvPred, bi, pcCU->getSlice()->getSPS()->getBitDepth(toChannelType(compID)) );
+#endif
   }
 }
 
@@ -666,7 +715,12 @@ Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidt
  */
 
 
-Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *dstPic, Bool bi, const Int bitDepth )
+Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *dstPic, Bool bi, const Int bitDepth
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+, Bool isIntraBC
+#endif
+)
+
 {
   Int     refStride  = refPic->getStride(compID);
   Int     dstStride  = dstPic->getStride(compID);
@@ -681,6 +735,14 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
 
   Int     xFrac  = mv->getHor() & ((1<<shiftHor)-1);
   Int     yFrac  = mv->getVer() & ((1<<shiftVer)-1);
+
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+  if ( isIntraBC )
+  {
+    xFrac = yFrac = 0;
+  }
+#endif
+
   UInt    cxWidth  = width  >> refPic->getComponentScaleX(compID);
   UInt    cxHeight = height >> refPic->getComponentScaleY(compID);
 
@@ -705,6 +767,36 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
     m_if.filterVer(compID, tmp + ((vFilterSize>>1) -1)*tmpStride, tmpStride, dst, dstStride, cxWidth, cxHeight,               yFrac, false, !bi, chFmt, bitDepth);
   }
 }
+
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+Void TComPrediction::xPredIntraBCBlk(const ComponentID compID, TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic )
+{
+  Int     refStride  = refPic->getStride(compID);
+  Int     dstStride  = dstPic->getStride(compID);
+
+  Int mvx = mv->getHor() >>  refPic->getComponentScaleX(compID);
+  Int mvy = mv->getVer() >>  refPic->getComponentScaleY(compID);
+
+  Int     refOffset  = mvx + mvy * refStride;
+
+  Pel*    ref = refPic->getAddr( compID, cu->getCtuRsAddr(), cu->getZorderIdxInCtu() + partAddr ) + refOffset;
+  Pel*    dst = dstPic->getAddr( compID, partAddr );
+
+  UInt    cxWidth  = width  >> refPic->getComponentScaleX(compID);
+  UInt    cxHeight = height >> refPic->getComponentScaleY(compID);
+
+  for (Int row = 0; row < cxHeight; row++)
+  {
+    for (Int col = 0; col < cxWidth; col++)
+    {
+      dst[col] = ref[col];
+    }
+
+    ref += refStride;
+    dst += dstStride;
+  }
+}
+#endif
 
 Void TComPrediction::xWeightedAverage( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartIdx, Int iWidth, Int iHeight, TComYuv* pcYuvDst, const BitDepths &clipBitDepths )
 {
@@ -849,5 +941,1246 @@ Bool TComPrediction::UseDPCMForFirstPassIntraEstimation(TComTU &rTu, const UInt 
           rTu.getCU()->getCUTransquantBypass(rTu.GetAbsPartIdxTU()) &&
           (uiDirMode==HOR_IDX || uiDirMode==VER_IDX);
 }
+
+Void TComPrediction::preCalcPLTIndex(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiPLTSize)
+{
+  Bool bLossless = pcCU->getCUTransquantBypass(0);
+  Int iErrorLimit = bLossless ? 0 : 3 * getPLTErrLimit();
+  UInt uiPos;
+#if SCM_T0072_T0109_T0120_PLT_NON444
+  UInt uiScaleX = pcCU->getPic()->getComponentScaleX(COMPONENT_Cb);
+  UInt uiScaleY = pcCU->getPic()->getComponentScaleY(COMPONENT_Cb); 
+#endif
+
+  UInt uiBestIdx = 0;
+  UChar useEscapeFlag=0;
+
+  for (UInt uiY = 0; uiY < uiHeight; uiY++)
+  {
+    for (UInt uiX = 0; uiX < uiWidth; uiX++)
+    {
+      uiPos = uiY * uiWidth + uiX;
+#if SCM_T0072_T0109_T0120_PLT_NON444
+      UInt uiPosC = (uiY>>uiScaleY) * (uiWidth>>uiScaleX) + (uiX>>uiScaleX);
+#endif
+      UInt uiPLTIdx = 0;
+      UInt uiMinError = MAX_UINT;
+      while (uiPLTIdx < uiPLTSize)
+      {
+        UInt uiAbsError = MAX_UINT;
+        if ( bLossless )
+        {
+#if SCM_T0072_T0109_T0120_PLT_NON444
+          uiAbsError = abs( Palette[0][uiPLTIdx] - pSrc[0][uiPos] ) + abs( Palette[1][uiPLTIdx] - pSrc[1][uiPosC] ) + abs( Palette[2][uiPLTIdx] - pSrc[2][uiPosC] );
+#else
+          uiAbsError = abs( Palette[0][uiPLTIdx] - pSrc[0][uiPos] ) + abs( Palette[1][uiPLTIdx] - pSrc[1][uiPos] ) + abs( Palette[2][uiPLTIdx] - pSrc[2][uiPos] );
+#endif
+        }
+        else
+        {
+#if SCM_T0072_T0109_T0120_PLT_NON444
+          uiAbsError = ( abs(Palette[0][uiPLTIdx] - pSrc[0][uiPos])  >> DISTORTION_PRECISION_ADJUSTMENT(pcCU->getSlice()->getSPS()->getBitDepths().recon[CHANNEL_TYPE_LUMA]  -8) )
+                     + ( abs(Palette[1][uiPLTIdx] - pSrc[1][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(pcCU->getSlice()->getSPS()->getBitDepths().recon[CHANNEL_TYPE_CHROMA]-8) )
+                     + ( abs(Palette[2][uiPLTIdx] - pSrc[2][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(pcCU->getSlice()->getSPS()->getBitDepths().recon[CHANNEL_TYPE_CHROMA]-8) );
+#else
+          uiAbsError = ( abs(Palette[0][uiPLTIdx] - pSrc[0][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(pcCU->getSlice()->getSPS()->getBitDepths().recon[CHANNEL_TYPE_LUMA]  -8) )
+                     + ( abs(Palette[1][uiPLTIdx] - pSrc[1][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(pcCU->getSlice()->getSPS()->getBitDepths().recon[CHANNEL_TYPE_CHROMA]-8) )
+                     + ( abs(Palette[2][uiPLTIdx] - pSrc[2][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(pcCU->getSlice()->getSPS()->getBitDepths().recon[CHANNEL_TYPE_CHROMA]-8) );
+#endif
+        }
+        if (uiAbsError < uiMinError)
+        {
+          uiBestIdx = uiPLTIdx;
+          uiMinError = uiAbsError;
+          if (uiMinError == 0)
+          {
+            break;
+          }
+        }
+        uiPLTIdx++;
+      }
+      m_cIndexBlock[uiPos] = uiBestIdx;
+      if (uiMinError > iErrorLimit)
+      {
+        m_cIndexBlock[uiPos] -= pcCU->getSlice()->getSPS()->getPLTMaxSize();
+        useEscapeFlag=1;
+      }
+    }
+  }
+
+  pcCU->setPLTEscapeSubParts(0, useEscapeFlag,0, pcCU->getDepth(0));
+#if SCM_T0072_T0109_T0120_PLT_NON444
+  pcCU->setPLTEscapeSubParts(1, useEscapeFlag,0, pcCU->getDepth(0));
+  pcCU->setPLTEscapeSubParts(2, useEscapeFlag,0, pcCU->getDepth(0));
+#endif
+}
+
+Void  TComPrediction::reorderPLT(TComDataCU* pcCU, Pel *pPalette[3], UInt uiNumComp)
+{
+
+  UInt uiPLTSizePrev, uiDictMaxSize;
+#if !SCM_T0064_REMOVE_PLT_SHARING
+  UInt uiPLTUsedSizePrev;
+#endif
+  Pel * pPalettePrev[3];
+  UInt uiMaxPLTSize = pcCU->getSlice()->getSPS()->getPLTMaxSize();
+  UInt uiMaxPLTPredSize = pcCU->getSlice()->getSPS()->getPLTMaxPredSize();
+  Pel* pPaletteTemp[3];
+  for (UInt ch = 0; ch < 3; ch++)
+  {
+    pPaletteTemp[ch] = (Pel*)xMalloc(Pel, uiMaxPLTSize);
+  }
+#if SCM_T0072_T0109_T0120_PLT_NON444
+  ComponentID compBegin = COMPONENT_Y;
+#else
+  ComponentID compBegin = ComponentID(uiNumComp == 2 ? 1 : 0);
+#endif
+
+  for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
+  {
+#if SCM_T0064_REMOVE_PLT_SHARING
+    pPalettePrev[comp] = pcCU->getPLTPred(pcCU, pcCU->getZorderIdxInCtu(), comp, uiPLTSizePrev);
+#else
+    pPalettePrev[comp] = pcCU->getPLTPred(pcCU, pcCU->getZorderIdxInCtu(), comp, uiPLTSizePrev, uiPLTUsedSizePrev);
+#endif
+    for (UInt i = 0; i < uiMaxPLTSize; i++)
+    {
+      pPaletteTemp[comp][i] = pPalette[comp][i];
+    }
+  }
+
+#if !SCM_T0072_T0109_T0120_PLT_NON444
+#if SCM_T0064_REMOVE_PLT_SHARING
+  pcCU->getPLTPred(pcCU, pcCU->getZorderIdxInCtu(), compBegin, uiPLTSizePrev);
+#else
+  pcCU->getPLTPred(pcCU, pcCU->getZorderIdxInCtu(), compBegin, uiPLTSizePrev, uiPLTUsedSizePrev);
+#endif
+#endif
+
+  uiDictMaxSize = pcCU->getPLTSize(compBegin, 0);
+
+  UInt uiIdxPrev = 0, uiIdxCurr = 0;
+  Bool bReused = false;
+  Bool *bPredicted, *bReusedPrev;
+  bPredicted  = (Bool*)xMalloc(Bool, uiMaxPLTSize + 1);
+  bReusedPrev = (Bool*)xMalloc(Bool, uiMaxPLTPredSize + 1);
+  memset(bPredicted, 0, sizeof(Bool)*(uiMaxPLTSize + 1));
+  memset(bReusedPrev, 0, sizeof(Bool)*(uiMaxPLTPredSize + 1));
+  UInt uiNumPLTRceived = uiDictMaxSize, uiNumPLTPredicted = 0;
+  for (uiIdxPrev = 0; uiIdxPrev < uiPLTSizePrev; uiIdxPrev++)
+  {
+    bReused = false;
+    Int iCounter = 0;
+    for (uiIdxCurr = 0; uiIdxCurr < uiDictMaxSize; uiIdxCurr++)
+    {
+      iCounter = 0;
+
+      for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
+      {
+        if (pPalettePrev[comp][uiIdxPrev] == pPalette[comp][uiIdxCurr])
+        {
+          iCounter++;
+        }
+      }
+      if (iCounter == uiNumComp)
+      {
+        bReused = true;
+        break;
+      }
+    }
+    bReusedPrev[uiIdxPrev] = bReused;
+    bPredicted[uiIdxCurr] = bReused;
+    if (bPredicted[uiIdxCurr])
+    {
+      uiNumPLTRceived--;
+      uiNumPLTPredicted++;
+    }
+  }
+  for (uiIdxPrev = 0; uiIdxPrev < uiMaxPLTPredSize; uiIdxPrev++)
+  {
+    for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
+    {
+      pcCU->setPrevPLTReusedFlagSubParts(comp, bReusedPrev[uiIdxPrev], uiIdxPrev, 0, pcCU->getDepth(0));
+    }
+  }
+  uiIdxCurr = 0;
+  for (UInt uiPrevIdx = 0; uiPrevIdx < uiPLTSizePrev; uiPrevIdx++)
+  {
+    if (bReusedPrev[uiPrevIdx])
+    {
+      for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
+      {
+        pPalette[comp][uiIdxCurr] = pPalettePrev[comp][uiPrevIdx];
+      }
+      uiIdxCurr++;
+    }
+  }
+
+  for (UInt uiIdx = 0; uiIdx < uiDictMaxSize; uiIdx++)
+  {
+    if (bPredicted[uiIdx] == 0)
+    {
+      for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
+      {
+        pPalette[comp][uiIdxCurr] = pPaletteTemp[comp][uiIdx];
+      }
+      uiIdxCurr++;
+    }
+  }
+  for (UInt ch = 0; ch < 3; ch++)
+  {
+    if (pPaletteTemp[ch])
+    {
+      xFree(pPaletteTemp[ch]);
+      pPaletteTemp[ch] = NULL;
+    }
+  }
+  if (bPredicted)
+  {
+    xFree(bPredicted);
+    bPredicted = NULL;
+  }
+  if (bReusedPrev)
+  {
+    xFree(bReusedPrev);
+    bReusedPrev = NULL;
+  }
+}
+
+Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3],  UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize, TComRdCost *pcCost )
+{
+  Int iErrorLimit = getPLTErrLimit();
+  UInt uiTotalSize = uiHeight*uiWidth;
+  SortingElement *psList = new SortingElement [uiTotalSize];
+  SortingElement sElement;
+  UInt uiDictMaxSize = pcCU->getSlice()->getSPS()->getPLTMaxSize();
+  SortingElement *pListSort = new SortingElement [uiDictMaxSize + 1];
+  UInt uiIdx = 0;
+  UInt uiPos;
+  Int last = -1;
+#if SCM_T0072_T0109_T0120_PLT_NON444
+  UInt uiScaleX = pcCU->getPic()->getComponentScaleX(COMPONENT_Cb);
+  UInt uiScaleY = pcCU->getPic()->getComponentScaleY(COMPONENT_Cb);
+#endif
+
+#if SCM_T0087_IMPROVED_PALETTE_TABLE_GENERATION
+  SortingElement *psListHistogram = new SortingElement[uiTotalSize];
+  SortingElement *psInitial = new SortingElement[uiTotalSize];
+  UInt uiHisIdx = 0;
+
+  for (UInt uiY = 0; uiY < uiHeight; uiY++)
+  {
+    for (UInt uiX = 0; uiX < uiWidth; uiX++)
+    {
+      uiPos = uiY * uiWidth + uiX;
+#if SCM_T0072_T0109_T0120_PLT_NON444
+      UInt uiPosC = (uiY>>uiScaleY) * (uiWidth>>uiScaleX) + (uiX>>uiScaleX);
+      sElement.setAll(pSrc[0][uiPos], pSrc[1][uiPosC], pSrc[2][uiPosC]);
+#else
+      sElement.setAll(pSrc[0][uiPos], pSrc[1][uiPos], pSrc[2][uiPos]);
+#endif 
+      Int i = 0;
+      for (i = uiHisIdx - 1; i >= 0; i--)
+      {
+        if (psListHistogram[i].EqualData(sElement))
+        {
+          psListHistogram[i].addElement(sElement);
+          break;
+        }
+      }
+      if (i == -1)
+      {
+        psListHistogram[uiHisIdx].copyDataFrom(sElement);
+        psListHistogram[uiHisIdx].uiCnt = 1;
+        uiHisIdx++;
+      }
+    }
+  }
+
+  UInt uiHisCnt, uiMaxIdx;
+  UInt uiLimit = ((uiHeight << 2)*iErrorLimit) >> 7;
+  uiLimit = (uiLimit > (uiHeight >> 1)) ? uiLimit : (uiHeight >> 1);
+
+  Bool bOtherPeakExist;
+  while (true)
+  {
+    uiHisCnt = psListHistogram[0].uiCnt;
+    uiMaxIdx = 0;
+    for (UInt j = 1; j < uiHisIdx; j++)
+    {
+      if (psListHistogram[j].uiCnt >= uiHisCnt)
+      {
+        uiHisCnt = psListHistogram[j].uiCnt;
+        uiMaxIdx = j;
+      }
+    }
+
+    if (uiHisCnt >= uiLimit)
+    {
+      bOtherPeakExist = false;
+      for (UInt j = 0; j < uiHisIdx; j++)
+      {
+        if (psListHistogram[j].uiCnt >= (uiHisCnt >> 1) && j != uiMaxIdx)
+        {
+          if (psListHistogram[uiMaxIdx].almostEqualData(psListHistogram[j], iErrorLimit >> 2, pcCU->getSlice()->getSPS()->getBitDepths()))
+          {
+            bOtherPeakExist = true;
+          }
+        }
+      }
+
+      if (!bOtherPeakExist)
+      {
+        psList[uiIdx].copyAllFrom(psListHistogram[uiMaxIdx]);
+        psInitial[uiIdx].copyAllFrom(psListHistogram[uiMaxIdx]);
+        last = uiIdx;
+        uiIdx++;
+
+        for (UInt j = 0; j < uiHisIdx; j++)
+        {
+          if (psListHistogram[uiMaxIdx].almostEqualData(psListHistogram[j], iErrorLimit >> 2, pcCU->getSlice()->getSPS()->getBitDepths()) && j != uiMaxIdx)
+          {
+            psListHistogram[j].ResetElement();
+          }
+        }
+      }
+
+      psListHistogram[uiMaxIdx].ResetElement();
+    }
+    else
+    {
+      break;
+    }
+  }
+
+  UInt uiInitialIdx = uiIdx;
+  Bool bMatched;
+
+  for (UInt uiY = 0; uiY < uiHeight; uiY++)
+  {
+    for (UInt uiX = 0; uiX < uiWidth; uiX++)
+    {
+      uiPos = uiY * uiWidth + uiX;
+#if SCM_T0072_T0109_T0120_PLT_NON444
+      UInt uiPosC = (uiY>>uiScaleY) * (uiWidth>>uiScaleX) + (uiX>>uiScaleX);
+      sElement.setAll(pSrc[0][uiPos], pSrc[1][uiPosC], pSrc[2][uiPosC]);
+#else
+      sElement.setAll(pSrc[0][uiPos], pSrc[1][uiPos], pSrc[2][uiPos]);
+#endif 
+      bMatched = false;
+      for (Int i = 0; i < uiInitialIdx; i++)
+      {
+        bMatched |= psInitial[i].EqualData(sElement);
+      }
+
+      if (!bMatched)
+      {
+        Int besti = last, bestSAD = (last == -1) ? MAX_UINT : psList[last].getSAD(sElement, pcCU->getSlice()->getSPS()->getBitDepths());
+        if (bestSAD)
+        {
+          for (Int i = uiIdx - 1; i >= 0; i--)
+          {
+            UInt sad = psList[i].getSAD(sElement, pcCU->getSlice()->getSPS()->getBitDepths());
+            if (sad < bestSAD)
+            {
+              bestSAD = sad;
+              besti = i;
+              if (!sad) break;
+            }
+          }
+        }
+
+        if (besti >= 0 && psList[besti].almostEqualData(sElement, iErrorLimit, pcCU->getSlice()->getSPS()->getBitDepths()))
+        {
+          psList[besti].addElement(sElement);
+          last = besti;
+        }
+        else
+        {
+          psList[uiIdx].copyDataFrom(sElement);
+          psList[uiIdx].uiCnt = 1;
+          last = uiIdx;
+          uiIdx++;
+        }
+      }
+    }
+  }
+#else
+  for( UInt uiY = 0; uiY < uiHeight; uiY++ )
+  {
+    for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+    {
+      uiPos = uiY * uiWidth+ uiX;
+#if SCM_T0072_T0109_T0120_PLT_NON444
+      UInt uiPosC = (uiY>>uiScaleY) * (uiWidth>>uiScaleX) + (uiX>>uiScaleX);
+      sElement.setAll (pSrc[0][uiPos], pSrc[1][uiPosC], pSrc[2][uiPosC]);
+#else
+      sElement.setAll (pSrc[0][uiPos], pSrc[1][uiPos], pSrc[2][uiPos]);
+#endif
+
+      Int besti = last, bestSAD = (last == -1) ? MAX_UINT : psList[last].getSAD(sElement, pcCU->getSlice()->getSPS()->getBitDepths());
+      if( bestSAD )
+      {
+        for( Int i = uiIdx-1; i>=0; i-- )
+        {
+          UInt sad = psList[i].getSAD(sElement, pcCU->getSlice()->getSPS()->getBitDepths());
+          if( sad < bestSAD )
+          {
+            bestSAD = sad;
+            besti = i;
+            if( !sad ) break;
+          }
+        }
+      }
+
+      if (besti>=0 && psList[besti].almostEqualData(sElement, iErrorLimit, pcCU->getSlice()->getSPS()->getBitDepths()))
+      {
+        psList[besti].addElement(sElement);
+        last = besti;
+      }
+      else
+      {
+        psList[uiIdx].copyDataFrom(sElement);
+        psList[uiIdx].uiCnt = 1;
+        last = uiIdx;
+        uiIdx ++;
+      }
+    }
+  }
+#endif
+
+  for (Int i = 0; i < uiDictMaxSize; i++)
+  {
+    pListSort[i].uiCnt  = 0;
+    pListSort[i].setAll(0, 0, 0) ;
+  }
+
+  //bubble sorting
+  uiDictMaxSize = 1;
+  for (Int i = 0; i < uiIdx; i++)
+  {
+    if( psList[i].uiCnt > pListSort[uiDictMaxSize-1].uiCnt )
+    {
+      Int j;
+      for (j = uiDictMaxSize; j > 0; j--)
+      {
+        if (psList[i].uiCnt > pListSort[j-1].uiCnt)
+        {
+          pListSort[j].copyAllFrom (pListSort[j-1]);
+          uiDictMaxSize = std::min(uiDictMaxSize + 1, pcCU->getSlice()->getSPS()->getPLTMaxSize());
+        }
+        else
+        {
+          break;
+        }
+      }
+      pListSort[j].copyAllFrom (psList[i]) ;
+    }
+  }
+
+  uiPLTSize = 0;
+  Pel *pPred[3]  = { pcCU->getLastPLTInLcuFinal(0), pcCU->getLastPLTInLcuFinal(1), pcCU->getLastPLTInLcuFinal(2) };
+  Double bitCost = pcCost->getLambda() * 24;
+  BitDepths bitDepths = pcCU->getSlice()->getSPS()->getBitDepths();
+  for (Int i = 0; i < pcCU->getSlice()->getSPS()->getPLTMaxSize(); i++)
+  {
+    if( pListSort[i].uiCnt )
+    {
+      Int iHalf = pListSort[i].uiCnt>>1;
+      Palette[0][uiPLTSize] = (pListSort[i].uiSumData[0]+iHalf)/pListSort[i].uiCnt;
+      Palette[1][uiPLTSize] = (pListSort[i].uiSumData[1]+iHalf)/pListSort[i].uiCnt;
+      Palette[2][uiPLTSize] = (pListSort[i].uiSumData[2]+iHalf)/pListSort[i].uiCnt;
+
+      Int best = -1;
+      if( iErrorLimit )
+      {
+        Double pal[3] = { pListSort[i].uiSumData[0]/(Double)pListSort[i].uiCnt,
+                          pListSort[i].uiSumData[1]/(Double)pListSort[i].uiCnt,
+                          pListSort[i].uiSumData[2]/(Double)pListSort[i].uiCnt };
+
+        Double err      = pal[0] - Palette[0][uiPLTSize];
+        Double bestCost = (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_LUMA]-8)) );
+        err = pal[1] - Palette[1][uiPLTSize]; bestCost += (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA]-8)) );
+        err = pal[2] - Palette[2][uiPLTSize]; bestCost += (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA]-8)) );
+        bestCost = bestCost * pListSort[i].uiCnt + bitCost;
+
+        for(int t=0; t<pcCU->getLastPLTInLcuSizeFinal(0); t++)
+        {
+          err = pal[0] - pPred[0][t];
+          Double cost = (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_LUMA]-8)) );
+          err = pal[1] - pPred[1][t]; cost += (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA]-8)) );
+          err = pal[2] - pPred[2][t]; cost += (err*err) / ( 1<<(2*DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA]-8)) );
+          cost *= pListSort[i].uiCnt;
+          if(cost < bestCost)
+          {
+            best = t;
+            bestCost = cost;
+          }
+        }
+        if( best != -1 )
+        {
+          Palette[0][uiPLTSize] = pPred[0][best];
+          Palette[1][uiPLTSize] = pPred[1][best];
+          Palette[2][uiPLTSize] = pPred[2][best];
+        }
+      }
+
+      Bool bDuplicate = false;
+      if( pListSort[i].uiCnt == 1 && best == -1 )
+      {
+        bDuplicate = true;
+      }
+      else
+      {
+        for( Int t=0; t<uiPLTSize; t++)
+        {
+          if( Palette[0][uiPLTSize] == Palette[0][t] && Palette[1][uiPLTSize] == Palette[1][t] && Palette[2][uiPLTSize] == Palette[2][t] )
+          {
+            bDuplicate = true;
+            break;
+          }
+        }
+      }
+      if( !bDuplicate ) uiPLTSize++;
+    }
+    else
+    {
+      break;
+    }
+  }
+
+  delete [] psList;
+  delete [] pListSort;
+
+#if SCM_T0087_IMPROVED_PALETTE_TABLE_GENERATION
+  delete[] psListHistogram;
+  delete[] psInitial;
+#endif
+}
+
+#if SCM_T0064_REMOVE_PLT_SHARING
+Void TComPrediction::derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize, Bool forcePLTPrediction)
+#else
+Void TComPrediction::derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize)
+#endif
+{
+  std::vector<SortingElement> psList;
+  SortingElement sElement;
+  Int uiIdx = 0;
+  UInt uiPos;
+
+#if SCM_T0064_REMOVE_PLT_SHARING
+  const UInt maxPLTSizeSPS = pcCU->getSlice()->getSPS()->getPLTMaxSize();
+  uiPLTSize = 0;
+
+  const Pel * const pPred[3] = { pcCU->getLastPLTInLcuFinal(0), pcCU->getLastPLTInLcuFinal(1), pcCU->getLastPLTInLcuFinal(2) };
+#endif
+
+#if SCM_T0072_T0109_T0120_PLT_NON444
+  UInt uiScaleX = pcCU->getPic()->getComponentScaleX(COMPONENT_Cb);
+  UInt uiScaleY = pcCU->getPic()->getComponentScaleY(COMPONENT_Cb);
+#endif
+  
+#if SCM_T0064_REMOVE_PLT_SHARING
+  if( forcePLTPrediction )
+  {
+    UInt pltPredIndexUsed[MAX_PLT_PRED_SIZE];
+    memset( pltPredIndexUsed, 0, sizeof(pltPredIndexUsed) );
+
+    UChar pltIndexUsed[MAX_PLT_PRED_SIZE];
+    memset( pltIndexUsed, 0, sizeof(pltIndexUsed) );
+
+    for( UInt uiY = 0; uiY < uiHeight; uiY++ )
+    {
+      for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+      {
+        uiPos = uiY * uiWidth + uiX;
+#if SCM_T0072_T0109_T0120_PLT_NON444
+        UInt uiPosC = (uiY>>uiScaleY) * (uiWidth>>uiScaleX) + (uiX>>uiScaleX);
+#endif
+        Int iBestIdx = -1;
+        UInt uiPLTIdx = 0;
+
+        while( uiPLTIdx < pcCU->getLastPLTInLcuSizeFinal(0) )
+        {
+#if SCM_T0072_T0109_T0120_PLT_NON444
+          if( pPred[0][uiPLTIdx] == pSrc[0][uiPos] && pPred[1][uiPLTIdx] == pSrc[1][uiPosC] && pPred[2][uiPLTIdx] == pSrc[2][uiPosC] )
+#else
+          if( pPred[0][uiPLTIdx] == pSrc[0][uiPos] && pPred[1][uiPLTIdx] == pSrc[1][uiPos] && pPred[2][uiPLTIdx] == pSrc[2][uiPos] )
+#endif
+          {
+            iBestIdx = uiPLTIdx;
+            break;
+          }
+          uiPLTIdx++;
+        }
+
+        if( iBestIdx >= 0 )
+        {
+          pltPredIndexUsed[iBestIdx]++;
+        }
+      }
+    }
+
+    while( uiIdx < maxPLTSizeSPS )
+    {
+      UInt maxNoIndexUsed = 0, bestIndex = 0;
+      for( UInt i = 0; i < pcCU->getLastPLTInLcuSizeFinal(0); i++ )
+      {
+        if( pltIndexUsed[i] == 0 && pltPredIndexUsed[i] > maxNoIndexUsed )
+        {
+          maxNoIndexUsed = pltPredIndexUsed[i];
+          bestIndex = i;
+        }
+      }
+      if( maxNoIndexUsed > 0 )
+      {
+        pltIndexUsed[bestIndex] = 1;
+
+        Palette[0][uiPLTSize] = pPred[0][bestIndex];
+        Palette[1][uiPLTSize] = pPred[1][bestIndex];
+        Palette[2][uiPLTSize] = pPred[2][bestIndex];
+        uiPLTSize++;
+      }
+      else
+      {
+        break;
+      }
+      uiIdx++;
+    }
+  }
+#endif
+
+  uiIdx = 0;
+  for (UInt uiY = 0; uiY < uiHeight; uiY++)
+  {
+    for (UInt uiX = 0; uiX < uiWidth; uiX++)
+    {
+      uiPos = uiY * uiWidth + uiX;
+#if SCM_T0072_T0109_T0120_PLT_NON444
+      UInt uiPosC = (uiY>>uiScaleY) * (uiWidth>>uiScaleX) + (uiX>>uiScaleX);
+#endif
+
+#if SCM_T0064_REMOVE_PLT_SHARING
+
+      Int iBestIdx = -1;
+
+      if( forcePLTPrediction )
+      {
+        UInt uiPLTIdx = 0;
+
+        while( uiPLTIdx < uiPLTSize )
+        {
+#if SCM_T0072_T0109_T0120_PLT_NON444
+          if( Palette[0][uiPLTIdx] == pSrc[0][uiPos] && Palette[1][uiPLTIdx] == pSrc[1][uiPosC] && Palette[2][uiPLTIdx] == pSrc[2][uiPosC] )
+#else
+          if( Palette[0][uiPLTIdx] == pSrc[0][uiPos] && Palette[1][uiPLTIdx] == pSrc[1][uiPos] && Palette[2][uiPLTIdx] == pSrc[2][uiPos] )
+#endif
+          {
+            iBestIdx = uiPLTIdx;
+            break;
+          }
+          uiPLTIdx++;
+        }
+      }
+
+      if( iBestIdx >= 0 )
+      {
+        continue;
+      }
+#endif
+      Int i = 0;
+#if SCM_T0072_T0109_T0120_PLT_NON444
+      sElement.setAll(pSrc[0][uiPos], pSrc[1][uiPosC], pSrc[2][uiPosC]);
+#else
+      sElement.setAll(pSrc[0][uiPos], pSrc[1][uiPos], pSrc[2][uiPos]);
+#endif
+      for (i = uiIdx - 1; i >= 0; i--)
+      {
+        if( psList[i].uiData[0] == sElement.uiData[0] && psList[i].uiData[1] == sElement.uiData[1] && psList[i].uiData[2] == sElement.uiData[2] )
+        {
+          psList[i].uiCnt++;
+          break;
+        }
+      }
+      if (i == -1)
+      {
+        psList.push_back(sElement);
+        psList[uiIdx].uiCnt++;
+        uiIdx++;
+      }
+    }
+  }
+
+  //insertion sort, high frequency -> low frequency
+  std::stable_sort(psList.begin(), psList.end());
+  UInt uiPLTSizePrev;
+#if !SCM_T0064_REMOVE_PLT_SHARING
+  UInt uiPLTUsedSizePrev;
+#endif
+  Pel *pPalettePrev[3];
+  for (UInt comp = 0; comp < 3; comp++)
+  {
+#if SCM_T0064_REMOVE_PLT_SHARING
+    pPalettePrev[comp] = pcCU->getPLTPred(pcCU, pcCU->getZorderIdxInCtu(), comp, uiPLTSizePrev);
+#else
+    pPalettePrev[comp] = pcCU->getPLTPred(pcCU, pcCU->getZorderIdxInCtu(), comp, uiPLTSizePrev, uiPLTUsedSizePrev);
+#endif
+  }
+
+#if SCM_T0064_REMOVE_PLT_SHARING
+  if( uiPLTSize < maxPLTSizeSPS )
+  {
+#else
+  uiPLTSize = 0;
+#endif
+    for (Int i = 0; i < uiIdx; i++)
+    {
+      for (Int j = i - 1; j >= 0; j--)
+      {
+        if ( psList[j].uiCnt && psList[i].uiData[0] == psList[j].uiData[0]
+                             && psList[i].uiData[1] == psList[j].uiData[1]
+                             && psList[i].uiData[2] == psList[j].uiData[2]
+           )
+        {
+          psList[i].uiCnt = 0;
+          break;
+        }
+      }
+
+      Bool includeIntoPLT = true;
+      if( psList[i].uiCnt == 1 )
+      {
+        includeIntoPLT = false;
+        for( UInt uiIdxPrev = 0; uiIdxPrev < uiPLTSizePrev; uiIdxPrev++ )
+        {
+          UInt iCounter = 0;
+
+          for( UInt comp = 0; comp < 3; comp++ )
+          {
+            if( psList[i].uiData[comp] == pPalettePrev[comp][uiIdxPrev] )
+            {
+              iCounter++;
+            }
+            else
+            {
+              break;
+            }
+          }
+          if( iCounter == 3 )
+          {
+            includeIntoPLT = true;
+            break;
+          }
+        }
+      }
+
+      if( includeIntoPLT && psList[i].uiCnt)
+      {
+        Palette[0][uiPLTSize] = psList[i].uiData[0];
+        Palette[1][uiPLTSize] = psList[i].uiData[1];
+        Palette[2][uiPLTSize] = psList[i].uiData[2];
+        uiPLTSize++;
+        if (uiPLTSize == pcCU->getSlice()->getSPS()->getPLTMaxSize())
+        {
+          break;
+        }
+      }
+    }
+#if SCM_T0064_REMOVE_PLT_SHARING
+  }
+#endif
+}
+
+Void TComPrediction::calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalette[3], Pel* pValue, Pel*paPixelValue[3], Pel * paRecoValue[3], UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiIdx )
+{
+  Bool bLossless = pcCU->getCUTransquantBypass (0);
+  Int iQP[3];
+  Int iQPrem[3];
+  Int iQPper[3];
+  Int quantiserScale[3];
+  Int quantiserRightShift[3];
+  Int rightShiftOffset[3];
+  Int InvquantiserRightShift[3];
+  Int iAdd[3];
+  for (UInt ch = 0; ch < MAX_NUM_COMPONENT; ch++)
+  {
+    QpParam cQP(*pcCU, ComponentID(ch));
+    iQP[ch] = cQP.Qp;
+    iQPrem[ch] = iQP[ch] % 6;
+    iQPper[ch] = iQP[ch] / 6;
+    quantiserScale[ch] = g_quantScales[iQPrem[ch]];
+    quantiserRightShift[ch] = QUANT_SHIFT + iQPper[ch];
+    rightShiftOffset[ch] = 1 << (quantiserRightShift[ch] - 1);
+#if SCM_T0118_T0112_ESCAPE_COLOR_CODING
+    InvquantiserRightShift[ch] = IQUANT_SHIFT;
+    iAdd[ch] = 1 << (InvquantiserRightShift[ch] - 1);
+#else
+    InvquantiserRightShift[ch] = (IQUANT_SHIFT - iQPper[ch]);
+    iAdd[ch] = InvquantiserRightShift[ch] == 0 ? 0 : 1 << (InvquantiserRightShift[ch] - 1);
+#endif 
+  }
+
+  UInt uiY, uiX;
+  uiY = uiIdx / uiWidth;
+  uiX = uiIdx % uiWidth;
+  UInt uiScanIdx = uiY * uiStrideOrg + uiX;
+  UInt uiYIdxRaster = pcCU->getPLTScanRotationModeFlag(0)? (uiX * uiStrideOrg + uiY) : (uiY * uiStrideOrg + uiX);
+#if SCM_T0072_T0109_T0120_PLT_NON444
+  UInt uiScaleX = pcCU->getPic()->getComponentScaleX(COMPONENT_Cb);
+  UInt uiScaleY = pcCU->getPic()->getComponentScaleY(COMPONENT_Cb);
+  UInt uiXC, uiYC, uiScanIdxC, uiYIdxRasterC;
+  if(!pcCU->getPLTScanRotationModeFlag(0))
+  {
+    uiXC = (uiX>>uiScaleX);
+    uiYC = (uiY>>uiScaleY);
+    uiScanIdxC = uiYC * (uiStrideOrg>>uiScaleX) + uiXC;
+    uiYIdxRasterC = uiYC * (uiStrideOrg>>uiScaleX) + uiXC;
+  }
+  else
+  {
+    uiXC = (uiX>>uiScaleY);
+    uiYC = (uiY>>uiScaleX);
+    uiScanIdxC = uiYC * (uiStrideOrg>>uiScaleY) + uiXC;
+    uiYIdxRasterC = uiXC * (uiStrideOrg>>uiScaleX) + uiYC;
+  }
+#endif
+#if SCM_T0118_T0112_ESCAPE_COLOR_CODING
+  UInt uiMaxVal[3];
+  for (UInt ch = 0; ch < MAX_NUM_COMPONENT; ch++)
+  {
+    uiMaxVal[ch] = pcCU->xCalcMaxVals(pcCU, ComponentID(ch));
+  }
+#else
+  UInt uiMaxBit[3];
+  pcCU->xCalcMaxBits(pcCU, uiMaxBit);
+#endif
+
+  if (bLossless)
+  {
+    for (UInt ch = 0; ch < MAX_NUM_COMPONENT; ch ++)
+    {
+#if SCM_T0072_T0109_T0120_PLT_NON444
+      if( ch == 0 )
+      {
+#endif
+        paPixelValue[ch][uiScanIdx] =  pOrg[ch][uiYIdxRaster];
+        paRecoValue[ch][uiYIdxRaster] = pOrg[ch][uiYIdxRaster];
+#if SCM_T0072_T0109_T0120_PLT_NON444
+      }
+      else
+      {
+        if(   pcCU->getPic()->getChromaFormat() == CHROMA_444 ||
+            ( pcCU->getPic()->getChromaFormat() == CHROMA_420 && ((uiX&1) == 0) && ((uiY&1) == 0) ) ||
+            ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(0) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(0) && ((uiY&1) == 0))) )
+          )
+        {
+          paPixelValue[ch][uiScanIdxC] =  pOrg[ch][uiYIdxRasterC];
+          paRecoValue[ch][uiYIdxRasterC] = pOrg[ch][uiYIdxRasterC];
+        }
+      }
+#endif
+    }
+  }
+  else
+  {
+    BitDepths bitDepths = pcCU->getSlice()->getSPS()->getBitDepths();
+    for (UInt ch = 0; ch < MAX_NUM_COMPONENT; ch ++)
+    {
+#if SCM_T0072_T0109_T0120_PLT_NON444
+      if( ch == 0 )
+      {
+#endif
+#if SCM_T0118_T0112_ESCAPE_COLOR_CODING
+        paPixelValue[ch][uiScanIdx] = Pel(Clip3<Int>( 0, uiMaxVal[ch], ((pOrg[ch][uiYIdxRaster] * quantiserScale[ch] + rightShiftOffset[ch]) >> quantiserRightShift[ch]) ));
+        paRecoValue[ch][uiYIdxRaster] = (((paPixelValue[ch][uiScanIdx]*g_invQuantScales[iQPrem[ch]])<<iQPper[ch]) + iAdd[ch])>>InvquantiserRightShift[ch];
+#else
+        paPixelValue[ch][uiScanIdx] = Pel(ClipBD<Int>((pOrg[ch][uiYIdxRaster] * quantiserScale[ch] + rightShiftOffset[ch]) >> quantiserRightShift[ch], uiMaxBit[ch]));
+        paRecoValue[ch][uiYIdxRaster] = (paPixelValue[ch] [uiScanIdx]*g_invQuantScales[iQPrem[ch]] + iAdd[ch])>>InvquantiserRightShift[ch];
+#endif
+        paRecoValue[ch][uiYIdxRaster] = Pel(ClipBD<Int>(paRecoValue[ch][uiYIdxRaster], bitDepths.recon[ch? 1:0]));
+#if SCM_T0072_T0109_T0120_PLT_NON444
+      }
+      else
+      {
+        if(   pcCU->getPic()->getChromaFormat() == CHROMA_444 ||
+            ( pcCU->getPic()->getChromaFormat() == CHROMA_420 && ((uiX&1) == 0) && ((uiY&1) == 0)) ||
+            ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(0) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(0) && ((uiY&1) == 0))) )
+          )
+        {
+#if SCM_T0118_T0112_ESCAPE_COLOR_CODING
+          paPixelValue[ch][uiScanIdxC] = Pel(Clip3<Int>( 0, uiMaxVal[ch], ((pOrg[ch][uiYIdxRasterC] * quantiserScale[ch] + rightShiftOffset[ch]) >> quantiserRightShift[ch]) ));
+          paRecoValue[ch][uiYIdxRasterC] = (((paPixelValue[ch][uiScanIdxC]*g_invQuantScales[iQPrem[ch]])<<iQPper[ch]) + iAdd[ch])>>InvquantiserRightShift[ch];
+#else
+          paPixelValue[ch][uiScanIdxC] = Pel(ClipBD<Int>((pOrg[ch][uiYIdxRasterC] * quantiserScale[ch] + rightShiftOffset[ch]) >> quantiserRightShift[ch], uiMaxBit[ch]));
+          paRecoValue[ch][uiYIdxRasterC] = (paPixelValue[ch] [uiScanIdxC]*g_invQuantScales[iQPrem[ch]] + iAdd[ch])>>InvquantiserRightShift[ch];
+#endif 
+          paRecoValue[ch][uiYIdxRasterC] = Pel(ClipBD<Int>(paRecoValue[ch][uiYIdxRasterC], bitDepths.recon[ch? 1:0]));
+        }
+      }
+#endif
+    }
+  }
+}
+
+Bool TComPrediction::calLeftRun(TComDataCU* pcCU, Pel* pValue, UChar* pSPoint, UInt uiStartPos, UInt uiTotal, UInt &uiRun, UChar* pEscapeFlag)
+{
+  UInt uiIdx = uiStartPos;
+  Pel *pcIndexBlock = m_cIndexBlock;
+  while (uiIdx < uiTotal)
+  {
+    UInt uiTraIdx = m_puiScanOrder[uiIdx];  //unified position variable (raster scan)
+    pValue[uiTraIdx] = pcIndexBlock[uiTraIdx] < 0 ? pcIndexBlock[uiTraIdx] + pcCU->getSlice()->getSPS()->getPLTMaxSize() : pcIndexBlock[uiTraIdx];
+    Bool bMismatch = (pcIndexBlock[uiTraIdx] < 0);
+
+    pSPoint[uiTraIdx] = PLT_RUN_LEFT;
+    pEscapeFlag[uiTraIdx] = (pcIndexBlock[uiTraIdx] < 0)? 1: 0;
+    UInt leftTraIdx = uiIdx ? m_puiScanOrder[uiIdx - 1] : 0;
+    if( uiIdx > uiStartPos &&
+      ( ( pcIndexBlock[leftTraIdx] >= 0 && pValue[uiTraIdx] == pValue[leftTraIdx] && !bMismatch ) || ( bMismatch && pcIndexBlock[leftTraIdx] < 0 ) )
+      )
+    {
+      uiRun++;
+    }
+    else if (uiIdx > uiStartPos)
+    {
+      break;
+    }
+    uiIdx++;
+  }
+  return true;
+}
+
+Bool  TComPrediction::calAboveRun(TComDataCU* pcCU, Pel* pValue, UChar* pSPoint, UInt uiWidth, UInt uiStartPos, UInt uiTotal, UInt &uiRun, UChar* pEscapeFlag)
+{
+  UInt uiIdx = uiStartPos;
+  UInt uiY = 0;
+  Bool valid = false;
+  Pel *pcIndexBlock = m_cIndexBlock;
+  UInt uiTraIdx = m_puiScanOrder[uiIdx];  //unified position variable (raster scan)
+
+  uiY = uiTraIdx / uiWidth;
+  if( uiY == 0 )
+  {
+    return false;
+  }
+
+  while (uiIdx < uiTotal)
+  {
+    UInt uiStride = uiWidth;
+    uiTraIdx = m_puiScanOrder[uiIdx];  //unified position variable (raster scan)
+
+    pValue[uiTraIdx] = pcIndexBlock[uiTraIdx] < 0 ? pcIndexBlock[uiTraIdx] + pcCU->getSlice()->getSPS()->getPLTMaxSize() : pcIndexBlock[uiTraIdx];
+    Bool bMismatch = (pcIndexBlock[uiTraIdx] < 0);
+
+    pSPoint[uiTraIdx] = PLT_RUN_ABOVE;
+    pEscapeFlag[uiTraIdx] = (pcIndexBlock[uiTraIdx] < 0)? 1: 0;
+
+    if ( ( pcIndexBlock[uiTraIdx - uiStride] >= 0 && pValue[uiTraIdx] == pValue[uiTraIdx - uiStride] && !bMismatch ) ||
+         ( bMismatch && pcIndexBlock[uiTraIdx - uiStride] < 0 )
+       )
+    {
+      uiRun++;
+      valid = true;
+    }
+    else
+    {
+      break;
+    }
+    uiIdx++;
+  }
+  return valid;
+}
+
+Void  TComPrediction::rotationScan( Pel* pLevel, UInt uiWidth, UInt uiHeight, Bool isInverse )
+{
+  Pel tmpLevel;
+  UInt uiPos = 0;
+  UInt* puiScanOrder = g_scanOrder[SCAN_UNGROUPED][SCAN_VER][g_aucConvertToBit[uiWidth] + 2][g_aucConvertToBit[uiHeight] + 2];
+
+  for (UInt j = 1; j < uiHeight; j++)
+  {
+    uiPos += j;
+    for (UInt i = j; i < uiWidth; i++)
+    {
+      tmpLevel = pLevel[uiPos];
+      pLevel[uiPos] = pLevel[puiScanOrder[uiPos]];
+      pLevel[puiScanOrder[uiPos]] = tmpLevel;
+      uiPos++;
+    }
+  }
+}
+
+#if SCM_T0064_REMOVE_PLT_SHARING
+Void TComPrediction::derivePLTLossyForcePrediction(TComDataCU *pcCU, Pel *Palette[3], Pel *pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize, TComRdCost *pcCost)
+{
+  const Int iErrorLimit = getPLTErrLimit();
+  const UInt maxPLTSizeSPS = pcCU->getSlice()->getSPS()->getPLTMaxSize();
+  const UInt uiTotalSize = uiHeight * uiWidth;
+  SortingElement *psList = new SortingElement[uiTotalSize];
+  SortingElement sElement;
+  SortingElement *pListSort = new SortingElement[maxPLTSizeSPS + 1];
+
+  uiPLTSize = 0;
+  UInt uiIdx = 0, uiPos, uiBestIdx = 0;
+  Int last = -1;
+
+  UInt pltPredIndexUsed[MAX_PLT_PRED_SIZE];
+  memset( pltPredIndexUsed, 0, sizeof(pltPredIndexUsed) );
+
+  UChar pltIndexUsed[MAX_PLT_PRED_SIZE];
+  memset( pltIndexUsed, 0, sizeof(pltIndexUsed) );
+
+  Pel *pPred[3] = { pcCU->getLastPLTInLcuFinal(0), pcCU->getLastPLTInLcuFinal(1), pcCU->getLastPLTInLcuFinal(2) };
+
+#if SCM_T0072_T0109_T0120_PLT_NON444
+  UInt uiScaleX = pcCU->getPic()->getComponentScaleX(COMPONENT_Cb);
+  UInt uiScaleY = pcCU->getPic()->getComponentScaleY(COMPONENT_Cb);
+#endif
+
+  const BitDepths bitDepths = pcCU->getSlice()->getSPS()->getBitDepths();
+  for( UInt uiY = 0; uiY < uiHeight; uiY++ )
+  {
+    for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+    {
+      uiPos = uiY * uiWidth + uiX;
+#if SCM_T0072_T0109_T0120_PLT_NON444
+      UInt uiPosC = (uiY>>uiScaleY) * (uiWidth>>uiScaleX) + (uiX>>uiScaleX);
+#endif
+      UInt uiPLTIdx = 0;
+      UInt uiMinError = MAX_UINT;
+      while( uiPLTIdx < pcCU->getLastPLTInLcuSizeFinal(0) )
+      {
+        UInt uiAbsError = (abs(pPred[0][uiPLTIdx] - pSrc[0][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_LUMA] - 8))
+#if SCM_T0072_T0109_T0120_PLT_NON444
+                        + (abs(pPred[1][uiPLTIdx] - pSrc[1][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8))
+                        + (abs(pPred[2][uiPLTIdx] - pSrc[2][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8));
+#else
+                        + (abs(pPred[1][uiPLTIdx] - pSrc[1][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8))
+                        + (abs(pPred[2][uiPLTIdx] - pSrc[2][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8));
+#endif
+
+        if( uiAbsError < uiMinError )
+        {
+          uiBestIdx = uiPLTIdx;
+          uiMinError = uiAbsError;
+          if (uiMinError == 0)
+          {
+            break;
+          }
+        }
+        uiPLTIdx++;
+      }
+
+      if( uiMinError <= iErrorLimit )
+      {
+        pltPredIndexUsed[uiBestIdx]++;
+      }
+    }
+  }
+
+  while( uiIdx < maxPLTSizeSPS )
+  {
+    UInt maxNoIndexUsed = 0, bestIndex = 0;
+    for( UInt i = 0; i < pcCU->getLastPLTInLcuSizeFinal(0); i++ )
+    {
+      if( pltIndexUsed[i] == 0 && pltPredIndexUsed[i] > maxNoIndexUsed )
+      {
+        maxNoIndexUsed = pltPredIndexUsed[i];
+        bestIndex = i;
+      }
+    }
+    if( maxNoIndexUsed > 0 )
+    {
+      pltIndexUsed[bestIndex] = 1;
+
+      Palette[0][uiPLTSize] = pPred[0][bestIndex];
+      Palette[1][uiPLTSize] = pPred[1][bestIndex];
+      Palette[2][uiPLTSize] = pPred[2][bestIndex];
+      uiPLTSize++;
+    }
+    else
+    {
+      break;
+    }
+    uiIdx++;
+  }
+
+  uiIdx = 0;
+  for( UInt uiY = 0; uiY < uiHeight; uiY++ )
+  {
+    for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+    {
+      uiPos = uiY * uiWidth + uiX;
+#if SCM_T0072_T0109_T0120_PLT_NON444
+      UInt uiPosC = (uiY>>uiScaleY) * (uiWidth>>uiScaleX) + (uiX>>uiScaleX);
+#endif
+
+      UInt uiPLTIdx = 0;
+      UInt uiMinError = MAX_UINT;
+      while( uiPLTIdx < uiPLTSize )
+      {
+        UInt uiAbsError = (abs(Palette[0][uiPLTIdx] - pSrc[0][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_LUMA] - 8))
+#if SCM_T0072_T0109_T0120_PLT_NON444
+                        + (abs(Palette[1][uiPLTIdx] - pSrc[1][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8))
+                        + (abs(Palette[2][uiPLTIdx] - pSrc[2][uiPosC]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8));
+#else
+                        + (abs(Palette[1][uiPLTIdx] - pSrc[1][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8))
+                        + (abs(Palette[2][uiPLTIdx] - pSrc[2][uiPos]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8));
+#endif
+
+        if (uiAbsError < uiMinError)
+        {
+          uiMinError = uiAbsError;
+          if (uiMinError == 0)
+          {
+            break;
+          }
+        }
+        uiPLTIdx++;
+      }
+
+      if( uiMinError > iErrorLimit )
+      {
+#if SCM_T0072_T0109_T0120_PLT_NON444
+        sElement.setAll(pSrc[0][uiPos], pSrc[1][uiPosC], pSrc[2][uiPosC]);
+#else
+        sElement.setAll(pSrc[0][uiPos], pSrc[1][uiPos], pSrc[2][uiPos]);
+#endif
+        Int besti = last, bestSAD = (last == -1) ? MAX_UINT : psList[last].getSAD(sElement, pcCU->getSlice()->getSPS()->getBitDepths());
+        if (bestSAD)
+        {
+          for (Int i = uiIdx - 1; i >= 0; i--)
+          {
+            UInt sad = psList[i].getSAD(sElement, pcCU->getSlice()->getSPS()->getBitDepths());
+            if (sad < bestSAD)
+            {
+              bestSAD = sad;
+              besti = i;
+              if (!sad)
+              {
+                break;
+              }
+            }
+          }
+        }
+
+        if( besti >= 0 && psList[besti].almostEqualData(sElement, iErrorLimit, pcCU->getSlice()->getSPS()->getBitDepths()) )
+        {
+          psList[besti].addElement(sElement);
+          last = besti;
+        }
+        else
+        {
+          psList[uiIdx].copyDataFrom(sElement);
+          psList[uiIdx].uiCnt = 1;
+          last = uiIdx;
+          uiIdx++;
+        }
+      }
+    }
+  }
+
+  for( Int i = 0; i < maxPLTSizeSPS; i++ )
+  {
+    pListSort[i].uiCnt = 0;
+    pListSort[i].setAll(0, 0, 0);
+  }
+
+  //bubble sorting
+  UInt uiDictMaxSize = 1;
+  for( Int i = 0; i < uiIdx; i++ )
+  {
+    if( psList[i].uiCnt > pListSort[uiDictMaxSize - 1].uiCnt )
+    {
+      Int j;
+      for( j = uiDictMaxSize; j > 0; j-- )
+      {
+        if( psList[i].uiCnt > pListSort[j - 1].uiCnt )
+        {
+          pListSort[j].copyAllFrom(pListSort[j - 1]);
+          uiDictMaxSize = std::min(uiDictMaxSize + 1, maxPLTSizeSPS);
+        }
+        else
+        {
+          break;
+        }
+      }
+      pListSort[j].copyAllFrom(psList[i]);
+    }
+  }
+
+  Double bitCost = pcCost->getLambda() * 24;
+
+  for( Int i = 0; i < maxPLTSizeSPS && uiPLTSize < maxPLTSizeSPS; i++ )
+  {
+    if( pListSort[i].uiCnt )
+    {
+      Int iHalf = pListSort[i].uiCnt >> 1;
+      Palette[0][uiPLTSize] = (pListSort[i].uiSumData[0] + iHalf) / pListSort[i].uiCnt;
+      Palette[1][uiPLTSize] = (pListSort[i].uiSumData[1] + iHalf) / pListSort[i].uiCnt;
+      Palette[2][uiPLTSize] = (pListSort[i].uiSumData[2] + iHalf) / pListSort[i].uiCnt;
+
+      Bool bDuplicate = false;
+      if( pListSort[i].uiCnt == 1 )
+      {
+        bDuplicate = true;
+      }
+      else
+      {
+        Int best = -1;
+        if( iErrorLimit )
+        {  
+          Double pal[3] = { pListSort[i].uiSumData[0] / (Double)pListSort[i].uiCnt,
+                            pListSort[i].uiSumData[1] / (Double)pListSort[i].uiCnt,
+                            pListSort[i].uiSumData[2] / (Double)pListSort[i].uiCnt };
+
+          Double err = pal[0] - Palette[0][uiPLTSize];
+          Double bestCost = (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_LUMA] - 8)));
+          err = pal[1] - Palette[1][uiPLTSize]; bestCost += (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8)));
+          err = pal[2] - Palette[2][uiPLTSize]; bestCost += (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8)));
+          bestCost = bestCost * pListSort[i].uiCnt + bitCost;
+
+          for( Int t = 0; t < uiPLTSize; t++ )
+          {
+            if( Palette[0][uiPLTSize] == Palette[0][t] && Palette[1][uiPLTSize] == Palette[1][t] && Palette[2][uiPLTSize] == Palette[2][t] )
+            {
+              bDuplicate = true;
+              break;
+            }
+
+            err = pal[0] - Palette[0][t];
+            Double cost = (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_LUMA] - 8)));
+            err = pal[1] - Palette[1][t]; cost += (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8)));
+            err = pal[2] - Palette[2][t]; cost += (err*err) / (1 << (2 * DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA] - 8)));
+            cost *= pListSort[i].uiCnt;
+            if( cost < bestCost )
+            {
+              best = t;
+              bestCost = cost;
+            }
+          }
+          if( best != -1 )
+          {
+            bDuplicate = true;
+          }
+        }
+      }
+
+      if( !bDuplicate )
+      {
+        uiPLTSize++;
+      }
+    }
+    else
+    {
+      break;
+    }
+  }
+
+  delete[] psList;
+  delete[] pListSort;
+}
+#endif
 
 //! \}

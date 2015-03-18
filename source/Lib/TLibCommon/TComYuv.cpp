@@ -439,4 +439,196 @@ Void TComYuv::removeHighFreq( const TComYuv* pcYuvSrc, const UInt uiPartIdx, con
   }
 }
 
+#if SCM_T0132_ACT_CLIP
+Void TComYuv::convert(const Bool extendedPrecision, const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, Bool bForwardConversion, const BitDepths& bitDepths, Bool bLossless, TComYuv* pcYuvNoCorrResi)
+#else
+Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, Bool bForwardConversion, const BitDepths& bitDepths, Bool bLossless, TComYuv* pcYuvNoCorrResi)
+#endif 
+{
+#if SCM_T0132_ACT_CLIP
+  const Int lumaBitDepth   = bitDepths.recon[CHANNEL_TYPE_LUMA];
+  const Int chromaBitDepth = bitDepths.recon[CHANNEL_TYPE_CHROMA];
+
+  Int CoeffMinY = -(1<<(extendedPrecision? std::max(15, lumaBitDepth+6):15));
+  Int CoeffMinC = -(1<<(extendedPrecision? std::max(15, chromaBitDepth+6):15));
+  Int CoeffMaxY =  (1<<(extendedPrecision? std::max(15, lumaBitDepth+6):15)) - 1;
+  Int CoeffMaxC =  (1<<(extendedPrecision? std::max(15, chromaBitDepth+6):15)) - 1;
+#endif
+  assert(getChromaFormat() == CHROMA_444);
+  UInt uiPartSize = uiWidth;
+
+  Pel* pOrg0  = getAddrPix( (ComponentID)0, uiPixX, uiPixY );
+  Pel* pOrg1  = getAddrPix( (ComponentID)1, uiPixX, uiPixY );
+  Pel* pOrg2  = getAddrPix( (ComponentID)2, uiPixX, uiPixY );
+
+  Pel* pDst0  = getAddrPix( (ComponentID)0, uiPixX, uiPixY );
+  Pel* pDst1  = getAddrPix( (ComponentID)1, uiPixX, uiPixY );
+  Pel* pDst2  = getAddrPix( (ComponentID)2, uiPixX, uiPixY );
+
+  if(pcYuvNoCorrResi)
+  {
+    pDst0  = pcYuvNoCorrResi->getAddrPix( (ComponentID)0, uiPixX, uiPixY );
+    pDst1  = pcYuvNoCorrResi->getAddrPix( (ComponentID)1, uiPixX, uiPixY );
+    pDst2  = pcYuvNoCorrResi->getAddrPix( (ComponentID)2, uiPixX, uiPixY );
+  }
+  const Int  iStride0 = getStride((ComponentID)0);
+  const Int  iStride1 = getStride((ComponentID)1);
+  const Int  iStride2 = getStride((ComponentID)2);
+
+  if(bForwardConversion)
+  {
+    if(!bLossless)
+    {
+      Int maxBitDepth  = std::max(bitDepths.recon[CHANNEL_TYPE_LUMA], bitDepths.recon[CHANNEL_TYPE_CHROMA]);
+      Int iShiftLuma   = maxBitDepth - bitDepths.recon[CHANNEL_TYPE_LUMA];
+      Int iShiftChroma = maxBitDepth - bitDepths.recon[CHANNEL_TYPE_CHROMA];
+      Int iRoundLuma   = 1<<(1+iShiftLuma);
+      Int iRoundChroma = 1<<(1+iShiftChroma);
+      for(Int y=0; y<uiPartSize; y++) 
+      { 
+        for(Int x=0; x<uiPartSize; x++) 
+        {
+          Int r, g, b;
+          r = pOrg2[x]<<iShiftChroma;
+          g = pOrg0[x]<<iShiftLuma;
+          b = pOrg1[x]<<iShiftChroma;
+
+          pDst0[x] = (g<<1) +r+b  ;
+          pDst1[x] = (g<<1) -r-b  ;
+          pDst2[x] = ((r-b) << 1) ;
+          pDst0[x] = (pDst0[x] + iRoundLuma)   >> (2+iShiftLuma);
+          pDst1[x] = (pDst1[x] + iRoundChroma) >> (2+iShiftChroma);
+          pDst2[x] = (pDst2[x] + iRoundChroma) >> (2+iShiftChroma);
+        }
+        pOrg0 += iStride0;
+        pOrg1 += iStride1;
+        pOrg2 += iStride2;
+        pDst0 += iStride0;
+        pDst1 += iStride1;
+        pDst2 += iStride2;
+      }
+    }
+    else
+    {
+      for(Int y=0; y<uiPartSize; y++)
+      {
+        for(Int x=0; x<uiPartSize; x++)
+        {
+          Int r, g, b;
+          r = pOrg2[x];
+          g = pOrg0[x];
+          b = pOrg1[x];
+
+          Int Co = r-b;
+          Int t = b + (Co>>1);
+          Int Cg = g - t;
+          pDst0[x] = t + (Cg>>1);
+          pDst1[x] = Cg;
+          pDst2[x] = Co;
+        }
+        pOrg0 += iStride0;
+        pOrg1 += iStride1;
+        pOrg2 += iStride2;
+        pDst0 += iStride0;
+        pDst1 += iStride1;
+        pDst2 += iStride2;
+      }
+    }
+  }
+  else
+  {
+    Int maxBitDepth  = std::max(bitDepths.recon[CHANNEL_TYPE_LUMA], bitDepths.recon[CHANNEL_TYPE_CHROMA]);
+    Int iShiftLuma   = maxBitDepth - bitDepths.recon[CHANNEL_TYPE_LUMA];
+    Int iShiftChroma = maxBitDepth - bitDepths.recon[CHANNEL_TYPE_CHROMA];
+    Int iRoundLuma   = iShiftLuma? (1<<(iShiftLuma-1)): 0;
+    Int iRoundChroma = iShiftChroma? (1<<(iShiftChroma-1)): 0;
+    for(Int y=0; y<uiPartSize; y++)
+    {
+      for(Int x=0; x<uiPartSize; x++)
+      {
+        Int y0, cg, co;
+#if SCM_T0132_ACT_CLIP
+        y0 = Clip3<Int>(CoeffMinY,CoeffMaxY, pOrg0[x]);
+        cg = Clip3<Int>(CoeffMinC,CoeffMaxC, pOrg1[x]);
+        co = Clip3<Int>(CoeffMinC,CoeffMaxC, pOrg2[x]);
+#else
+        y0 = pOrg0[x];
+        cg = pOrg1[x];
+        co = pOrg2[x];
+#endif
+        if(!bLossless)
+        {
+          y0 <<= iShiftLuma;
+          cg <<= (iShiftChroma + 1);
+          co <<= (iShiftChroma + 1);
+        }
+        Int t = y0 - (cg>>1);
+        pDst0[x] = cg + t;
+        pDst1[x] = t - (co>>1);
+        pDst2[x] = co + pDst1[x];
+        if(!bLossless)
+        {
+          pDst0[x] = (pDst0[x] + iRoundLuma)   >> iShiftLuma;
+          pDst1[x] = (pDst1[x] + iRoundChroma) >> iShiftChroma;
+          pDst2[x] = (pDst2[x] + iRoundChroma) >> iShiftChroma;
+        }
+      }
+      pOrg0 += iStride0;
+      pOrg1 += iStride1;
+      pOrg2 += iStride2;
+      pDst0 += iStride0;
+      pDst1 += iStride1;
+      pDst2 += iStride2;
+    }
+  }
+}
+
+
+Void TComYuv::DefaultConvertPix(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, const BitDepths& bitDepths )
+{
+  assert(getChromaFormat() == CHROMA_444);
+  UInt uiPartSize = uiWidth;
+  Int  iMaxLuma   = (1<<bitDepths.recon[CHANNEL_TYPE_LUMA])   - 1;
+  Int  iMaxChroma = (1<<bitDepths.recon[CHANNEL_TYPE_CHROMA]) - 1;
+  Int  iChromaOffset = (1<<(bitDepths.recon[CHANNEL_TYPE_CHROMA]-1));
+  Int maxBitDepth  = std::max(bitDepths.recon[CHANNEL_TYPE_LUMA], bitDepths.recon[CHANNEL_TYPE_CHROMA]);
+  Int iShiftLuma   = maxBitDepth - bitDepths.recon[CHANNEL_TYPE_LUMA];
+  Int iShiftChroma = maxBitDepth - bitDepths.recon[CHANNEL_TYPE_CHROMA];
+  Int iRoundLuma   = 1<<(1+iShiftLuma);
+  Int iRoundChroma = 1<<(1+iShiftChroma);
+
+  Pel* pDst0  = getAddrPix( (ComponentID)0, uiPixX, uiPixY );
+  Pel* pDst1  = getAddrPix( (ComponentID)1, uiPixX, uiPixY );
+  Pel* pDst2  = getAddrPix( (ComponentID)2, uiPixX, uiPixY );
+
+  const Int  iStride0 = getStride((ComponentID)0);
+  const Int  iStride1 = getStride((ComponentID)1);
+  const Int  iStride2 = getStride((ComponentID)2);
+
+  for(Int y=0; y<uiPartSize; y++) 
+  {
+    for(Int x=0; x<uiPartSize; x++) 
+    {
+      Int r, g, b;
+      r = pDst2[x]<<iShiftChroma;
+      g = pDst0[x]<<iShiftLuma;
+      b = pDst1[x]<<iShiftChroma;
+
+      pDst0[x] = ((g<<1)+r+b + iRoundLuma)>>(2+iShiftLuma);
+      pDst1[x] = ((g<<1)-r-b + iRoundChroma)>>(2+iShiftChroma);
+      pDst2[x] = (((r-b)<<1)  + iRoundChroma)>>(2+iShiftChroma);
+
+      pDst1[x] += iChromaOffset;
+      pDst2[x] += iChromaOffset;
+      pDst0[x] = Clip3( 0, iMaxLuma,   Int(pDst0[x]) );
+      pDst1[x] = Clip3( 0, iMaxChroma, Int(pDst1[x]) );
+      pDst2[x] = Clip3( 0, iMaxChroma, Int(pDst2[x]) );
+    }
+
+    pDst0 += iStride0;
+    pDst1 += iStride1;
+    pDst2 += iStride2; 
+  }
+}
+
 //! \}

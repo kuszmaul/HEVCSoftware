@@ -106,9 +106,15 @@ public:
                     , Bool onlyEstMergeInfo = false
                     );
 
+  Pel   writePLTIndex          ( UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0, UChar *pEscapeFlag = 0);
+  Void  encodeRun              ( UInt uiRun, Bool bCopyTopMode, const UInt uiPltIdx, const UInt uiMaxRun );
+
 private:
   Void  xWriteUnarySymbol    ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset );
   Void  xWriteUnaryMaxSymbol ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
+  Void  xEncodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, UInt &uiNumPLTPredicted, UInt uiMaxPLTSize);
+  Void  xWriteTruncBinCode      ( UInt uiSymbol, UInt uiMaxSymbol );
+  Void codeScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void  xWriteEpExGolomb     ( UInt uiSymbol, UInt uiCount );
   Void  xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam, const Bool useLimitedPrefixLength, const Int maxLog2TrDynamicRange );
 
@@ -118,6 +124,9 @@ private:
   Void codeDFFlag( UInt /*uiCode*/, const Char* /*pSymbolName*/ )       {printf("Not supported in codeDFFlag()\n"); assert(0); exit(1);};
   Void codeDFSvlc( Int /*iCode*/, const Char* /*pSymbolName*/ )         {printf("Not supported in codeDFSvlc()\n"); assert(0); exit(1);};
 
+  UInt xWriteTruncMsbP1      ( UInt uiSymbol, ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut);
+  Void xWriteTruncMsbP1RefinementBits ( UInt uiSymbol, ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut);
+
 protected:
   TComBitIf*    m_pcBitIf;
   TEncBinIf*    m_pcBinIf;
@@ -126,6 +135,12 @@ protected:
 
 public:
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codePLTModeFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codePLTModeSyntax      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp);
+#if !SCM_T0064_REMOVE_PLT_SHARING
+  Void codePLTSharingModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
+  Void encodeSPoint          ( TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiIdx, UInt uiWidth, UChar *pSPoint, UInt *uiRefScanOrder );
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -133,6 +148,10 @@ public:
   Void codeMVPIdx        ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
 
   Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+  Void codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
+  Void codeColourTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeTransformSubdivFlag ( UInt uiSymbol, UInt uiCtx );
@@ -156,6 +175,13 @@ public:
   Void codeCoeffNxN            ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID );
   Void codeTransformSkipFlags ( TComTU &rTu, ComponentID component );
 
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+  Void codeIntraBCFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeIntraBC             ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeIntraBCBvd          ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
+  Void estBvdBin0Cost          (Int *Bin0Cost);
+#endif
+
   // -------------------------------------------------------------------------------------------------------------------
   // for RD-optimizatioon
   // -------------------------------------------------------------------------------------------------------------------
@@ -172,6 +198,7 @@ public:
 
   TEncBinIf* getEncBinIf()  { return m_pcBinIf; }
 private:
+  UInt* m_puiScanOrder;
   ContextModel         m_contextModels[MAX_NUM_CTX_MOD];
   Int                  m_numContextModels;
   ContextModel3DBuffer m_cCUSplitFlagSCModel;
@@ -205,10 +232,27 @@ private:
   ContextModel3DBuffer m_CUTransquantBypassFlagSCModel;
   ContextModel3DBuffer m_explicitRdpcmFlagSCModel;
   ContextModel3DBuffer m_explicitRdpcmDirSCModel;
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+  ContextModel3DBuffer m_cIntraBCPredFlagSCModel;
+#endif
   ContextModel3DBuffer m_cCrossComponentPredictionSCModel;
-
+  ContextModel3DBuffer m_PLTModeFlagSCModel;
+  ContextModel3DBuffer m_SPointSCModel;
+  ContextModel3DBuffer m_cCopyTopRunSCModel;
+  ContextModel3DBuffer m_cRunSCModel;
+#if !SCM_T0064_REMOVE_PLT_SHARING
+  ContextModel3DBuffer m_PLTSharingModeFlagSCModel;
+#endif
+#if SCM_T0065_PLT_IDX_GROUP
+  ContextModel3DBuffer m_PLTLastRunTypeSCModel;
+#endif
+  ContextModel3DBuffer m_PLTScanRotationModeFlagSCModel;
   ContextModel3DBuffer m_ChromaQpAdjFlagSCModel;
   ContextModel3DBuffer m_ChromaQpAdjIdcSCModel;
+  ContextModel3DBuffer m_cCUColourTransformFlagSCModel;
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+  ContextModel3DBuffer m_cIntraBCBVDSCModel;
+#endif
 
   UInt m_golombRiceAdaptationStatistics[RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS];
 };

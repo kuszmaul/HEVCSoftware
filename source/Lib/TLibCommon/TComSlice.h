@@ -757,11 +757,21 @@ private:
   BitDepths        m_bitDepths;
   Int              m_qpBDOffset[MAX_NUM_CHANNEL_TYPE];
   Bool             m_useExtendedPrecision;
+  Bool             m_useIntraBlockCopy;
   Bool             m_useHighPrecisionPredictionWeighting;
   Bool             m_useResidualRotation;
   Bool             m_useSingleSignificanceMapContext;
   Bool             m_useGolombRiceParameterAdaptation;
   Bool             m_alignCABACBeforeBypass;
+  Bool             m_usePaletteMode;
+  UInt             m_uiPLTMaxSize;
+  UInt             m_uiPLTMaxPredSize;
+#if SCM_T0069_AMVR_REFINEMENT
+  Int              m_motionVectorResolutionControlIdc;
+#else
+  Bool             m_useAdaptiveMvResolution;
+#endif
+  Bool             m_disableIntraBoundaryFilter;
   Bool             m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
   Int              m_pcmBitDepths[MAX_NUM_CHANNEL_TYPE];
   Bool             m_bPCMFilterDisableFlag;
@@ -891,6 +901,8 @@ public:
   Void                   setQpBDOffset(ChannelType type, Int i)                                          { m_qpBDOffset[type] = i;                                              }
   Bool                   getUseExtendedPrecision() const                                                 { return m_useExtendedPrecision;                                       }
   Void                   setUseExtendedPrecision(Bool value)                                             { m_useExtendedPrecision = value;                                      }
+  Bool                   getUseIntraBlockCopy()         const                                            { return m_useIntraBlockCopy;  }
+  Void                   setUseIntraBlockCopy(Bool value)                                                { m_useIntraBlockCopy = value; }
   Bool                   getUseHighPrecisionPredictionWeighting() const                                  { return m_useHighPrecisionPredictionWeighting;                        }
   Void                   setUseHighPrecisionPredictionWeighting(Bool value)                              { m_useHighPrecisionPredictionWeighting = value;                       }
 
@@ -908,6 +920,22 @@ public:
 
   Bool                   getAlignCABACBeforeBypass()                 const                               { return m_alignCABACBeforeBypass;                                     }
   Void                   setAlignCABACBeforeBypass(const Bool value)                                     { m_alignCABACBeforeBypass = value;                                    }
+
+  Bool                   getUsePLTMode() const                                                           { return m_usePaletteMode;                                             }
+  Void                   setUsePLTMode(const Bool value)                                                 { m_usePaletteMode = value;                                            }
+  UInt                   getPLTMaxSize() const                                                           { return m_uiPLTMaxSize;                                               }
+  Void                   setPLTMaxSize(const UInt value)                                                 { m_uiPLTMaxSize = value;                                              }
+  UInt                   getPLTMaxPredSize() const                                                       { return m_uiPLTMaxPredSize;                                           }
+  Void                   setPLTMaxPredSize(const UInt value)                                             { m_uiPLTMaxPredSize = value;                                          }
+#if SCM_T0069_AMVR_REFINEMENT
+  Int                    getMotionVectorResolutionControlIdc() const                                     { return m_motionVectorResolutionControlIdc;                           }
+  Void                   setMotionVectorResolutionControlIdc( Int idc )                                  { m_motionVectorResolutionControlIdc = idc;                            }
+#else
+  Bool                   getUseAdaptiveMvResolution() const                                              { return m_useAdaptiveMvResolution;                                    }
+  Void                   setUseAdaptiveMvResolution( Bool b )                                            { m_useAdaptiveMvResolution = b;                                       }
+#endif
+  Void                   setDisableIntraBoundaryFilter( Bool b)                                          { m_disableIntraBoundaryFilter = b;                                    }
+  Bool                   getDisableIntraBoundaryFilter() const                                           { return m_disableIntraBoundaryFilter;                                 }
 
   Bool                   getUseResidualDPCM(const RDPCMSignallingMode signallingMode) const              { return m_useResidualDPCM[signallingMode];                            }
   Void                   setUseResidualDPCM(const RDPCMSignallingMode signallingMode, const Bool value)  { m_useResidualDPCM[signallingMode] = value;                           }
@@ -999,6 +1027,13 @@ private:
   Int              m_chromaCbQpOffset;
   Int              m_chromaCrQpOffset;
 
+#if SCM_T0140_ACT_QP_OFFSET
+  Bool             m_useSliceACTOffset;
+  Int              m_actYQpOffset;
+  Int              m_actCbQpOffset;
+  Int              m_actCrQpOffset;
+#endif
+
   UInt             m_numRefIdxL0DefaultActive;
   UInt             m_numRefIdxL1DefaultActive;
 
@@ -1037,7 +1072,12 @@ private:
   Bool             m_listsModificationPresentFlag;
   UInt             m_log2ParallelMergeLevelMinus2;
   Int              m_numExtraSliceHeaderBits;
-
+  Bool             m_useColourTrans;
+#if SCM_T0048_PLT_PRED_IN_PPS
+  UInt             m_uiNumPLTPred;
+  Pel              m_aiPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE];
+  Int              m_palettePredictorBitDepth[MAX_NUM_CHANNEL_TYPE];
+#endif
 public:
                          TComPPS();
   virtual                ~TComPPS();
@@ -1173,6 +1213,23 @@ public:
   Bool                   getLoopFilterAcrossSlicesEnabledFlag() const                     { return m_loopFilterAcrossSlicesEnabledFlag;   }
   Bool                   getSliceHeaderExtensionPresentFlag() const                       { return m_sliceHeaderExtensionPresentFlag;     }
   Void                   setSliceHeaderExtensionPresentFlag(Bool val)                     { m_sliceHeaderExtensionPresentFlag = val;      }
+
+  Bool     getUseColourTrans()                 const { return m_useColourTrans;}
+  Void     setUseColourTrans(const Bool value)       { m_useColourTrans= value;}
+
+#if SCM_T0140_ACT_QP_OFFSET
+  Bool     getUseSliceACTOffset()                 const { return m_useSliceACTOffset;}
+  Void     setUseSliceACTOffset(const Bool value)       { m_useSliceACTOffset= value;}
+  Void     setActQpOffset(ComponentID compID, Int i ) { if (compID==COMPONENT_Y) m_actYQpOffset = i; else if (compID==COMPONENT_Cb) m_actCbQpOffset = i; else if (compID==COMPONENT_Cr) m_actCrQpOffset= i; else assert(0); }
+  Int      getActQpOffset(ComponentID compID) const { return (compID==COMPONENT_Y) ? m_actYQpOffset : (compID==COMPONENT_Cb ? m_actCbQpOffset : m_actCrQpOffset ); }
+#endif
+#if SCM_T0048_PLT_PRED_IN_PPS
+  UInt     getNumPLTPred()                     const { return m_uiNumPLTPred; }
+  Void     setNumPLTPred(UInt num)                   { m_uiNumPLTPred = num; }
+  Pel*     getPLTPred(UInt ch)                 const { return const_cast<Pel*>(m_aiPLT[ch]); }
+  Int      getPalettePredictorBitDepth(ChannelType type) const   { return m_palettePredictorBitDepth[type]; }
+  Void     setPalettePredictorBitDepth(ChannelType type, Int u ) { m_palettePredictorBitDepth[type] = u;    }
+#endif
 };
 
 struct WPScalingParam
@@ -1235,6 +1292,9 @@ private:
   //  Data
   Int                        m_iSliceQpDelta;
   Int                        m_iSliceChromaQpDelta[MAX_NUM_COMPONENT];
+#if SCM_T0140_ACT_QP_OFFSET
+  Int                        m_iSliceACTQpDelta[MAX_NUM_COMPONENT];
+#endif
   TComPic*                   m_apcRefPicList [NUM_REF_PIC_LIST_01][MAX_NUM_REF+1];
   Int                        m_aiRefPOCList  [NUM_REF_PIC_LIST_01][MAX_NUM_REF+1];
   Bool                       m_bIsUsedAsLongTerm[NUM_REF_PIC_LIST_01][MAX_NUM_REF+1];
@@ -1292,6 +1352,11 @@ private:
   Bool                       m_LFCrossSliceBoundaryFlag;
 
   Bool                       m_enableTMVPFlag;
+  Bool                       m_useIntegerMv;
+
+#if SCM_T0116_IBCSEARCH_OPTIMIZE
+  TComPic*                   m_pcLastEncPic;
+#endif
 
   SliceType                  m_encCABACTableIdx;           // Used to transmit table selection across slices.
 
@@ -1337,6 +1402,9 @@ public:
 #endif
   Int                         getSliceQpDelta() const                                { return m_iSliceQpDelta;                                       }
   Int                         getSliceChromaQpDelta(ComponentID compID) const        { return isLuma(compID) ? 0 : m_iSliceChromaQpDelta[compID];    }
+#if SCM_T0140_ACT_QP_OFFSET
+  Int                         getSliceActQpDelta(ComponentID compID)    const        { return  m_iSliceACTQpDelta[compID];                           }
+#endif
   Bool                        getUseChromaQpAdj() const                              { return m_ChromaQpAdjEnabled;                                  }
   Bool                        getDeblockingFilterDisable() const                     { return m_deblockingFilterDisable;                             }
   Bool                        getDeblockingFilterOverrideFlag() const                { return m_deblockingFilterOverrideFlag;                        }
@@ -1374,6 +1442,9 @@ public:
   Void                        setSliceQpBase( Int i )                                { m_iSliceQpBase      = i;                                      }
 #endif
   Void                        setSliceQpDelta( Int i )                               { m_iSliceQpDelta     = i;                                      }
+#if SCM_T0140_ACT_QP_OFFSET
+  Void                        setSliceActQpDelta( ComponentID compID, Int i )        { m_iSliceACTQpDelta[compID] = i;                               }
+#endif
   Void                        setSliceChromaQpDelta( ComponentID compID, Int i )     { m_iSliceChromaQpDelta[compID] = isLuma(compID) ? 0 : i;       }
   Void                        setUseChromaQpAdj( Bool b )                            { m_ChromaQpAdjEnabled = b;                                     }
   Void                        setDeblockingFilterDisable( Bool b )                   { m_deblockingFilterDisable= b;                                 }
@@ -1513,6 +1584,14 @@ public:
 
   Void                        setEnableTMVPFlag( Bool   b )                          { m_enableTMVPFlag = b;                                         }
   Bool                        getEnableTMVPFlag()                                    { return m_enableTMVPFlag;                                      }
+
+  Void setUseIntegerMv           ( Bool b    )    { m_useIntegerMv = b; }
+  Bool getUseIntegerMv           ()               { return m_useIntegerMv; }
+
+#if SCM_T0116_IBCSEARCH_OPTIMIZE
+  TComPic*                    getLastEncPic()                                        { return m_pcLastEncPic;                                        }
+  Void                        setLastEncPic(TComPic *pcPic)                          { m_pcLastEncPic=pcPic;                                         }
+#endif
 
   Void                        setEncCABACTableIdx( SliceType idx )                   { m_encCABACTableIdx = idx;                                     }
   SliceType                   getEncCABACTableIdx() const                            { return m_encCABACTableIdx;                                    }

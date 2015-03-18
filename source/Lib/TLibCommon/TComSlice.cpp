@@ -106,6 +106,10 @@ TComSlice::TComSlice()
 , m_temporalLayerNonReferenceFlag ( false )
 , m_LFCrossSliceBoundaryFlag      ( false )
 , m_enableTMVPFlag                ( true )
+, m_useIntegerMv                  ( false )
+#if SCM_T0116_IBCSEARCH_OPTIMIZE
+, m_pcLastEncPic                  ( NULL )
+#endif
 , m_encCABACTableIdx              (I_SLICE)
 {
   for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
@@ -117,6 +121,9 @@ TComSlice::TComSlice()
   {
     m_lambdas            [component] = 0.0;
     m_iSliceChromaQpDelta[component] = 0;
+#if SCM_T0140_ACT_QP_OFFSET
+    m_iSliceACTQpDelta   [component] = 0;
+#endif
   }
 
   initEqualRef();
@@ -165,6 +172,9 @@ Void TComSlice::initSlice()
   for (UInt component = 0; component < MAX_NUM_COMPONENT; component++)
   {
     m_iSliceChromaQpDelta[component] = 0;
+#if SCM_T0140_ACT_QP_OFFSET
+    m_iSliceACTQpDelta   [component] = 0;
+#endif
   }
 
   m_maxNumMergeCand = MRG_MAX_NUM_CANDS;
@@ -325,6 +335,25 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
       ::memset( m_apcRefPicList, 0, sizeof (m_apcRefPicList));
       ::memset( m_aiNumRefIdx,   0, sizeof ( m_aiNumRefIdx ));
 
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+      if( m_pcRPS->getNumberOfPictures() == 0 )
+      {
+        m_apcRefPicList[REF_PIC_LIST_INTRABC][0] = *(rcListPic.begin());
+        m_aiNumRefIdx[REF_PIC_LIST_INTRABC] = 1;
+      }
+#endif
+
+#if SCM_T0116_IBCSEARCH_OPTIMIZE
+      if( m_pcRPS->getNumberOfPictures() == 0 )
+      {
+        TComPic *pPrevPic = xGetRefPic(rcListPic, max(0, getPOC()-1));
+        if ( pPrevPic->getSlice( 0 )->getPOC() != max( 0, getPOC()-1 ) )
+        {
+          pPrevPic = xGetRefPic( rcListPic, getPOC() );
+        }
+        setLastEncPic(pPrevPic);
+      }
+#endif
       return;
     }
 
@@ -400,7 +429,11 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
       assert(numPicTotalCurr == 0);
     }
 
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+    if ( (m_eSliceType == I_SLICE) || (getNumRefIdx(REF_PIC_LIST_0) == 0 && getNumRefIdx(REF_PIC_LIST_1) == 0) )
+#else
     if (m_eSliceType == I_SLICE)
+#endif
     {
       ::memset( m_apcRefPicList, 0, sizeof (m_apcRefPicList));
       ::memset( m_aiNumRefIdx,   0, sizeof ( m_aiNumRefIdx ));
@@ -479,9 +512,20 @@ Int TComSlice::getNumRpsCurrTempList() const
 {
   Int numRpsCurrTempList = 0;
 
-  if (m_eSliceType == I_SLICE)
+  if ( m_eSliceType == I_SLICE )
   {
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+    if ( getSPS()->getUseIntraBlockCopy() )
+    {
+      return 1;
+    }
+    else
+    {
+      return 0;
+    }
+#else
     return 0;
+#endif
   }
   for(UInt i=0; i < m_pcRPS->getNumberOfNegativePictures()+ m_pcRPS->getNumberOfPositivePictures() + m_pcRPS->getNumberOfLongtermPictures(); i++)
   {
@@ -490,7 +534,21 @@ Int TComSlice::getNumRpsCurrTempList() const
       numRpsCurrTempList++;
     }
   }
+#if !SCM_FIX_T0227_INTEGRATION
   return numRpsCurrTempList;
+#endif
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+  if ( getSPS()->getUseIntraBlockCopy() )
+  {
+    return numRpsCurrTempList + 1;
+  }
+  else
+  {
+    return numRpsCurrTempList;
+  }
+#else
+    return numRpsCurrTempList;
+#endif
 }
 
 Void TComSlice::initEqualRef()
@@ -610,9 +668,11 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
     {
       rpcPic = *(iterPic);
       rpcPic->setCurrSliceIdx(0);
+
       if (rpcPic->getPOC() != pocCurr)
       {
         rpcPic->getSlice(0)->setReferenced(false);
+        rpcPic->getHashMap()->clearAll();
       }
       iterPic++;
     }
@@ -640,6 +700,7 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
           if (rpcPic->getPOC() != pocCurr && rpcPic->getPOC() != m_iLastIDR)
           {
             rpcPic->getSlice(0)->setReferenced(false);
+            rpcPic->getHashMap()->clearAll();
           }
           iterPic++;
         }
@@ -658,6 +719,7 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
           if (rpcPic->getPOC() != pocCurr && rpcPic->getPOC() != pocCRA)
           {
             rpcPic->getSlice(0)->setReferenced(false);
+            rpcPic->getHashMap()->clearAll();
           }
           iterPic++;
         }
@@ -1065,6 +1127,7 @@ Void TComSlice::applyReferencePictureSet( TComList<TComPic*>& rcListPic, const T
     if(rpcPic->getPicSym()->getSlice(0)->getPOC() != this->getPOC() && isReference == 0)
     {
       rpcPic->getSlice( 0 )->setReferenced( false );
+      rpcPic->getHashMap()->clearAll();
       rpcPic->setUsedByCurr(0);
       rpcPic->setIsLongTerm(0);
     }
@@ -1566,11 +1629,21 @@ TComSPS::TComSPS()
 , m_pcmLog2MaxSize            (  5)
 , m_uiPCMLog2MinSize          (  7)
 , m_useExtendedPrecision      (false)
+, m_useIntraBlockCopy         (false)
 , m_useHighPrecisionPredictionWeighting(false)
 , m_useResidualRotation       (false)
 , m_useSingleSignificanceMapContext(false)
 , m_useGolombRiceParameterAdaptation(false)
 , m_alignCABACBeforeBypass    (false)
+, m_usePaletteMode            (false)
+, m_uiPLTMaxSize              ( 31)
+, m_uiPLTMaxPredSize          ( 64)
+#if SCM_T0069_AMVR_REFINEMENT
+, m_motionVectorResolutionControlIdc(0)
+#else
+, m_useAdaptiveMvResolution   (false)
+#endif
+, m_disableIntraBoundaryFilter(false)
 , m_bPCMFilterDisableFlag     (false)
 , m_disableIntraReferenceSmoothing(false)
 , m_uiBitsForPOC              (  8)
@@ -1742,6 +1815,12 @@ TComPPS::TComPPS()
 , m_ChromaQpAdjTableSize             (0)
 , m_chromaCbQpOffset                 (0)
 , m_chromaCrQpOffset                 (0)
+#if SCM_T0140_ACT_QP_OFFSET
+, m_useSliceACTOffset                (false)
+, m_actYQpOffset                     (-5)
+, m_actCbQpOffset                    (-5)
+, m_actCrQpOffset                    (-3)
+#endif
 , m_numRefIdxL0DefaultActive         (1)
 , m_numRefIdxL1DefaultActive         (1)
 , m_useCrossComponentPrediction      (false)
@@ -1761,6 +1840,10 @@ TComPPS::TComPPS()
 , m_loopFilterAcrossSlicesEnabledFlag(false)
 , m_listsModificationPresentFlag     (0)
 , m_numExtraSliceHeaderBits          (0)
+, m_useColourTrans                   (false)
+#if SCM_T0048_PLT_PRED_IN_PPS
+, m_uiNumPLTPred                     (0) // Implies palette pred in PPS deactivated
+#endif
 {
   for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
   {
@@ -1768,6 +1851,12 @@ TComPPS::TComPPS()
   }
   m_ChromaQpAdjTableIncludingNullEntry[0].u.comp.CbOffset = 0; // Array includes entry [0] for the null offset used when cu_chroma_qp_offset_flag=0. This is initialised here and never subsequently changed.
   m_ChromaQpAdjTableIncludingNullEntry[0].u.comp.CrOffset = 0;
+#if SCM_T0048_PLT_PRED_IN_PPS
+  for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
+  {
+    m_palettePredictorBitDepth[ch] = 8;
+  }
+#endif
 }
 
 TComPPS::~TComPPS()

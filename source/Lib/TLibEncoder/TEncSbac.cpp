@@ -87,9 +87,27 @@ TEncSbac::TEncSbac()
 , m_CUTransquantBypassFlagSCModel      ( 1,             1,                      NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX    , m_contextModels + m_numContextModels, m_numContextModels)
 , m_explicitRdpcmFlagSCModel           ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_EXPLICIT_RDPCM_FLAG_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
 , m_explicitRdpcmDirSCModel            ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_EXPLICIT_RDPCM_DIR_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+, m_cIntraBCPredFlagSCModel            ( 1,             1,                      NUM_INTRABC_PRED_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 , m_cCrossComponentPredictionSCModel   ( 1,             1,                      NUM_CROSS_COMPONENT_PREDICTION_CTX   , m_contextModels + m_numContextModels, m_numContextModels)
+, m_PLTModeFlagSCModel                 ( 1,             1,                      NUM_PLTMODE_FLAG_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
+, m_SPointSCModel                      ( 1,             1,                      NUM_SPOINT_CTX                       , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cCopyTopRunSCModel                 ( 1,             1,                      NUM_TOP_RUN_CTX                      , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cRunSCModel                        ( 1,             1,                      NUM_LEFT_RUN_CTX                     , m_contextModels + m_numContextModels, m_numContextModels)
+#if !SCM_T0064_REMOVE_PLT_SHARING
+, m_PLTSharingModeFlagSCModel          ( 1,             1,                      NUM_PLT_REUSE_FLAG_CTX               , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
+#if SCM_T0065_PLT_IDX_GROUP
+, m_PLTLastRunTypeSCModel              ( 1,             1,                      NUM_PLT_LAST_RUN_TYPE_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
+, m_PLTScanRotationModeFlagSCModel     ( 1,             1,                      NUM_SCAN_ROTATION_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_ChromaQpAdjFlagSCModel             ( 1,             1,                      NUM_CHROMA_QP_ADJ_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_ChromaQpAdjIdcSCModel              ( 1,             1,                      NUM_CHROMA_QP_ADJ_IDC_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cCUColourTransformFlagSCModel      ( 1,             1,                      NUM_COLOUR_TRANS_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+, m_cIntraBCBVDSCModel                 (1,              1,                      NUM_INTRABC_BVD_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
 }
@@ -112,6 +130,13 @@ Void TEncSbac::resetEntropy           (const TComSlice *pSlice)
   {
     eSliceType = encCABACTableIdx;
   }
+
+#if SCM_T0227_INTRABC_SIG_UNIFICATION
+  if ( eSliceType == I_SLICE && pSlice->getSPS()->getUseIntraBlockCopy() )
+  {
+    eSliceType = P_SLICE;
+  }
+#endif
 
   m_cCUSplitFlagSCModel.initBuffer                ( eSliceType, iQp, (UChar*)INIT_SPLIT_FLAG );
   m_cCUSkipFlagSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_SKIP_FLAG );
@@ -141,9 +166,27 @@ Void TEncSbac::resetEntropy           (const TComSlice *pSlice)
   m_CUTransquantBypassFlagSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
   m_explicitRdpcmFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_EXPLICIT_RDPCM_FLAG);
   m_explicitRdpcmDirSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_EXPLICIT_RDPCM_DIR);
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+  m_cIntraBCPredFlagSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_INTRABC_PRED_FLAG );
+#endif
   m_cCrossComponentPredictionSCModel.initBuffer   ( eSliceType, iQp, (UChar*)INIT_CROSS_COMPONENT_PREDICTION  );
+  m_PLTModeFlagSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_PLTMODE_FLAG );
+  m_SPointSCModel.initBuffer                      ( eSliceType, iQp, (UChar*)INIT_SPOINT );
+  m_cCopyTopRunSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_TOP_RUN);
+  m_cRunSCModel.initBuffer                        ( eSliceType, iQp, (UChar*)INIT_RUN);
+#if !SCM_T0064_REMOVE_PLT_SHARING
+  m_PLTSharingModeFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_PLT_REUSE_FLAG);
+#endif
+#if SCM_T0065_PLT_IDX_GROUP
+  m_PLTLastRunTypeSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_PLT_LAST_RUN_TYPE);
+#endif
+  m_PLTScanRotationModeFlagSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_SCAN_ROTATION_FLAG );
   m_ChromaQpAdjFlagSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
   m_ChromaQpAdjIdcSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
+  m_cCUColourTransformFlagSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_COLOUR_TRANS );
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+  m_cIntraBCBVDSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_INTRABC_BVD);
+#endif
 
   for (UInt statisticIndex = 0; statisticIndex < RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS ; statisticIndex++)
   {
@@ -202,9 +245,27 @@ SliceType TEncSbac::determineCabacInitIdx(const TComSlice *pSlice)
       curCost += m_CUTransquantBypassFlagSCModel.calcCost      ( curSliceType, qp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
       curCost += m_explicitRdpcmFlagSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_EXPLICIT_RDPCM_FLAG);
       curCost += m_explicitRdpcmDirSCModel.calcCost            ( curSliceType, qp, (UChar*)INIT_EXPLICIT_RDPCM_DIR);
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+      curCost += m_cIntraBCPredFlagSCModel.calcCost            ( curSliceType, qp, (UChar*)INIT_INTRABC_PRED_FLAG );
+#endif
       curCost += m_cCrossComponentPredictionSCModel.calcCost   ( curSliceType, qp, (UChar*)INIT_CROSS_COMPONENT_PREDICTION );
+      curCost += m_PLTModeFlagSCModel.calcCost                 ( curSliceType, qp, (UChar*)INIT_PLTMODE_FLAG );
+      curCost += m_SPointSCModel.calcCost                      ( curSliceType, qp, (UChar*)INIT_SPOINT );
+      curCost += m_cCopyTopRunSCModel.calcCost                 ( curSliceType, qp, (UChar*)INIT_TOP_RUN );
+      curCost += m_cRunSCModel.calcCost                        ( curSliceType, qp, (UChar*)INIT_RUN );
+#if !SCM_T0064_REMOVE_PLT_SHARING
+      curCost += m_PLTSharingModeFlagSCModel.calcCost          ( curSliceType, qp, (UChar*)INIT_PLT_REUSE_FLAG );
+#endif
+#if SCM_T0065_PLT_IDX_GROUP
+      curCost += m_PLTLastRunTypeSCModel.calcCost              (curSliceType, qp, (UChar*)INIT_PLT_LAST_RUN_TYPE);
+#endif
+      curCost += m_PLTScanRotationModeFlagSCModel.calcCost     ( curSliceType, qp, (UChar*)INIT_SCAN_ROTATION_FLAG );
       curCost += m_ChromaQpAdjFlagSCModel.calcCost             ( curSliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
       curCost += m_ChromaQpAdjIdcSCModel.calcCost              ( curSliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
+      curCost += m_cCUColourTransformFlagSCModel.calcCost      ( curSliceType, qp, (UChar*)INIT_COLOUR_TRANS );
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+      curCost += m_cIntraBCBVDSCModel.calcCost                 ( curSliceType, qp, (UChar*)INIT_INTRABC_BVD );
+#endif
 
       if (curCost < bestCost)
       {
@@ -327,6 +388,588 @@ Void TEncSbac::xWriteEpExGolomb( UInt uiSymbol, UInt uiCount )
   m_pcBinIf->encodeBinsEP( bins, numBins );
 }
 
+Void TEncSbac::xWriteTruncBinCode(UInt uiSymbol, UInt uiMaxSymbol)
+{
+  UInt uiThresh;
+  if (uiMaxSymbol > 256)
+  {
+    UInt uiThreshVal = 1 << 8;
+    uiThresh = 8;
+    while (uiThreshVal <= uiMaxSymbol)
+    {
+      uiThresh++;
+      uiThreshVal <<= 1;
+    }
+    uiThresh--;
+  }
+  else
+  {
+    uiThresh = g_uhPLTTBC[uiMaxSymbol];
+  }
+
+  UInt uiVal = 1 << uiThresh;
+  assert(uiVal <= uiMaxSymbol);
+  assert((uiVal << 1) > uiMaxSymbol);
+  assert(uiSymbol < uiMaxSymbol);
+  UInt b = uiMaxSymbol - uiVal;
+  assert(b < uiVal);
+  if (uiSymbol < uiVal - b)
+  {
+    m_pcBinIf->encodeBinsEP(uiSymbol, uiThresh);
+  }
+  else
+  {
+    uiSymbol += uiVal - b;
+    assert(uiSymbol < (uiVal << 1));
+    assert((uiSymbol >> 1) >= uiVal - b);
+    m_pcBinIf->encodeBinsEP(uiSymbol, uiThresh + 1);
+  }
+}
+
+Pel TEncSbac::writePLTIndex(UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint, Int iWidth, UChar *pEscapeFlag)
+{
+  UInt uiTraIdx = m_puiScanOrder[uiIdx];  //unified position variable (raster scan)
+#if SCM_T0065_PLT_IDX_GROUP
+  Pel siCurLevel = pEscapeFlag[uiTraIdx] ? (iMaxSymbol - 1) : pLevel[uiTraIdx];
+#else
+  Pel siCurLevel = pLevel[uiTraIdx];
+#endif
+  if( pEscapeFlag[uiTraIdx] )
+  {
+    assert(siCurLevel == (iMaxSymbol-1));
+  }
+
+  if( uiIdx )
+  {
+    UInt uiTraIdxLeft = m_puiScanOrder[uiIdx - 1];
+    if (pSPoint[uiTraIdxLeft] == PLT_RUN_LEFT)  ///< copy left
+    {
+      Pel siLeftLevel = pLevel[uiTraIdxLeft];
+      if( pEscapeFlag[uiTraIdxLeft] )
+      {
+        siLeftLevel = iMaxSymbol - 1;
+      }
+
+      assert(siCurLevel != siLeftLevel);
+
+      if (siCurLevel > siLeftLevel)
+      {
+        siCurLevel--;
+      }
+    }
+    else
+    {
+      assert(uiTraIdxLeft >= iWidth);
+      Pel siAboveLevel = pLevel[uiTraIdx - iWidth];
+      if( pEscapeFlag[uiTraIdx - iWidth] )
+      {
+        siAboveLevel = iMaxSymbol - 1;
+      }
+
+      assert(siCurLevel != siAboveLevel);
+
+      if (siCurLevel > siAboveLevel)
+      {
+        siCurLevel--;
+      }
+    }
+    iMaxSymbol--;
+  }
+  assert(iMaxSymbol > 0);
+  assert(siCurLevel >= 0);
+  assert(iMaxSymbol > siCurLevel);
+  if (iMaxSymbol > 1)
+  {
+    xWriteTruncBinCode((UInt)siCurLevel, iMaxSymbol);
+  }
+  return siCurLevel;
+}
+
+Void TEncSbac::xEncodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, UInt &uiNumPLTPredicted, UInt uiMaxPLTSize)
+{
+  Int lastPredIdx = -1;
+  UInt run = 0;
+  uiNumPLTPredicted = 0;
+
+  for( UInt idx = 0; idx < uiPLTSizePrev; idx++ )
+  {
+    if( bReusedPrev[idx] )
+    {
+      uiNumPLTPredicted++;
+      lastPredIdx = idx;
+    }
+  }
+
+  Int idx = 0;
+  while( idx <= lastPredIdx )
+  {
+    if( bReusedPrev[idx] )
+    {
+      xWriteEpExGolomb( run ? run + 1 : run, 0 );
+      run = 0;
+    }
+    else
+    {
+      run++;
+    }
+    idx++;
+  }
+  if ((uiNumPLTPredicted < uiMaxPLTSize && lastPredIdx + 1 < uiPLTSizePrev) || !uiNumPLTPredicted)
+  {
+    xWriteEpExGolomb( 1, 0 );
+  }
+}
+
+Void TEncSbac::encodeRun ( UInt uiRun, Bool bCopyTopMode, const UInt uiPltIdx, const UInt uiMaxRun )
+{
+  ContextModel *pcModel;
+  UChar *ucCtxLut;
+  if ( bCopyTopMode )
+  {
+    pcModel = m_cCopyTopRunSCModel.get(0);
+    ucCtxLut = g_ucRunTopLut;
+  }
+  else
+  {
+    pcModel = m_cRunSCModel.get(0);
+    ucCtxLut = g_ucRunLeftLut;
+    g_ucRunLeftLut[0] = (uiPltIdx < SCM__S0269_PLT_RUN_MSB_IDX_CTX_T1 ? 0: (uiPltIdx < SCM__S0269_PLT_RUN_MSB_IDX_CTX_T2 ? 1 : 2));
+  }
+  xWriteTruncMsbP1RefinementBits( uiRun, pcModel, uiMaxRun, SCM__S0269_PLT_RUN_MSB_IDX_CABAC_BYPASS_THRE, ucCtxLut );
+}
+
+Void TEncSbac::encodeSPoint( TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiIdx, UInt uiWidth, UChar *pSPoint, UInt *uiRefScanOrder )
+{
+  if( uiRefScanOrder )
+  {
+    m_puiScanOrder = uiRefScanOrder;
+  }
+
+  UInt uiTraIdx = m_puiScanOrder[uiIdx];
+#if !SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
+  UInt uiCtx = pcCU->getCtxSPoint( uiAbsPartIdx, uiTraIdx, pSPoint );
+#endif
+
+  if( uiTraIdx >= uiWidth && pSPoint[m_puiScanOrder[uiIdx - 1]] != PLT_RUN_ABOVE )
+  {
+    UInt mode = pSPoint[uiTraIdx];
+#if SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
+    m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, 0 ) );
+#else
+    m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, uiCtx ) );
+#endif
+  }
+}
+
+Void TEncSbac::codePLTModeFlag(TComDataCU *pcCU, UInt uiAbsPartIdx)
+{
+  UInt uiSymbol = pcCU->getPLTModeFlag(uiAbsPartIdx);
+  m_pcBinIf->encodeBin(uiSymbol, m_PLTModeFlagSCModel.get(0, 0, 0));
+}
+
+#if !SCM_T0064_REMOVE_PLT_SHARING
+Void TEncSbac:: codePLTSharingModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  UInt uiSymbol = pcCU->getPLTSharingModeFlag(uiAbsPartIdx);
+  m_pcBinIf->encodeBin( uiSymbol, m_PLTSharingModeFlagSCModel.get(0,0,0) );
+}
+#endif
+
+Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp)
+{
+  UInt uiIdx, uiDictMaxSize, uiDictIdxBits;
+  UInt uiSampleBits[3];
+  Pel *pLevel, *pPalette;
+  TCoeff *pRun;
+  Pel *pPixelValue[3];
+#if SCM_T0072_T0109_T0120_PLT_NON444
+  ComponentID compBegin = COMPONENT_Y;
+#else
+  ComponentID compBegin = ComponentID(uiNumComp == 2 ? 1 : 0);
+#endif
+  const UInt minCoeffSizeY = pcCU->getPic()->getMinCUWidth() * pcCU->getPic()->getMinCUHeight();
+  const UInt offsetY = minCoeffSizeY * uiAbsPartIdx;
+  const UInt offset = offsetY >> (pcCU->getPic()->getComponentScaleX(compBegin) + pcCU->getPic()->getComponentScaleY(compBegin));
+  UInt width = pcCU->getWidth(uiAbsPartIdx) >> pcCU->getPic()->getComponentScaleX(compBegin);
+  UInt height = pcCU->getHeight(uiAbsPartIdx) >> pcCU->getPic()->getComponentScaleY(compBegin);
+  UInt uiTotal = width * height;
+#if SCM_T0072_T0109_T0120_PLT_NON444
+  UInt uiScaleX = pcCU->getPic()->getComponentScaleX(COMPONENT_Cb);
+  UInt uiScaleY = pcCU->getPic()->getComponentScaleY(COMPONENT_Cb);
+  const UInt offsetC = offsetY >> (uiScaleX + uiScaleY);
+#endif
+
+  UInt uiRun = 0;
+  uiIdx = 0;
+  pLevel = pcCU->getLevel(compBegin) + offset;
+  pRun = pcCU->getRun(compBegin) + offset;
+  UChar* pSPoint = pcCU->getSPoint(compBegin) + offset;
+  UChar* pEscapeFlag = pcCU->getEscapeFlag(compBegin) + offset;
+
+  for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
+  {
+    uiSampleBits[comp] = pcCU->getSlice()->getSPS()->getBitDepth(toChannelType(ComponentID(comp)));
+#if SCM_T0072_T0109_T0120_PLT_NON444
+    if ( comp == compBegin )
+    {
+      pPixelValue[comp] = pcCU->getLevel( ComponentID( comp ) ) + offset;
+    }
+    else
+    {
+      pPixelValue[comp] = pcCU->getLevel( ComponentID( comp ) ) + offsetC;
+    }
+#else
+    pPixelValue[comp] = pcCU->getLevel(ComponentID(comp)) + offset;
+#endif
+  }
+
+  uiDictMaxSize = pcCU->getPLTSize(compBegin, uiAbsPartIdx);
+  UInt uiMaxPLTSize = pcCU->getSlice()->getSPS()->getPLTMaxSize();
+  assert(uiDictMaxSize <= uiMaxPLTSize);
+  uiDictIdxBits = 0;
+  while ((1 << uiDictIdxBits) < uiDictMaxSize)
+  {
+    uiDictIdxBits++;
+  }
+  UInt uiIndexMaxSize = uiDictMaxSize;
+  UInt uiSignalEscape = pcCU->getPLTEscape(compBegin, uiAbsPartIdx);
+  UInt uiDictIdxBitsExteneded = uiDictIdxBits;
+  if (uiSignalEscape)
+  {
+    while ((1 << uiDictIdxBitsExteneded) <= uiDictMaxSize)
+    {
+      uiDictIdxBitsExteneded++;
+    }
+    uiIndexMaxSize++;
+  }
+
+#if !SCM_T0064_REMOVE_PLT_SHARING
+  UInt uiPLTUsedSizePrev;
+#endif
+  UInt uiPLTSizePrev;
+  //the bit depth depends on QP
+  //calculate the bitLen needed to represent the quantized escape values
+  UInt uiMaxVal[3];
+  for (Int comp = compBegin; comp < compBegin + uiNumComp; comp++)
+  {
+    uiMaxVal[comp] = pcCU->xCalcMaxVals(pcCU, ComponentID(comp));
+  }
+
+#if !SCM_T0064_REMOVE_PLT_SHARING
+  codePLTSharingModeFlag(pcCU, uiAbsPartIdx);
+  Bool bUsePLTSharingMode = pcCU->getPLTSharingModeFlag(uiAbsPartIdx);
+  if ( !bUsePLTSharingMode )
+#endif
+  {
+#if SCM_T0064_REMOVE_PLT_SHARING
+    pcCU->getPLTPred( pcCU, uiAbsPartIdx, compBegin, uiPLTSizePrev );
+#else
+    pcCU->getPLTPred( pcCU, uiAbsPartIdx, compBegin, uiPLTSizePrev, uiPLTUsedSizePrev );
+#endif
+    UChar *bReusedPrev;
+    UInt uiNumPLTRceived = uiDictMaxSize, uiNumPLTPredicted = 0;
+
+    bReusedPrev = pcCU->getPrevPLTReusedFlag( compBegin, uiAbsPartIdx );
+
+    if ( uiPLTSizePrev )
+    {
+      xEncodePLTPredIndicator( bReusedPrev, uiPLTSizePrev, uiNumPLTPredicted, uiMaxPLTSize);
+    }
+
+    assert( uiDictMaxSize >= uiNumPLTPredicted );
+    if ( uiNumPLTPredicted < uiMaxPLTSize)
+    {
+      uiNumPLTRceived = uiDictMaxSize - uiNumPLTPredicted;
+#if SCM_T0063_NUM_PLT_ENTRY
+      xWriteEpExGolomb(uiNumPLTRceived, 0);
+#else
+      for ( UInt uiPLTIdx = 0; uiPLTIdx <= uiNumPLTRceived; uiPLTIdx++ )
+      {
+        if ( uiNumPLTPredicted + uiPLTIdx < uiMaxPLTSize)
+        {
+          m_pcBinIf->encodeBinEP( uiPLTIdx == (uiNumPLTRceived) );
+        }
+      }
+#endif
+    }
+    for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
+    {
+      pPalette = pcCU->getPLT( comp, uiAbsPartIdx );
+      for ( UInt uiPLTIdx = uiNumPLTPredicted; uiPLTIdx < uiDictMaxSize; uiPLTIdx++ )
+      {
+        m_pcBinIf->encodeBinsEP( (UInt)pPalette[uiPLTIdx], uiSampleBits[comp] );
+      }
+    }
+  }
+
+  m_puiScanOrder = g_scanOrder[SCAN_UNGROUPED][SCAN_TRAV][g_aucConvertToBit[width]+2][g_aucConvertToBit[height]+2];
+  if (uiDictMaxSize > 0)
+  {
+    m_pcBinIf->encodeBinEP(uiSignalEscape);
+    if (uiDictMaxSize + uiSignalEscape > 1)
+    {
+      codeScanRotationModeFlag(pcCU, uiAbsPartIdx);
+    }
+    else
+    {
+      assert(!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx));
+      assert(!uiSignalEscape);
+    }
+  }
+  else
+  {
+    assert(!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx));
+  }
+#if SCM_T0065_PLT_IDX_GROUP
+  Int iLastRunPos = -1;
+  UInt lastRunType = 0;
+  UInt uiNumIndices = 0;
+  std::list<Int> lIdxPosList, lParsedIdxList;
+  if (uiIndexMaxSize > 1)
+  {
+    uiIdx = 0;
+    while (uiIdx < uiTotal)
+    {
+      UInt uiTraIdx = m_puiScanOrder[uiIdx];
+      if (pSPoint[uiTraIdx] == PLT_RUN_LEFT)
+      {
+        lIdxPosList.push_back(uiIdx);
+        uiNumIndices++;
+      }
+      lastRunType = pSPoint[uiTraIdx];
+      iLastRunPos = uiIdx;
+      uiRun = pRun[uiTraIdx];
+      uiIdx += uiRun;
+      uiIdx++;
+    }
+
+    UInt uiCurrParam = 2 + uiIndexMaxSize / 6;
+    UInt uiMappedValue;
+#if SCM_T0064_REMOVE_PLT_SHARING
+    Bool bUsePLTSharingMode = false;
+#endif
+    assert(uiNumIndices);
+    UInt uiInterval = bUsePLTSharingMode ? 8 : 32;
+    UInt uiZeroPosition = bUsePLTSharingMode ? 3 : uiIndexMaxSize;
+
+    if (uiNumIndices >= uiZeroPosition)
+    {
+      Int iNumResPos = uiZeroPosition - 1;
+      UInt uiValue = uiNumIndices - uiZeroPosition;
+      uiMappedValue = uiValue < iNumResPos * (uiInterval - 1) ?
+        uiValue / (uiInterval - 1) * uiInterval + uiValue % (uiInterval - 1) : uiValue + iNumResPos;
+    }
+    else
+    {
+      UInt uiValue = uiZeroPosition - uiNumIndices;
+      uiMappedValue = uiValue * uiInterval - 1;
+    }
+    xWriteCoefRemainExGolomb(uiMappedValue, uiCurrParam, false, MAX_NUM_CHANNEL_TYPE);
+
+    while (!lIdxPosList.empty())
+    {
+      uiIdx = lIdxPosList.front();
+      lIdxPosList.pop_front();
+      lParsedIdxList.push_back(writePLTIndex(uiIdx, pLevel, uiIndexMaxSize, pSPoint, width, pEscapeFlag));
+    }
+    m_pcBinIf->encodeBin(lastRunType, m_PLTLastRunTypeSCModel.get(0, 0, 0));
+  }
+
+  uiIdx = 0;
+#endif
+  while ( uiIdx < uiTotal )
+  {
+#if !SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
+    UInt uiCtx = 0;
+#endif
+    UInt uiTraIdx = m_puiScanOrder[uiIdx];  //unified position variable (raster scan)
+    if (uiIndexMaxSize > 1)
+    {
+#if !SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
+      uiCtx = pcCU->getCtxSPoint( uiAbsPartIdx, uiTraIdx, pSPoint );
+#endif
+      if ( uiTraIdx >= width && pSPoint[m_puiScanOrder[uiIdx - 1]] != PLT_RUN_ABOVE )
+      {
+        UInt mode = pSPoint[uiTraIdx];
+#if SCM_T0065_PLT_IDX_GROUP
+        if ( uiNumIndices && uiIdx < uiTotal - 1 )
+        {
+#endif
+#if SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
+          m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, 0 ) );
+#else
+          m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, uiCtx ) );
+#endif
+#if SCM_T0065_PLT_IDX_GROUP
+        }
+#endif
+      }
+    }
+    Pel siCurLevel = 0;
+    {
+      if ( pSPoint[uiTraIdx] == PLT_RUN_LEFT )
+      {
+        UInt uiRealLevel = pLevel[uiTraIdx];
+        if( pEscapeFlag[uiTraIdx] )
+        {
+          pLevel[uiTraIdx] = uiIndexMaxSize - 1;
+        }
+#if SCM_T0065_PLT_IDX_GROUP
+        if (!lParsedIdxList.empty())
+        {
+          siCurLevel = lParsedIdxList.front();
+          lParsedIdxList.pop_front();
+        }
+        else
+        {
+          siCurLevel = 0;
+        }
+#else
+        siCurLevel = writePLTIndex( uiIdx, pLevel, uiIndexMaxSize, pSPoint, width, pEscapeFlag );
+#endif
+        if( pEscapeFlag[uiTraIdx] )
+        {
+          pLevel[uiTraIdx] = uiRealLevel;
+        }
+      }
+#if SCM_HIGH_BIT_DEPTH_BUG_FIX
+      uiRun = (UInt)pRun[uiTraIdx];
+#else
+      uiRun = pRun[uiTraIdx];
+#endif 
+      if ( uiIndexMaxSize > 1 )
+      {
+#if SCM_T0065_PLT_IDX_GROUP
+        if (iLastRunPos != uiIdx)
+        {
+          uiNumIndices -= (pSPoint[uiTraIdx] == PLT_RUN_LEFT);
+          encodeRun(uiRun, pSPoint[uiTraIdx], siCurLevel, uiTotal - uiNumIndices - uiIdx - 1);
+        }
+#else
+        encodeRun( uiRun, pSPoint[uiTraIdx], siCurLevel, uiTotal - uiIdx - 1 );
+#endif
+      }
+
+#if !SCM_S0181_S0150_GROUP_ESCAPE_COLOR_AT_END
+      for(UInt uiRunIdx = 0; uiRunIdx <= uiRun; uiRunIdx++, uiIdx++)
+      {
+        if( pEscapeFlag[m_puiScanOrder[uiIdx]] )
+        {
+#if SCM_T0072_T0109_T0120_PLT_NON444
+          UInt uiY, uiX;
+          uiTraIdx = m_puiScanOrder[uiIdx];
+          uiY = uiTraIdx/width;
+          uiX = uiTraIdx%width;
+          UInt uiXC, uiYC, uiTraIdxC;
+          if(!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx))
+          {
+            uiXC = (uiX>>uiScaleX);
+            uiYC = (uiY>>uiScaleY);
+            uiTraIdxC = uiYC * (width>>uiScaleX) + uiXC;
+          }
+          else
+          {
+            uiXC = (uiX>>uiScaleY);
+            uiYC = (uiY>>uiScaleX);
+            uiTraIdxC = uiYC * (height>>uiScaleY) + uiXC;  
+          }
+          
+          if(
+              pcCU->getPic()->getChromaFormat() == CHROMA_444 ||
+              ( pcCU->getPic()->getChromaFormat() == CHROMA_420 && ((uiX&1) == 0) && ((uiY&1) == 0)) ||
+              ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiY&1) == 0))) )
+            )
+          {
+            for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
+            {
+              if(comp == compBegin)
+                xWriteTruncBinCode( (UInt)pPixelValue[comp][uiTraIdx], uiMaxVal[comp] + 1 );
+              else
+                xWriteTruncBinCode( (UInt)pPixelValue[comp][uiTraIdxC], uiMaxVal[comp] + 1 );
+            }
+          }
+          else
+          {
+            xWriteTruncBinCode( (UInt)pPixelValue[compBegin][uiTraIdx], uiMaxVal[compBegin] + 1 );
+          }
+#else
+          for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
+          {
+            xWriteTruncBinCode( (UInt)pPixelValue[comp][m_puiScanOrder[uiIdx]], uiMaxVal[comp] + 1 );
+          }
+#endif
+        }
+      }
+#else
+      uiIdx += (uiRun + 1);    
+#endif
+    }
+  }
+  assert(uiIdx == uiTotal);
+
+#if SCM_S0181_S0150_GROUP_ESCAPE_COLOR_AT_END
+  for( uiIdx = 0; uiIdx < uiTotal; uiIdx ++ )
+  {
+    UInt uiTraIdx = m_puiScanOrder[uiIdx];
+    if( pEscapeFlag[uiTraIdx] )
+    {
+#if SCM_T0072_T0109_T0120_PLT_NON444
+      UInt uiY, uiX;
+      uiY = uiTraIdx/width;
+      uiX = uiTraIdx%width;
+      UInt uiXC, uiYC, uiTraIdxC;
+      if(!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx))
+      {
+        uiXC = (uiX>>uiScaleX);
+        uiYC = (uiY>>uiScaleY);
+        uiTraIdxC = uiYC * (width>>uiScaleX) + uiXC;
+      }
+      else
+      {
+        uiXC = (uiX>>uiScaleY);
+        uiYC = (uiY>>uiScaleX);
+        uiTraIdxC = uiYC * (height>>uiScaleY) + uiXC;
+      }
+
+      if(   pcCU->getPic()->getChromaFormat() == CHROMA_444 ||
+          ( pcCU->getPic()->getChromaFormat() == CHROMA_420 && ((uiX&1) == 0) && ((uiY&1) == 0)) ||
+          ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiY&1) == 0))) )
+        )
+      {
+        for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
+        {
+          if ( comp == compBegin )
+          {
+            xWriteTruncBinCode( (UInt)pPixelValue[comp][uiTraIdx], uiMaxVal[comp] + 1 );
+          }
+          else
+          {
+            xWriteTruncBinCode( (UInt)pPixelValue[comp][uiTraIdxC], uiMaxVal[comp] + 1 );
+          }
+        }
+      }
+      else
+      {
+        xWriteTruncBinCode( (UInt)pPixelValue[compBegin][uiTraIdx], uiMaxVal[compBegin] + 1 );
+      }
+#else
+      for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
+      {
+        xWriteTruncBinCode( (UInt)pPixelValue[comp][m_puiScanOrder[uiIdx]], uiMaxVal[comp] + 1 );
+      }
+#endif
+    }
+  }
+#endif
+}
+
+Void TEncSbac::codeScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  UInt uiSymbol = pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx);
+  UInt uiCtx = 0;
+  m_pcBinIf->encodeBin( uiSymbol, m_PLTScanRotationModeFlagSCModel.get( 0, 0, uiCtx ) );
+}
+
 
 /** Coding of coeff_abs_level_minus3
  * \param symbol                  value of coeff_abs_level_minus3
@@ -434,6 +1077,10 @@ Void TEncSbac::codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRef
 
 Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+  assert( !pcCU->isIntraBC( uiAbsPartIdx ) );
+#endif
+
   PartSize eSize         = pcCU->getPartitionSize( uiAbsPartIdx );
   const UInt log2DiffMaxMinCodingBlockSize = pcCU->getSlice()->getSPS()->getLog2DiffMaxMinCodingBlockSize();
 
@@ -517,6 +1164,42 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   }
 }
 
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+Void TEncSbac::codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  const UInt uiSymbol = pcCU->getPartitionSize(uiAbsPartIdx);
+  if( pcCU->getDepth(uiAbsPartIdx) == pcCU->getSlice()->getSPS()->getLog2DiffMaxMinCodingBlockSize() )
+  {
+    // size can be 2Nx2N, NxN, 2NxN, Nx2N
+    if( uiSymbol == SIZE_2Nx2N )
+    {
+      m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 0 ) );
+    }
+    else
+    {
+      m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0 ) );
+      m_pcBinIf->encodeBin( ( uiSymbol == SIZE_2NxN ? 1 : 0 ), m_cCUPartSizeSCModel.get( 0, 0, 1 ) );
+      if( uiSymbol != SIZE_2NxN )
+      {
+        m_pcBinIf->encodeBin( ( uiSymbol == SIZE_Nx2N ? 1 : 0 ), m_cCUPartSizeSCModel.get( 0, 0, 2 ) );
+      }
+    }
+  }
+  else
+  {
+    // size can be 2Nx2N, 2NxN, Nx2N
+    if( uiSymbol == SIZE_2Nx2N )
+    {
+      m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 0 ) );
+    }
+    else
+    {
+      m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0 ) );
+      m_pcBinIf->encodeBin( ( uiSymbol == SIZE_Nx2N ? 0 : 1 ), m_cCUPartSizeSCModel.get( 0, 0, 1 ) );
+    }
+  }
+}
+#endif
 
 /** code prediction mode
  * \param pcCU
@@ -526,6 +1209,9 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 Void TEncSbac::codePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   // get context function is here
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION  
+  assert(!pcCU->isIntraBC(uiAbsPartIdx));
+#endif
   m_pcBinIf->encodeBin( pcCU->isIntra( uiAbsPartIdx ) ? 1 : 0, m_cCUPredModeSCModel.get( 0, 0, 0 ) );
 }
 
@@ -725,6 +1411,87 @@ Void TEncSbac::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
   return;
 }
 
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
+/** code intraBC flag
+ * \param pcCU
+ * \param uiAbsPartIdx
+ * \returns Void
+ */
+Void TEncSbac::codeIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  // get context function is here
+  const UInt uiSymbol = pcCU->isIntraBC( uiAbsPartIdx ) ? 1 : 0;
+
+  m_pcBinIf->encodeBin(uiSymbol, m_cIntraBCPredFlagSCModel.get( 0, 0, 0 ));
+
+  DTRACE_CABAC_VL( g_nSymbolCounter++ );
+  DTRACE_CABAC_T( "\tuiSymbol: ");
+  DTRACE_CABAC_V( uiSymbol );
+  DTRACE_CABAC_T( "\n");
+}
+
+/** code intraBC
+ * \param pcCU
+ * \param uiAbsPartIdx
+ * \returns Void
+ */
+Void TEncSbac::codeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  const PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
+  const UInt iNumPart = pcCU->getNumPartitions( uiAbsPartIdx );
+  const UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxTotalCUDepth() - pcCU->getDepth(uiAbsPartIdx) ) << 1 ) ) >> 4;
+
+  for(UInt iPartIdx = 0; iPartIdx < iNumPart; iPartIdx ++)
+  {
+    codeIntraBCBvd(pcCU, uiAbsPartIdx + iPartIdx * uiPUOffset, REF_PIC_LIST_INTRABC);
+    Int iSymbol = pcCU->getMVPIdx(REF_PIC_LIST_INTRABC, uiAbsPartIdx + iPartIdx * uiPUOffset);
+    xWriteUnaryMaxSymbol(iSymbol, m_cMVPIdxSCModel.get(0), 1, AMVP_MAX_NUM_CANDS-1);
+  }
+}
+
+Void TEncSbac::codeIntraBCBvd( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
+{ 
+  const TComCUMvField* pcCUMvField = pcCU->getCUMvField( eRefList );
+  
+  const Int iHor = pcCUMvField->getMvd( uiAbsPartIdx ).getHor();
+  const Int iVer = pcCUMvField->getMvd( uiAbsPartIdx ).getVer();
+
+  ContextModel* pCtx = m_cIntraBCBVDSCModel.get( 0 );
+  
+  m_pcBinIf->encodeBin( iHor != 0 ? 1 : 0, *pCtx );
+  
+  pCtx++;
+  m_pcBinIf->encodeBin( iVer != 0 ? 1 : 0, *pCtx );
+  
+  const Bool bHorAbsGr0 = iHor != 0;
+  const Bool bVerAbsGr0 = iVer != 0;
+  const UInt uiHorAbs   = 0 > iHor ? -iHor : iHor;
+  const UInt uiVerAbs   = 0 > iVer ? -iVer : iVer;
+  
+  if( bHorAbsGr0 )
+  {
+    xWriteEpExGolomb( uiHorAbs-1, INTRABC_BVD_CODING_EGORDER );
+    m_pcBinIf->encodeBinEP( 0 > iHor ? 1 : 0 );
+  }
+  
+  if( bVerAbsGr0 )
+  {
+    xWriteEpExGolomb( uiVerAbs-1, INTRABC_BVD_CODING_EGORDER );
+    m_pcBinIf->encodeBinEP( 0 > iVer ? 1 : 0 );
+  }
+  return;
+}
+
+Void  TEncSbac::estBvdBin0Cost(Int *Bin0Cost)
+{
+  ContextModel* pCtx = m_cIntraBCBVDSCModel.get( 0 );
+  Bin0Cost[0] = pCtx->getEntropyBits(0);
+  Bin0Cost[1] = pCtx->getEntropyBits(1);
+  pCtx++;
+  Bin0Cost[2] = pCtx->getEntropyBits(0);
+  Bin0Cost[3] = pCtx->getEntropyBits(1);
+}
+#endif
 
 Void TEncSbac::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
@@ -1092,6 +1859,16 @@ Void TEncSbac::codeQtCbfZero( TComTU & rTu, const ChannelType chType )
   UInt uiCtx = rTu.getCU()->getCtxQtCbf( rTu, chType );
 
   m_pcBinIf->encodeBin( uiCbf , m_cCUQtCbfSCModel.get( 0, chType, uiCtx ) );
+}
+
+Void TEncSbac::codeColourTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  Bool uiFlag = pcCU->getColourTransform(uiAbsPartIdx)== true? 1: 0;
+  UInt uiCtx = 0;
+  if(pcCU->getSlice()->getPPS()->getUseColourTrans())
+  {
+    m_pcBinIf->encodeBin( uiFlag , m_cCUColourTransformFlagSCModel.get( 0, 0, uiCtx ) );
+  }
 }
 
 Void TEncSbac::codeQtRootCbfZero( TComDataCU* pcCU )
@@ -2013,5 +2790,59 @@ Void TEncSbac::codeExplicitRdpcmMode( TComTU &rTu, const ComponentID compID )
     assert(0);
   }
 }
+
+UInt TEncSbac::xWriteTruncMsbP1( UInt uiSymbol, ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut)
+{
+  if ( uiMax == 0 )
+    return 0;
+
+  UInt uiMsbP1;
+  for (uiMsbP1 = 0; uiSymbol > 0; uiMsbP1++)
+  {
+    uiSymbol >>= 1;
+    if ( uiMsbP1 > uiCtxT )
+    {
+      m_pcBinIf->encodeBinEP(1);
+    }
+    else
+    m_pcBinIf->encodeBin(1, uiMsbP1 <= uiCtxT? pcSCModel[ucCtxLut[uiMsbP1]] : pcSCModel[ucCtxLut[uiCtxT]]);
+  }
+  assert ( uiMsbP1 <= uiMax );
+  if ( uiMsbP1 < uiMax )
+  {
+    if ( uiMsbP1 > uiCtxT )
+    {
+      m_pcBinIf->encodeBinEP(0);
+    }
+    else
+    m_pcBinIf->encodeBin(0, uiMsbP1 <= uiCtxT? pcSCModel[ucCtxLut[uiMsbP1]] : pcSCModel[ucCtxLut[uiCtxT]]);
+  }
+  return uiMsbP1;
+}
+
+Void TEncSbac::xWriteTruncMsbP1RefinementBits ( UInt uiSymbol, ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut )
+{
+  if (uiMax==0)
+    return;
+
+  UInt uiMsbP1 = xWriteTruncMsbP1( uiSymbol, pcSCModel, g_getMsbP1Idx(uiMax), uiCtxT, ucCtxLut );
+  if ( uiMsbP1 > 1)
+  {
+    UInt uiNumBins = g_getMsbP1Idx(uiMax);
+    if ( uiMsbP1 < uiNumBins)
+    {
+
+      UInt uiBits = uiMsbP1-1;
+      m_pcBinIf->encodeBinsEP( uiSymbol & ((1 << uiBits) - 1), uiBits );
+    }
+    else
+    {
+      UInt curValue = 1 << (uiNumBins-1);
+      xWriteTruncBinCode(uiSymbol-curValue, uiMax+1-curValue);
+    }
+  }
+}
+
+
 
 //! \}

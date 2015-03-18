@@ -121,7 +121,11 @@ private:
   TEncSampleAdaptiveOffset*  m_pcSAO;
   TEncRateCtrl*           m_pcRateCtrl;
   // indicate sequence first
+#if SCM_T0048_PLT_PRED_IN_PPS
+  UInt                    m_uiSeqOrder;
+#else
   Bool                    m_bSeqFirst;
+#endif
 
   // clean decoding refresh
   Bool                    m_bRefreshPending;
@@ -138,6 +142,9 @@ private:
   Bool                    m_nestedBufferingPeriodSEIPresentInAU;
   Bool                    m_nestedPictureTimingSEIPresentInAU;
   SEIEncoder              m_seiEncoder;
+
+  Bool                    m_hasLosslessPSNR[MAX_NUM_COMPONENT];
+  Double                  m_losslessPSNR[MAX_NUM_COMPONENT];
 
 public:
   TEncGOP();
@@ -163,6 +170,10 @@ public:
   NalUnitType getNalUnitType( Int pocCurr, Int lastIdr, Bool isField );
   Void arrangeLongtermPicturesInRPS(TComSlice *, TComList<TComPic*>& );
 
+#if SCM_T0048_PLT_PRED_IN_PPS
+  TComPPS* getPPS();
+#endif
+
 protected:
   TEncRateCtrl* getRateCtrl()       { return m_pcRateCtrl;  }
 
@@ -180,6 +191,7 @@ protected:
   UInt64 xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1, const BitDepths &bitDepths);
 
   Double xCalculateRVM();
+  Bool xGetUseIntegerMv( TComSlice* pcSlice );
 
   Void xCreateIRAPLeadingSEIMessages (SEIMessages& seiMessages, const TComSPS *sps, const TComPPS *pps);
   Void xCreatePerPictureSEIMessages (Int picInGOP, SEIMessages& seiMessages, SEIMessages& nestedSeiMessages, TComSlice *slice);
