@@ -534,7 +534,9 @@ Int TComSlice::getNumRpsCurrTempList() const
       numRpsCurrTempList++;
     }
   }
+#if !SCM_FIX_T0227_INTEGRATION
   return numRpsCurrTempList;
+#endif
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
   if ( getSPS()->getUseIntraBlockCopy() )
   {
