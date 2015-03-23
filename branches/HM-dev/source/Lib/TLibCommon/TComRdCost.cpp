@@ -37,6 +37,7 @@
 
 #include <math.h>
 #include <assert.h>
+#include <limits>
 #include "TComRom.h"
 #include "TComRdCost.h"
 
@@ -275,12 +276,12 @@ Void TComRdCost::init()
   m_iCostScale                 = 0;
 }
 
-UInt TComRdCost::xGetComponentBits( Int iVal )
+// Static member function
+UInt TComRdCost::xGetExpGolombNumberOfBits( Int iVal )
 {
+  assert(iVal != std::numeric_limits<Int>::min());
   UInt uiLength = 1;
-  UInt uiTemp   = ( iVal <= 0) ? (-iVal<<1)+1: (iVal<<1);
-
-  assert ( uiTemp );
+  UInt uiTemp   = ( iVal <= 0) ? (UInt(-iVal)<<1)+1: UInt(iVal<<1);
 
   while ( 1 != uiTemp )
   {
