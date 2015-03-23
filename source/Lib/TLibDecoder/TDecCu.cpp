@@ -510,7 +510,7 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
 #endif
 
   DEBUG_STRING_NEW(sTemp)
-  m_pcPrediction->initAdiPatternChType( rTu, bAboveAvail, bLeftAvail, compID, bUseFilteredPredictions  DEBUG_STRING_PASS_INTO(sTemp) );
+  m_pcPrediction->initIntraPatternChType( rTu, bAboveAvail, bLeftAvail, compID, bUseFilteredPredictions  DEBUG_STRING_PASS_INTO(sTemp) );
 
 
   //===== get prediction signal =====

@@ -138,7 +138,7 @@ extern const UInt   g_uiGroupIdx[ MAX_TU_SIZE ];
 extern const UInt   g_uiMinInGroup[ LAST_SIGNIFICANT_GROUPS ];
 
 // ====================================================================================================================
-// ADI table
+// Intra prediction table
 // ====================================================================================================================
 
 extern const UChar  g_aucIntraModeNumFast[MAX_CU_DEPTH];

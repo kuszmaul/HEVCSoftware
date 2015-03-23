@@ -124,8 +124,8 @@ public:
   }
 
   // This function is actually still in TComPattern.cpp
-  /// set parameters from CU data for accessing ADI data
-  Void initAdiPatternChType ( TComTU &rTu,
+  /// set parameters from CU data for accessing intra data
+  Void initIntraPatternChType ( TComTU &rTu,
                               Bool&       bAbove,
                               Bool&       bLeft,
                               const ComponentID compID, const Bool bFilterRefSamples
