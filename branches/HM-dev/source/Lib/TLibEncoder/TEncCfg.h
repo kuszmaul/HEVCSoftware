@@ -168,6 +168,7 @@ protected:
   Bool      m_saoCtuBoundary;
 
   //====== Motion search ========
+  Bool      m_bDisableIntraPUsInInterSlices;
   Int       m_iFastSearch;                      //  0:Full search  1:Diamond  2:PMVFAST
   Int       m_iSearchRange;                     //  0:Full frame
   Int       m_bipredSearchRange;
@@ -445,6 +446,7 @@ public:
   Void      setDeblockingFilterMetric       ( Bool  b )      { m_DeblockingFilterMetric = b; }
 
   //====== Motion search ========
+  Void      setDisableIntraPUsInInterSlices ( Bool  b )      { m_bDisableIntraPUsInInterSlices = b; }
   Void      setFastSearch                   ( Int   i )      { m_iFastSearch = i; }
   Void      setSearchRange                  ( Int   i )      { m_iSearchRange = i; }
   Void      setBipredSearchRange            ( Int   i )      { m_bipredSearchRange = i; }
@@ -510,6 +512,7 @@ public:
   Bool      getDeblockingFilterMetric       ()      { return m_DeblockingFilterMetric; }
 
   //==== Motion search ========
+  Bool      getDisableIntraPUsInInterSlices () const { return m_bDisableIntraPUsInInterSlices; }
   Int       getFastSearch                   ()      { return  m_iFastSearch; }
   Int       getSearchRange                  ()      { return  m_iSearchRange; }
 

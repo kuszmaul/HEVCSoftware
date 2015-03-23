@@ -201,6 +201,7 @@ protected:
   Bool      m_useSelectiveRDOQ;                               ///< flag for using selective RDOQ
 #endif
   Int       m_rdPenalty;                                      ///< RD-penalty for 32x32 TU for intra in non-intra slices (0: no RD-penalty, 1: RD-penalty, 2: maximum RD-penalty)
+  Bool      m_bDisableIntraPUsInInterSlices;                  ///< Flag for disabling intra predicted PUs in inter slices.
   Int       m_iFastSearch;                                    ///< ME mode, 0 = full, 1 = diamond, 2 = PMVFAST
   Int       m_iSearchRange;                                   ///< ME search range
   Int       m_bipredSearchRange;                              ///< ME search range for bipred refinement

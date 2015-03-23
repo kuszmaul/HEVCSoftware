@@ -139,6 +139,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setDeblockingFilterMetric                            ( m_DeblockingFilterMetric );
 
   //====== Motion search ========
+  m_cTEncTop.setDisableIntraPUsInInterSlices                      ( m_bDisableIntraPUsInInterSlices );
   m_cTEncTop.setFastSearch                                        ( m_iFastSearch  );
   m_cTEncTop.setSearchRange                                       ( m_iSearchRange );
   m_cTEncTop.setBipredSearchRange                                 ( m_bipredSearchRange );

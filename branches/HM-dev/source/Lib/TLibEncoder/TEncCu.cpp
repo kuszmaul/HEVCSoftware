@@ -634,10 +634,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         // speedup for inter frames
         Double intraCost = 0.0;
 
-        if((rpcBestCU->getSlice()->getSliceType() == I_SLICE)                                     ||
-           (rpcBestCU->getCbf( 0, COMPONENT_Y  ) != 0)                                            ||
-          ((rpcBestCU->getCbf( 0, COMPONENT_Cb ) != 0) && (numberValidComponents > COMPONENT_Cb)) ||
-          ((rpcBestCU->getCbf( 0, COMPONENT_Cr ) != 0) && (numberValidComponents > COMPONENT_Cr))  ) // avoid very complex intra if it is unlikely
+        if((rpcBestCU->getSlice()->getSliceType() == I_SLICE)                                        ||
+            ((!m_pcEncCfg->getDisableIntraPUsInInterSlices()) && (
+              (rpcBestCU->getCbf( 0, COMPONENT_Y  ) != 0)                                            ||
+             ((rpcBestCU->getCbf( 0, COMPONENT_Cb ) != 0) && (numberValidComponents > COMPONENT_Cb)) ||
+             ((rpcBestCU->getCbf( 0, COMPONENT_Cr ) != 0) && (numberValidComponents > COMPONENT_Cr))  // avoid very complex intra if it is unlikely
+            )))
         {
           xCheckRDCostIntra( rpcBestCU, rpcTempCU, intraCost, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
           rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
