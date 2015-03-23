@@ -775,6 +775,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("GOPSize,g",                                       m_iGOPSize,                                           1, "GOP size of temporal structure")
 
   // motion search options
+  ("DisableIntraInInter",                             m_bDisableIntraPUsInInterSlices,                  false, "Flag to disable intra PUs in inter slices")
   ("FastSearch",                                      m_iFastSearch,                                        1, "0:Full search  1:Diamond  2:PMVFAST")
   ("SearchRange,-sr",                                 m_iSearchRange,                                      96, "Motion search range")
   ("BipredSearchRange",                               m_bipredSearchRange,                                  4, "Motion search range for bipred refinement")
