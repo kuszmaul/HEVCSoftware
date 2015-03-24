@@ -229,7 +229,7 @@ Void TComYuv::copyPartToPartYuv   ( TComYuv* pcYuvDst, const UInt uiPartIdx, con
 
 Void TComYuv::copyPartToPartComponent  ( const ComponentID compID, TComYuv* pcYuvDst, const UInt uiPartIdx, const UInt iWidthComponent, const UInt iHeightComponent ) const
 {
-  const Pel* pSrc =           getAddr(compID);
+  const Pel* pSrc =           getAddr(compID, uiPartIdx);
         Pel* pDst = pcYuvDst->getAddr(compID, uiPartIdx);
   if( pSrc == pDst )
   {
