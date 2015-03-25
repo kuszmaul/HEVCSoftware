@@ -245,7 +245,7 @@ Void SEIWriter::xWriteSEIDecodingUnitInfo(const SEIDecodingUnitInfo& sei, const 
   WRITE_UVLC(sei.m_decodingUnitIdx, "decoding_unit_idx");
   if(vui->getHrdParameters()->getSubPicCpbParamsInPicTimingSEIFlag())
   {
-    WRITE_CODE( sei.m_duSptCpbRemovalDelay, (vui->getHrdParameters()->getDuCpbRemovalDelayLengthMinus1() + 1), "du_spt_cpb_removal_delay");
+    WRITE_CODE( sei.m_duSptCpbRemovalDelay, (vui->getHrdParameters()->getDuCpbRemovalDelayLengthMinus1() + 1), "du_spt_cpb_removal_delay_increment");
   }
   WRITE_FLAG( sei.m_dpbOutputDuDelayPresentFlag, "dpb_output_du_delay_present_flag");
   if(sei.m_dpbOutputDuDelayPresentFlag)

@@ -137,13 +137,12 @@ Void TAppDecTop::decode()
 #endif
     AnnexBStats stats = AnnexBStats();
 
-    vector<uint8_t> nalUnit;
     InputNALUnit nalu;
-    byteStreamNALUnit(bytestream, nalUnit, stats);
+    byteStreamNALUnit(bytestream, nalu.getBitstream().getFifo(), stats);
 
     // call actual decoding function
     Bool bNewPicture = false;
-    if (nalUnit.empty())
+    if (nalu.getBitstream().getFifo().empty())
     {
       /* this can happen if the following occur:
        *  - empty input file
@@ -154,7 +153,7 @@ Void TAppDecTop::decode()
     }
     else
     {
-      read(nalu, nalUnit);
+      read(nalu);
       if( (m_iMaxTemporalLayer >= 0 && nalu.m_temporalId > m_iMaxTemporalLayer) || !isNaluWithinTargetDecLayerIdSet(&nalu)  )
       {
         bNewPicture = false;

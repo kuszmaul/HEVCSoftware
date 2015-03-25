@@ -1632,7 +1632,7 @@ protected:
 };// END CLASS DEFINITION TComSlice
 
 
-Void calculateParameterSetChangedFlag(Bool &bChanged, const std::vector<UChar> *pOldData, const std::vector<UChar> *pNewData);
+Void calculateParameterSetChangedFlag(Bool &bChanged, const std::vector<UChar> *pOldData, const std::vector<UChar> &newData);
 
 template <class T> class ParameterSetMap
 {
@@ -1658,7 +1658,7 @@ public:
     }
   }
 
-  Void storePS(Int psId, T *ps, const std::vector<UChar> *pNaluData)
+  Void storePS(Int psId, T *ps, const std::vector<UChar> &naluData)
   {
     assert ( psId < m_maxId );
     if ( m_paramsetMap.find(psId) != m_paramsetMap.end() )
@@ -1666,7 +1666,7 @@ public:
       MapData<T> &mapData=m_paramsetMap[psId];
 
       // work out changed flag
-      calculateParameterSetChangedFlag(mapData.bChanged, mapData.pNaluData, pNaluData);
+      calculateParameterSetChangedFlag(mapData.bChanged, mapData.pNaluData, naluData);
       delete m_paramsetMap[psId].pNaluData;
       delete m_paramsetMap[psId].parameterSet;
 
@@ -1677,15 +1677,8 @@ public:
       m_paramsetMap[psId].parameterSet = ps;
       m_paramsetMap[psId].bChanged = false;
     }
-    if (pNaluData)
-    {
-      m_paramsetMap[psId].pNaluData=new std::vector<UChar>;
-      *(m_paramsetMap[psId].pNaluData) = *pNaluData;
-    }
-    else
-    {
-      m_paramsetMap[psId].pNaluData=0;
-    }
+    m_paramsetMap[psId].pNaluData=new std::vector<UChar>;
+    *(m_paramsetMap[psId].pNaluData) = naluData;
   }
 
   Void clearChangedFlag(Int psId)
@@ -1708,7 +1701,14 @@ public:
 
   T* getPS(Int psId)
   {
-    return ( m_paramsetMap.find(psId) == m_paramsetMap.end() ) ? NULL : m_paramsetMap[psId].parameterSet;
+    typename std::map<Int,MapData<T> >::iterator it=m_paramsetMap.find(psId);
+    return ( it == m_paramsetMap.end() ) ? NULL : (it)->second.parameterSet;
+  }
+
+  const T* getPS(Int psId) const
+  {
+    typename std::map<Int,MapData<T> >::const_iterator it=m_paramsetMap.find(psId);
+    return ( it == m_paramsetMap.end() ) ? NULL : (it)->second.parameterSet;
   }
 
   T* getFirstPS()
@@ -1728,7 +1728,7 @@ public:
   virtual        ~ParameterSetManager();
 
   //! store sequence parameter set and take ownership of it
-  Void           storeVPS(TComVPS *vps, const std::vector<UChar> *pNaluData) { m_vpsMap.storePS( vps->getVPSId(), vps, pNaluData); };
+  Void           storeVPS(TComVPS *vps, const std::vector<UChar> &naluData) { m_vpsMap.storePS( vps->getVPSId(), vps, naluData); };
   //! get pointer to existing video parameter set
   TComVPS*       getVPS(Int vpsId)                                           { return m_vpsMap.getPS(vpsId); };
   Bool           getVPSChangedFlag(Int vpsId) const                          { return m_vpsMap.getChangedFlag(vpsId); }
@@ -1736,7 +1736,7 @@ public:
   TComVPS*       getFirstVPS()                                               { return m_vpsMap.getFirstPS(); };
 
   //! store sequence parameter set and take ownership of it
-  Void           storeSPS(TComSPS *sps, const std::vector<UChar> *pNaluData) { m_spsMap.storePS( sps->getSPSId(), sps, pNaluData); };
+  Void           storeSPS(TComSPS *sps, const std::vector<UChar> &naluData) { m_spsMap.storePS( sps->getSPSId(), sps, naluData); };
   //! get pointer to existing sequence parameter set
   TComSPS*       getSPS(Int spsId)                                           { return m_spsMap.getPS(spsId); };
   Bool           getSPSChangedFlag(Int spsId) const                          { return m_spsMap.getChangedFlag(spsId); }
@@ -1744,7 +1744,7 @@ public:
   TComSPS*       getFirstSPS()                                               { return m_spsMap.getFirstPS(); };
 
   //! store picture parameter set and take ownership of it
-  Void           storePPS(TComPPS *pps, const std::vector<UChar> *pNaluData) { m_ppsMap.storePS( pps->getPPSId(), pps, pNaluData); };
+  Void           storePPS(TComPPS *pps, const std::vector<UChar> &naluData) { m_ppsMap.storePS( pps->getPPSId(), pps, naluData); };
   //! get pointer to existing picture parameter set
   TComPPS*       getPPS(Int ppsId)                                           { return m_ppsMap.getPS(ppsId); };
   Bool           getPPSChangedFlag(Int ppsId) const                          { return m_ppsMap.getChangedFlag(ppsId); }
@@ -1753,22 +1753,22 @@ public:
 
   //! activate a SPS from a active parameter sets SEI message
   //! \returns true, if activation is successful
-  Bool           activateSPSWithSEI(Int SPSId);
+  // Bool           activateSPSWithSEI(Int SPSId);
 
   //! activate a PPS and depending on isIDR parameter also SPS and VPS
   //! \returns true, if activation is successful
   Bool           activatePPS(Int ppsId, Bool isIRAP);
 
-  const TComVPS* getActiveVPS()const { return &m_activeVPS; };
-  const TComSPS* getActiveSPS()const { return &m_activeSPS; };
+  const TComVPS* getActiveVPS()const { return m_vpsMap.getPS(m_activeVPSId); };
+  const TComSPS* getActiveSPS()const { return m_spsMap.getPS(m_activeSPSId); };
 
 protected:
   ParameterSetMap<TComVPS> m_vpsMap;
   ParameterSetMap<TComSPS> m_spsMap;
   ParameterSetMap<TComPPS> m_ppsMap;
 
-  TComVPS                  m_activeVPS; // used for SEI message
-  TComSPS                  m_activeSPS; // used for SEI message
+  Int m_activeVPSId; // -1 for nothing active
+  Int m_activeSPSId; // -1 for nothing active
 };
 
 //! \}
