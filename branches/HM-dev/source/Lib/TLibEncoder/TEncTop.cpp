@@ -746,30 +746,37 @@ Void TEncTop::xInitPPS()
   m_cPPS.setWPBiPred( m_useWeightedBiPred );
   m_cPPS.setOutputFlagPresentFlag( false );
   m_cPPS.setSignHideFlag(getSignHideFlag());
+
   if ( getDeblockingFilterMetric() )
   {
-    m_cPPS.setDeblockingFilterControlPresentFlag (true);
     m_cPPS.setDeblockingFilterOverrideEnabledFlag(true);
     m_cPPS.setPicDisableDeblockingFilterFlag(false);
-    m_cPPS.setDeblockingFilterBetaOffsetDiv2(0);
-    m_cPPS.setDeblockingFilterTcOffsetDiv2(0);
   }
   else
   {
-    m_cPPS.setDeblockingFilterControlPresentFlag (m_DeblockingFilterControlPresent );
-
-    if (m_cPPS.getDeblockingFilterControlPresentFlag())
-    {
-      m_cPPS.setDeblockingFilterOverrideEnabledFlag( !getLoopFilterOffsetInPPS() );
-      m_cPPS.setPicDisableDeblockingFilterFlag( getLoopFilterDisable() );
-    }
+    m_cPPS.setDeblockingFilterOverrideEnabledFlag( !getLoopFilterOffsetInPPS() );
+    m_cPPS.setPicDisableDeblockingFilterFlag( getLoopFilterDisable() );
   }
 
-  if (m_cPPS.getDeblockingFilterControlPresentFlag() && ! m_cPPS.getPicDisableDeblockingFilterFlag())
+  if (! m_cPPS.getPicDisableDeblockingFilterFlag())
   {
     m_cPPS.setDeblockingFilterBetaOffsetDiv2( getLoopFilterBetaOffset() );
     m_cPPS.setDeblockingFilterTcOffsetDiv2( getLoopFilterTcOffset() );
   }
+  else
+  {
+    m_cPPS.setDeblockingFilterBetaOffsetDiv2(0);
+    m_cPPS.setDeblockingFilterTcOffsetDiv2(0);
+  }
+
+  // deblockingFilterControlPresentFlag is true if any of the settings differ from the inferred values:
+  const Bool deblockingFilterControlPresentFlag = m_cPPS.getDeblockingFilterOverrideEnabledFlag() ||
+                                                  m_cPPS.getPicDisableDeblockingFilterFlag()      ||
+                                                  m_cPPS.getDeblockingFilterBetaOffsetDiv2() != 0 ||
+                                                  m_cPPS.getDeblockingFilterTcOffsetDiv2() != 0;
+
+  m_cPPS.setDeblockingFilterControlPresentFlag(deblockingFilterControlPresentFlag);
+
   m_cPPS.setLog2ParallelMergeLevelMinus2   (m_log2ParallelMergeLevelMinus2 );
   m_cPPS.setCabacInitPresentFlag(CABAC_INIT_PRESENT_FLAG);
   m_cPPS.setLoopFilterAcrossSlicesEnabledFlag( m_bLFCrossSliceBoundaryFlag );
