@@ -741,11 +741,6 @@ Bool TVideoIOYuv::read ( TComPicYuv*  pPicYuvUser, TComPicYuv* pPicYuvTrueOrg, c
     }
   }
 
-  Int internalBitDepth[MAX_NUM_CHANNEL_TYPE];
-  for(UInt chType=0; chType<MAX_NUM_CHANNEL_TYPE; chType++)
-  {
-    internalBitDepth[chType] = m_bitdepthShift[chType] + m_MSBExtendedBitDepth[chType];
-  }
   ColourSpaceConvert(*pPicYuvTrueOrg, *pPicYuvUser, ipcsc, true);
 
   return true;
@@ -770,11 +765,6 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUser, const InputColourSpaceConversi
   if (ipCSC!=IPCOLOURSPACE_UNCHANGED)
   {
     cPicYuvCSCd.create(pPicYuvUser->getWidth(COMPONENT_Y), pPicYuvUser->getHeight(COMPONENT_Y), pPicYuvUser->getChromaFormat(), pPicYuvUser->getWidth(COMPONENT_Y), pPicYuvUser->getHeight(COMPONENT_Y), 0, false);
-    Int internalBitDepth[MAX_NUM_CHANNEL_TYPE];
-    for(UInt chType=0; chType<MAX_NUM_CHANNEL_TYPE; chType++)
-    {
-      internalBitDepth[chType] = m_bitdepthShift[chType] + m_MSBExtendedBitDepth[chType];
-    }
     ColourSpaceConvert(*pPicYuvUser, cPicYuvCSCd, ipCSC, false);
   }
   TComPicYuv *pPicYuv=(ipCSC==IPCOLOURSPACE_UNCHANGED) ? pPicYuvUser : &cPicYuvCSCd;
@@ -870,11 +860,6 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUserTop, TComPicYuv* pPicYuvUserBott
   {
     cPicYuvTopCSCd   .create(pPicYuvUserTop   ->getWidth(COMPONENT_Y), pPicYuvUserTop   ->getHeight(COMPONENT_Y), pPicYuvUserTop   ->getChromaFormat(), pPicYuvUserTop   ->getWidth(COMPONENT_Y), pPicYuvUserTop   ->getHeight(COMPONENT_Y), 0, false);
     cPicYuvBottomCSCd.create(pPicYuvUserBottom->getWidth(COMPONENT_Y), pPicYuvUserBottom->getHeight(COMPONENT_Y), pPicYuvUserBottom->getChromaFormat(), pPicYuvUserBottom->getWidth(COMPONENT_Y), pPicYuvUserBottom->getHeight(COMPONENT_Y), 0, false);
-    Int internalBitDepth[MAX_NUM_CHANNEL_TYPE];
-    for(UInt chType=0; chType<MAX_NUM_CHANNEL_TYPE; chType++)
-    {
-      internalBitDepth[chType] = m_bitdepthShift[chType] + m_MSBExtendedBitDepth[chType];
-    }
     ColourSpaceConvert(*pPicYuvUserTop,    cPicYuvTopCSCd,    ipCSC, false);
     ColourSpaceConvert(*pPicYuvUserBottom, cPicYuvBottomCSCd, ipCSC, false);
   }
