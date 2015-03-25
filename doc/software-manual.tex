@@ -1338,14 +1338,6 @@ Enables or disables the use of in-loop filtering across slice
 boundaries.
 \\
 
-\Option{DeblockingFilterControlPresent}&
-%\ShortOption{\None}&
-\Default{false}&
-Enables or disables the presence of the deblocking filter control
-parameters in the picture parameter set and in the slice segment header.
-When disabled, the default deblocking filter parameters are used.
-\\
-
 \Option{LoopFilterOffsetInPPS}&
 %\ShortOption{\None}&
 \Default{false}&
@@ -1376,7 +1368,8 @@ shall be an integer number in the range $-6..6$.
 \Option{DeblockingFilterMetric}&
 %\ShortOption{\None}&
 \Default{false}&
-Enables or disables the use of a deblocking filter metric to evaluate the suitability of deblocking..
+Enables or disables the use of a deblocking filter metric to evaluate the suitability of deblocking. If enabled then
+LoopFilterOffsetInPPS and LoopFilterDisable must be 0.
 \\
 
 \Option{LFCrossSliceBoundaryFlag}&
