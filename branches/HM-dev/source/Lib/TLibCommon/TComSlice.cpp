@@ -2254,11 +2254,9 @@ ParameterSetManager::ParameterSetManager()
 : m_vpsMap(MAX_NUM_VPS)
 , m_spsMap(MAX_NUM_SPS)
 , m_ppsMap(MAX_NUM_PPS)
-, m_activeVPS()
-, m_activeSPS()
+, m_activeVPSId(-1)
+, m_activeSPSId(-1)
 {
-  m_activeVPS.setVPSId(-1);
-  m_activeSPS.setSPSId(-1);
 }
 
 
@@ -2268,30 +2266,30 @@ ParameterSetManager::~ParameterSetManager()
 
 //! activate a SPS from a active parameter sets SEI message
 //! \returns true, if activation is successful
-Bool ParameterSetManager::activateSPSWithSEI(Int spsId)
-{
-  TComSPS *sps = m_spsMap.getPS(spsId);
-  if (sps)
-  {
-    Int vpsId = sps->getVPSId();
-    TComVPS *vps = m_vpsMap.getPS(vpsId);
-    if (vps)
-    {
-      m_activeVPS = *(vps);
-      m_activeSPS = *(sps);
-      return true;
-    }
-    else
-    {
-      printf("Warning: tried to activate SPS using an Active parameter sets SEI message. Referenced VPS does not exist.");
-    }
-  }
-  else
-  {
-    printf("Warning: tried to activate non-existing SPS using an Active parameter sets SEI message.");
-  }
-  return false;
-}
+//Bool ParameterSetManager::activateSPSWithSEI(Int spsId)
+//{
+//  TComSPS *sps = m_spsMap.getPS(spsId);
+//  if (sps)
+//  {
+//    Int vpsId = sps->getVPSId();
+//    TComVPS *vps = m_vpsMap.getPS(vpsId);
+//    if (vps)
+//    {
+//      m_activeVPS = *(vps);
+//      m_activeSPS = *(sps);
+//      return true;
+//    }
+//    else
+//    {
+//      printf("Warning: tried to activate SPS using an Active parameter sets SEI message. Referenced VPS does not exist.");
+//    }
+//  }
+//  else
+//  {
+//    printf("Warning: tried to activate non-existing SPS using an Active parameter sets SEI message.");
+//  }
+//  return false;
+//}
 
 //! activate a PPS and depending on isIDR parameter also SPS and VPS
 //! \returns true, if activation is successful
@@ -2301,41 +2299,49 @@ Bool ParameterSetManager::activatePPS(Int ppsId, Bool isIRAP)
   if (pps)
   {
     Int spsId = pps->getSPSId();
-    if (!isIRAP && (spsId != m_activeSPS.getSPSId() ))
+    if (!isIRAP && (spsId != m_activeSPSId ))
     {
       printf("Warning: tried to activate PPS referring to a inactive SPS at non-IDR.");
-      return false;
-    }
-    TComSPS *sps = m_spsMap.getPS(spsId);
-    if (sps)
-    {
-      Int vpsId = sps->getVPSId();
-      if (!isIRAP && (vpsId != m_activeVPS.getVPSId() ))
-      {
-        printf("Warning: tried to activate PPS referring to a inactive VPS at non-IDR.");
-        return false;
-      }
-      TComVPS *vps =m_vpsMap.getPS(vpsId);
-      if (vps)
-      {
-        m_activeVPS = *(vps);
-        m_activeSPS = *(sps);
-        return true;
-      }
-      else
-      {
-        printf("Warning: tried to activate PPS that refers to a non-existing VPS.");
-      }
     }
     else
     {
-      printf("Warning: tried to activate a PPS that refers to a non-existing SPS.");
+      TComSPS *sps = m_spsMap.getPS(spsId);
+      if (sps)
+      {
+        Int vpsId = sps->getVPSId();
+        if (!isIRAP && (vpsId != m_activeVPSId ))
+        {
+          printf("Warning: tried to activate PPS referring to a inactive VPS at non-IDR.");
+        }
+        else
+        {
+          TComVPS *vps =m_vpsMap.getPS(vpsId);
+          if (vps)
+          {
+            m_activeVPSId = vpsId;
+            m_activeSPSId = spsId;
+            return true;
+          }
+          else
+          {
+            printf("Warning: tried to activate PPS that refers to a non-existing VPS.");
+          }
+        }
+      }
+      else
+      {
+        printf("Warning: tried to activate a PPS that refers to a non-existing SPS.");
+      }
     }
   }
   else
   {
     printf("Warning: tried to activate non-existing PPS.");
   }
+
+  // Failed to activate if reach here.
+  m_activeSPSId=-1;
+  m_activeVPSId=-1;
   return false;
 }
 
@@ -2358,7 +2364,7 @@ TComPTL::TComPTL()
   ::memset(m_subLayerLevelPresentFlag,   0, sizeof(m_subLayerLevelPresentFlag  ));
 }
 
-Void calculateParameterSetChangedFlag(Bool &bChanged, const std::vector<UChar> *pOldData, const std::vector<UChar> *pNewData)
+Void calculateParameterSetChangedFlag(Bool &bChanged, const std::vector<UChar> *pOldData, const std::vector<UChar> &newData)
 {
   if (!bChanged)
   {
@@ -2375,7 +2381,7 @@ Void calculateParameterSetChangedFlag(Bool &bChanged, const std::vector<UChar> *
       }
       else
       {
-        const UChar *pNewDataArray=&(*pNewData)[0];
+        const UChar *pNewDataArray=&(newData)[0];
         const UChar *pOldDataArray=&(*pOldData)[0];
         if (memcmp(pOldDataArray, pNewDataArray, pOldData->size()))
         {

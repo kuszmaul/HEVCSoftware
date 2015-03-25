@@ -33,7 +33,7 @@
 
 /**
  \file     NALread.cpp
- \brief    reading funtionality for NAL units
+ \brief    reading functionality for NAL units
  */
 
 
@@ -104,7 +104,7 @@ static Void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf, TComInputBitstream
 
 Void readNalUnitHeader(InputNALUnit& nalu)
 {
-  TComInputBitstream& bs = *nalu.m_Bitstream;
+  TComInputBitstream& bs = nalu.getBitstream();
 
   Bool forbidden_zero_bit = bs.read(1);           // forbidden_zero_bit
   assert(forbidden_zero_bit == 0);
@@ -144,15 +144,13 @@ Void readNalUnitHeader(InputNALUnit& nalu)
  * create a NALunit structure with given header values and storage for
  * a bitstream
  */
-Void read(InputNALUnit& nalu, vector<uint8_t>& nalUnitBuf)
+Void read(InputNALUnit& nalu)
 {
-  /* perform anti-emulation prevention */
-  TComInputBitstream *pcBitstream = new TComInputBitstream(NULL);
-  convertPayloadToRBSP(nalUnitBuf, pcBitstream, (nalUnitBuf[0] & 64) == 0);
-
-  nalu.m_Bitstream = new TComInputBitstream(&nalUnitBuf);
-  nalu.m_Bitstream->setEmulationPreventionByteLocation(pcBitstream->getEmulationPreventionByteLocation());
-  delete pcBitstream;
+  TComInputBitstream &bitstream = nalu.getBitstream();
+  vector<uint8_t>& nalUnitBuf=bitstream.getFifo();
+  // perform anti-emulation prevention
+  convertPayloadToRBSP(nalUnitBuf, &bitstream, (nalUnitBuf[0] & 64) == 0);
+  bitstream.resetToStart();
   readNalUnitHeader(nalu);
 }
 //! \}
