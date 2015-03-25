@@ -285,7 +285,7 @@ Void TDecTop::xActivateParameterSets()
     }
 
 #if RExt__HIGH_BIT_DEPTH_SUPPORT==0
-    if (sps->getUseExtendedPrecision() || sps->getBitDepth(CHANNEL_TYPE_LUMA)>12 || sps->getBitDepth(CHANNEL_TYPE_CHROMA)>12 )
+    if (sps->getSpsRangeExtension().getExtendedPrecisionProcessingFlag() || sps->getBitDepth(CHANNEL_TYPE_LUMA)>12 || sps->getBitDepth(CHANNEL_TYPE_CHROMA)>12 )
     {
       printf("High bit depth support must be enabled at compile-time in order to decode this bitstream\n");
       assert (0);
@@ -313,7 +313,7 @@ Void TDecTop::xActivateParameterSets()
     sps=pSlice->getSPS();
 
     // Initialise the various objects for the new set of settings
-    m_cSAO.create( sps->getPicWidthInLumaSamples(), sps->getPicHeightInLumaSamples(), sps->getChromaFormatIdc(), sps->getMaxCUWidth(), sps->getMaxCUHeight(), sps->getMaxTotalCUDepth(), pps->getSaoOffsetBitShift(CHANNEL_TYPE_LUMA), pps->getSaoOffsetBitShift(CHANNEL_TYPE_CHROMA) );
+    m_cSAO.create( sps->getPicWidthInLumaSamples(), sps->getPicHeightInLumaSamples(), sps->getChromaFormatIdc(), sps->getMaxCUWidth(), sps->getMaxCUHeight(), sps->getMaxTotalCUDepth(), pps->getPpsRangeExtension().getLog2SaoOffsetScale(CHANNEL_TYPE_LUMA), pps->getPpsRangeExtension().getLog2SaoOffsetScale(CHANNEL_TYPE_CHROMA) );
     m_cLoopFilter.create( sps->getMaxTotalCUDepth() );
     m_cPrediction.initTempBuff(sps->getChromaFormatIdc());
 

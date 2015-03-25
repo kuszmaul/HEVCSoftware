@@ -223,13 +223,7 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
   Bool pps_extension_present_flag=false;
   Bool pps_extension_flags[NUM_PPS_EXTENSION_FLAGS]={false};
 
-  pps_extension_flags[PPS_EXT__REXT] = (
-             ( pcPPS->getUseTransformSkip() && (pcPPS->getTransformSkipLog2MaxSize() != 2))
-          || pcPPS->getUseCrossComponentPrediction()
-          || ( pcPPS->getChromaQpAdjTableSize() > 0 )
-          || ( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_LUMA) !=0 ) || ( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_CHROMA) !=0 )
-     )
-    ;
+  pps_extension_flags[PPS_EXT__REXT] = pcPPS->getPpsRangeExtension().settingsDifferFromDefaults(pcPPS->getUseTransformSkip());
 
   // Other PPS extension flags checked here.
 
@@ -265,29 +259,31 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
         switch (PPSExtensionFlagIndex(i))
         {
           case PPS_EXT__REXT:
-
-            if (pcPPS->getUseTransformSkip())
             {
-              WRITE_UVLC( pcPPS->getTransformSkipLog2MaxSize()-2,                 "log2_max_transform_skip_block_size_minus2");
-            }
-
-            WRITE_FLAG((pcPPS->getUseCrossComponentPrediction() ? 1 : 0),         "cross_component_prediction_enabled_flag" );
-
-            WRITE_FLAG(UInt(pcPPS->getChromaQpAdjTableSize() > 0),                "chroma_qp_offset_list_enabled_flag" );
-            if (pcPPS->getChromaQpAdjTableSize() > 0)
-            {
-              WRITE_UVLC(pcPPS->getMaxCuChromaQpAdjDepth(),                       "diff_cu_chroma_qp_offset_depth");
-              WRITE_UVLC(pcPPS->getChromaQpAdjTableSize() - 1,                    "chroma_qp_offset_list_len_minus1");
-              /* skip zero index */
-              for (Int cuChromaQpOffsetIdx = 0; cuChromaQpOffsetIdx < pcPPS->getChromaQpAdjTableSize(); cuChromaQpOffsetIdx++)
+              const TComPPSRExt &ppsRangeExtension = pcPPS->getPpsRangeExtension();
+              if (pcPPS->getUseTransformSkip())
               {
-                WRITE_SVLC(pcPPS->getChromaQpAdjTableAt(cuChromaQpOffsetIdx+1).u.comp.CbOffset,     "cb_qp_offset_list[i]");
-                WRITE_SVLC(pcPPS->getChromaQpAdjTableAt(cuChromaQpOffsetIdx+1).u.comp.CrOffset,     "cr_qp_offset_list[i]");
+                WRITE_UVLC( ppsRangeExtension.getLog2MaxTransformSkipBlockSize()-2,            "log2_max_transform_skip_block_size_minus2");
               }
-            }
 
-            WRITE_UVLC( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_LUMA),           "log2_sao_offset_scale_luma"   );
-            WRITE_UVLC( pcPPS->getSaoOffsetBitShift(CHANNEL_TYPE_CHROMA),         "log2_sao_offset_scale_chroma" );
+              WRITE_FLAG((ppsRangeExtension.getCrossComponentPredictionEnabledFlag() ? 1 : 0), "cross_component_prediction_enabled_flag" );
+
+              WRITE_FLAG(UInt(ppsRangeExtension.getChromaQpOffsetListEnabledFlag()),           "chroma_qp_offset_list_enabled_flag" );
+              if (ppsRangeExtension.getChromaQpOffsetListEnabledFlag())
+              {
+                WRITE_UVLC(ppsRangeExtension.getDiffCuChromaQpOffsetDepth(),                   "diff_cu_chroma_qp_offset_depth");
+                WRITE_UVLC(ppsRangeExtension.getChromaQpOffsetListLen() - 1,                   "chroma_qp_offset_list_len_minus1");
+                /* skip zero index */
+                for (Int cuChromaQpOffsetIdx = 0; cuChromaQpOffsetIdx < ppsRangeExtension.getChromaQpOffsetListLen(); cuChromaQpOffsetIdx++)
+                {
+                  WRITE_SVLC(ppsRangeExtension.getChromaQpOffsetListEntry(cuChromaQpOffsetIdx+1).u.comp.CbOffset,     "cb_qp_offset_list[i]");
+                  WRITE_SVLC(ppsRangeExtension.getChromaQpOffsetListEntry(cuChromaQpOffsetIdx+1).u.comp.CrOffset,     "cr_qp_offset_list[i]");
+                }
+              }
+
+              WRITE_UVLC( ppsRangeExtension.getLog2SaoOffsetScale(CHANNEL_TYPE_LUMA),           "log2_sao_offset_scale_luma"   );
+              WRITE_UVLC( ppsRangeExtension.getLog2SaoOffsetScale(CHANNEL_TYPE_CHROMA),         "log2_sao_offset_scale_chroma" );
+            }
             break;
           default:
             assert(pps_extension_flags[i]==false); // Should never get here with an active PPS extension flag.
@@ -568,17 +564,7 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
   Bool sps_extension_present_flag=false;
   Bool sps_extension_flags[NUM_SPS_EXTENSION_FLAGS]={false};
 
-  sps_extension_flags[SPS_EXT__REXT] = (
-          pcSPS->getUseResidualRotation()
-       || pcSPS->getUseSingleSignificanceMapContext()
-       || pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_IMPLICIT)
-       || pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_EXPLICIT)
-       || pcSPS->getUseExtendedPrecision()
-       || pcSPS->getDisableIntraReferenceSmoothing()
-       || pcSPS->getUseHighPrecisionPredictionWeighting()
-       || pcSPS->getUseGolombRiceParameterAdaptation()
-       || pcSPS->getAlignCABACBeforeBypass()
-    );
+  sps_extension_flags[SPS_EXT__REXT] = pcSPS->getSpsRangeExtension().settingsDifferFromDefaults();
 
   // Other SPS extension flags checked here.
 
@@ -614,17 +600,20 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
         switch (SPSExtensionFlagIndex(i))
         {
           case SPS_EXT__REXT:
+          {
+            const TComSPSRExt &spsRangeExtension=pcSPS->getSpsRangeExtension();
 
-            WRITE_FLAG( (pcSPS->getUseResidualRotation() ? 1 : 0),                  "transform_skip_rotation_enabled_flag");
-            WRITE_FLAG( (pcSPS->getUseSingleSignificanceMapContext() ? 1 : 0),      "transform_skip_context_enabled_flag");
-            WRITE_FLAG( (pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_IMPLICIT) ? 1 : 0), "implicit_rdpcm_enabled_flag" );
-            WRITE_FLAG( (pcSPS->getUseResidualDPCM(RDPCM_SIGNAL_EXPLICIT) ? 1 : 0), "explicit_rdpcm_enabled_flag" );
-            WRITE_FLAG( (pcSPS->getUseExtendedPrecision() ? 1 : 0),                 "extended_precision_processing_flag" );
-            WRITE_FLAG( (pcSPS->getDisableIntraReferenceSmoothing() ? 1 : 0),       "intra_smoothing_disabled_flag" );
-            WRITE_FLAG( (pcSPS->getUseHighPrecisionPredictionWeighting() ? 1 : 0),  "high_precision_offsets_enabled_flag" );
-            WRITE_FLAG( (pcSPS->getUseGolombRiceParameterAdaptation() ? 1 : 0),     "persistent_rice_adaptation_enabled_flag" );
-            WRITE_FLAG( (pcSPS->getAlignCABACBeforeBypass() ? 1 : 0),               "cabac_bypass_alignment_enabled_flag" );
+            WRITE_FLAG( (spsRangeExtension.getTransformSkipRotationEnabledFlag() ? 1 : 0),      "transform_skip_rotation_enabled_flag");
+            WRITE_FLAG( (spsRangeExtension.getTransformSkipContextEnabledFlag() ? 1 : 0),       "transform_skip_context_enabled_flag");
+            WRITE_FLAG( (spsRangeExtension.getRdpcmEnabledFlag(RDPCM_SIGNAL_IMPLICIT) ? 1 : 0), "implicit_rdpcm_enabled_flag" );
+            WRITE_FLAG( (spsRangeExtension.getRdpcmEnabledFlag(RDPCM_SIGNAL_EXPLICIT) ? 1 : 0), "explicit_rdpcm_enabled_flag" );
+            WRITE_FLAG( (spsRangeExtension.getExtendedPrecisionProcessingFlag() ? 1 : 0),       "extended_precision_processing_flag" );
+            WRITE_FLAG( (spsRangeExtension.getIntraSmoothingDisabledFlag() ? 1 : 0),            "intra_smoothing_disabled_flag" );
+            WRITE_FLAG( (spsRangeExtension.getHighPrecisionOffsetsEnabledFlag() ? 1 : 0),       "high_precision_offsets_enabled_flag" );
+            WRITE_FLAG( (spsRangeExtension.getPersistentRiceAdaptationEnabledFlag() ? 1 : 0),   "persistent_rice_adaptation_enabled_flag" );
+            WRITE_FLAG( (spsRangeExtension.getCabacBypassAlignmentEnabledFlag() ? 1 : 0),       "cabac_bypass_alignment_enabled_flag" );
             break;
+          }
           default:
             assert(sps_extension_flags[i]==false); // Should never get here with an active SPS extension flag.
             break;
@@ -1017,7 +1006,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       assert(numberValidComponents <= COMPONENT_Cr+1);
     }
 
-    if (pcSlice->getPPS()->getChromaQpAdjTableSize() > 0)
+    if (pcSlice->getPPS()->getPpsRangeExtension().getChromaQpOffsetListEnabledFlag())
     {
       WRITE_FLAG(pcSlice->getUseChromaQpAdj(), "cu_chroma_qp_offset_enabled_flag");
     }
@@ -1400,7 +1389,7 @@ Void TEncCavlc::xCodePredWeightTable( TComSlice* pcSlice )
               Int iDeltaWeight = (wp[j].iWeight - (1<<wp[COMPONENT_Cb].uiLog2WeightDenom));
               WRITE_SVLC( iDeltaWeight, iNumRef==0?"delta_chroma_weight_l0[i]":"delta_chroma_weight_l1[i]" );
 
-              Int range=pcSlice->getSPS()->getUseHighPrecisionPredictionWeighting() ? (1<<pcSlice->getSPS()->getBitDepth(CHANNEL_TYPE_CHROMA))/2 : 128;
+              Int range=pcSlice->getSPS()->getSpsRangeExtension().getHighPrecisionOffsetsEnabledFlag() ? (1<<pcSlice->getSPS()->getBitDepth(CHANNEL_TYPE_CHROMA))/2 : 128;
               Int pred = ( range - ( ( range*wp[j].iWeight)>>(wp[j].uiLog2WeightDenom) ) );
               Int iDeltaChroma = (wp[j].iOffset - pred);
               WRITE_SVLC( iDeltaChroma, iNumRef==0?"delta_chroma_offset_l0[i]":"delta_chroma_offset_l1[i]" );

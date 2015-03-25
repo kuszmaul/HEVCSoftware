@@ -147,7 +147,7 @@ Void TAppEncTop::xInitLibCfg()
   //====== Quality control ========
   m_cTEncTop.setMaxDeltaQP                                        ( m_iMaxDeltaQP  );
   m_cTEncTop.setMaxCuDQPDepth                                     ( m_iMaxCuDQPDepth  );
-  m_cTEncTop.setMaxCUChromaQpAdjustmentDepth                      ( m_maxCUChromaQpAdjustmentDepth );
+  m_cTEncTop.setDiffCuChromaQpOffsetDepth                         ( m_diffCuChromaQpOffsetDepth );
   m_cTEncTop.setChromaCbQpOffset                                  ( m_cbQpOffset     );
   m_cTEncTop.setChromaCrQpOffset                                  ( m_crQpOffset  );
 
@@ -159,8 +159,8 @@ Void TAppEncTop::xInitLibCfg()
 
   m_cTEncTop.setUseAdaptiveQP                                     ( m_bUseAdaptiveQP  );
   m_cTEncTop.setQPAdaptationRange                                 ( m_iQPAdaptationRange );
-  m_cTEncTop.setUseExtendedPrecision                              ( m_useExtendedPrecision );
-  m_cTEncTop.setUseHighPrecisionPredictionWeighting               ( m_useHighPrecisionPredictionWeighting );
+  m_cTEncTop.setExtendedPrecisionProcessingFlag                   ( m_extendedPrecisionProcessingFlag );
+  m_cTEncTop.setHighPrecisionOffsetsEnabledFlag                   ( m_highPrecisionOffsetsEnabledFlag );
   //====== Tool list ========
   m_cTEncTop.setDeltaQpRD                                         ( m_uiDeltaQpRD  );
   m_cTEncTop.setUseASR                                            ( m_bUseASR      );
@@ -185,20 +185,20 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseFastDecisionForMerge                           ( m_useFastDecisionForMerge  );
   m_cTEncTop.setUseCbfFastMode                                    ( m_bUseCbfFastMode  );
   m_cTEncTop.setUseEarlySkipDetection                             ( m_useEarlySkipDetection );
-  m_cTEncTop.setUseCrossComponentPrediction                       ( m_useCrossComponentPrediction );
+  m_cTEncTop.setCrossComponentPredictionEnabledFlag               ( m_crossComponentPredictionEnabledFlag );
   m_cTEncTop.setUseReconBasedCrossCPredictionEstimate             ( m_reconBasedCrossCPredictionEstimate );
-  m_cTEncTop.setSaoOffsetBitShift                                 ( CHANNEL_TYPE_LUMA  , m_saoOffsetBitShift[CHANNEL_TYPE_LUMA]   );
-  m_cTEncTop.setSaoOffsetBitShift                                 ( CHANNEL_TYPE_CHROMA, m_saoOffsetBitShift[CHANNEL_TYPE_CHROMA] );
+  m_cTEncTop.setLog2SaoOffsetScale                                ( CHANNEL_TYPE_LUMA  , m_log2SaoOffsetScale[CHANNEL_TYPE_LUMA]   );
+  m_cTEncTop.setLog2SaoOffsetScale                                ( CHANNEL_TYPE_CHROMA, m_log2SaoOffsetScale[CHANNEL_TYPE_CHROMA] );
   m_cTEncTop.setUseTransformSkip                                  ( m_useTransformSkip      );
   m_cTEncTop.setUseTransformSkipFast                              ( m_useTransformSkipFast  );
-  m_cTEncTop.setUseResidualRotation                               ( m_useResidualRotation   );
-  m_cTEncTop.setUseSingleSignificanceMapContext                   ( m_useSingleSignificanceMapContext   );
-  m_cTEncTop.setUseGolombRiceParameterAdaptation                  ( m_useGolombRiceParameterAdaptation );
-  m_cTEncTop.setAlignCABACBeforeBypass                            ( m_alignCABACBeforeBypass );
-  m_cTEncTop.setTransformSkipLog2MaxSize                          ( m_transformSkipLog2MaxSize  );
+  m_cTEncTop.setTransformSkipRotationEnabledFlag                  ( m_transformSkipRotationEnabledFlag );
+  m_cTEncTop.setTransformSkipContextEnabledFlag                   ( m_transformSkipContextEnabledFlag   );
+  m_cTEncTop.setPersistentRiceAdaptationEnabledFlag               ( m_persistentRiceAdaptationEnabledFlag );
+  m_cTEncTop.setCabacBypassAlignmentEnabledFlag                   ( m_cabacBypassAlignmentEnabledFlag );
+  m_cTEncTop.setLog2MaxTransformSkipBlockSize                     ( m_log2MaxTransformSkipBlockSize  );
   for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
   {
-    m_cTEncTop.setUseResidualDPCM                                 ( RDPCMSignallingMode(signallingModeIndex), m_useResidualDPCM[signallingModeIndex]);
+    m_cTEncTop.setRdpcmEnabledFlag                                ( RDPCMSignallingMode(signallingModeIndex), m_rdpcmEnabledFlag[signallingModeIndex]);
   }
   m_cTEncTop.setUseConstrainedIntraPred                           ( m_bUseConstrainedIntraPred );
   m_cTEncTop.setPCMLog2MinSize                                    ( m_uiPCMLog2MinSize);
@@ -241,7 +241,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setPCMInputBitDepthFlag                              ( m_bPCMInputBitDepthFlag);
   m_cTEncTop.setPCMFilterDisableFlag                              ( m_bPCMFilterDisableFlag);
 
-  m_cTEncTop.setDisableIntraReferenceSmoothing                    (!m_enableIntraReferenceSmoothing );
+  m_cTEncTop.setIntraSmoothingDisabledFlag                        (!m_enableIntraReferenceSmoothing );
   m_cTEncTop.setDecodedPictureHashSEIEnabled                      ( m_decodedPictureHashSEIEnabled );
   m_cTEncTop.setRecoveryPointSEIEnabled                           ( m_recoveryPointSEIEnabled );
   m_cTEncTop.setBufferingPeriodSEIEnabled                         ( m_bufferingPeriodSEIEnabled );

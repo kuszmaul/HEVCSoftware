@@ -108,7 +108,7 @@ QpParam::QpParam(const TComDataCU &cu, const ComponentID compID)
     chromaQpOffset += cu.getSlice()->getPPS()->getQpOffset(compID);
     chromaQpOffset += cu.getSlice()->getSliceChromaQpDelta(compID);
 
-    chromaQpOffset += cu.getSlice()->getPPS()->getChromaQpAdjTableAt(cu.getChromaQpAdj(0)).u.offset[Int(compID)-1];
+    chromaQpOffset += cu.getSlice()->getPPS()->getPpsRangeExtension().getChromaQpOffsetListEntry(cu.getChromaQpAdj(0)).u.offset[Int(compID)-1];
   }
 
   *this = QpParam(cu.getQP( 0 ),
@@ -1197,7 +1197,7 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
 
     // Represents scaling through forward transform
     Int iTransformShift = getTransformShift(channelBitDepth, uiLog2TrSize, maxLog2TrDynamicRange);
-    if (useTransformSkip && pcCU->getSlice()->getSPS()->getUseExtendedPrecision())
+    if (useTransformSkip && pcCU->getSlice()->getSPS()->getSpsRangeExtension().getExtendedPrecisionProcessingFlag())
     {
       iTransformShift = std::max<Int>(0, iTransformShift);
     }
@@ -1285,7 +1285,7 @@ Bool TComTrQuant::xNeedRDOQ( TComTU &rTu, TCoeff * pSrc, const ComponentID compI
 
   // Represents scaling through forward transform
   Int iTransformShift = getTransformShift(channelBitDepth, uiLog2TrSize, maxLog2TrDynamicRange);
-  if (useTransformSkip && pcCU->getSlice()->getSPS()->getUseExtendedPrecision())
+  if (useTransformSkip && pcCU->getSlice()->getSPS()->getSpsRangeExtension().getExtendedPrecisionProcessingFlag())
   {
     iTransformShift = std::max<Int>(0, iTransformShift);
   }
@@ -1343,7 +1343,7 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
   assert ( uiWidth <= m_uiMaxTrSize );
 
   // Represents scaling through forward transform
-  const Bool bClipTransformShiftTo0 = (pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0) && pcCU->getSlice()->getSPS()->getUseExtendedPrecision();
+  const Bool bClipTransformShiftTo0 = (pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0) && pcCU->getSlice()->getSPS()->getSpsRangeExtension().getExtendedPrecisionProcessingFlag();
   const Int  originalTransformShift = getTransformShift(channelBitDepth, uiLog2TrSize, maxLog2TrDynamicRange);
   const Int  iTransformShift        = bClipTransformShiftTo0 ? std::max<Int>(0, originalTransformShift) : originalTransformShift;
 
@@ -1687,7 +1687,7 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
   TComDataCU* pcCU = rTu.getCU();
   UInt absPartIdxTU = rTu.GetAbsPartIdxTU();
   UInt uiTrMode=rTu.GetTransformDepthRel();
-  if( (pcCU->getCbf(absPartIdxTU, compID, uiTrMode) == 0) && (isLuma(compID) || !pcCU->getSlice()->getPPS()->getUseCrossComponentPrediction()) )
+  if( (pcCU->getCbf(absPartIdxTU, compID, uiTrMode) == 0) && (isLuma(compID) || !pcCU->getSlice()->getPPS()->getPpsRangeExtension().getCrossComponentPredictionEnabledFlag()) )
   {
     return;
   }
@@ -2027,7 +2027,7 @@ Void TComTrQuant::xTransformSkip( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff
   const Int channelBitDepth = rTu.getCU()->getSlice()->getSPS()->getBitDepth(toChannelType(component));
 
   Int iTransformShift = getTransformShift(channelBitDepth, rTu.GetEquivalentLog2TrSize(component), maxLog2TrDynamicRange);
-  if (rTu.getCU()->getSlice()->getSPS()->getUseExtendedPrecision())
+  if (rTu.getCU()->getSlice()->getSPS()->getSpsRangeExtension().getExtendedPrecisionProcessingFlag())
   {
     iTransformShift = std::max<Int>(0, iTransformShift);
   }
@@ -2080,7 +2080,7 @@ Void TComTrQuant::xITransformSkip( TCoeff* plCoef, Pel* pResidual, UInt uiStride
 #endif
 
   Int iTransformShift = getTransformShift(channelBitDepth, rTu.GetEquivalentLog2TrSize(component), maxLog2TrDynamicRange);
-  if (rTu.getCU()->getSlice()->getSPS()->getUseExtendedPrecision())
+  if (rTu.getCU()->getSlice()->getSPS()->getSpsRangeExtension().getExtendedPrecisionProcessingFlag())
   {
     iTransformShift = std::max<Int>(0, iTransformShift);
   }
@@ -2144,7 +2144,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
   const ChannelType      channelType      = toChannelType(compID);
   const UInt             uiLog2TrSize     = rTu.GetEquivalentLog2TrSize(compID);
 
-  const Bool             extendedPrecision = pcCU->getSlice()->getSPS()->getUseExtendedPrecision();
+  const Bool             extendedPrecision = pcCU->getSlice()->getSPS()->getSpsRangeExtension().getExtendedPrecisionProcessingFlag();
   const Int              maxLog2TrDynamicRange = pcCU->getSlice()->getSPS()->getMaxLog2TrDynamicRange(toChannelType(compID));
   const Int              channelBitDepth = rTu.getCU()->getSlice()->getSPS()->getBitDepth(channelType);
 
@@ -2156,12 +2156,12 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
 
   // Represents scaling through forward transform
   Int iTransformShift = getTransformShift(channelBitDepth, uiLog2TrSize, maxLog2TrDynamicRange);
-  if ((pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0) && pcCU->getSlice()->getSPS()->getUseExtendedPrecision())
+  if ((pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0) && extendedPrecision)
   {
     iTransformShift = std::max<Int>(0, iTransformShift);
   }
 
-  const Bool bUseGolombRiceParameterAdaptation = pcCU->getSlice()->getSPS()->getUseGolombRiceParameterAdaptation();
+  const Bool bUseGolombRiceParameterAdaptation = pcCU->getSlice()->getSPS()->getSpsRangeExtension().getPersistentRiceAdaptationEnabledFlag();
   const UInt initialGolombRiceParameter        = m_pcEstBitsSbac->golombRiceAdaptationStatistics[rTu.getGolombRiceStatisticsIndex(compID)] / RExt__GOLOMB_RICE_INCREMENT_DIVISOR;
         UInt uiGoRiceParam                     = initialGolombRiceParameter;
   Double     d64BlockUncodedCost               = 0;
