@@ -537,9 +537,26 @@ Void TEncSlice::precompressSlice( TComPic* pcPic )
   {
     printf( "\nMultiple QP optimization is not allowed when rate control is enabled." );
     assert(0);
+    return;
   }
 
   TComSlice* pcSlice        = pcPic->getSlice(getSliceIdx());
+
+  if (pcSlice->getDependentSliceSegmentFlag())
+  {
+    // if this is a dependent slice segment, then it was optimised
+    // when analysing the entire slice.
+    return;
+  }
+
+  if (pcSlice->getSliceMode()==FIXED_NUMBER_OF_BYTES)
+  {
+    // TODO: investigate use of average cost per CTU so that this Slice Mode can be used.
+    printf( "\nUnable to optimise Slice-level QP if Slice Mode is set to FIXED_NUMBER_OF_BYTES\n" );
+    assert(0);
+    return;
+  }
+
   Double     dPicRdCostBest = MAX_DOUBLE;
   UInt       uiQpIdxBest = 0;
 
@@ -561,7 +578,6 @@ Void TEncSlice::precompressSlice( TComPic* pcPic )
   }
   m_pcRdCost      ->setFrameLambda(dFrameLambda);
 
-  const UInt initialSliceQp=pcSlice->getSliceQp();
   // for each QP candidate
   for ( UInt uiQpIdx = 0; uiQpIdx < 2 * m_pcCfg->getDeltaQpRD() + 1; uiQpIdx++ )
   {
@@ -572,17 +588,18 @@ Void TEncSlice::precompressSlice( TComPic* pcPic )
     setUpLambda(pcSlice, m_pdRdPicLambda[uiQpIdx], m_piRdPicQp    [uiQpIdx]);
 
     // try compress
-    compressSlice   ( pcPic );
+    compressSlice   ( pcPic, true );
 
-    Double dPicRdCost;
-    UInt64 uiPicDist        = m_uiPicDist;
-    // TODO: will this work if multiple slices are being used? There may not be any reconstruction data yet.
-    //       Will this also be ideal if a byte-restriction is placed on the slice?
-    //         - what if the last CTU was sometimes included, sometimes not, and that had all the distortion?
-    m_pcGOPEncoder->preLoopFilterPicAll( pcPic, uiPicDist );
+    UInt64 uiPicDist        = m_uiPicDist; // Distortion, as calculated by compressSlice.
+    // NOTE: This distortion is the chroma-weighted SSE distortion for the slice.
+    //       Previously a standard SSE distortion was calculated (for the entire frame).
+    //       Which is correct?
+
+    // TODO: Update loop filter, SAO and distortion calculation to work on one slice only.
+    // m_pcGOPEncoder->preLoopFilterPicAll( pcPic, uiPicDist );
 
     // compute RD cost and choose the best
-    dPicRdCost = m_pcRdCost->calcRdCost64( m_uiPicTotalBits, uiPicDist, true, DF_SSE_FRAME);
+    Double dPicRdCost = m_pcRdCost->calcRdCost64( m_uiPicTotalBits, uiPicDist, true, DF_SSE_FRAME); // NOTE: Is the 'true' parameter really necessary?
 
     if ( dPicRdCost < dPicRdCostBest )
     {
@@ -591,12 +608,6 @@ Void TEncSlice::precompressSlice( TComPic* pcPic )
     }
   }
 
-  if (pcSlice->getDependentSliceSegmentFlag() && initialSliceQp!=m_piRdPicQp[uiQpIdxBest] )
-  {
-    // TODO: this won't work with dependent slices: they do not have their own QP.
-    fprintf(stderr,"ERROR - attempt to change QP for a dependent slice-segment, having already coded the slice\n");
-    assert(pcSlice->getDependentSliceSegmentFlag()==false || initialSliceQp==m_piRdPicQp[uiQpIdxBest]);
-  }
   // set best values
   pcSlice       ->setSliceQp             ( m_piRdPicQp    [uiQpIdxBest] );
 #if ADAPTIVE_QP_SELECTION
@@ -605,7 +616,7 @@ Void TEncSlice::precompressSlice( TComPic* pcPic )
   setUpLambda(pcSlice, m_pdRdPicLambda[uiQpIdxBest], m_piRdPicQp    [uiQpIdxBest]);
 }
 
-Void TEncSlice::calCostSliceI(TComPic* pcPic)
+Void TEncSlice::calCostSliceI(TComPic* pcPic) // TODO: this only analyses the first slice segment. What about the others?
 {
   Double            iSumHadSlice      = 0;
   TComSlice * const pcSlice           = pcPic->getSlice(getSliceIdx());
@@ -640,13 +651,21 @@ Void TEncSlice::calCostSliceI(TComPic* pcPic)
 
 /** \param pcPic   picture class
  */
-Void TEncSlice::compressSlice( TComPic* pcPic )
+Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice )
 {
+  // if bCompressEntireSlice is true, then the entire slice (not slice segment) is compressed,
+  //   effectively disabling the slice-segment-mode.
+
   UInt   startCtuTsAddr;
   UInt   boundingCtuTsAddr;
   TComSlice* const pcSlice            = pcPic->getSlice(getSliceIdx());
   pcSlice->setSliceSegmentBits(0);
   xDetermineStartAndBoundingCtuTsAddr ( startCtuTsAddr, boundingCtuTsAddr, pcPic );
+  if (bCompressEntireSlice)
+  {
+    boundingCtuTsAddr = pcSlice->getSliceCurEndCtuTsAddr();
+    pcSlice->setSliceSegmentCurEndCtuTsAddr(boundingCtuTsAddr);
+  }
 
   // initialize cost values - these are used by precompressSlice (they should be parameters).
   m_uiPicTotalBits  = 0;
@@ -695,7 +714,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
   if( m_pcCfg->getUseAdaptQpSelect() && !(pcSlice->getDependentSliceSegmentFlag()))
   {
     // TODO: this won't work with dependent slices: they do not have their own QP. Check fix to mask clause execution with && !(pcSlice->getDependentSliceSegmentFlag())
-    m_pcTrQuant->clearSliceARLCnt();
+    m_pcTrQuant->clearSliceARLCnt(); // TODO: this looks wrong for multiple slices - the results of all but the last slice will be cleared before they are used (all slices compressed, and then all slices encoded)
     if(pcSlice->getSliceType()!=I_SLICE)
     {
       Int qpBase = pcSlice->getSliceQpBase();
@@ -842,7 +861,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
       pcSlice->setSliceCurEndCtuTsAddr(validEndOfSliceCtuTsAddr);
       boundingCtuTsAddr=validEndOfSliceCtuTsAddr;
     }
-    else if(pcSlice->getSliceSegmentMode()==FIXED_NUMBER_OF_BYTES && pcSlice->getSliceSegmentBits()+numberOfWrittenBits > (pcSlice->getSliceSegmentArgument()<<3))
+    else if((!bCompressEntireSlice) && pcSlice->getSliceSegmentMode()==FIXED_NUMBER_OF_BYTES && pcSlice->getSliceSegmentBits()+numberOfWrittenBits > (pcSlice->getSliceSegmentArgument()<<3))
     {
       pcSlice->setSliceSegmentCurEndCtuTsAddr(validEndOfSliceCtuTsAddr);
       boundingCtuTsAddr=validEndOfSliceCtuTsAddr;
@@ -1089,7 +1108,7 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
 #if ADAPTIVE_QP_SELECTION
   if( m_pcCfg->getUseAdaptQpSelect() )
   {
-    m_pcTrQuant->storeSliceQpNext(pcSlice);
+    m_pcTrQuant->storeSliceQpNext(pcSlice); // TODO: this will only be storing the adaptive QP state of the very last slice-segment that is not dependent in the frame... Perhaps this should be moved to the compress slice loop.
   }
 #endif
 
