@@ -322,6 +322,7 @@ Void TEncGOP::xWriteTrailingSEIMessages (SEIMessages& seiMessages, AccessUnit &a
   // Note: using accessUnit.end() works only as long as this function is called after slice coding and before EOS/EOB NAL units
   AccessUnit::iterator pos = accessUnit.end();
   xWriteSEISeparately(NAL_UNIT_SUFFIX_SEI, seiMessages, accessUnit, pos, temporalId, sps);
+  deleteSEIs(seiMessages);
 }
 
 Void TEncGOP::xWriteDuSEIMessages (SEIMessages& duInfoSeiMessages, AccessUnit &accessUnit, Int temporalId, const TComSPS *sps, std::deque<DUData> &duData)
@@ -1657,7 +1658,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       trailingSeiMessages.push_back(decodedPictureHashSei);
     }
     xWriteTrailingSEIMessages(trailingSeiMessages, accessUnit, pcSlice->getTLayer(), pcSlice->getSPS());
-    trailingSeiMessages.clear();
 
     m_pcCfg->setEncodedFlag(iGOPid, true);
 
@@ -1712,7 +1712,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       xCreateScalableNestingSEI (leadingSeiMessages, nestedSeiMessages);
     }
     xWriteLeadingSEIMessages(leadingSeiMessages, duInfoSeiMessages, accessUnit, pcSlice->getTLayer(), pcSlice->getSPS(), duData);
-    leadingSeiMessages.clear();
     xWriteDuSEIMessages(duInfoSeiMessages, accessUnit, pcSlice->getTLayer(), pcSlice->getSPS(), duData);
 
     pcPic->getPicYuvRec()->copyToPic(pcPicYuvRecOut);
