@@ -115,8 +115,8 @@ public:
                                 Int iGOPid,   TComSlice*& rpcSlice, Bool isField );
   Void    resetQP             ( TComPic* pic, Int sliceQP, Double lambda );
   // compress and encode slice
-  Void    precompressSlice    ( TComPic* pcPic                                     );      ///< precompress slice for multi-loop opt.
-  Void    compressSlice       ( TComPic* pcPic                                     );      ///< analysis stage of slice
+  Void    precompressSlice    ( TComPic* pcPic                                     );      ///< precompress slice for multi-loop slice-level QP opt.
+  Void    compressSlice       ( TComPic* pcPic, const Bool bCompressEntireSlice    );      ///< analysis stage of slice
   Void    calCostSliceI       ( TComPic* pcPic );
   Void    encodeSlice         ( TComPic* pcPic, TComOutputBitstream* pcSubstreams, UInt &numBinsCoded );
 
