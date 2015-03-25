@@ -293,6 +293,7 @@ Void TEncGOP::xWriteLeadingSEIOrdered (SEIMessages& seiMessages, SEIMessages& du
 
   if (!testWrite)
   {
+    deleteSEIs(localMessages);
     seiMessages.clear();
   }
 }
@@ -1489,7 +1490,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       actualTotalBits += xWriteParameterSets(accessUnit, pcSlice);
 
       // create prefix SEI messages at the beginning of the sequence
-      leadingSeiMessages.clear();
+      assert(leadingSeiMessages.empty());
       xCreateIRAPLeadingSEIMessages(leadingSeiMessages, pcSlice->getSPS(), pcSlice->getPPS());
 
       m_bSeqFirst = false;
