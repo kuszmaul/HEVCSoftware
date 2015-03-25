@@ -351,7 +351,7 @@ Void TDecTop::xActivateParameterSets()
     if(!m_SEIs.empty())
     {
       // Check if any new Picture Timing SEI has arrived
-      SEIMessages pictureTimingSEIs = extractSeisByType (m_SEIs, SEI::PICTURE_TIMING);
+      SEIMessages pictureTimingSEIs = getSeisByType(m_SEIs, SEI::PICTURE_TIMING);
       if (pictureTimingSEIs.size()>0)
       {
         SEIPictureTiming* pictureTiming = (SEIPictureTiming*) *(pictureTimingSEIs.begin());
