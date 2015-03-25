@@ -1486,7 +1486,7 @@ Void  TComSlice::resetWpScaling()
 //! init WP table
 Void  TComSlice::initWpScaling(const TComSPS *sps)
 {
-  const Bool bUseHighPrecisionPredictionWeighting = sps->getUseHighPrecisionPredictionWeighting();
+  const Bool bUseHighPrecisionPredictionWeighting = sps->getSpsRangeExtension().getHighPrecisionOffsetsEnabledFlag();
   for ( Int e=0 ; e<NUM_REF_PIC_LIST_01 ; e++ )
   {
     for ( Int i=0 ; i<MAX_NUM_REF ; i++ )
@@ -1543,6 +1543,22 @@ TComVPS::~TComVPS()
 // Sequence parameter set (SPS)
 // ------------------------------------------------------------------------------------------------
 
+TComSPSRExt::TComSPSRExt()
+ : m_transformSkipRotationEnabledFlag   (false)
+ , m_transformSkipContextEnabledFlag    (false)
+// m_rdpcmEnabledFlag initialized below
+ , m_extendedPrecisionProcessingFlag    (false)
+ , m_intraSmoothingDisabledFlag         (false)
+ , m_highPrecisionOffsetsEnabledFlag    (false)
+ , m_persistentRiceAdaptationEnabledFlag(false)
+ , m_cabacBypassAlignmentEnabledFlag    (false)
+{
+  for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
+  {
+    m_rdpcmEnabledFlag[signallingModeIndex] = false;
+  }
+}
+
 TComSPS::TComSPS()
 : m_SPSId                     (  0)
 , m_VPSId                     (  0)
@@ -1565,14 +1581,7 @@ TComSPS::TComSPS()
 , m_usePCM                    (false)
 , m_pcmLog2MaxSize            (  5)
 , m_uiPCMLog2MinSize          (  7)
-, m_useExtendedPrecision      (false)
-, m_useHighPrecisionPredictionWeighting(false)
-, m_useResidualRotation       (false)
-, m_useSingleSignificanceMapContext(false)
-, m_useGolombRiceParameterAdaptation(false)
-, m_alignCABACBeforeBypass    (false)
 , m_bPCMFilterDisableFlag     (false)
-, m_disableIntraReferenceSmoothing(false)
 , m_uiBitsForPOC              (  8)
 , m_numLongTermRefPicSPS      (  0)
 , m_uiMaxTrSize               ( 32)
@@ -1598,11 +1607,6 @@ TComSPS::TComSPS()
     m_uiMaxLatencyIncrease[i] = 0;
     m_uiMaxDecPicBuffering[i] = 1;
     m_numReorderPics[i]       = 0;
-  }
-
-  for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
-  {
-    m_useResidualDPCM[signallingModeIndex] = false;
   }
 
   ::memset(m_ltRefPicPocLsbSps, 0, sizeof(m_ltRefPicPocLsbSps));
@@ -1730,6 +1734,22 @@ Void TComSPS::setHrdParameters( UInt frameRate, Bool useSubCpbParams, UInt bitRa
 const Int TComSPS::m_winUnitX[]={1,2,2,1};
 const Int TComSPS::m_winUnitY[]={1,2,1,1};
 
+TComPPSRExt::TComPPSRExt()
+: m_log2MaxTransformSkipBlockSize      (2)
+, m_crossComponentPredictionEnabledFlag(false)
+, m_diffCuChromaQpOffsetDepth          (0)
+, m_chromaQpOffsetListLen              (0)
+// m_ChromaQpAdjTableIncludingNullEntry initialized below
+// m_log2SaoOffsetScale initialized below
+{
+  m_ChromaQpAdjTableIncludingNullEntry[0].u.comp.CbOffset = 0; // Array includes entry [0] for the null offset used when cu_chroma_qp_offset_flag=0. This is initialised here and never subsequently changed.
+  m_ChromaQpAdjTableIncludingNullEntry[0].u.comp.CrOffset = 0;
+  for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
+  {
+    m_log2SaoOffsetScale[ch] = 0;
+  }
+}
+
 TComPPS::TComPPS()
 : m_PPSId                            (0)
 , m_SPSId                            (0)
@@ -1738,16 +1758,12 @@ TComPPS::TComPPS()
 , m_bConstrainedIntraPred            (false)
 , m_bSliceChromaQpFlag               (false)
 , m_uiMaxCuDQPDepth                  (0)
-, m_MaxCuChromaQpAdjDepth            (0)
-, m_ChromaQpAdjTableSize             (0)
 , m_chromaCbQpOffset                 (0)
 , m_chromaCrQpOffset                 (0)
 , m_numRefIdxL0DefaultActive         (1)
 , m_numRefIdxL1DefaultActive         (1)
-, m_useCrossComponentPrediction      (false)
 , m_TransquantBypassEnableFlag       (false)
 , m_useTransformSkip                 (false)
-, m_transformSkipLog2MaxSize         (2)
 , m_dependentSliceSegmentsEnabledFlag(false)
 , m_tilesEnabledFlag                 (false)
 , m_entropyCodingSyncEnabledFlag     (false)
@@ -1762,12 +1778,6 @@ TComPPS::TComPPS()
 , m_listsModificationPresentFlag     (0)
 , m_numExtraSliceHeaderBits          (0)
 {
-  for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
-  {
-    m_saoOffsetBitShift[ch] = 0;
-  }
-  m_ChromaQpAdjTableIncludingNullEntry[0].u.comp.CbOffset = 0; // Array includes entry [0] for the null offset used when cu_chroma_qp_offset_flag=0. This is initialised here and never subsequently changed.
-  m_ChromaQpAdjTableIncludingNullEntry[0].u.comp.CrOffset = 0;
 }
 
 TComPPS::~TComPPS()

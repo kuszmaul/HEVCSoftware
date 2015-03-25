@@ -715,6 +715,60 @@ public:
   const TimingInfo* getTimingInfo() const                                  { return &m_timingInfo;                          }
 };
 
+/// SPS RExt class
+class TComSPSRExt // Names aligned to text specification
+{
+private:
+  Bool             m_transformSkipRotationEnabledFlag;
+  Bool             m_transformSkipContextEnabledFlag;
+  Bool             m_rdpcmEnabledFlag[NUMBER_OF_RDPCM_SIGNALLING_MODES];
+  Bool             m_extendedPrecisionProcessingFlag;
+  Bool             m_intraSmoothingDisabledFlag;
+  Bool             m_highPrecisionOffsetsEnabledFlag;
+  Bool             m_persistentRiceAdaptationEnabledFlag;
+  Bool             m_cabacBypassAlignmentEnabledFlag;
+
+public:
+  TComSPSRExt();
+
+  Bool settingsDifferFromDefaults() const
+  {
+    return getTransformSkipRotationEnabledFlag()
+        || getTransformSkipContextEnabledFlag()
+        || getRdpcmEnabledFlag(RDPCM_SIGNAL_IMPLICIT)
+        || getRdpcmEnabledFlag(RDPCM_SIGNAL_EXPLICIT)
+        || getExtendedPrecisionProcessingFlag()
+        || getIntraSmoothingDisabledFlag()
+        || getHighPrecisionOffsetsEnabledFlag()
+        || getPersistentRiceAdaptationEnabledFlag()
+        || getCabacBypassAlignmentEnabledFlag();
+  }
+
+
+  Bool getTransformSkipRotationEnabledFlag() const                                     { return m_transformSkipRotationEnabledFlag;     }
+  Void setTransformSkipRotationEnabledFlag(const Bool value)                           { m_transformSkipRotationEnabledFlag = value;    }
+
+  Bool getTransformSkipContextEnabledFlag() const                                      { return m_transformSkipContextEnabledFlag;      }
+  Void setTransformSkipContextEnabledFlag(const Bool value)                            { m_transformSkipContextEnabledFlag = value;     }
+
+  Bool getRdpcmEnabledFlag(const RDPCMSignallingMode signallingMode) const             { return m_rdpcmEnabledFlag[signallingMode];     }
+  Void setRdpcmEnabledFlag(const RDPCMSignallingMode signallingMode, const Bool value) { m_rdpcmEnabledFlag[signallingMode] = value;    }
+
+  Bool getExtendedPrecisionProcessingFlag() const                                      { return m_extendedPrecisionProcessingFlag;      }
+  Void setExtendedPrecisionProcessingFlag(Bool value)                                  { m_extendedPrecisionProcessingFlag = value;     }
+
+  Bool getIntraSmoothingDisabledFlag() const                                           { return m_intraSmoothingDisabledFlag;           }
+  Void setIntraSmoothingDisabledFlag(Bool bValue)                                      { m_intraSmoothingDisabledFlag=bValue;           }
+
+  Bool getHighPrecisionOffsetsEnabledFlag() const                                      { return m_highPrecisionOffsetsEnabledFlag;      }
+  Void setHighPrecisionOffsetsEnabledFlag(Bool value)                                  { m_highPrecisionOffsetsEnabledFlag = value;     }
+
+  Bool getPersistentRiceAdaptationEnabledFlag() const                                  { return m_persistentRiceAdaptationEnabledFlag;  }
+  Void setPersistentRiceAdaptationEnabledFlag(const Bool value)                        { m_persistentRiceAdaptationEnabledFlag = value; }
+
+  Bool getCabacBypassAlignmentEnabledFlag() const                                      { return m_cabacBypassAlignmentEnabledFlag;      }
+  Void setCabacBypassAlignmentEnabledFlag(const Bool value)                            { m_cabacBypassAlignmentEnabledFlag = value;     }
+};
 
 /// SPS class
 class TComSPS
@@ -756,16 +810,8 @@ private:
   // Parameter
   BitDepths        m_bitDepths;
   Int              m_qpBDOffset[MAX_NUM_CHANNEL_TYPE];
-  Bool             m_useExtendedPrecision;
-  Bool             m_useHighPrecisionPredictionWeighting;
-  Bool             m_useResidualRotation;
-  Bool             m_useSingleSignificanceMapContext;
-  Bool             m_useGolombRiceParameterAdaptation;
-  Bool             m_alignCABACBeforeBypass;
-  Bool             m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
   Int              m_pcmBitDepths[MAX_NUM_CHANNEL_TYPE];
   Bool             m_bPCMFilterDisableFlag;
-  Bool             m_disableIntraReferenceSmoothing;
 
   UInt             m_uiBitsForPOC;
   UInt             m_numLongTermRefPicSPS;
@@ -788,6 +834,8 @@ private:
 
   Bool             m_vuiParametersPresentFlag;
   TComVUI          m_vuiParameters;
+
+  TComSPSRExt      m_spsRangeExtension;
 
   static const Int m_winUnitX[MAX_CHROMA_FORMAT_IDC+1];
   static const Int m_winUnitY[MAX_CHROMA_FORMAT_IDC+1];
@@ -884,33 +932,14 @@ public:
   Void                   setStreamBitDepth(ChannelType type, Int u )                                     { m_bitDepths.stream[type] = u;                                        }
 #endif
   const BitDepths&       getBitDepths() const                                                            { return m_bitDepths;                                                  }
-  Int                    getMaxLog2TrDynamicRange(ChannelType channelType) const                         { return getUseExtendedPrecision() ? std::max<Int>(15, Int(m_bitDepths.recon[channelType] + 6)) : 15; }
+  Int                    getMaxLog2TrDynamicRange(ChannelType channelType) const                         { return getSpsRangeExtension().getExtendedPrecisionProcessingFlag() ? std::max<Int>(15, Int(m_bitDepths.recon[channelType] + 6)) : 15; }
 
   Int                    getDifferentialLumaChromaBitDepth() const                                       { return Int(m_bitDepths.recon[CHANNEL_TYPE_LUMA]) - Int(m_bitDepths.recon[CHANNEL_TYPE_CHROMA]); }
   Int                    getQpBDOffset(ChannelType type) const                                           { return m_qpBDOffset[type];                                           }
   Void                   setQpBDOffset(ChannelType type, Int i)                                          { m_qpBDOffset[type] = i;                                              }
-  Bool                   getUseExtendedPrecision() const                                                 { return m_useExtendedPrecision;                                       }
-  Void                   setUseExtendedPrecision(Bool value)                                             { m_useExtendedPrecision = value;                                      }
-  Bool                   getUseHighPrecisionPredictionWeighting() const                                  { return m_useHighPrecisionPredictionWeighting;                        }
-  Void                   setUseHighPrecisionPredictionWeighting(Bool value)                              { m_useHighPrecisionPredictionWeighting = value;                       }
 
   Void                   setUseSAO(Bool bVal)                                                            { m_bUseSAO = bVal;                                                    }
   Bool                   getUseSAO() const                                                               { return m_bUseSAO;                                                    }
-
-  Bool                   getUseResidualRotation() const                                                  { return m_useResidualRotation;                                        }
-  Void                   setUseResidualRotation(const Bool value)                                        { m_useResidualRotation = value;                                       }
-
-  Bool                   getUseSingleSignificanceMapContext()                 const                      { return m_useSingleSignificanceMapContext;                            }
-  Void                   setUseSingleSignificanceMapContext(const Bool value)                            { m_useSingleSignificanceMapContext = value;                           }
-
-  Bool                   getUseGolombRiceParameterAdaptation()                 const                     { return m_useGolombRiceParameterAdaptation;                           }
-  Void                   setUseGolombRiceParameterAdaptation(const Bool value)                           { m_useGolombRiceParameterAdaptation = value;                          }
-
-  Bool                   getAlignCABACBeforeBypass()                 const                               { return m_alignCABACBeforeBypass;                                     }
-  Void                   setAlignCABACBeforeBypass(const Bool value)                                     { m_alignCABACBeforeBypass = value;                                    }
-
-  Bool                   getUseResidualDPCM(const RDPCMSignallingMode signallingMode) const              { return m_useResidualDPCM[signallingMode];                            }
-  Void                   setUseResidualDPCM(const RDPCMSignallingMode signallingMode, const Bool value)  { m_useResidualDPCM[signallingMode] = value;                           }
 
   UInt                   getMaxTLayers() const                                                           { return m_uiMaxTLayers; }
   Void                   setMaxTLayers( UInt uiMaxTLayers )                                              { assert( uiMaxTLayers <= MAX_TLAYER ); m_uiMaxTLayers = uiMaxTLayers; }
@@ -921,8 +950,6 @@ public:
   Void                   setPCMBitDepth(ChannelType type, UInt u)                                        { m_pcmBitDepths[type] = u;                                            }
   Void                   setPCMFilterDisableFlag( Bool bValue )                                          { m_bPCMFilterDisableFlag = bValue;                                    }
   Bool                   getPCMFilterDisableFlag() const                                                 { return m_bPCMFilterDisableFlag;                                      }
-  Void                   setDisableIntraReferenceSmoothing(Bool bValue)                                  { m_disableIntraReferenceSmoothing=bValue;                             }
-  Bool                   getDisableIntraReferenceSmoothing() const                                       { return m_disableIntraReferenceSmoothing;                             }
 
   Bool                   getScalingListFlag() const                                                      { return m_scalingListEnabledFlag;                                     }
   Void                   setScalingListFlag( Bool b )                                                    { m_scalingListEnabledFlag  = b;                                       }
@@ -947,6 +974,33 @@ public:
   const TComPTL*         getPTL() const                                                                  { return &m_pcPTL;                                                     }
   TComPTL*               getPTL()                                                                        { return &m_pcPTL;                                                     }
 
+  const TComSPSRExt&     getSpsRangeExtension() const                                                    { return m_spsRangeExtension;                                          }
+  TComSPSRExt&           getSpsRangeExtension()                                                          { return m_spsRangeExtension;                                          }
+
+  // Sequence parameter set range extension syntax
+  // WAS: getUseResidualRotation and setUseResidualRotation
+  // Now getSpsRangeExtension().getTransformSkipRotationEnabledFlag and getSpsRangeExtension().setTransformSkipRotationEnabledFlag
+
+  // WAS: getUseSingleSignificanceMapContext and setUseSingleSignificanceMapContext
+  // Now: getSpsRangeExtension().getTransformSkipContextEnabledFlag and getSpsRangeExtension().setTransformSkipContextEnabledFlag
+
+  // WAS: getUseResidualDPCM and setUseResidualDPCM
+  // Now: getSpsRangeExtension().getRdpcmEnabledFlag and getSpsRangeExtension().setRdpcmEnabledFlag and
+
+  // WAS: getUseExtendedPrecision and setUseExtendedPrecision
+  // Now: getSpsRangeExtension().getExtendedPrecisionProcessingFlag and getSpsRangeExtension().setExtendedPrecisionProcessingFlag
+
+  // WAS: getDisableIntraReferenceSmoothing and setDisableIntraReferenceSmoothing
+  // Now: getSpsRangeExtension().getIntraSmoothingDisabledFlag and getSpsRangeExtension().setIntraSmoothingDisabledFlag
+
+  // WAS: getUseHighPrecisionPredictionWeighting and setUseHighPrecisionPredictionWeighting
+  // Now: getSpsRangeExtension().getHighPrecisionOffsetsEnabledFlag and getSpsRangeExtension().setHighPrecisionOffsetsEnabledFlag
+
+  // WAS: getUseGolombRiceParameterAdaptation and setUseGolombRiceParameterAdaptation
+  // Now: getSpsRangeExtension().getPersistentRiceAdaptationEnabledFlag and getSpsRangeExtension().setPersistentRiceAdaptationEnabledFlag
+
+  // WAS: getAlignCABACBeforeBypass and setAlignCABACBeforeBypass
+  // Now: getSpsRangeExtension().getCabacBypassAlignmentEnabledFlag and getSpsRangeExtension().setCabacBypassAlignmentEnabledFlag
 };
 
 
@@ -977,6 +1031,69 @@ public:
   Void    setRefPicSetIdxL1(UInt idx, UInt refPicSetIdx) { assert(idx<REF_PIC_LIST_NUM_IDX); m_RefPicSetIdxL1[idx] = refPicSetIdx; }
 };
 
+
+
+/// PPS RExt class
+class TComPPSRExt // Names aligned to text specification
+{
+private:
+  Int              m_log2MaxTransformSkipBlockSize;
+  Bool             m_crossComponentPredictionEnabledFlag;
+
+  // Chroma QP Adjustments
+  Int              m_diffCuChromaQpOffsetDepth;
+  Int              m_chromaQpOffsetListLen; // size (excludes the null entry used in the following array).
+  ChromaQpAdj      m_ChromaQpAdjTableIncludingNullEntry[1+MAX_QP_OFFSET_LIST_SIZE]; //!< Array includes entry [0] for the null offset used when cu_chroma_qp_offset_flag=0, and entries [cu_chroma_qp_offset_idx+1...] otherwise
+
+  UInt             m_log2SaoOffsetScale[MAX_NUM_CHANNEL_TYPE];
+
+public:
+  TComPPSRExt();
+
+  Bool settingsDifferFromDefaults(const bool bTransformSkipEnabledFlag) const
+  {
+    return (bTransformSkipEnabledFlag && (getLog2MaxTransformSkipBlockSize() !=2))
+        || (getCrossComponentPredictionEnabledFlag() )
+        || (getChromaQpOffsetListEnabledFlag() )
+        || (getLog2SaoOffsetScale(CHANNEL_TYPE_LUMA) !=0 )
+        || (getLog2SaoOffsetScale(CHANNEL_TYPE_CHROMA) !=0 );
+  }
+
+  UInt                   getLog2MaxTransformSkipBlockSize() const                         { return m_log2MaxTransformSkipBlockSize;         }
+  Void                   setLog2MaxTransformSkipBlockSize( UInt u )                       { m_log2MaxTransformSkipBlockSize  = u;           }
+
+  Bool                   getCrossComponentPredictionEnabledFlag() const                   { return m_crossComponentPredictionEnabledFlag;   }
+  Void                   setCrossComponentPredictionEnabledFlag(Bool value)               { m_crossComponentPredictionEnabledFlag = value;  }
+
+  Void                   clearChromaQpOffsetList()                                        { m_chromaQpOffsetListLen = 0;                    }
+
+  UInt                   getDiffCuChromaQpOffsetDepth () const                            { return m_diffCuChromaQpOffsetDepth;             }
+  Void                   setDiffCuChromaQpOffsetDepth ( UInt u )                          { m_diffCuChromaQpOffsetDepth = u;                }
+
+  Bool                   getChromaQpOffsetListEnabledFlag() const                         { return getChromaQpOffsetListLen()>0;            }
+  Int                    getChromaQpOffsetListLen() const                                 { return m_chromaQpOffsetListLen;                 }
+
+  const ChromaQpAdj&     getChromaQpOffsetListEntry( Int cuChromaQpOffsetIdxPlus1 ) const
+  {
+    assert(cuChromaQpOffsetIdxPlus1 < m_chromaQpOffsetListLen+1);
+    return m_ChromaQpAdjTableIncludingNullEntry[cuChromaQpOffsetIdxPlus1]; // Array includes entry [0] for the null offset used when cu_chroma_qp_offset_flag=0, and entries [cu_chroma_qp_offset_idx+1...] otherwise
+  }
+
+  Void                   setChromaQpOffsetListEntry( Int cuChromaQpOffsetIdxPlus1, Int cbOffset, Int crOffset )
+  {
+    assert (cuChromaQpOffsetIdxPlus1 != 0 && cuChromaQpOffsetIdxPlus1 <= MAX_QP_OFFSET_LIST_SIZE);
+    m_ChromaQpAdjTableIncludingNullEntry[cuChromaQpOffsetIdxPlus1].u.comp.CbOffset = cbOffset; // Array includes entry [0] for the null offset used when cu_chroma_qp_offset_flag=0, and entries [cu_chroma_qp_offset_idx+1...] otherwise
+    m_ChromaQpAdjTableIncludingNullEntry[cuChromaQpOffsetIdxPlus1].u.comp.CrOffset = crOffset;
+    m_chromaQpOffsetListLen = max(m_chromaQpOffsetListLen, cuChromaQpOffsetIdxPlus1);
+  }
+
+  // Now: getPpsRangeExtension().getLog2SaoOffsetScale and getPpsRangeExtension().setLog2SaoOffsetScale
+  UInt                   getLog2SaoOffsetScale(ChannelType type) const                    { return m_log2SaoOffsetScale[type];             }
+  Void                   setLog2SaoOffsetScale(ChannelType type, UInt uiBitShift)         { m_log2SaoOffsetScale[type] = uiBitShift;       }
+
+};
+
+
 /// PPS class
 class TComPPS
 {
@@ -991,11 +1108,6 @@ private:
   // access channel
   UInt             m_uiMaxCuDQPDepth;
 
-  // Chroma QP Adjustments
-  Int              m_MaxCuChromaQpAdjDepth;
-  Int              m_ChromaQpAdjTableSize; // size (excludes the null entry used in the following array).
-  ChromaQpAdj      m_ChromaQpAdjTableIncludingNullEntry[1+MAX_QP_OFFSET_LIST_SIZE]; //!< Array includes entry [0] for the null offset used when cu_chroma_qp_offset_flag=0, and entries [cu_chroma_qp_offset_idx+1...] otherwise
-
   Int              m_chromaCbQpOffset;
   Int              m_chromaCrQpOffset;
 
@@ -1005,11 +1117,8 @@ private:
   Bool             m_bUseWeightPred;                    //!< Use of Weighting Prediction (P_SLICE)
   Bool             m_useWeightedBiPred;                 //!< Use of Weighting Bi-Prediction (B_SLICE)
   Bool             m_OutputFlagPresentFlag;             //!< Indicates the presence of output_flag in slice header
-  Bool             m_useCrossComponentPrediction;
-  UInt             m_saoOffsetBitShift[MAX_NUM_CHANNEL_TYPE];
   Bool             m_TransquantBypassEnableFlag;        //!< Indicates presence of cu_transquant_bypass_flag in CUs.
   Bool             m_useTransformSkip;
-  Int              m_transformSkipLog2MaxSize;
   Bool             m_dependentSliceSegmentsEnabledFlag; //!< Indicates the presence of dependent slices
   Bool             m_tilesEnabledFlag;                  //!< Indicates the presence of tiles
   Bool             m_entropyCodingSyncEnabledFlag;      //!< Indicates the presence of wavefronts
@@ -1037,6 +1146,8 @@ private:
   Bool             m_listsModificationPresentFlag;
   UInt             m_log2ParallelMergeLevelMinus2;
   Int              m_numExtraSliceHeaderBits;
+
+  TComPPSRExt      m_ppsRangeExtension;
 
 public:
                          TComPPS();
@@ -1079,25 +1190,6 @@ public:
     return (compID==COMPONENT_Y) ? 0 : (compID==COMPONENT_Cb ? m_chromaCbQpOffset : m_chromaCrQpOffset );
   }
 
-  Void                   setMaxCuChromaQpAdjDepth ( UInt u )                              { m_MaxCuChromaQpAdjDepth = u;                  }
-  UInt                   getMaxCuChromaQpAdjDepth () const                                { return m_MaxCuChromaQpAdjDepth;               }
-  Void                   clearChromaQpAdjTable()                                          { m_ChromaQpAdjTableSize = 0;                   }
-  Int                    getChromaQpAdjTableSize() const                                  { return m_ChromaQpAdjTableSize;                }
-
-  const ChromaQpAdj&     getChromaQpAdjTableAt( Int cuChromaQpOffsetIdxPlus1 ) const
-  {
-    assert(cuChromaQpOffsetIdxPlus1 < m_ChromaQpAdjTableSize+1);
-    return m_ChromaQpAdjTableIncludingNullEntry[cuChromaQpOffsetIdxPlus1]; // Array includes entry [0] for the null offset used when cu_chroma_qp_offset_flag=0, and entries [cu_chroma_qp_offset_idx+1...] otherwise
-  }
-
-  Void                   setChromaQpAdjTableAt( Int cuChromaQpOffsetIdxPlus1, Int cbOffset, Int crOffset )
-  {
-    assert (cuChromaQpOffsetIdxPlus1 != 0 && cuChromaQpOffsetIdxPlus1 <= MAX_QP_OFFSET_LIST_SIZE);
-    m_ChromaQpAdjTableIncludingNullEntry[cuChromaQpOffsetIdxPlus1].u.comp.CbOffset = cbOffset; // Array includes entry [0] for the null offset used when cu_chroma_qp_offset_flag=0, and entries [cu_chroma_qp_offset_idx+1...] otherwise
-    m_ChromaQpAdjTableIncludingNullEntry[cuChromaQpOffsetIdxPlus1].u.comp.CrOffset = crOffset;
-    m_ChromaQpAdjTableSize = max(m_ChromaQpAdjTableSize, cuChromaQpOffsetIdxPlus1);
-  }
-
   Void                   setNumRefIdxL0DefaultActive(UInt ui)                             { m_numRefIdxL0DefaultActive=ui;                }
   UInt                   getNumRefIdxL0DefaultActive() const                              { return m_numRefIdxL0DefaultActive;            }
   Void                   setNumRefIdxL1DefaultActive(UInt ui)                             { m_numRefIdxL1DefaultActive=ui;                }
@@ -1108,12 +1200,6 @@ public:
   Void                   setUseWP( Bool b )                                               { m_bUseWeightPred = b;                         }
   Void                   setWPBiPred( Bool b )                                            { m_useWeightedBiPred = b;                      }
 
-  Bool                   getUseCrossComponentPrediction() const                           { return m_useCrossComponentPrediction;         }
-  Void                   setUseCrossComponentPrediction(Bool value)                       { m_useCrossComponentPrediction = value;        }
-
-  UInt                   getSaoOffsetBitShift(ChannelType type) const                     { return m_saoOffsetBitShift[type];             }
-  Void                   setSaoOffsetBitShift(ChannelType type, UInt uiBitShift)          { m_saoOffsetBitShift[type] = uiBitShift;       }
-
   Void                   setOutputFlagPresentFlag( Bool b )                               { m_OutputFlagPresentFlag = b;                  }
   Bool                   getOutputFlagPresentFlag() const                                 { return m_OutputFlagPresentFlag;               }
   Void                   setTransquantBypassEnableFlag( Bool b )                          { m_TransquantBypassEnableFlag = b;             }
@@ -1121,8 +1207,6 @@ public:
 
   Bool                   getUseTransformSkip() const                                      { return m_useTransformSkip;                    }
   Void                   setUseTransformSkip( Bool b )                                    { m_useTransformSkip  = b;                      }
-  UInt                   getTransformSkipLog2MaxSize() const                              { return m_transformSkipLog2MaxSize;            }
-  Void                   setTransformSkipLog2MaxSize( UInt u )                            { m_transformSkipLog2MaxSize  = u;              }
 
   Void                   setLoopFilterAcrossTilesEnabledFlag(Bool b)                      { m_loopFilterAcrossTilesEnabledFlag = b;       }
   Bool                   getLoopFilterAcrossTilesEnabledFlag() const                      { return m_loopFilterAcrossTilesEnabledFlag;    }
@@ -1173,6 +1257,31 @@ public:
   Bool                   getLoopFilterAcrossSlicesEnabledFlag() const                     { return m_loopFilterAcrossSlicesEnabledFlag;   }
   Bool                   getSliceHeaderExtensionPresentFlag() const                       { return m_sliceHeaderExtensionPresentFlag;     }
   Void                   setSliceHeaderExtensionPresentFlag(Bool val)                     { m_sliceHeaderExtensionPresentFlag = val;      }
+
+  const TComPPSRExt&     getPpsRangeExtension() const                                     { return m_ppsRangeExtension;                   }
+  TComPPSRExt&           getPpsRangeExtension()                                           { return m_ppsRangeExtension;                   }
+
+  // WAS: getTransformSkipLog2MaxSize and setTransformSkipLog2MaxSize
+  // Now: getPpsRangeExtension().getLog2MaxTransformSkipBlockSize and getPpsRangeExtension().setLog2MaxTransformSkipBlockSize
+
+  // WAS: getUseCrossComponentPrediction and setUseCrossComponentPrediction
+  // Now: getPpsRangeExtension().getCrossComponentPredictionEnabledFlag and getPpsRangeExtension().setCrossComponentPredictionEnabledFlag
+
+  // WAS: clearChromaQpAdjTable
+  // Now: getPpsRangeExtension().clearChromaQpOffsetList
+
+  // WAS: getMaxCuChromaQpAdjDepth and setMaxCuChromaQpAdjDepth
+  // Now: getPpsRangeExtension().getDiffCuChromaQpOffsetDepth and getPpsRangeExtension().setDiffCuChromaQpOffsetDepth
+
+  // WAS: getChromaQpAdjTableSize
+  // Now: getPpsRangeExtension().getChromaQpOffsetListLen
+
+  // WAS: getChromaQpAdjTableAt and setChromaQpAdjTableAt
+  // Now: getPpsRangeExtension().getChromaQpOffsetListEntry and getPpsRangeExtension().setChromaQpOffsetListEntry
+
+  // WAS: getSaoOffsetBitShift and setSaoOffsetBitShift
+  // Now: getPpsRangeExtension().getLog2SaoOffsetScale and getPpsRangeExtension().setLog2SaoOffsetScale
+
 };
 
 struct WPScalingParam

@@ -80,8 +80,8 @@ private:
 
   //  Data : encoder control
   Bool                    m_bEncodeDQP;
-  Bool                    m_CodeChromaQpAdjFlag;
-  Int                     m_ChromaQpAdjIdc;
+  Bool                    m_stillToCodeChromaQpOffsetFlag; //indicates whether chroma QP offset flag needs to coded at this particular CU granularity.
+  Int                     m_cuChromaQpOffsetIdxPlus1; // if 0, then cu_chroma_qp_offset_flag will be 0, otherwise cu_chroma_qp_offset_flag will be 1.
 
   //  Access channel
   TEncCfg*                m_pcEncCfg;
@@ -152,8 +152,8 @@ protected:
   Bool getdQPFlag           ()                        { return m_bEncodeDQP;        }
   Void setdQPFlag           ( Bool b )                { m_bEncodeDQP = b;           }
 
-  Bool getCodeChromaQpAdjFlag() { return m_CodeChromaQpAdjFlag; }
-  Void setCodeChromaQpAdjFlag( Bool b ) { m_CodeChromaQpAdjFlag = b; }
+  Bool getCodeChromaQpAdjFlag() { return m_stillToCodeChromaQpOffsetFlag; }
+  Void setCodeChromaQpAdjFlag( Bool b ) { m_stillToCodeChromaQpOffsetFlag = b; }
 
 #if ADAPTIVE_QP_SELECTION
   // Adaptive reconstruction level (ARL) statistics collection functions
