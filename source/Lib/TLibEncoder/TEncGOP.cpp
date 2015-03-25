@@ -289,11 +289,10 @@ Void TEncGOP::xWriteLeadingSEIOrdered (SEIMessages& seiMessages, SEIMessages& du
 
   // And finally everything else one by one
   xWriteSEISeparately(NAL_UNIT_PREFIX_SEI, localMessages, accessUnit, itNalu, temporalId, sps);
-  xClearSEIs(currentMessages, !testWrite);
+  xClearSEIs(localMessages, !testWrite);
 
   if (!testWrite)
   {
-    deleteSEIs(localMessages);
     seiMessages.clear();
   }
 }
