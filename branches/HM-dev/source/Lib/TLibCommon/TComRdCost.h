@@ -206,12 +206,9 @@ private:
   static Distortion xGetSAD64         ( DistParam* pcDtParam );
   static Distortion xGetSAD16N        ( DistParam* pcDtParam );
 
-#if AMP_SAD
   static Distortion xGetSAD12         ( DistParam* pcDtParam );
   static Distortion xGetSAD24         ( DistParam* pcDtParam );
   static Distortion xGetSAD48         ( DistParam* pcDtParam );
-
-#endif
 
   static Distortion xGetHADs          ( DistParam* pcDtParam );
   static Distortion xCalcHADs2x2      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
