@@ -223,6 +223,7 @@ protected:
   Bool      m_bUseConstrainedIntraPred;
   Bool      m_bFastUDIUseMPMEnabled;
   Bool      m_bFastMEForGenBLowDelayEnabled;
+  Bool      m_bUseBLambdaForNonKeyLowDelayPictures;
   Bool      m_usePCM;
   Int       m_PCMBitDepth[MAX_NUM_CHANNEL_TYPE];
   UInt      m_pcmLog2MaxSize;
@@ -547,6 +548,8 @@ public:
   Void      setUseConstrainedIntraPred      ( Bool  b )     { m_bUseConstrainedIntraPred = b; }
   Void      setFastUDIUseMPMEnabled         ( Bool  b )     { m_bFastUDIUseMPMEnabled = b; }
   Void      setFastMEForGenBLowDelayEnabled ( Bool  b )     { m_bFastMEForGenBLowDelayEnabled = b; }
+  Void      setUseBLambdaForNonKeyLowDelayPictures ( Bool b ) { m_bUseBLambdaForNonKeyLowDelayPictures = b; }
+
   Void      setPCMInputBitDepthFlag         ( Bool  b )     { m_bPCMInputBitDepthFlag = b; }
   Void      setPCMFilterDisableFlag         ( Bool  b )     {  m_bPCMFilterDisableFlag = b; }
   Void      setUsePCM                       ( Bool  b )     {  m_usePCM = b;               }
@@ -571,6 +574,7 @@ public:
   Bool      getUseConstrainedIntraPred      ()      { return m_bUseConstrainedIntraPred; }
   Bool      getFastUDIUseMPMEnabled         ()      { return m_bFastUDIUseMPMEnabled; }
   Bool      getFastMEForGenBLowDelayEnabled ()      { return m_bFastMEForGenBLowDelayEnabled; }
+  Bool      getUseBLambdaForNonKeyLowDelayPictures () { return m_bUseBLambdaForNonKeyLowDelayPictures; }
   Bool      getPCMInputBitDepthFlag         ()      { return m_bPCMInputBitDepthFlag;   }
   Bool      getPCMFilterDisableFlag         ()      { return m_bPCMFilterDisableFlag;   }
   Bool      getUsePCM                       ()      { return m_usePCM;                 }

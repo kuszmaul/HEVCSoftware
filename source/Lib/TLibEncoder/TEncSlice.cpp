@@ -377,27 +377,28 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iGOP
 
   setUpLambda(rpcSlice, dLambda, iQP);
 
-#if HB_LAMBDA_FOR_LDC
-  // restore original slice type
-
-  if(!(isField && pocLast == 1) || !m_pcCfg->getEfficientFieldIRAPEnabled())
+  if (m_pcCfg->getFastMEForGenBLowDelayEnabled())
   {
-#if ALLOW_RECOVERY_POINT_AS_RAP
-    if(m_pcCfg->getDecodingRefreshType() == 3)
-    {
-      eSliceType = (pocLast == 0 || (pocCurr)                     % m_pcCfg->getIntraPeriod() == 0 || m_pcGOPEncoder->getGOPSize() == 0) ? I_SLICE : eSliceType;
-    }
-    else
-    {
-#endif
-      eSliceType = (pocLast == 0 || (pocCurr - (isField ? 1 : 0)) % m_pcCfg->getIntraPeriod() == 0 || m_pcGOPEncoder->getGOPSize() == 0) ? I_SLICE : eSliceType;
-#if ALLOW_RECOVERY_POINT_AS_RAP
-    }
-#endif
-  }
+    // restore original slice type
 
-  rpcSlice->setSliceType        ( eSliceType );
+    if(!(isField && pocLast == 1) || !m_pcCfg->getEfficientFieldIRAPEnabled())
+    {
+#if ALLOW_RECOVERY_POINT_AS_RAP
+      if(m_pcCfg->getDecodingRefreshType() == 3)
+      {
+        eSliceType = (pocLast == 0 || (pocCurr)                     % m_pcCfg->getIntraPeriod() == 0 || m_pcGOPEncoder->getGOPSize() == 0) ? I_SLICE : eSliceType;
+      }
+      else
+      {
 #endif
+        eSliceType = (pocLast == 0 || (pocCurr - (isField ? 1 : 0)) % m_pcCfg->getIntraPeriod() == 0 || m_pcGOPEncoder->getGOPSize() == 0) ? I_SLICE : eSliceType;
+#if ALLOW_RECOVERY_POINT_AS_RAP
+      }
+#endif
+    }
+
+    rpcSlice->setSliceType        ( eSliceType );
+  }
 
   if (m_pcCfg->getUseRecalculateQPAccordingToLambda())
   {

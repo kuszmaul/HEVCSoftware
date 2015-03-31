@@ -193,7 +193,6 @@ template <typename ValueType> inline ValueType rightShiftEvenRounding(const Valu
 
 // Explicit temporal layer QP offset
 #define MAX_TLAYER                  7           ///< max number of temporal layer
-#define HB_LAMBDA_FOR_LDC           1           ///< use of B-style lambda for non-key pictures in low-delay mode
 
 // Fast estimation of generalized B in low-delay mode
 #define GPB_SIMPLE_UNI              1           ///< Simple mode for uni-direction
