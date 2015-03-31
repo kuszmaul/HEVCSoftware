@@ -108,7 +108,7 @@ public:
 #endif
   Void destroyEncData();
   Void initRDOCabacCoder(TEncSbac* pcRDGoOnSbacCoder, TComSlice* pcSlice) ;
-  Void SAOProcess(TComPic* pPic, Bool* sliceEnabled, const Double *lambdas
+  Void SAOProcess(TComPic* pPic, Bool* sliceEnabled, const Double *lambdas, const Bool bTestSAODisableAtPictureLevel
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
                 , Bool isPreDBFSamplesUsed
 #endif
@@ -124,7 +124,7 @@ private: //methods
 #endif
                    );
   Void decidePicParams(Bool* sliceEnabled, Int picTempLayer);
-  Void decideBlkParams(TComPic* pic, Bool* sliceEnabled, SAOStatData*** blkStats, TComPicYuv* srcYuv, TComPicYuv* resYuv, SAOBlkParam* reconParams, SAOBlkParam* codedParams);
+  Void decideBlkParams(TComPic* pic, Bool* sliceEnabled, SAOStatData*** blkStats, TComPicYuv* srcYuv, TComPicYuv* resYuv, SAOBlkParam* reconParams, SAOBlkParam* codedParams, const Bool bTestSAODisableAtPictureLevel);
   Void getBlkStats(const ComponentID compIdx, const Int channelBitDepth, SAOStatData* statsDataTypes, Pel* srcBlk, Pel* orgBlk, Int srcStride, Int orgStride, Int width, Int height, Bool isLeftAvail,  Bool isRightAvail, Bool isAboveAvail, Bool isBelowAvail, Bool isAboveLeftAvail, Bool isAboveRightAvail
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
                   , Bool isCalculatePreDeblockSamples
