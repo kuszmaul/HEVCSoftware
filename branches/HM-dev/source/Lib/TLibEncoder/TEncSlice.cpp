@@ -236,17 +236,13 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iGOP
       }
     }
 
-#if HARMONIZE_GOP_FIRST_FIELD_COUPLE
-    if(poc != 0)
+    if(m_pcCfg->getHarmonizeGopFirstFieldCoupleEnabled() && poc != 0)
     {
-#endif
       if (isField && ((rpcSlice->getPOC() % 2) == 1))
       {
         depth ++;
       }
-#if HARMONIZE_GOP_FIRST_FIELD_COUPLE
     }
-#endif
   }
 
   // slice type

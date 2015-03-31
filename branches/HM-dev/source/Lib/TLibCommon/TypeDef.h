@@ -83,7 +83,6 @@
 // ====================================================================================================================
 #define T0196_SELECTIVE_RDOQ                              1 ///< selective RDOQ
 
-#define HARMONIZE_GOP_FIRST_FIELD_COUPLE                  1
 #define ALLOW_RECOVERY_POINT_AS_RAP                       1
 #define BUGFIX_INTRAPERIOD                                1
 
