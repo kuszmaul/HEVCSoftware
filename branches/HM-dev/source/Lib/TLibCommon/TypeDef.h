@@ -77,7 +77,7 @@
 // Tool Switches - transitory (these macros are likely to be removed in future revisions)
 // ====================================================================================================================
 
-#define DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES  1
+#define DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES  1 ///< TODO: integrate this macro into a broader conformance checking system.
 #define T0196_SELECTIVE_RDOQ                              1 ///< selective RDOQ
 
 // ====================================================================================================================
