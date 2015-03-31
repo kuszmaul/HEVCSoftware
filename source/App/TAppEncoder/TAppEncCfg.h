@@ -233,6 +233,7 @@ protected:
 
   Bool      m_bUseConstrainedIntraPred;                       ///< flag for using constrained intra prediction
   Bool      m_bFastUDIUseMPMEnabled;
+  Bool      m_bFastMEForGenBLowDelayEnabled;
 
   Int       m_decodedPictureHashSEIEnabled;                    ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
   Int       m_recoveryPointSEIEnabled;

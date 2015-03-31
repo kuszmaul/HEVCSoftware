@@ -196,10 +196,7 @@ template <typename ValueType> inline ValueType rightShiftEvenRounding(const Valu
 #define HB_LAMBDA_FOR_LDC           1           ///< use of B-style lambda for non-key pictures in low-delay mode
 
 // Fast estimation of generalized B in low-delay mode
-#define GPB_SIMPLE                  1           ///< Simple GPB mode
-#if     GPB_SIMPLE
 #define GPB_SIMPLE_UNI              1           ///< Simple mode for uni-direction
-#endif
 
 // Adaptive search range depending on POC difference
 #define ADAPT_SR_SCALE              1           ///< division factor for adaptive search range
