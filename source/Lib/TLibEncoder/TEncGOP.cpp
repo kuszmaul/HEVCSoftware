@@ -540,13 +540,11 @@ Void TEncGOP::xCreatePictureTimingSEI  (Int IRAPGOPid, SEIMessages& seiMessages,
     }
     pictureTimingSEI->m_auCpbRemovalDelay = std::min<Int>(std::max<Int>(1, m_totalCoded - m_lastBPSEI), static_cast<Int>(pow(2, static_cast<Double>(hrd->getCpbRemovalDelayLengthMinus1()+1)))); // Syntax element signalled as minus, hence the .
     pictureTimingSEI->m_picDpbOutputDelay = slice->getSPS()->getNumReorderPics(slice->getSPS()->getMaxTLayers()-1) + slice->getPOC() - m_totalCoded;
-#if EFFICIENT_FIELD_IRAP
-    if(IRAPGOPid > 0 && IRAPGOPid < m_iGopSize)
+    if(m_pcCfg->getEfficientFieldIRAPEnabled() && IRAPGOPid > 0 && IRAPGOPid < m_iGopSize)
     {
       // if pictures have been swapped there is likely one more picture delay on their tid. Very rough approximation
       pictureTimingSEI->m_picDpbOutputDelay ++;
     }
-#endif
     Int factor = hrd->getTickDivisorMinus2() + 2;
     pictureTimingSEI->m_picDpbOutputDuDelay = factor * pictureTimingSEI->m_picDpbOutputDelay;
     if( m_pcCfg->getDecodingUnitInfoSEIEnabled() )
@@ -819,7 +817,6 @@ cabac_zero_word_padding(TComSlice *const pcSlice, TComPic *const pcPic, const st
   }
 }
 
-#if EFFICIENT_FIELD_IRAP
 class EfficientFieldIRAPMapping
 {
   private:
@@ -948,7 +945,6 @@ Int EfficientFieldIRAPMapping::restoreGOPid(const Int GOPid)
   return GOPid;
 }
 
-#endif
 
 static UInt calculateCollocatedFromL1Flag(TEncCfg *pCfg, const Int GOPid, const Int gopSize)
 {
@@ -1025,10 +1021,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
   std::deque<DUData> duData;
   SEIDecodingUnitInfo decodingUnitInfoSEI;
 
-#if EFFICIENT_FIELD_IRAP
   EfficientFieldIRAPMapping effFieldIRAPMap;
-  effFieldIRAPMap.initialize(isField, m_iGopSize, iPOCLast, iNumPicRcvd, m_iLastIDR, this, m_pcCfg);
-#endif
+  if (m_pcCfg->getEfficientFieldIRAPEnabled())
+  {
+    effFieldIRAPMap.initialize(isField, m_iGopSize, iPOCLast, iNumPicRcvd, m_iLastIDR, this, m_pcCfg);
+  }
 
   // reset flag indicating whether pictures have been encoded
   for ( Int iGOPid=0; iGOPid < m_iGopSize; iGOPid++ )
@@ -1038,9 +1035,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
   for ( Int iGOPid=0; iGOPid < m_iGopSize; iGOPid++ )
   {
-#if EFFICIENT_FIELD_IRAP
-    iGOPid=effFieldIRAPMap.adjustGOPid(iGOPid);
-#endif
+    if (m_pcCfg->getEfficientFieldIRAPEnabled())
+    {
+      iGOPid=effFieldIRAPMap.adjustGOPid(iGOPid);
+    }
 
     //-- For time output for each slice
     clock_t iBeforeTime = clock();
@@ -1069,9 +1067,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     if(pocCurr>=m_pcCfg->getFramesToBeEncoded())
     {
-#if EFFICIENT_FIELD_IRAP
-      iGOPid=effFieldIRAPMap.restoreGOPid(iGOPid);
-#endif
+      if (m_pcCfg->getEfficientFieldIRAPEnabled())
+      {
+        iGOPid=effFieldIRAPMap.restoreGOPid(iGOPid);
+      }
       continue;
     }
 
@@ -1129,52 +1128,52 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       }
     }
 
-#if EFFICIENT_FIELD_IRAP
-    if ( pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
-      || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL
-      || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_N_LP
-      || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL
-      || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP
-      || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA )  // IRAP picture
+    if (m_pcCfg->getEfficientFieldIRAPEnabled())
     {
-      m_associatedIRAPType = pcSlice->getNalUnitType();
-      m_associatedIRAPPOC = pocCurr;
+      if ( pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
+        || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL
+        || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_N_LP
+        || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL
+        || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP
+        || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA )  // IRAP picture
+      {
+        m_associatedIRAPType = pcSlice->getNalUnitType();
+        m_associatedIRAPPOC = pocCurr;
+      }
+      pcSlice->setAssociatedIRAPType(m_associatedIRAPType);
+      pcSlice->setAssociatedIRAPPOC(m_associatedIRAPPOC);
     }
-    pcSlice->setAssociatedIRAPType(m_associatedIRAPType);
-    pcSlice->setAssociatedIRAPPOC(m_associatedIRAPPOC);
-#endif
     // Do decoding refresh marking if any
-    pcSlice->decodingRefreshMarking(m_pocCRA, m_bRefreshPending, rcListPic);
+    pcSlice->decodingRefreshMarking(m_pocCRA, m_bRefreshPending, rcListPic, m_pcCfg->getEfficientFieldIRAPEnabled());
     m_pcEncTop->selectReferencePictureSet(pcSlice, pocCurr, iGOPid);
     pcSlice->getRPS()->setNumberOfLongtermPictures(0);
-#if !EFFICIENT_FIELD_IRAP
-    if ( pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
-      || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL
-      || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_N_LP
-      || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL
-      || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP
-      || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA )  // IRAP picture
+    if (!m_pcCfg->getEfficientFieldIRAPEnabled())
     {
-      m_associatedIRAPType = pcSlice->getNalUnitType();
-      m_associatedIRAPPOC = pocCurr;
+      if ( pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
+        || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL
+        || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_N_LP
+        || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL
+        || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP
+        || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA )  // IRAP picture
+      {
+        m_associatedIRAPType = pcSlice->getNalUnitType();
+        m_associatedIRAPPOC = pocCurr;
+      }
+      pcSlice->setAssociatedIRAPType(m_associatedIRAPType);
+      pcSlice->setAssociatedIRAPPOC(m_associatedIRAPPOC);
     }
-    pcSlice->setAssociatedIRAPType(m_associatedIRAPType);
-    pcSlice->setAssociatedIRAPPOC(m_associatedIRAPPOC);
-#endif
 
 #if ALLOW_RECOVERY_POINT_AS_RAP
     if ((pcSlice->checkThatAllRefPicsAreAvailable(rcListPic, pcSlice->getRPS(), false, m_iLastRecoveryPicPOC, m_pcCfg->getDecodingRefreshType() == 3) != 0) || (pcSlice->isIRAP()) 
-#if EFFICIENT_FIELD_IRAP
-      || (isField && pcSlice->getAssociatedIRAPType() >= NAL_UNIT_CODED_SLICE_BLA_W_LP && pcSlice->getAssociatedIRAPType() <= NAL_UNIT_CODED_SLICE_CRA && pcSlice->getAssociatedIRAPPOC() == pcSlice->getPOC()+1)
-#endif
+      || (m_pcCfg->getEfficientFieldIRAPEnabled() && isField && pcSlice->getAssociatedIRAPType() >= NAL_UNIT_CODED_SLICE_BLA_W_LP && pcSlice->getAssociatedIRAPType() <= NAL_UNIT_CODED_SLICE_CRA && pcSlice->getAssociatedIRAPPOC() == pcSlice->getPOC()+1)
       )
     {
-      pcSlice->createExplicitReferencePictureSetFromReference(rcListPic, pcSlice->getRPS(), pcSlice->isIRAP(), m_iLastRecoveryPicPOC, m_pcCfg->getDecodingRefreshType() == 3);
+      pcSlice->createExplicitReferencePictureSetFromReference(rcListPic, pcSlice->getRPS(), pcSlice->isIRAP(), m_iLastRecoveryPicPOC, m_pcCfg->getDecodingRefreshType() == 3, m_pcCfg->getEfficientFieldIRAPEnabled());
     }
 #else
     if ((pcSlice->checkThatAllRefPicsAreAvailable(rcListPic, pcSlice->getRPS(), false) != 0) || (pcSlice->isIRAP()))
     {
-      pcSlice->createExplicitReferencePictureSetFromReference(rcListPic, pcSlice->getRPS(), pcSlice->isIRAP());
+      pcSlice->createExplicitReferencePictureSetFromReference(rcListPic, pcSlice->getRPS(), pcSlice->isIRAP(), m_pcCfg->getEfficientFieldIRAPEnabled());
     }
 #endif
 
@@ -1702,11 +1701,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       }
     }
 
-#if EFFICIENT_FIELD_IRAP
-    xCreatePictureTimingSEI(effFieldIRAPMap.GetIRAPGOPid(), leadingSeiMessages, nestedSeiMessages, duInfoSeiMessages, pcSlice, isField, duData);
-#else
-    xCreatePictureTimingSEI(0, leadingSeiMessages, nestedSeiMessages, duInfoSeiMessages, pcSlice, isField, duData);
-#endif
+    xCreatePictureTimingSEI(m_pcCfg->getEfficientFieldIRAPEnabled()?effFieldIRAPMap.GetIRAPGOPid():0, leadingSeiMessages, nestedSeiMessages, duInfoSeiMessages, pcSlice, isField, duData);
     if (m_pcCfg->getScalableNestingSEIEnabled())
     {
       xCreateScalableNestingSEI (leadingSeiMessages, nestedSeiMessages);
@@ -1724,9 +1719,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     printf("\n");
     fflush(stdout);
 
-#if EFFICIENT_FIELD_IRAP
-    iGOPid=effFieldIRAPMap.restoreGOPid(iGOPid);
-#endif
+    if (m_pcCfg->getEfficientFieldIRAPEnabled())
+    {
+      iGOPid=effFieldIRAPMap.restoreGOPid(iGOPid);
+    }
   } // iGOPid-loop
 
   delete pcBitstreamRedirect;
@@ -2230,13 +2226,11 @@ NalUnitType TEncGOP::getNalUnitType(Int pocCurr, Int lastIDR, Bool isField)
     return NAL_UNIT_CODED_SLICE_IDR_W_RADL;
   }
 
-#if EFFICIENT_FIELD_IRAP
-  if(isField && pocCurr == 1)
+  if(m_pcCfg->getEfficientFieldIRAPEnabled() && isField && pocCurr == 1)
   {
     // to avoid the picture becoming an IRAP
     return NAL_UNIT_CODED_SLICE_TRAIL_R;
   }
-#endif
 
 #if ALLOW_RECOVERY_POINT_AS_RAP
   if(m_pcCfg->getDecodingRefreshType() != 3 && (pocCurr - isField) % m_pcCfg->getIntraPeriod() == 0)
