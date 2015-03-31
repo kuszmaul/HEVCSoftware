@@ -897,12 +897,10 @@ Void TComSlice::checkLeadingPictureRestrictions(TComList<TComPic*>& rcListPic)
   while ( iterPic != rcListPic.end())
   {
     rpcPic = *(iterPic++);
-#if BUGFIX_INTRAPERIOD
     if(!rpcPic->getReconMark())
     {
       continue;
     }
-#endif
     if (rpcPic->getPOC() == this->getPOC())
     {
       continue;
