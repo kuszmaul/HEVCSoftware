@@ -35,7 +35,7 @@
  \brief    encoder search class
  */
 
-#include "TLibCommon/TypeDef.h"
+#include "TLibCommon/CommonDef.h"
 #include "TLibCommon/TComRom.h"
 #include "TLibCommon/TComMotionInfo.h"
 #include "TEncSearch.h"
@@ -1148,7 +1148,7 @@ Void TEncSearch::xIntraCodingTUBlock(       TComYuv*    pcOrgYuv,
   const Bool           bUseReconstructedResidualForEstimate = m_pcEncCfg->getUseReconBasedCrossCPredictionEstimate();
         Pel *const     lumaResidualForEstimate              = bUseReconstructedResidualForEstimate ? reconstructedLumaResidual : encoderLumaResidual;
 
-#ifdef DEBUG_STRING
+#if DEBUG_STRING
   const Int debugPredModeMask=DebugStringGetPredModeMask(MODE_INTRA);
 #endif
 
@@ -1158,7 +1158,7 @@ Void TEncSearch::xIntraCodingTUBlock(       TComYuv*    pcOrgYuv,
 
   DEBUG_STRING_NEW(sTemp)
 
-#ifndef DEBUG_STRING
+#if !DEBUG_STRING
   if( default0Save1Load2 != 2 )
 #endif
   {
@@ -1185,7 +1185,7 @@ Void TEncSearch::xIntraCodingTUBlock(       TComYuv*    pcOrgYuv,
       }
     }
   }
-#ifndef DEBUG_STRING
+#if !DEBUG_STRING
   else
   {
     // load prediction
@@ -1268,7 +1268,7 @@ Void TEncSearch::xIntraCodingTUBlock(       TComYuv*    pcOrgYuv,
 
   //--- inverse transform ---
 
-#ifdef DEBUG_STRING
+#if DEBUG_STRING
   if ( (uiAbsSum > 0) || (DebugOptionList::DebugString_InvTran.getInt()&debugPredModeMask) )
 #else
   if ( uiAbsSum > 0 )
@@ -1308,7 +1308,7 @@ Void TEncSearch::xIntraCodingTUBlock(       TComYuv*    pcOrgYuv,
       }
     }
 
- #ifdef DEBUG_STRING
+ #if DEBUG_STRING
     std::stringstream ss(stringstream::out);
     const Bool bDebugPred=((DebugOptionList::DebugString_Pred.getInt()&debugPredModeMask) && DEBUG_STRING_CHANNEL_CONDITION(compID));
     const Bool bDebugResi=((DebugOptionList::DebugString_Resi.getInt()&debugPredModeMask) && DEBUG_STRING_CHANNEL_CONDITION(compID));
@@ -2288,7 +2288,7 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
 
         Double cost      = (Double)uiSad + (Double)iModeBits * sqrtLambdaForFirstPass;
 
-#ifdef DEBUG_INTRA_SEARCH_COSTS
+#if DEBUG_INTRA_SEARCH_COSTS
         std::cout << "1st pass mode " << uiMode << " SAD = " << uiSad << ", mode bits = " << iModeBits << ", cost = " << cost << "\n";
 #endif
 
@@ -2368,7 +2368,7 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
       xRecurIntraCodingLumaQT( pcOrgYuv, pcPredYuv, pcResiYuv, resiLumaPU, uiPUDistY, dPUCost, tuRecurseWithPU DEBUG_STRING_PASS_INTO(sMode) );
 #endif
 
-#ifdef DEBUG_INTRA_SEARCH_COSTS
+#if DEBUG_INTRA_SEARCH_COSTS
       std::cout << "2nd pass [luma,chroma] mode [" << Int(pcCU->getIntraDir(CHANNEL_TYPE_LUMA, uiPartOffset)) << "," << Int(pcCU->getIntraDir(CHANNEL_TYPE_CHROMA, uiPartOffset)) << "] cost = " << dPUCost << "\n";
 #endif
 
@@ -4327,7 +4327,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
 
     m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_TEMP_BEST]);
 
-#ifdef DEBUG_STRING
+#if DEBUG_STRING
     pcYuvResiBest->clear(); // Clear the residual image, if we didn't code it.
     for(UInt i=0; i<MAX_NUM_COMPONENT+1; i++)
     {
@@ -4375,7 +4375,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     }
     static const UInt useTS[MAX_NUM_COMPONENT]={0,0,0};
     pcCU->setTransformSkipSubParts ( useTS, 0, pcCU->getDepth(0) );
-#ifdef DEBUG_STRING
+#if DEBUG_STRING
     sDebug.clear();
     for(UInt i=0; i<MAX_NUM_COMPONENT+1; i++)
     {
@@ -4443,7 +4443,7 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
   const UInt uiLog2TrSize = rTu.GetLog2LumaTrSize();
 
   UInt SplitFlag = ((pcCU->getSlice()->getSPS()->getQuadtreeTUMaxDepthInter() == 1) && pcCU->isInter(uiAbsPartIdx) && ( pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N ));
-#ifdef DEBUG_STRING
+#if DEBUG_STRING
   const Int debugPredModeMask = DebugStringGetPredModeMask(pcCU->getPredictionMode(uiAbsPartIdx));
 #endif
 
@@ -4767,7 +4767,7 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
                   }
                 }
 
-#ifdef DEBUG_STRING
+#if DEBUG_STRING
                 if (currAbsSum > 0)
                 {
                   DEBUG_STRING_SWAP(sSingleStringComp[compID], sSingleStringTest)
@@ -4932,7 +4932,7 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
     {
       DEBUG_STRING_NEW(childString)
       xEstimateInterResidualQT( pcResi, dSubdivCost, uiSubdivBits, uiSubdivDist, bCheckFull ? NULL : puiZeroDist,  tuRecurseChild DEBUG_STRING_PASS_INTO(childString));
-#ifdef DEBUG_STRING
+#if DEBUG_STRING
       // split the string by component and append to the relevant output (because decoder decodes in channel order, whereas this search searches by TU-order)
       std::size_t lastPos=0;
       const std::size_t endStrng=childString.find(debug_reorder_data_inter_token[MAX_NUM_COMPONENT], lastPos);
@@ -4988,7 +4988,7 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
       rdCost += dSubdivCost;
       ruiBits += uiSubdivBits;
       ruiDist += uiSubdivDist;
-#ifdef DEBUG_STRING
+#if DEBUG_STRING
       for(UInt ch = 0; ch < numValidComp; ch++)
       {
         DEBUG_STRING_APPEND(sDebug, debug_reorder_data_inter_token[ch])
@@ -5048,7 +5048,7 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
     rdCost  += dSingleCost;
     ruiBits += uiSingleBits;
     ruiDist += uiSingleDist;
-#ifdef DEBUG_STRING
+#if DEBUG_STRING
     for(UInt ch = 0; ch < numValidComp; ch++)
     {
       const ComponentID compID=ComponentID(ch);

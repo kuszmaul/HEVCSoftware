@@ -141,7 +141,7 @@ Void TComPrediction::initIntraPatternChType( TComTU &rTu, Bool& bAbove, Bool& bL
   const UInt uiPartIdxLB      = g_auiRasterToZscan[ g_auiZscanToRaster[ uiPartIdxLT ] + ((iTUHeightInUnits - 1) * iPartIdxStride)];
 
   Int   iPicStride = pcCU->getPic()->getStride(compID);
-  Bool  bNeighborFlags[4 * MAX_NUM_SPU_W + 1];
+  Bool  bNeighborFlags[4 * MAX_NUM_PART_IDXS_IN_CTU_WIDTH + 1];
   Int   iNumIntraNeighbor = 0;
 
   bNeighborFlags[iLeftUnits] = isAboveLeftAvailable( pcCU, uiPartIdxLT );
@@ -159,7 +159,7 @@ Void TComPrediction::initIntraPatternChType( TComTU &rTu, Bool& bAbove, Bool& bL
 
   assert(uiROIWidth*uiROIHeight <= m_iYuvExtSize);
 
-#ifdef DEBUG_STRING
+#if DEBUG_STRING
   std::stringstream ss(stringstream::out);
 #endif
 
@@ -176,7 +176,7 @@ Void TComPrediction::initIntraPatternChType( TComTU &rTu, Bool& bAbove, Bool& bL
                           uiROIWidth, uiROIHeight, iPicStride);
 
 
-#ifdef DEBUG_STRING
+#if DEBUG_STRING
     if (DebugOptionList::DebugString_Pred.getInt()&DebugStringGetPredModeMask(MODE_INTRA))
     {
       ss << "###: generating Ref Samples for channel " << compID << " and " << rTu.getRect(compID).width << " x " << rTu.getRect(compID).height << "\n";
@@ -296,7 +296,7 @@ Void TComPrediction::initIntraPatternChType( TComTU &rTu, Bool& bAbove, Bool& bL
 
       *piDestPtr=*piSrcPtr; // far right is not filtered
 
-#ifdef DEBUG_STRING
+#if DEBUG_STRING
     if (DebugOptionList::DebugString_Pred.getInt()&DebugStringGetPredModeMask(MODE_INTRA))
     {
       ss << "###: filtered result for channel " << compID <<"\n";

@@ -35,7 +35,7 @@
     \brief    weighted prediction encoder class
 */
 
-#include "../TLibCommon/TypeDef.h"
+#include "../TLibCommon/CommonDef.h"
 #include "../TLibCommon/TComSlice.h"
 #include "../TLibCommon/TComPic.h"
 #include "../TLibCommon/TComPicYuv.h"
