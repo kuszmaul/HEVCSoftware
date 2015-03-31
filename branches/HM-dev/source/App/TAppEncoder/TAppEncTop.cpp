@@ -203,6 +203,7 @@ Void TAppEncTop::xInitLibCfg()
   }
   m_cTEncTop.setUseConstrainedIntraPred                           ( m_bUseConstrainedIntraPred );
   m_cTEncTop.setFastUDIUseMPMEnabled                              ( m_bFastUDIUseMPMEnabled );
+  m_cTEncTop.setFastMEForGenBLowDelayEnabled                      ( m_bFastMEForGenBLowDelayEnabled );
   m_cTEncTop.setPCMLog2MinSize                                    ( m_uiPCMLog2MinSize);
   m_cTEncTop.setUsePCM                                            ( m_usePCM );
 
