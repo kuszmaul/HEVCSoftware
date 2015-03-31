@@ -64,7 +64,9 @@ TComPicSym::TComPicSym()
 ,m_puiTileIdxMap(NULL)
 ,m_ctuRsToTsAddrMap(NULL)
 ,m_saoBlkParams(NULL)
+#if ADAPTIVE_QP_SELECTION
 ,m_pParentARLBuffer(NULL)
+#endif
 {}
 
 
@@ -160,8 +162,10 @@ Void TComPicSym::destroy()
     delete[] m_saoBlkParams; m_saoBlkParams = NULL;
   }
 
+#if ADAPTIVE_QP_SELECTION
   delete [] m_pParentARLBuffer;
   m_pParentARLBuffer = NULL;
+#endif
 }
 
 Void TComPicSym::allocateNewSlice()
