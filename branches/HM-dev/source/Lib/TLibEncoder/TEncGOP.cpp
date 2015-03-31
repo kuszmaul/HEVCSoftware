@@ -1756,14 +1756,17 @@ Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, Bool isField, const Bool pr
   printf( "\n\nB Slices--------------------------------------------------------\n" );
   m_gcAnalyzeB.printOut('b', chFmt, printMSEBasedSNR, printSequenceMSE, bitDepths);
 
-#if _SUMMARY_OUT_
-  m_gcAnalyzeAll.printSummary(chFmt, printSequenceMSE, bitDepths);
-#endif
-#if _SUMMARY_PIC_
-  m_gcAnalyzeI.printSummary(chFmt, printSequenceMSE, bitDepths, 'I');
-  m_gcAnalyzeP.printSummary(chFmt, printSequenceMSE, bitDepths, 'P');
-  m_gcAnalyzeB.printSummary(chFmt, printSequenceMSE, bitDepths, 'B');
-#endif
+  if (!m_pcCfg->getSummaryOutFilename().empty())
+  {
+    m_gcAnalyzeAll.printSummary(chFmt, printSequenceMSE, bitDepths, m_pcCfg->getSummaryOutFilename());
+  }
+
+  if (!m_pcCfg->getSummaryPicFilenameBase().empty())
+  {
+    m_gcAnalyzeI.printSummary(chFmt, printSequenceMSE, bitDepths, m_pcCfg->getSummaryPicFilenameBase()+"I.txt");
+    m_gcAnalyzeP.printSummary(chFmt, printSequenceMSE, bitDepths, m_pcCfg->getSummaryPicFilenameBase()+"P.txt");
+    m_gcAnalyzeB.printSummary(chFmt, printSequenceMSE, bitDepths, m_pcCfg->getSummaryPicFilenameBase()+"B.txt");
+  }
 
   if(isField)
   {
@@ -1775,9 +1778,10 @@ Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, Bool isField, const Bool pr
     printf( "\n\nSUMMARY INTERLACED ---------------------------------------------\n" );
     m_gcAnalyzeAll_in.printOut('a', chFmt, printMSEBasedSNR, printSequenceMSE, bitDepths);
 
-#if _SUMMARY_OUT_
-    m_gcAnalyzeAll_in.printSummary(chFmt, printSequenceMSE, bitDepths);
-#endif
+    if (!m_pcCfg->getSummaryOutFilename().empty())
+    {
+      m_gcAnalyzeAll_in.printSummary(chFmt, printSequenceMSE, bitDepths, m_pcCfg->getSummaryOutFilename());
+    }
   }
 
   printf("\nRVM: %.3lf\n" , xCalculateRVM());

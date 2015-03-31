@@ -376,6 +376,9 @@ protected:
   Bool      m_bEfficientFieldIRAPEnabled;                     ///< enable to code fields in a specific, potentially more efficient, order.
   Bool      m_bHarmonizeGopFirstFieldCoupleEnabled;
 
+  std::string m_summaryOutFilename;                           ///< filename to use for producing summary output file.
+  std::string m_summaryPicFilenameBase;                       ///< Base filename to use for producing summary picture output files. The actual filenames used will have I.txt, P.txt and B.txt appended.
+
 public:
   TEncCfg()
   : m_tileColumnWidth()
@@ -923,6 +926,11 @@ public:
   Void      setChromaSamplingHorFilterIdc(Int i)                     { m_chromaSamplingHorFilterIdc = i;}
   Int       getChromaSamplingVerFilterIdc()                          { return m_chromaSamplingVerFilterIdc;}
   Void      setChromaSamplingVerFilterIdc(Int i)                     { m_chromaSamplingVerFilterIdc = i;}
+
+  Void      setSummaryOutFilename(const std::string &s)              { m_summaryOutFilename = s; }
+  const std::string& getSummaryOutFilename() const                   { return m_summaryOutFilename; }
+  Void      setSummaryPicFilenameBase(const std::string &s)          { m_summaryPicFilenameBase = s; }
+  const std::string& getSummaryPicFilenameBase() const               { return m_summaryPicFilenameBase; }
 };
 
 //! \}

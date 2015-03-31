@@ -676,6 +676,18 @@ When 1, the Mean Square Error (MSE) values of each frame will also be output alo
 When 1, the Mean Square Error (MSE) values of the entire sequence will also be output alongside the default PSNR values.
 \\
 
+\Option{SummaryOutFilename} &
+%\ShortOption{\None} &
+\Default{false} &
+Filename to use for producing summary output file. If empty, do not produce a file.
+\\
+
+\Option{SummaryPicFilenameBase} &
+%\ShortOption{\None} &
+\Default{false} &
+Base filename to use for producing summary picture output files. The actual filenames used will have I.txt, P.txt and B.txt appended. If empty, do not produce a file.
+\\
+
 \Option{CabacZeroWordPaddingEnabled} &
 %\ShortOption{\None} &
 \Default{false} &
@@ -2581,26 +2593,6 @@ dynamic free of reference memories
 MAX_TLAYER &
 8 &
 maximum number of temporal layers
-\\
-
-HB_LAMBDA_FOR_LDC &
-on &
-use of B-style lambda for non-key pictures in low-delay mode
-\\
-
-GPB_SIMPLE &
-on &
-Fast estimation of generalized B in low-delay mode
-\\
-
-GPB_SIMPLE_UNI &
-on &
-Fast estimation of generalized B in low-delay mode for uni-direction
-\\
-
-FASTME_SMOOTHER_MV &
-on &
-Fast ME using smoother MV assumption
 \\
 
 ADAPT_SR_SCALE &
