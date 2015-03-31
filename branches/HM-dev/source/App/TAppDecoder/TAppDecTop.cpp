@@ -457,7 +457,8 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
                                          conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
                                          conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
                                          conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
-                                         conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset() );
+                                         conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset(),
+                                         NUM_CHROMA_FORMAT, m_bClipOutputVideoToRec709Range  );
         }
 
         // update POC of display order
@@ -601,7 +602,8 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
                                          conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
                                          conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
                                          conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
-                                         conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset() );
+                                         conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset(),
+                                         NUM_CHROMA_FORMAT, m_bClipOutputVideoToRec709Range );
         }
 
         // update POC of display order

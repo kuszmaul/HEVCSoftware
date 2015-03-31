@@ -86,6 +86,8 @@ protected:
   Bool      m_printFrameMSE;
   Bool      m_printSequenceMSE;
   Bool      m_cabacZeroWordPaddingEnabled;
+  Bool      m_bClipInputVideoToRec709Range;
+  Bool      m_bClipOutputVideoToRec709Range;
 
   // profile/level
   Profile::Name m_profile;

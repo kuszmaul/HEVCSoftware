@@ -207,8 +207,6 @@ template <typename ValueType> inline ValueType rightShiftEvenRounding(const Valu
 // Adaptive search range depending on POC difference
 #define ADAPT_SR_SCALE              1           ///< division factor for adaptive search range
 
-#define CLIP_TO_709_RANGE           0
-
 // Early-skip threshold (encoder)
 #define EARLY_SKIP_THRES            1.50        ///< if RD < thres*avg[BestSkipRD]
 

@@ -750,6 +750,18 @@ When 1, indicates that field-based coding is to be applied.
 Indicates the order of the fields packed into the input frame. When 1, the top field is temporally first.
 \\
 
+\Option{ClipInputVideoToRec709Range} &
+%\ShortOption{\None} &
+\Default{0} &
+If 1 then clip input video to the Rec. 709 Range on loading when InternalBitDepth is less than MSBExtendedBitDepth.
+\\
+
+\Option{ClipOutputVideoToRec709Range} &
+%\ShortOption{\None} &
+\Default{0} &
+If 1 then clip output video to the Rec. 709 Range on saving when OutputBitDepth is less than InternalBitDepth.
+\\
+
 \end{OptionTableNoShorthand}
 
 %%
@@ -1013,6 +1025,11 @@ $}
 Specifies the maximum number of merge candidates to use.
 \\
 
+\Option{DisableIntraInInter} &
+%\ShortOption{\None} &
+\Default{0} &
+Flag to disable intra PUs in inter slices.
+\\
 
 \end{OptionTableNoShorthand}
 
@@ -2531,10 +2548,6 @@ on &
 division factor for adaptive search range
 \\
 
-CLIP_TO_709_RANGE &
-off &
-\\
-
 EARLY_SKIP_THRES &
 1.5 &
 early skip if RD < EARLY_SKIP_THRES*avg[BestSkipRD]
@@ -2679,6 +2692,12 @@ If no value is specified, no colour space conversion is applied. The list may ev
 \Option{SEINoDisplay} &
 \Default{false} &
 When true, do not output frames for which there is an SEI NoDisplay message.
+\\
+
+\Option{ClipOutputVideoToRec709Range} &
+%\ShortOption{\None} &
+\Default{0} &
+If 1 then clip output video to the Rec. 709 Range on saving when OutputBitDepth is less than InternalBitDepth.
 \\
 
 \end{OptionTableNoShorthand}
