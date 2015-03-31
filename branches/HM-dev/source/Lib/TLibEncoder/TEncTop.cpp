@@ -891,7 +891,6 @@ Void TEncTop::xInitRPS(Bool isFieldCoding)
       {
         rps->setRefIdc(j, ge.m_refIdc[j]);
       }
-#if WRITE_BACK
       // the following code overwrite the deltaPOC and Used by current values read from the config file with the ones
       // computed from the RefIdc.  A warning is printed if they are not identical.
       numNeg = 0;
@@ -945,7 +944,6 @@ Void TEncTop::xInitRPS(Bool isFieldCoding)
           rps->setUsed(j,RPSTemp.getUsed(j));
         }
       }
-#endif
     }
   }
   //In case of field coding, we need to set special parameters for the first bottom field of the sequence, since it is not specified in the cfg file.

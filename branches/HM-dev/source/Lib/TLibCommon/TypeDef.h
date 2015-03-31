@@ -83,7 +83,6 @@
 #define SAO_ENCODE_ALLOW_USE_PREDEBLOCK                   1
 #define T0196_SELECTIVE_RDOQ                              1 ///< selective RDOQ
 #define TILE_SIZE_CHECK                                   1
-#define WRITE_BACK                                        1 ///< Enable/disable the encoder to replace the deltaPOC and Used by current from the config file with the values derived by the refIdc parameter.
 
 // ====================================================================================================================
 // Tool Switches
