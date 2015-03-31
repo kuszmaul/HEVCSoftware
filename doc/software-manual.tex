@@ -989,6 +989,12 @@ Specifies the search range used for bi-prediction refinement in motion
 estimation.
 \\
 
+\Option{ClipForBiPredMEEnabled} &
+%\ShortOption{\None} &
+\Default{0} &
+Enables clipping in the Bi-Pred ME, which prevents values over- or under-flowing. It is usually disabled to reduce encoder run-time.
+\\
+
 \Option{HadamardME} &
 %\ShortOption{\None} &
 \Default{true} &

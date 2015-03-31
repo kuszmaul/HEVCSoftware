@@ -171,6 +171,7 @@ protected:
   Int       m_iFastSearch;                      //  0:Full search  1:Diamond  2:PMVFAST
   Int       m_iSearchRange;                     //  0:Full frame
   Int       m_bipredSearchRange;
+  Bool      m_bClipForBiPredMeEnabled;
 
   //====== Quality control ========
   Int       m_iMaxDeltaQP;                      //  Max. absolute delta QP (1:default)
@@ -448,6 +449,7 @@ public:
   Void      setFastSearch                   ( Int   i )      { m_iFastSearch = i; }
   Void      setSearchRange                  ( Int   i )      { m_iSearchRange = i; }
   Void      setBipredSearchRange            ( Int   i )      { m_bipredSearchRange = i; }
+  Void      setClipForBiPredMeEnabled       ( Bool  b )      { m_bClipForBiPredMeEnabled = b; }
 
   //====== Quality control ========
   Void      setMaxDeltaQP                   ( Int   i )      { m_iMaxDeltaQP = i; }
@@ -510,8 +512,9 @@ public:
 
   //==== Motion search ========
   Bool      getDisableIntraPUsInInterSlices () const { return m_bDisableIntraPUsInInterSlices; }
-  Int       getFastSearch                   ()      { return  m_iFastSearch; }
-  Int       getSearchRange                  ()      { return  m_iSearchRange; }
+  Int       getFastSearch                   () const { return m_iFastSearch; }
+  Int       getSearchRange                  () const { return m_iSearchRange; }
+  Bool      getClipForBiPredMeEnabled       () const { return m_bClipForBiPredMeEnabled; }
 
   //==== Quality control ========
   Int       getMaxDeltaQP                   ()      { return  m_iMaxDeltaQP; }

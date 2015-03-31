@@ -139,9 +139,7 @@ public:
   Void         addAvg                     ( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const UInt iPartUnitIdx, const UInt iWidth, const UInt iHeight, const BitDepths &clipBitDepths );
 
   Void         removeHighFreq             ( const TComYuv* pcYuvSrc, const UInt uiPartIdx, const UInt uiWidth, const UInt uiHeight
-#if !DISABLING_CLIP_FOR_BIPREDME
-                                          , const Int bitDepths[MAX_NUM_CHANNEL_TYPE]
-#endif
+                                          , const Int bitDepths[MAX_NUM_CHANNEL_TYPE], const Bool bClipToBitDepths
                                           );
 
   // ------------------------------------------------------------------------------------------------------------------

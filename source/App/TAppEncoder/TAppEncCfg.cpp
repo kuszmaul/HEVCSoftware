@@ -781,6 +781,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("FastSearch",                                      m_iFastSearch,                                        1, "0:Full search  1:Diamond  2:PMVFAST")
   ("SearchRange,-sr",                                 m_iSearchRange,                                      96, "Motion search range")
   ("BipredSearchRange",                               m_bipredSearchRange,                                  4, "Motion search range for bipred refinement")
+  ("ClipForBiPredMEEnabled",                          m_bClipForBiPredMeEnabled,                        false, "Enables clipping in the Bi-Pred ME. It is disabled to reduce encoder run-time")
   ("HadamardME",                                      m_bUseHADME,                                       true, "Hadamard ME for fractional-pel")
   ("ASR",                                             m_bUseASR,                                        false, "Adaptive motion search range")
 
