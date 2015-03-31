@@ -77,7 +77,6 @@
 // Tool Switches - transitory (these macros are likely to be removed in future revisions)
 // ====================================================================================================================
 
-#define AMP_SAD                                           1 ///< dedicated SAD functions for AMP
 #define DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES  1
 #define RDO_WITHOUT_DQP_BITS                              0 ///< Disable counting dQP bits in RDO-based mode decision
 #define SAO_ENCODE_ALLOW_USE_PREDEBLOCK                   1
@@ -368,7 +367,6 @@ enum DFunc
   DF_HADS64          = 27,     ///<  64xM HAD with step
   DF_HADS16N         = 28,     ///< 16NxM HAD with step
 
-#if AMP_SAD
   DF_SAD12           = 43,
   DF_SAD24           = 44,
   DF_SAD48           = 45,
@@ -379,10 +377,6 @@ enum DFunc
 
   DF_SSE_FRAME       = 50,     ///< Frame-based SSE
   DF_TOTAL_FUNCTIONS = 64
-#else
-  DF_SSE_FRAME       = 32,     ///< Frame-based SSE
-  DF_TOTAL_FUNCTIONS = 33
-#endif
 };
 
 /// index for SBAC based RD optimization
