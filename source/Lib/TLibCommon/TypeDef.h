@@ -116,15 +116,6 @@
 #define C1FLAG_NUMBER                                     8 // maximum number of largerThan1 flag coded in one chunk :  16 in HM5
 #define C2FLAG_NUMBER                                     1 // maximum number of largerThan2 flag coded in one chunk:  16 in HM5
 
-#define SAO_ENCODING_CHOICE                               1  ///< I0184: picture early termination
-#if SAO_ENCODING_CHOICE
-#define SAO_ENCODING_RATE                                 0.75
-#define SAO_ENCODING_CHOICE_CHROMA                        1 ///< J0044: picture early termination Luma and Chroma are handled separately
-#if SAO_ENCODING_CHOICE_CHROMA
-#define SAO_ENCODING_RATE_CHROMA                          0.5
-#endif
-#endif
-
 #define MAX_NUM_SAO_OFFSETS                               4
 
 #define MAX_NUM_VPS                                      16
@@ -186,8 +177,6 @@
 #define MDCS_ANGLE_LIMIT                                  4         ///< (default 4) 0 = Horizontal/vertical only, 1 = Horizontal/vertical +/- 1, 2 = Horizontal/vertical +/- 2 etc...
 #define MDCS_MAXIMUM_WIDTH                                8         ///< (default 8) (measured in pixels) TUs with width greater than this can only use diagonal scan
 #define MDCS_MAXIMUM_HEIGHT                               8         ///< (default 8) (measured in pixels) TUs with height greater than this can only use diagonal scan
-
-#define FAST_UDI_USE_MPM 1
 
 #define RDO_WITHOUT_DQP_BITS                              0           ///< Disable counting dQP bits in RDO-based mode decision
 

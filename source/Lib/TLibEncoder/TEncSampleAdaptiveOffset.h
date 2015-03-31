@@ -108,7 +108,7 @@ public:
 #endif
   Void destroyEncData();
   Void initRDOCabacCoder(TEncSbac* pcRDGoOnSbacCoder, TComSlice* pcSlice) ;
-  Void SAOProcess(TComPic* pPic, Bool* sliceEnabled, const Double *lambdas, const Bool bTestSAODisableAtPictureLevel
+  Void SAOProcess(TComPic* pPic, Bool* sliceEnabled, const Double *lambdas, const Bool bTestSAODisableAtPictureLevel, const Double saoEncodingRate, const Double saoEncodingRateChroma
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
                 , Bool isPreDBFSamplesUsed
 #endif
@@ -123,8 +123,8 @@ private: //methods
                    , Bool isCalculatePreDeblockSamples = false
 #endif
                    );
-  Void decidePicParams(Bool* sliceEnabled, Int picTempLayer);
-  Void decideBlkParams(TComPic* pic, Bool* sliceEnabled, SAOStatData*** blkStats, TComPicYuv* srcYuv, TComPicYuv* resYuv, SAOBlkParam* reconParams, SAOBlkParam* codedParams, const Bool bTestSAODisableAtPictureLevel);
+  Void decidePicParams(Bool* sliceEnabled, Int picTempLayer, const Double saoEncodingRate, const Double saoEncodingRateChroma);
+  Void decideBlkParams(TComPic* pic, Bool* sliceEnabled, SAOStatData*** blkStats, TComPicYuv* srcYuv, TComPicYuv* resYuv, SAOBlkParam* reconParams, SAOBlkParam* codedParams, const Bool bTestSAODisableAtPictureLevel, const Double saoEncodingRate, const Double saoEncodingRateChroma);
   Void getBlkStats(const ComponentID compIdx, const Int channelBitDepth, SAOStatData* statsDataTypes, Pel* srcBlk, Pel* orgBlk, Int srcStride, Int orgStride, Int width, Int height, Bool isLeftAvail,  Bool isRightAvail, Bool isAboveAvail, Bool isBelowAvail, Bool isAboveLeftAvail, Bool isAboveRightAvail
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
                   , Bool isCalculatePreDeblockSamples
@@ -155,9 +155,7 @@ private: //members
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
   SAOStatData***         m_preDBFstatData;
 #endif
-#if SAO_ENCODING_CHOICE
   Double                 m_saoDisabledRate[MAX_NUM_COMPONENT][MAX_TLAYER];
-#endif
   Int                    m_skipLinesR[MAX_NUM_COMPONENT][NUM_SAO_NEW_TYPES];
   Int                    m_skipLinesB[MAX_NUM_COMPONENT][NUM_SAO_NEW_TYPES];
 };

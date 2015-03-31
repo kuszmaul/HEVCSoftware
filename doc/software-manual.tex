@@ -1447,6 +1447,18 @@ Enables or disables the sample adaptive offset (SAO) filter.
 Enables the testing of disabling SAO at the picture level after having analysed all blocks.
 \\
 
+\Option{SaoEncodingRate} &
+%\ShortOption{\None} &
+\Default{0.75} &
+When >0 SAO early picture termination is enabled for luma and chroma.
+\\
+
+\Option{SaoEncodingRateChroma} &
+%\ShortOption{\None} &
+\Default{0.5} &
+The SAO early picture termination rate to use for chroma (when m_SaoEncodingRate is >0). If <=0, use results for luma.
+\\
+
 \Option{SAOLcuBoundary} &
 %\ShortOption{\None} &
 \Default{false} &
