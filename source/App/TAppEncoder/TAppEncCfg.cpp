@@ -859,6 +859,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("LFCrossSliceBoundaryFlag",                        m_bLFCrossSliceBoundaryFlag,                       true)
 
   ("ConstrainedIntraPred",                            m_bUseConstrainedIntraPred,                       false, "Constrained Intra Prediction")
+  ("FastUDIUseMPMEnabled",                            m_bFastUDIUseMPMEnabled,                           true, "If enabled, adapt intra direction search, accounting for MPM")
   ("PCMEnabledFlag",                                  m_usePCM,                                         false)
   ("PCMLog2MaxSize",                                  m_pcmLog2MaxSize,                                    5u)
   ("PCMLog2MinSize",                                  m_uiPCMLog2MinSize,                                  3u)

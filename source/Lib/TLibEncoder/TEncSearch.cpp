@@ -2241,7 +2241,7 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
     //===== determine set of modes to be tested (using prediction signal only) =====
     Int numModesAvailable     = 35; //total number of Intra modes
     UInt uiRdModeList[FAST_UDI_MAX_RDMODE_NUM];
-    Int numModesForFullRD = g_aucIntraModeNumFast[ uiWidthBit ];
+    Int numModesForFullRD = m_pcEncCfg->getFastUDIUseMPMEnabled()?g_aucIntraModeNumFast_UseMPM[ uiWidthBit ] : g_aucIntraModeNumFast_NotUseMPM[ uiWidthBit ];
 
     if (tuRecurseWithPU.ProcessComponentSection(COMPONENT_Y))
     {
@@ -2295,29 +2295,30 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
         CandNum += xUpdateCandList( uiMode, cost, numModesForFullRD, uiRdModeList, CandCostList );
       }
 
-#if FAST_UDI_USE_MPM
-      Int uiPreds[NUM_MOST_PROBABLE_MODES] = {-1, -1, -1};
-
-      Int iMode = -1;
-      pcCU->getIntraDirPredictor( uiPartOffset, uiPreds, COMPONENT_Y, &iMode );
-
-      const Int numCand = ( iMode >= 0 ) ? iMode : Int(NUM_MOST_PROBABLE_MODES);
-
-      for( Int j=0; j < numCand; j++)
+      if (m_pcEncCfg->getFastUDIUseMPMEnabled())
       {
-        Bool mostProbableModeIncluded = false;
-        Int mostProbableMode = uiPreds[j];
+        Int uiPreds[NUM_MOST_PROBABLE_MODES] = {-1, -1, -1};
 
-        for( Int i=0; i < numModesForFullRD; i++)
+        Int iMode = -1;
+        pcCU->getIntraDirPredictor( uiPartOffset, uiPreds, COMPONENT_Y, &iMode );
+
+        const Int numCand = ( iMode >= 0 ) ? iMode : Int(NUM_MOST_PROBABLE_MODES);
+
+        for( Int j=0; j < numCand; j++)
         {
-          mostProbableModeIncluded |= (mostProbableMode == uiRdModeList[i]);
-        }
-        if (!mostProbableModeIncluded)
-        {
-          uiRdModeList[numModesForFullRD++] = mostProbableMode;
+          Bool mostProbableModeIncluded = false;
+          Int mostProbableMode = uiPreds[j];
+
+          for( Int i=0; i < numModesForFullRD; i++)
+          {
+            mostProbableModeIncluded |= (mostProbableMode == uiRdModeList[i]);
+          }
+          if (!mostProbableModeIncluded)
+          {
+            uiRdModeList[numModesForFullRD++] = mostProbableMode;
+          }
         }
       }
-#endif // FAST_UDI_USE_MPM
     }
     else
     {
