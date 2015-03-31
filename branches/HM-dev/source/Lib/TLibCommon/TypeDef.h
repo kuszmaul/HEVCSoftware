@@ -79,7 +79,6 @@
 
 #define AMP_SAD                                           1 ///< dedicated SAD functions for AMP
 #define DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES  1
-#define DYN_REF_FREE                                      0 ///< Reference memory management - dynamic free of reference memories
 #define RDO_WITHOUT_DQP_BITS                              0 ///< Disable counting dQP bits in RDO-based mode decision
 #define SAO_ENCODE_ALLOW_USE_PREDEBLOCK                   1
 #define T0196_SELECTIVE_RDOQ                              1 ///< selective RDOQ
