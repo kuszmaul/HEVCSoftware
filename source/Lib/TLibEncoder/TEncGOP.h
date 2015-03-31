@@ -99,9 +99,7 @@ private:
   Int                     m_iGopSize;
   Int                     m_iNumPicCoded;
   Bool                    m_bFirst;
-#if ALLOW_RECOVERY_POINT_AS_RAP
   Int                     m_iLastRecoveryPicPOC;
-#endif
 
   //  Access channel
   TEncTop*                m_pcEncTop;

@@ -1082,16 +1082,10 @@ Void TComSlice::applyReferencePictureSet( TComList<TComPic*>& rcListPic, const T
 
 /** Function for applying picture marking based on the Reference Picture Set in pReferencePictureSet.
 */
-#if ALLOW_RECOVERY_POINT_AS_RAP
 Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, const TComReferencePictureSet *pReferencePictureSet, Bool printErrors, Int pocRandomAccess, Bool bUseRecoveryPoint)
-#else
-Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, const TComReferencePictureSet *pReferencePictureSet, Bool printErrors, Int pocRandomAccess)
-#endif
 {
-#if ALLOW_RECOVERY_POINT_AS_RAP
   Int atLeastOneUnabledByRecoveryPoint = 0;
   Int atLeastOneFlushedByPreviousIDR = 0;
-#endif
   TComPic* rpcPic;
   Int i, isAvailable;
   Int atLeastOneLost = 0;
@@ -1112,7 +1106,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
       {
         if(rpcPic->getIsLongTerm() && (rpcPic->getPicSym()->getSlice(0)->getPOC()) == pReferencePictureSet->getPOC(i) && rpcPic->getSlice(0)->isReferenced())
         {
-#if ALLOW_RECOVERY_POINT_AS_RAP
           if(bUseRecoveryPoint && this->getPOC() > pocRandomAccess && this->getPOC() + pReferencePictureSet->getDeltaPOC(i) < pocRandomAccess)
           {
             isAvailable = 0;
@@ -1121,9 +1114,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
           {
             isAvailable = 1;
           }
-#else
-          isAvailable = 1;
-#endif
         }
       }
       else
@@ -1133,7 +1123,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
         Int refPoc = pReferencePictureSet->getPOC(i) & (pocCycle-1);
         if(rpcPic->getIsLongTerm() && curPoc == refPoc && rpcPic->getSlice(0)->isReferenced())
         {
-#if ALLOW_RECOVERY_POINT_AS_RAP
           if(bUseRecoveryPoint && this->getPOC() > pocRandomAccess && this->getPOC() + pReferencePictureSet->getDeltaPOC(i) < pocRandomAccess)
           {
             isAvailable = 0;
@@ -1142,9 +1131,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
           {
             isAvailable = 1;
           }
-#else
-          isAvailable = 1;
-#endif
         }
       }
     }
@@ -1167,7 +1153,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
 
         if (rpcPic->getSlice(0)->isReferenced() && curPoc == refPoc)
         {
-#if ALLOW_RECOVERY_POINT_AS_RAP
           if(bUseRecoveryPoint && this->getPOC() > pocRandomAccess && this->getPOC() + pReferencePictureSet->getDeltaPOC(i) < pocRandomAccess)
           {
             isAvailable = 0;
@@ -1178,11 +1163,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
             rpcPic->setIsLongTerm(1);
             break;
           }
-#else
-          isAvailable = 1;
-          rpcPic->setIsLongTerm(1);
-          break;
-#endif
         }
       }
     }
@@ -1210,7 +1190,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
           iPocLost=this->getPOC() + pReferencePictureSet->getDeltaPOC(i);
         }
       }
-#if ALLOW_RECOVERY_POINT_AS_RAP
       else if(bUseRecoveryPoint && this->getPOC() > pocRandomAccess)
       {
         atLeastOneUnabledByRecoveryPoint = 1;
@@ -1219,7 +1198,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
       {
         atLeastOneFlushedByPreviousIDR = 1;
       }
-#endif
     }
   }
   // loop through all short-term pictures in the Reference Picture Set
@@ -1235,7 +1213,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
 
       if(!rpcPic->getIsLongTerm() && rpcPic->getPicSym()->getSlice(0)->getPOC() == this->getPOC() + pReferencePictureSet->getDeltaPOC(i) && rpcPic->getSlice(0)->isReferenced())
       {
-#if ALLOW_RECOVERY_POINT_AS_RAP
         if(bUseRecoveryPoint && this->getPOC() > pocRandomAccess && this->getPOC() + pReferencePictureSet->getDeltaPOC(i) < pocRandomAccess)
         {
           isAvailable = 0;
@@ -1244,9 +1221,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
         {
           isAvailable = 1;
         }
-#else
-        isAvailable = 1;
-#endif
       }
     }
     // report that a picture is lost if it is in the Reference Picture Set
@@ -1273,7 +1247,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
           iPocLost=this->getPOC() + pReferencePictureSet->getDeltaPOC(i);
         }
       }
-#if ALLOW_RECOVERY_POINT_AS_RAP
       else if(bUseRecoveryPoint && this->getPOC() > pocRandomAccess)
       {
         atLeastOneUnabledByRecoveryPoint = 1;
@@ -1282,16 +1255,13 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
       {
         atLeastOneFlushedByPreviousIDR = 1;
       }
-#endif
     }
   }
 
-#if ALLOW_RECOVERY_POINT_AS_RAP
   if(atLeastOneUnabledByRecoveryPoint || atLeastOneFlushedByPreviousIDR)
   {
     return -1;
   }    
-#endif
   if(atLeastOneLost)
   {
     return iPocLost+1;
@@ -1308,11 +1278,7 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
 
 /** Function for constructing an explicit Reference Picture Set out of the available pictures in a referenced Reference Picture Set
 */
-#if ALLOW_RECOVERY_POINT_AS_RAP
 Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, const TComReferencePictureSet *pReferencePictureSet, Bool isRAP, Int pocRandomAccess, Bool bUseRecoveryPoint, const Bool bEfficientFieldIRAPEnabled)
-#else
-Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, const TComReferencePictureSet *pReferencePictureSet, Bool isRAP, const Bool bEfficientFieldIRAPEnabled)
-#endif
 {
   TComPic* rpcPic;
   Int i, j;

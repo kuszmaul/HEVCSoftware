@@ -77,7 +77,6 @@
 // Tool Switches - transitory (these macros are likely to be removed in future revisions)
 // ====================================================================================================================
 
-#define ALLOW_RECOVERY_POINT_AS_RAP                       1
 #define AMP_SAD                                           1 ///< dedicated SAD functions for AMP
 #define BUGFIX_INTRAPERIOD                                1
 #define DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES  1
