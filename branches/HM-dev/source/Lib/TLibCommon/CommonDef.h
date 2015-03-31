@@ -201,9 +201,6 @@ template <typename ValueType> inline ValueType rightShiftEvenRounding(const Valu
 #define GPB_SIMPLE_UNI              1           ///< Simple mode for uni-direction
 #endif
 
-// Fast ME using smoother MV assumption
-#define FASTME_SMOOTHER_MV          1           ///< reduce ME time using faster option
-
 // Adaptive search range depending on POC difference
 #define ADAPT_SR_SCALE              1           ///< division factor for adaptive search range
 

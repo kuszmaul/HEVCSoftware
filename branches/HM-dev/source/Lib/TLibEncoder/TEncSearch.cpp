@@ -294,12 +294,6 @@ Void TEncSearch::init(TEncCfg*      pcEncCfg,
   m_tmpYuvPred.create(MAX_CU_SIZE, MAX_CU_SIZE, pcEncCfg->getChromaFormatIdc());
 }
 
-#if FASTME_SMOOTHER_MV
-#define FIRSTSEARCHSTOP     1
-#else
-#define FIRSTSEARCHSTOP     0
-#endif
-
 #define TZ_SEARCH_CONFIGURATION                                                                                 \
 const Int  iRaster                  = 5;  /* TZ soll von aussen ?ergeben werden */                            \
 const Bool bTestOtherPredictedMV    = 0;                                                                      \
@@ -307,7 +301,7 @@ const Bool bTestZeroVector          = 1;                                        
 const Bool bTestZeroVectorStart     = 0;                                                                      \
 const Bool bTestZeroVectorStop      = 0;                                                                      \
 const Bool bFirstSearchDiamond      = 1;  /* 1 = xTZ8PointDiamondSearch   0 = xTZ8PointSquareSearch */        \
-const Bool bFirstSearchStop         = FIRSTSEARCHSTOP;                                                        \
+const Bool bFirstSearchStop         = m_pcEncCfg->getFastMEAssumingSmootherMVEnabled();                       \
 const UInt uiFirstSearchRounds      = 3;  /* first search stop X rounds after best match (must be >=1) */     \
 const Bool bEnableRasterSearch      = 1;                                                                      \
 const Bool bAlwaysRasterSearch      = 0;  /* ===== 1: BETTER but factor 2 slower ===== */                     \
