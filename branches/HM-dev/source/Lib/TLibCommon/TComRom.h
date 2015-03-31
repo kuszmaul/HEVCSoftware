@@ -141,7 +141,8 @@ extern const UInt   g_uiMinInGroup[ LAST_SIGNIFICANT_GROUPS ];
 // Intra prediction table
 // ====================================================================================================================
 
-extern const UChar  g_aucIntraModeNumFast[MAX_CU_DEPTH];
+extern const UChar  g_aucIntraModeNumFast_UseMPM[MAX_CU_DEPTH];
+extern const UChar  g_aucIntraModeNumFast_NotUseMPM[MAX_CU_DEPTH];
 
 extern const UChar  g_chroma422IntraAngleMappingTable[NUM_INTRA_MODE];
 

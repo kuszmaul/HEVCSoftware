@@ -221,6 +221,7 @@ protected:
   UInt      m_uiDeltaQpRD;
 
   Bool      m_bUseConstrainedIntraPred;
+  Bool      m_bFastUDIUseMPMEnabled;
   Bool      m_usePCM;
   Int       m_PCMBitDepth[MAX_NUM_CHANNEL_TYPE];
   UInt      m_pcmLog2MaxSize;
@@ -542,6 +543,7 @@ public:
   Void      setUseCbfFastMode            ( Bool  b )     { m_bUseCbfFastMode = b; }
   Void      setUseEarlySkipDetection        ( Bool  b )     { m_useEarlySkipDetection = b; }
   Void      setUseConstrainedIntraPred      ( Bool  b )     { m_bUseConstrainedIntraPred = b; }
+  Void      setFastUDIUseMPMEnabled         ( Bool  b )     { m_bFastUDIUseMPMEnabled = b; }
   Void      setPCMInputBitDepthFlag         ( Bool  b )     { m_bPCMInputBitDepthFlag = b; }
   Void      setPCMFilterDisableFlag         ( Bool  b )     {  m_bPCMFilterDisableFlag = b; }
   Void      setUsePCM                       ( Bool  b )     {  m_usePCM = b;               }
@@ -564,6 +566,7 @@ public:
   Bool      getUseCbfFastMode               ()      { return m_bUseCbfFastMode; }
   Bool      getUseEarlySkipDetection        ()      { return m_useEarlySkipDetection; }
   Bool      getUseConstrainedIntraPred      ()      { return m_bUseConstrainedIntraPred; }
+  Bool      getFastUDIUseMPMEnabled         ()      { return m_bFastUDIUseMPMEnabled; }
   Bool      getPCMInputBitDepthFlag         ()      { return m_bPCMInputBitDepthFlag;   }
   Bool      getPCMFilterDisableFlag         ()      { return m_bPCMFilterDisableFlag;   }
   Bool      getUsePCM                       ()      { return m_usePCM;                 }
