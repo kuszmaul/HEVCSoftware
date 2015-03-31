@@ -1503,7 +1503,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
     }
     else
     {
-#ifdef DEBUG_TRANSFORM_AND_QUANTISE
+#if DEBUG_TRANSFORM_AND_QUANTISE
       std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at input to transform\n";
       printBlock(pcResidual, uiWidth, uiHeight, uiStride);
 #endif
@@ -1520,7 +1520,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
         xT( channelBitDepth, rTu.useDST(compID), pcResidual, uiStride, m_plTempCoeff, uiWidth, uiHeight, pcCU->getSlice()->getSPS()->getMaxLog2TrDynamicRange(toChannelType(compID)) );
       }
 
-#ifdef DEBUG_TRANSFORM_AND_QUANTISE
+#if DEBUG_TRANSFORM_AND_QUANTISE
       std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU between transform and quantiser\n";
       printBlock(m_plTempCoeff, uiWidth, uiHeight, uiWidth);
 #endif
@@ -1532,7 +1532,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
 #endif
               uiAbsSum, compID, cQP );
 
-#ifdef DEBUG_TRANSFORM_AND_QUANTISE
+#if DEBUG_TRANSFORM_AND_QUANTISE
       std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at output of quantiser\n";
       printBlock(rpcCoeff, uiWidth, uiHeight, uiWidth);
 #endif
@@ -1586,7 +1586,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
     return;
   }
 
-#if defined DEBUG_STRING
+#if DEBUG_STRING
   if (psDebug)
   {
     std::stringstream ss(stringstream::out);
@@ -1610,19 +1610,19 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
   }
   else
   {
-#ifdef DEBUG_TRANSFORM_AND_QUANTISE
+#if DEBUG_TRANSFORM_AND_QUANTISE
     std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at input to dequantiser\n";
     printBlock(pcCoeff, uiWidth, uiHeight, uiWidth);
 #endif
 
     xDeQuant(rTu, pcCoeff, m_plTempCoeff, compID, cQP);
 
-#ifdef DEBUG_TRANSFORM_AND_QUANTISE
+#if DEBUG_TRANSFORM_AND_QUANTISE
     std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU between dequantiser and inverse-transform\n";
     printBlock(m_plTempCoeff, uiWidth, uiHeight, uiWidth);
 #endif
 
-#if defined DEBUG_STRING
+#if DEBUG_STRING
     if (psDebug)
     {
       std::stringstream ss(stringstream::out);
@@ -1635,7 +1635,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
     {
       xITransformSkip( m_plTempCoeff, pcResidual, uiStride, rTu, compID );
 
-#if defined DEBUG_STRING
+#if DEBUG_STRING
       if (psDebug)
       {
         std::stringstream ss(stringstream::out);
@@ -1654,7 +1654,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
 #endif
       xIT( channelBitDepth, rTu.useDST(compID), m_plTempCoeff, pcResidual, uiStride, uiWidth, uiHeight, pcCU->getSlice()->getSPS()->getMaxLog2TrDynamicRange(toChannelType(compID)) );
 
-#if defined DEBUG_STRING
+#if DEBUG_STRING
       if (psDebug)
       {
         std::stringstream ss(stringstream::out);
@@ -1665,7 +1665,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
 #endif
     }
 
-#ifdef DEBUG_TRANSFORM_AND_QUANTISE
+#if DEBUG_TRANSFORM_AND_QUANTISE
     std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at output of inverse-transform\n";
     printBlock(pcResidual, uiWidth, uiHeight, uiStride);
     g_debugCounter++;
@@ -1706,13 +1706,13 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
     if(pcCU->getCbf(absPartIdxTU, compID, uiTrMode) != 0)
     {
       DEBUG_STRING_NEW(sTemp)
-#ifdef DEBUG_STRING
+#if DEBUG_STRING
       std::string *psDebug=((DebugOptionList::DebugString_InvTran.getInt()&(pcCU->isIntra(absPartIdxTU)?1:(pcCU->isInter(absPartIdxTU)?2:4)))!=0) ? &sTemp : 0;
 #endif
 
       invTransformNxN( rTu, compID, pResi, uiStride, pcCoeff, cQP DEBUG_STRING_PASS_INTO(psDebug) );
 
-#ifdef DEBUG_STRING
+#if DEBUG_STRING
       if (psDebug != 0)
       {
         std::cout << (*psDebug);
@@ -2256,7 +2256,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
 
       const Int64  tmpLevel                = Int64(abs(plSrcCoeff[ uiBlkPos ])) * quantisationCoefficient;
 
-      const Intermediate_Int lLevelDouble  = (Intermediate_Int)min<Int64>(tmpLevel, MAX_INTERMEDIATE_INT - (Intermediate_Int(1) << (iQBits - 1)));
+      const Intermediate_Int lLevelDouble  = (Intermediate_Int)min<Int64>(tmpLevel, std::numeric_limits<Intermediate_Int>::max() - (Intermediate_Int(1) << (iQBits - 1)));
 
 #if ADAPTIVE_QP_SELECTION
       if( m_bUseAdaptQpSelect )
@@ -2588,7 +2588,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
         if( signbit!=(absSum&0x1) )  // hide but need tune
         {
           // calculate the cost
-          Int64 minCostInc = MAX_INT64, curCost = MAX_INT64;
+          Int64 minCostInc = std::numeric_limits<Int64>::max(), curCost = std::numeric_limits<Int64>::max();
           Int minPos = -1, finalChange = 0, curChange = 0;
 
           for( n = (lastCG==1?lastNZPosInCG:uiCGSize-1) ; n >= 0; --n )
@@ -2615,7 +2615,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
                 curChange = -1;
                 if(n==firstNZPosInCG && abs(piDstCoeff[uiBlkPos])==1)
                 {
-                  curCost = MAX_INT64;
+                  curCost = std::numeric_limits<Int64>::max();
                 }
                 else
                 {
@@ -2633,7 +2633,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
                 UInt thissignbit = (plSrcCoeff[uiBlkPos]>=0?0:1);
                 if(thissignbit != signbit )
                 {
-                  curCost = MAX_INT64;
+                  curCost = std::numeric_limits<Int64>::max();
                 }
               }
             }

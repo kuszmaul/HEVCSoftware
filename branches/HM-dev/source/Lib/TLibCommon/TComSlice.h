@@ -837,8 +837,8 @@ private:
 
   TComSPSRExt      m_spsRangeExtension;
 
-  static const Int m_winUnitX[MAX_CHROMA_FORMAT_IDC+1];
-  static const Int m_winUnitY[MAX_CHROMA_FORMAT_IDC+1];
+  static const Int m_winUnitX[NUM_CHROMA_FORMAT];
+  static const Int m_winUnitY[NUM_CHROMA_FORMAT];
   TComPTL          m_pcPTL;
 
 #if O0043_BEST_EFFORT_DECODING
@@ -860,8 +860,8 @@ public:
   ChromaFormat           getChromaFormatIdc () const                                                     { return m_chromaFormatIdc;                                            }
   Void                   setChromaFormatIdc (ChromaFormat i)                                             { m_chromaFormatIdc = i;                                               }
 
-  static Int             getWinUnitX (Int chromaFormatIdc)                                               { assert (chromaFormatIdc >= 0 && chromaFormatIdc <= MAX_CHROMA_FORMAT_IDC); return m_winUnitX[chromaFormatIdc]; }
-  static Int             getWinUnitY (Int chromaFormatIdc)                                               { assert (chromaFormatIdc >= 0 && chromaFormatIdc <= MAX_CHROMA_FORMAT_IDC); return m_winUnitY[chromaFormatIdc]; }
+  static Int             getWinUnitX (Int chromaFormatIdc)                                               { assert (chromaFormatIdc >= 0 && chromaFormatIdc < NUM_CHROMA_FORMAT); return m_winUnitX[chromaFormatIdc]; }
+  static Int             getWinUnitY (Int chromaFormatIdc)                                               { assert (chromaFormatIdc >= 0 && chromaFormatIdc < NUM_CHROMA_FORMAT); return m_winUnitY[chromaFormatIdc]; }
 
   // structure
   Void                   setPicWidthInLumaSamples( UInt u )                                              { m_picWidthInLumaSamples = u;                                         }
