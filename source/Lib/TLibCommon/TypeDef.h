@@ -82,7 +82,6 @@
 #define RDO_WITHOUT_DQP_BITS                              0 ///< Disable counting dQP bits in RDO-based mode decision
 #define SAO_ENCODE_ALLOW_USE_PREDEBLOCK                   1
 #define T0196_SELECTIVE_RDOQ                              1 ///< selective RDOQ
-#define TILE_SIZE_CHECK                                   1
 
 // ====================================================================================================================
 // Tool Switches
