@@ -146,8 +146,6 @@
 #error
 #endif
 
-#define VERBOSE_RATE 0 ///< Print additional rate information in encoder
-
 #define AMVP_DECIMATION_FACTOR                            4
 
 #define SCAN_SET_SIZE                                    16
