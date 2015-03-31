@@ -384,6 +384,9 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setLog2MaxMvLengthVertical                           ( m_log2MaxMvLengthVertical );
   m_cTEncTop.setEfficientFieldIRAPEnabled                         ( m_bEfficientFieldIRAPEnabled );
   m_cTEncTop.setHarmonizeGopFirstFieldCoupleEnabled               ( m_bHarmonizeGopFirstFieldCoupleEnabled );
+
+  m_cTEncTop.setSummaryOutFilename                                ( m_summaryOutFilename );
+  m_cTEncTop.setSummaryPicFilenameBase                            ( m_summaryPicFilenameBase );
 }
 
 Void TAppEncTop::xCreateLib()
