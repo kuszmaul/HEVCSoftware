@@ -126,9 +126,7 @@ Void TEncSampleAdaptiveOffset::createEncData()
   }
 #endif
 
-#if SAO_ENCODING_CHOICE
   ::memset(m_saoDisabledRate, 0, sizeof(m_saoDisabledRate));
-#endif
 
   for(Int typeIdc=0; typeIdc < NUM_SAO_NEW_TYPES; typeIdc++)
   {
@@ -253,7 +251,7 @@ Void TEncSampleAdaptiveOffset::initRDOCabacCoder(TEncSbac* pcRDGoOnSbacCoder, TC
 
 
 
-Void TEncSampleAdaptiveOffset::SAOProcess(TComPic* pPic, Bool* sliceEnabled, const Double *lambdas, const Bool bTestSAODisableAtPictureLevel
+Void TEncSampleAdaptiveOffset::SAOProcess(TComPic* pPic, Bool* sliceEnabled, const Double *lambdas, const Bool bTestSAODisableAtPictureLevel, const Double saoEncodingRate, const Double saoEncodingRateChroma
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
                                          , Bool isPreDBFSamplesUsed
 #endif
@@ -276,11 +274,11 @@ Void TEncSampleAdaptiveOffset::SAOProcess(TComPic* pPic, Bool* sliceEnabled, con
   }
 #endif
   //slice on/off
-  decidePicParams(sliceEnabled, pPic->getSlice(0)->getDepth());
+  decidePicParams(sliceEnabled, pPic->getSlice(0)->getDepth(), saoEncodingRate, saoEncodingRateChroma);
 
   //block on/off
   SAOBlkParam* reconParams = new SAOBlkParam[m_numCTUsPic]; //temporary parameter buffer for storing reconstructed SAO parameters
-  decideBlkParams(pPic, sliceEnabled, m_statData, srcYuv, resYuv, reconParams, pPic->getPicSym()->getSAOBlkParam(), bTestSAODisableAtPictureLevel);
+  decideBlkParams(pPic, sliceEnabled, m_statData, srcYuv, resYuv, reconParams, pPic->getPicSym()->getSAOBlkParam(), bTestSAODisableAtPictureLevel, saoEncodingRate, saoEncodingRateChroma);
   delete[] reconParams;
 }
 
@@ -359,7 +357,7 @@ Void TEncSampleAdaptiveOffset::getStatistics(SAOStatData*** blkStats, TComPicYuv
   }
 }
 
-Void TEncSampleAdaptiveOffset::decidePicParams(Bool* sliceEnabled, Int picTempLayer)
+Void TEncSampleAdaptiveOffset::decidePicParams(Bool* sliceEnabled, Int picTempLayer, const Double saoEncodingRate, const Double saoEncodingRateChroma)
 {
   //decide sliceEnabled[compIdx]
   const Int numberOfComponents = getNumberValidComponents(m_chromaFormatIDC);
@@ -373,23 +371,27 @@ Void TEncSampleAdaptiveOffset::decidePicParams(Bool* sliceEnabled, Int picTempLa
     // reset flags & counters
     sliceEnabled[compIdx] = true;
 
-#if SAO_ENCODING_CHOICE
-#if SAO_ENCODING_CHOICE_CHROMA
-    // decide slice-level on/off based on previous results
-    if( (picTempLayer > 0)
-      && (m_saoDisabledRate[compIdx][picTempLayer-1] > ((compIdx==COMPONENT_Y) ? SAO_ENCODING_RATE : SAO_ENCODING_RATE_CHROMA)) )
+    if (saoEncodingRate>0.0)
     {
-      sliceEnabled[compIdx] = false;
+      if (saoEncodingRateChroma>0.0)
+      {
+        // decide slice-level on/off based on previous results
+        if( (picTempLayer > 0)
+          && (m_saoDisabledRate[compIdx][picTempLayer-1] > ((compIdx==COMPONENT_Y) ? saoEncodingRate : saoEncodingRateChroma)) )
+        {
+          sliceEnabled[compIdx] = false;
+        }
+      }
+      else
+      {
+        // decide slice-level on/off based on previous results
+        if( (picTempLayer > 0)
+          && (m_saoDisabledRate[COMPONENT_Y][0] > saoEncodingRate) )
+        {
+          sliceEnabled[compIdx] = false;
+        }
+      }
     }
-#else
-    // decide slice-level on/off based on previous results
-    if( (picTempLayer > 0)
-      && (m_saoDisabledRate[COMPONENT_Y][0] > SAO_ENCODING_RATE) )
-    {
-      sliceEnabled[compIdx] = false;
-    }
-#endif
-#endif
   }
 }
 
@@ -786,7 +788,9 @@ Void TEncSampleAdaptiveOffset::deriveModeMergeRDO(const BitDepths &bitDepths, In
   m_pcRDGoOnSbacCoder->load(cabacCoderRDO[SAO_CABACSTATE_BLK_TEMP]);
 }
 
-Void TEncSampleAdaptiveOffset::decideBlkParams(TComPic* pic, Bool* sliceEnabled, SAOStatData*** blkStats, TComPicYuv* srcYuv, TComPicYuv* resYuv, SAOBlkParam* reconParams, SAOBlkParam* codedParams, const Bool bTestSAODisableAtPictureLevel)
+Void TEncSampleAdaptiveOffset::decideBlkParams(TComPic* pic, Bool* sliceEnabled, SAOStatData*** blkStats, TComPicYuv* srcYuv, TComPicYuv* resYuv,
+                                               SAOBlkParam* reconParams, SAOBlkParam* codedParams, const Bool bTestSAODisableAtPictureLevel,
+                                               const Double saoEncodingRate, const Double saoEncodingRateChroma)
 {
   Bool allBlksDisabled = true;
   const Int numberOfComponents = getNumberValidComponents(m_chromaFormatIDC);
@@ -882,33 +886,34 @@ Void TEncSampleAdaptiveOffset::decideBlkParams(TComPic* pic, Bool* sliceEnabled,
     m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[ SAO_CABACSTATE_PIC_INIT ]);
   }
 
-#if SAO_ENCODING_CHOICE
-  Int picTempLayer = pic->getSlice(0)->getDepth();
-  Int numCtusForSAOOff[MAX_NUM_COMPONENT];
-
-  for (Int compIdx = 0; compIdx < numberOfComponents; compIdx++)
+  if (saoEncodingRate > 0.0)
   {
-    numCtusForSAOOff[compIdx] = 0;
-    for(Int ctuRsAddr=0; ctuRsAddr< m_numCTUsPic; ctuRsAddr++)
+    Int picTempLayer = pic->getSlice(0)->getDepth();
+    Int numCtusForSAOOff[MAX_NUM_COMPONENT];
+
+    for (Int compIdx = 0; compIdx < numberOfComponents; compIdx++)
     {
-      if( reconParams[ctuRsAddr][compIdx].modeIdc == SAO_MODE_OFF)
+      numCtusForSAOOff[compIdx] = 0;
+      for(Int ctuRsAddr=0; ctuRsAddr< m_numCTUsPic; ctuRsAddr++)
       {
-        numCtusForSAOOff[compIdx]++;
+        if( reconParams[ctuRsAddr][compIdx].modeIdc == SAO_MODE_OFF)
+        {
+          numCtusForSAOOff[compIdx]++;
+        }
       }
     }
+    if (saoEncodingRateChroma > 0.0)
+    {
+      for (Int compIdx = 0; compIdx < numberOfComponents; compIdx++)
+      {
+        m_saoDisabledRate[compIdx][picTempLayer] = (Double)numCtusForSAOOff[compIdx]/(Double)m_numCTUsPic;
+      }
+    }
+    else if (picTempLayer == 0)
+    {
+      m_saoDisabledRate[COMPONENT_Y][0] = (Double)(numCtusForSAOOff[COMPONENT_Y]+numCtusForSAOOff[COMPONENT_Cb]+numCtusForSAOOff[COMPONENT_Cr])/(Double)(m_numCTUsPic*3);
+    }
   }
-#if SAO_ENCODING_CHOICE_CHROMA
-  for (Int compIdx = 0; compIdx < numberOfComponents; compIdx++)
-  {
-    m_saoDisabledRate[compIdx][picTempLayer] = (Double)numCtusForSAOOff[compIdx]/(Double)m_numCTUsPic;
-  }
-#else
-  if (picTempLayer == 0)
-  {
-    m_saoDisabledRate[COMPONENT_Y][0] = (Double)(numCtusForSAOOff[COMPONENT_Y]+numCtusForSAOOff[COMPONENT_Cb]+numCtusForSAOOff[COMPONENT_Cr])/(Double)(m_numCTUsPic*3);
-  }
-#endif
-#endif
 }
 
 

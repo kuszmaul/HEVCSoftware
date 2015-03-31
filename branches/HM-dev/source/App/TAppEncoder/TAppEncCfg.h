@@ -180,6 +180,8 @@ protected:
   // coding tool (SAO)
   Bool      m_bUseSAO;
   Bool      m_bTestSAODisableAtPictureLevel;
+  Double    m_saoEncodingRate;                                ///< When >0 SAO early picture termination is enabled for luma and chroma
+  Double    m_saoEncodingRateChroma;                          ///< The SAO early picture termination rate to use for chroma (when m_SaoEncodingRate is >0). If <=0, use results for luma.
   Int       m_maxNumOffsetsPerPic;                            ///< SAO maximun number of offset per picture
   Bool      m_saoCtuBoundary;                                 ///< SAO parameter estimation using non-deblocked pixels for CTU bottom and right boundary areas
   // coding tools (loop filter)

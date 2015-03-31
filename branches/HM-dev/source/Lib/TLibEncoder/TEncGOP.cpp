@@ -1511,7 +1511,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       tempBitCounter.resetBits();
       m_pcEncTop->getRDGoOnSbacCoder()->setBitstream(&tempBitCounter);
       m_pcSAO->initRDOCabacCoder(m_pcEncTop->getRDGoOnSbacCoder(), pcSlice);
-      m_pcSAO->SAOProcess(pcPic, sliceEnabled, pcPic->getSlice(0)->getLambdas(), m_pcCfg->getTestSAODisableAtPictureLevel()
+      m_pcSAO->SAOProcess(pcPic, sliceEnabled, pcPic->getSlice(0)->getLambdas(), m_pcCfg->getTestSAODisableAtPictureLevel(), m_pcCfg->getSaoEncodingRate(), m_pcCfg->getSaoEncodingRateChroma()
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
                           , m_pcCfg->getSaoCtuBoundary()
 #endif

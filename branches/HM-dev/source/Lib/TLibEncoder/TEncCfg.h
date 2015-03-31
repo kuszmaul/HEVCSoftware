@@ -164,6 +164,8 @@ protected:
   Bool      m_DeblockingFilterMetric;
   Bool      m_bUseSAO;
   Bool      m_bTestSAODisableAtPictureLevel;
+  Double    m_saoEncodingRate;       // When non-0 SAO early picture termination is enabled for luma and chroma
+  Double    m_saoEncodingRateChroma; // The SAO early picture termination rate to use for chroma (when m_SaoEncodingRate is >0). If <=0, use results for luma.
   Int       m_maxNumOffsetsPerPic;
   Bool      m_saoCtuBoundary;
 
@@ -627,6 +629,11 @@ public:
   Bool      getUseSAO                  ()                            { return m_bUseSAO; }
   Void  setTestSAODisableAtPictureLevel (Bool bVal)                  { m_bTestSAODisableAtPictureLevel = bVal; }
   Bool  getTestSAODisableAtPictureLevel ( ) const                    { return m_bTestSAODisableAtPictureLevel; }
+
+  Void   setSaoEncodingRate(Double v)                                { m_saoEncodingRate = v; }
+  Double getSaoEncodingRate() const                                  { return m_saoEncodingRate; }
+  Void   setSaoEncodingRateChroma(Double v)                          { m_saoEncodingRateChroma = v; }
+  Double getSaoEncodingRateChroma() const                            { return m_saoEncodingRateChroma; }
   Void  setMaxNumOffsetsPerPic                   (Int iVal)          { m_maxNumOffsetsPerPic = iVal; }
   Int   getMaxNumOffsetsPerPic                   ()                  { return m_maxNumOffsetsPerPic; }
   Void  setSaoCtuBoundary              (Bool val)                    { m_saoCtuBoundary = val; }
