@@ -163,6 +163,7 @@ protected:
   Int       m_loopFilterTcOffsetDiv2;
   Bool      m_DeblockingFilterMetric;
   Bool      m_bUseSAO;
+  Bool      m_bTestSAODisableAtPictureLevel;
   Int       m_maxNumOffsetsPerPic;
   Bool      m_saoCtuBoundary;
 
@@ -624,6 +625,8 @@ public:
 
   Void      setUseSAO                  (Bool bVal)                   { m_bUseSAO = bVal; }
   Bool      getUseSAO                  ()                            { return m_bUseSAO; }
+  Void  setTestSAODisableAtPictureLevel (Bool bVal)                  { m_bTestSAODisableAtPictureLevel = bVal; }
+  Bool  getTestSAODisableAtPictureLevel ( ) const                    { return m_bTestSAODisableAtPictureLevel; }
   Void  setMaxNumOffsetsPerPic                   (Int iVal)          { m_maxNumOffsetsPerPic = iVal; }
   Int   getMaxNumOffsetsPerPic                   ()                  { return m_maxNumOffsetsPerPic; }
   Void  setSaoCtuBoundary              (Bool val)                    { m_saoCtuBoundary = val; }

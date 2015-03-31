@@ -239,6 +239,7 @@ Void TAppEncTop::xInitLibCfg()
   }
   m_cTEncTop.setLFCrossSliceBoundaryFlag                          ( m_bLFCrossSliceBoundaryFlag );
   m_cTEncTop.setUseSAO                                            ( m_bUseSAO );
+  m_cTEncTop.setTestSAODisableAtPictureLevel                      ( m_bTestSAODisableAtPictureLevel );
   m_cTEncTop.setMaxNumOffsetsPerPic                               ( m_maxNumOffsetsPerPic);
 
   m_cTEncTop.setSaoCtuBoundary                                    ( m_saoCtuBoundary);

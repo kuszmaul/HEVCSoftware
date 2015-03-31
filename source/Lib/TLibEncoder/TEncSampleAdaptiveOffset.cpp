@@ -253,7 +253,7 @@ Void TEncSampleAdaptiveOffset::initRDOCabacCoder(TEncSbac* pcRDGoOnSbacCoder, TC
 
 
 
-Void TEncSampleAdaptiveOffset::SAOProcess(TComPic* pPic, Bool* sliceEnabled, const Double *lambdas
+Void TEncSampleAdaptiveOffset::SAOProcess(TComPic* pPic, Bool* sliceEnabled, const Double *lambdas, const Bool bTestSAODisableAtPictureLevel
 #if SAO_ENCODE_ALLOW_USE_PREDEBLOCK
                                          , Bool isPreDBFSamplesUsed
 #endif
@@ -280,7 +280,7 @@ Void TEncSampleAdaptiveOffset::SAOProcess(TComPic* pPic, Bool* sliceEnabled, con
 
   //block on/off
   SAOBlkParam* reconParams = new SAOBlkParam[m_numCTUsPic]; //temporary parameter buffer for storing reconstructed SAO parameters
-  decideBlkParams(pPic, sliceEnabled, m_statData, srcYuv, resYuv, reconParams, pPic->getPicSym()->getSAOBlkParam());
+  decideBlkParams(pPic, sliceEnabled, m_statData, srcYuv, resYuv, reconParams, pPic->getPicSym()->getSAOBlkParam(), bTestSAODisableAtPictureLevel);
   delete[] reconParams;
 }
 
@@ -786,7 +786,7 @@ Void TEncSampleAdaptiveOffset::deriveModeMergeRDO(const BitDepths &bitDepths, In
   m_pcRDGoOnSbacCoder->load(cabacCoderRDO[SAO_CABACSTATE_BLK_TEMP]);
 }
 
-Void TEncSampleAdaptiveOffset::decideBlkParams(TComPic* pic, Bool* sliceEnabled, SAOStatData*** blkStats, TComPicYuv* srcYuv, TComPicYuv* resYuv, SAOBlkParam* reconParams, SAOBlkParam* codedParams)
+Void TEncSampleAdaptiveOffset::decideBlkParams(TComPic* pic, Bool* sliceEnabled, SAOStatData*** blkStats, TComPicYuv* srcYuv, TComPicYuv* resYuv, SAOBlkParam* reconParams, SAOBlkParam* codedParams, const Bool bTestSAODisableAtPictureLevel)
 {
   Bool allBlksDisabled = true;
   const Int numberOfComponents = getNumberValidComponents(m_chromaFormatIDC);
@@ -804,9 +804,7 @@ Void TEncSampleAdaptiveOffset::decideBlkParams(TComPic* pic, Bool* sliceEnabled,
   Double minCost, modeCost;
 
 
-#if RD_TEST_SAO_DISABLE_AT_PICTURE_LEVEL
-  Double totalCost = 0;
-#endif
+  Double totalCost = 0; // Used if bTestSAODisableAtPictureLevel==true
 
   for(Int ctuRsAddr=0; ctuRsAddr< m_numCTUsPic; ctuRsAddr++)
   {
@@ -859,9 +857,7 @@ Void TEncSampleAdaptiveOffset::decideBlkParams(TComPic* pic, Bool* sliceEnabled,
       }
     } //mode
 
-#if RD_TEST_SAO_DISABLE_AT_PICTURE_LEVEL
     totalCost += minCost;
-#endif
 
     m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[ SAO_CABACSTATE_BLK_NEXT ]);
 
@@ -871,8 +867,7 @@ Void TEncSampleAdaptiveOffset::decideBlkParams(TComPic* pic, Bool* sliceEnabled,
     offsetCTU(ctuRsAddr, srcYuv, resYuv, reconParams[ctuRsAddr], pic);
   } //ctuRsAddr
 
-#if RD_TEST_SAO_DISABLE_AT_PICTURE_LEVEL
-  if (!allBlksDisabled && (totalCost >= 0)) //SAO is not beneficial - disable it
+  if (!allBlksDisabled && (totalCost >= 0) && bTestSAODisableAtPictureLevel) //SAO has not beneficial in this case - disable it
   {
     for(Int ctuRsAddr = 0; ctuRsAddr < m_numCTUsPic; ctuRsAddr++)
     {
@@ -886,7 +881,6 @@ Void TEncSampleAdaptiveOffset::decideBlkParams(TComPic* pic, Bool* sliceEnabled,
 
     m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[ SAO_CABACSTATE_PIC_INIT ]);
   }
-#endif
 
 #if SAO_ENCODING_CHOICE
   Int picTempLayer = pic->getSlice(0)->getDepth();

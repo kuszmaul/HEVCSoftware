@@ -179,6 +179,7 @@ protected:
 
   // coding tool (SAO)
   Bool      m_bUseSAO;
+  Bool      m_bTestSAODisableAtPictureLevel;
   Int       m_maxNumOffsetsPerPic;                            ///< SAO maximun number of offset per picture
   Bool      m_saoCtuBoundary;                                 ///< SAO parameter estimation using non-deblocked pixels for CTU bottom and right boundary areas
   // coding tools (loop filter)
