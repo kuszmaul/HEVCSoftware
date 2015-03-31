@@ -1476,7 +1476,7 @@ public:
   Bool                        getIdrPicFlag() const                                  { return getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL || getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP; }
   Bool                        isIRAP() const                                         { return (getNalUnitType() >= 16) && (getNalUnitType() <= 23);  }
   Void                        checkCRA(const TComReferencePictureSet *pReferencePictureSet, Int& pocCRA, NalUnitType& associatedIRAPType, TComList<TComPic *>& rcListPic);
-  Void                        decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComList<TComPic*>& rcListPic);
+  Void                        decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComList<TComPic*>& rcListPic, const bool bEfficientFieldIRAPEnabled);
   Void                        setSliceType( SliceType e )                            { m_eSliceType        = e;                                      }
   Void                        setSliceQp( Int i )                                    { m_iSliceQp          = i;                                      }
 #if ADAPTIVE_QP_SELECTION
@@ -1544,10 +1544,10 @@ public:
   Bool                        isStepwiseTemporalLayerSwitchingPointCandidate( TComList<TComPic*>& rcListPic );
 #if ALLOW_RECOVERY_POINT_AS_RAP
   Int                         checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, const TComReferencePictureSet *pReferencePictureSet, Bool printErrors, Int pocRandomAccess = 0, Bool bUseRecoveryPoint = false);
-  Void                        createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, const TComReferencePictureSet *pReferencePictureSet, Bool isRAP, Int pocRandomAccess = 0, Bool bUseRecoveryPoint = false);
+  Void                        createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, const TComReferencePictureSet *pReferencePictureSet, Bool isRAP, Int pocRandomAccess, Bool bUseRecoveryPoint, const Bool bEfficientFieldIRAPEnabled);
 #else
   Int                         checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, const TComReferencePictureSet *pReferencePictureSet, Bool printErrors, Int pocRandomAccess = 0);
-  Void                        createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, const TComReferencePictureSet *pReferencePictureSet, Bool isRAP);
+  Void                        createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, const TComReferencePictureSet *pReferencePictureSet, Bool isRAP, const Bool bEfficientFieldIRAPEnabled);
 #endif
   Void                        setMaxNumMergeCand(UInt val )                          { m_maxNumMergeCand = val;                                      }
   UInt                        getMaxNumMergeCand() const                             { return m_maxNumMergeCand;                                     }

@@ -69,6 +69,7 @@ protected:
 
   Bool      m_isField;                                        ///< enable field coding
   Bool      m_isTopFieldFirst;
+  Bool      m_bEfficientFieldIRAPEnabled;                     ///< enable an efficient field IRAP structure.
 
   Int       m_conformanceWindowMode;
   Int       m_confWinLeft;
