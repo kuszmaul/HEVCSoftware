@@ -48,17 +48,22 @@
 
 #if ENC_DEC_TRACE
 
-Void  xTraceSPSHeader (const TComSPS *pSPS)
+Void  xTraceVPSHeader ()
 {
-  fprintf( g_hTrace, "=========== Sequence Parameter Set ID: %d ===========\n", pSPS->getSPSId() );
+  fprintf( g_hTrace, "=========== Video Parameter Set     ===========\n" );
 }
 
-Void  xTracePPSHeader (const TComPPS *pPPS)
+Void  xTraceSPSHeader ()
 {
-  fprintf( g_hTrace, "=========== Picture Parameter Set ID: %d ===========\n", pPPS->getPPSId() );
+  fprintf( g_hTrace, "=========== Sequence Parameter Set  ===========\n" );
 }
 
-Void  xTraceSliceHeader (const TComSlice *pSlice)
+Void  xTracePPSHeader ()
+{
+  fprintf( g_hTrace, "=========== Picture Parameter Set  ===========\n");
+}
+
+Void  xTraceSliceHeader ()
 {
   fprintf( g_hTrace, "=========== Slice ===========\n");
 }
@@ -181,7 +186,7 @@ Void TDecCavlc::parseShortTermRefPicSet( TComSPS* sps, TComReferencePictureSet* 
 Void TDecCavlc::parsePPS(TComPPS* pcPPS)
 {
 #if ENC_DEC_TRACE
-  xTracePPSHeader (pcPPS);
+  xTracePPSHeader ();
 #endif
   UInt  uiCode;
 
@@ -586,7 +591,7 @@ Void TDecCavlc::parseHrdParameters(TComHRD *hrd, Bool commonInfPresentFlag, UInt
 Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 {
 #if ENC_DEC_TRACE
-  xTraceSPSHeader (pcSPS);
+  xTraceSPSHeader ();
 #endif
 
   UInt  uiCode;
@@ -830,6 +835,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 
 Void TDecCavlc::parseVPS(TComVPS* pcVPS)
 {
+#if ENC_DEC_TRACE
+  xTraceVPSHeader ();
+#endif
   UInt  uiCode;
 
   READ_CODE( 4,  uiCode,  "vps_video_parameter_set_id" );         pcVPS->setVPSId( uiCode );
@@ -926,7 +934,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
   Int   iCode;
 
 #if ENC_DEC_TRACE
-  xTraceSliceHeader(pcSlice);
+  xTraceSliceHeader();
 #endif
   TComPPS* pps = NULL;
   TComSPS* sps = NULL;
@@ -2033,6 +2041,7 @@ Void TDecCavlc::parseExplicitRdpcmMode( TComTU& /*rTu*/, ComponentID /*compID*/ 
 {
   assert(0);
 }
+
 
 //! \}
 
