@@ -75,7 +75,6 @@ struct OutputNALUnit : public NALUnit
 };
 
 Void write(std::ostream& out, OutputNALUnit& nalu);
-Void writeRBSPTrailingBits(TComOutputBitstream& bs);
 
 inline NALUnitEBSP::NALUnitEBSP(OutputNALUnit& nalu)
   : NALUnit(nalu)

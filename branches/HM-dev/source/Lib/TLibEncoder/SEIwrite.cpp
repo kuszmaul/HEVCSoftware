@@ -130,7 +130,7 @@ Void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, const TComSP
 /**
  * marshal all SEI messages in provided list into one bitstream bs
  */
-Void SEIWriter::writeSEImessages(TComBitIf& bs, const SEIMessages &seiList, const TComSPS *sps)
+Void SEIWriter::writeSEImessages(TComBitIf& bs, const SEIMessages &seiList, const TComSPS *sps, Bool isNested)
 {
 #if ENC_DEC_TRACE
   if (g_HLSTraceEnable)
@@ -179,6 +179,10 @@ Void SEIWriter::writeSEImessages(TComBitIf& bs, const SEIMessages &seiList, cons
 #endif
 
     xWriteSEIpayloadData(bs, **sei, sps);
+  }
+  if (!isNested)
+  {
+    xWriteRbspTrailingBits();
   }
 }
 
@@ -536,7 +540,7 @@ Void SEIWriter::xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting
   }
 
   // write nested SEI messages
-  writeSEImessages(bs, sei.m_nestedSEIs, sps);
+  writeSEImessages(bs, sei.m_nestedSEIs, sps, true);
 }
 
 Void SEIWriter::xWriteSEITempMotionConstrainedTileSets(const SEITempMotionConstrainedTileSets& sei)

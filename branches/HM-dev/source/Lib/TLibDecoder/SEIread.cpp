@@ -131,9 +131,7 @@ Void SEIReader::parseSEImessage(TComInputBitstream* bs, SEIMessages& seis, const
   }
   while (m_pcBitstream->getNumBitsLeft() > 8);
 
-  UInt rbspTrailingBits;
-  sei_read_code(NULL, 8, rbspTrailingBits, "rbsp_trailing_bits");
-  assert(rbspTrailingBits == 0x80);
+  xReadRbspTrailingBits();
 }
 
 Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType, const TComSPS *sps, std::ostream *pDecodedMessageOutputStream)
