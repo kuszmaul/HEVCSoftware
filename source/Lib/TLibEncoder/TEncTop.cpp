@@ -740,9 +740,9 @@ Void TEncTop::xInitHrdParameters()
     hrd->setSubPicCpbParamsInPicTimingSEIFlag( false );
   }
 
-  hrd->setBitRateScale( 4 );                                       // in units of 2~( 6 + 4 ) = 1,024 bps
-  hrd->setCpbSizeScale( 6 );                                       // in units of 2~( 4 + 4 ) = 1,024 bit
-  hrd->setDuCpbSizeScale( 6 );                                       // in units of 2~( 4 + 4 ) = 1,024 bit
+  hrd->setBitRateScale( 4 );                                       // in units of 2^( 6 + 4 ) = 1,024 bps
+  hrd->setCpbSizeScale( 6 );                                       // in units of 2^( 4 + 6 ) = 1,024 bit
+  hrd->setDuCpbSizeScale( 6 );                                     // in units of 2^( 4 + 6 ) = 1,024 bit
 
   hrd->setInitialCpbRemovalDelayLengthMinus1(15);                  // assuming 0.5 sec, log2( 90,000 * 0.5 ) = 16-bit
   if( isRandomAccess )
@@ -769,13 +769,16 @@ Void TEncTop::xInitHrdParameters()
     hrd->setLowDelayHrdFlag( i, 0 );
     hrd->setCpbCntMinus1( i, 0 );
 
-    bitrateValue = bitRate;
-    cpbSizeValue = bitRate;                                     // 1 second
-    // DU CPB size could be smaller, but we don't know how 
+    //! \todo check for possible PTL violations
+    // BitRate[ i ] = ( bit_rate_value_minus1[ i ] + 1 ) * 2^( 6 + bit_rate_scale )
+    bitrateValue = bitRate / (1 << (6 + hrd->getBitRateScale()) );      // bitRate is in bits, so it needs to be scaled down
+    // CpbSize[ i ] = ( cpb_size_value_minus1[ i ] + 1 ) * 2^( 4 + cpb_size_scale )
+    cpbSizeValue = bitRate / (1 << (4 + hrd->getCpbSizeScale()) );      // using bitRate results in 1 second CPB size
+
+    // DU CPB size could be smaller (i.e. bitrateValue / number of DUs), but we don't know 
     // in how many DUs the slice segment settings will result 
-    // (used to be: bitRate/numDU)
-    duCpbSizeValue = bitRate;
-    duBitRateValue = bitRate;
+    duCpbSizeValue = bitrateValue;
+    duBitRateValue = cpbSizeValue;
 
     for( j = 0; j < ( hrd->getCpbCntMinus1( i ) + 1 ); j ++ )
     {
