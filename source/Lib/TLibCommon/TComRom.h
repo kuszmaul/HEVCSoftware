@@ -158,6 +158,8 @@ extern UInt64 g_nSymbolCounter;
 
 #endif
 
+const Char* nalUnitTypeToString(NalUnitType type);
+
 extern const Char *MatrixType[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM];
 extern const Char *MatrixType_DC[SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM];
 

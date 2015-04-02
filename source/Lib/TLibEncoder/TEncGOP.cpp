@@ -1878,39 +1878,6 @@ UInt64 TEncGOP::xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1, co
   return uiTotalDiff;
 }
 
-static const Char* nalUnitTypeToString(NalUnitType type)
-{
-  switch (type)
-  {
-    case NAL_UNIT_CODED_SLICE_TRAIL_R:    return "TRAIL_R";
-    case NAL_UNIT_CODED_SLICE_TRAIL_N:    return "TRAIL_N";
-    case NAL_UNIT_CODED_SLICE_TSA_R:      return "TSA_R";
-    case NAL_UNIT_CODED_SLICE_TSA_N:      return "TSA_N";
-    case NAL_UNIT_CODED_SLICE_STSA_R:     return "STSA_R";
-    case NAL_UNIT_CODED_SLICE_STSA_N:     return "STSA_N";
-    case NAL_UNIT_CODED_SLICE_BLA_W_LP:   return "BLA_W_LP";
-    case NAL_UNIT_CODED_SLICE_BLA_W_RADL: return "BLA_W_RADL";
-    case NAL_UNIT_CODED_SLICE_BLA_N_LP:   return "BLA_N_LP";
-    case NAL_UNIT_CODED_SLICE_IDR_W_RADL: return "IDR_W_RADL";
-    case NAL_UNIT_CODED_SLICE_IDR_N_LP:   return "IDR_N_LP";
-    case NAL_UNIT_CODED_SLICE_CRA:        return "CRA";
-    case NAL_UNIT_CODED_SLICE_RADL_R:     return "RADL_R";
-    case NAL_UNIT_CODED_SLICE_RADL_N:     return "RADL_N";
-    case NAL_UNIT_CODED_SLICE_RASL_R:     return "RASL_R";
-    case NAL_UNIT_CODED_SLICE_RASL_N:     return "RASL_N";
-    case NAL_UNIT_VPS:                    return "VPS";
-    case NAL_UNIT_SPS:                    return "SPS";
-    case NAL_UNIT_PPS:                    return "PPS";
-    case NAL_UNIT_ACCESS_UNIT_DELIMITER:  return "AUD";
-    case NAL_UNIT_EOS:                    return "EOS";
-    case NAL_UNIT_EOB:                    return "EOB";
-    case NAL_UNIT_FILLER_DATA:            return "FILLER";
-    case NAL_UNIT_PREFIX_SEI:             return "SEI";
-    case NAL_UNIT_SUFFIX_SEI:             return "SEI";
-    default:                              return "UNK";
-  }
-}
-
 Void TEncGOP::xCalculateAddPSNRs( const Bool isField, const Bool isFieldTopFieldFirst, const Int iGOPid, TComPic* pcPic, const AccessUnit&accessUnit, TComList<TComPic*> &rcListPic, const Double dEncTime, const InputColourSpaceConversion snr_conversion, const Bool printFrameMSE )
 {
   xCalculateAddPSNR( pcPic, pcPic->getPicYuvRec(), accessUnit, dEncTime, snr_conversion, printFrameMSE );

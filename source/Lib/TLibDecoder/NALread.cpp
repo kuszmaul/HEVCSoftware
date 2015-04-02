@@ -47,6 +47,9 @@
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
 #include "TLibCommon/TComCodingStatistics.h"
 #endif
+#if ENC_DEC_TRACE && DEC_NUH_TRACE
+#include "TLibCommon/TComRom.h"
+#endif
 
 using namespace std;
 
@@ -102,6 +105,27 @@ static Void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf, TComInputBitstream
   nalUnitBuf.resize(it_write - nalUnitBuf.begin());
 }
 
+#if ENC_DEC_TRACE && DEC_NUH_TRACE
+void xTraceNalUnitHeader(InputNALUnit& nalu)
+{
+  fprintf( g_hTrace, "*********** NAL UNIT (%s) ***********\n", nalUnitTypeToString(nalu.m_nalUnitType) );
+
+  fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
+  fprintf( g_hTrace, "%-50s u(%d)  : %u\n", "forbidden_zero_bit", 1, 0 ); 
+
+  fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
+  fprintf( g_hTrace, "%-50s u(%d)  : %u\n", "nal_unit_type", 6, nalu.m_nalUnitType ); 
+
+  fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
+  fprintf( g_hTrace, "%-50s u(%d)  : %u\n", "nuh_layer_id", 6, nalu.m_nuhLayerId );
+
+  fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
+  fprintf( g_hTrace, "%-50s u(%d)  : %u\n", "nuh_temporal_id_plus1", 3, nalu.m_temporalId + 1 );
+
+  fflush ( g_hTrace );
+}
+#endif
+
 Void readNalUnitHeader(InputNALUnit& nalu)
 {
   TComInputBitstream& bs = nalu.getBitstream();
@@ -113,6 +137,10 @@ Void readNalUnitHeader(InputNALUnit& nalu)
   nalu.m_temporalId = bs.read(3) - 1;             // nuh_temporal_id_plus1
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
   TComCodingStatistics::IncrementStatisticEP(STATS__NAL_UNIT_HEADER_BITS, 1+6+6+3, 0);
+#endif
+
+#if ENC_DEC_TRACE && DEC_NUH_TRACE
+  xTraceNalUnitHeader(nalu);
 #endif
 
   // only check these rules for base layer

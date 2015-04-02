@@ -70,6 +70,7 @@
 #ifndef ENC_DEC_TRACE
 #define ENC_DEC_TRACE                                     0
 #endif
+#define DEC_NUH_TRACE                                     0 ///< When trace enabled, enable tracing of NAL unit headers at the decoder (currently not possible at the encoder)
 
 #define PRINT_RPS_INFO                                    0 ///< Enable/disable the printing of bits used to send the RPS.
 
