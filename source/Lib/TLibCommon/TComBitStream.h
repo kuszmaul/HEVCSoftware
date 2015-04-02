@@ -62,7 +62,8 @@ public:
   virtual Void        writeAlignZero        () {};
   virtual Void        write                 ( UInt uiBits, UInt uiNumberOfBits )  = 0;
   virtual Void        resetBits             ()                                    = 0;
-  virtual UInt getNumberOfWrittenBits() const = 0;
+  virtual UInt        getNumberOfWrittenBits() const = 0;
+  virtual Int         getNumBitsUntilByteAligned() const = 0;
   virtual ~TComBitIf() {}
 };
 
@@ -129,7 +130,7 @@ public:
    * returns the number of bits that need to be written to
    * achieve byte alignment.
    */
-  Int getNumBitsUntilByteAligned() { return (8 - m_num_held_bits) & 0x7; }
+  Int getNumBitsUntilByteAligned() const { return (8 - m_num_held_bits) & 0x7; }
 
   /**
    * Return the number of bits that have been written since the last clear()

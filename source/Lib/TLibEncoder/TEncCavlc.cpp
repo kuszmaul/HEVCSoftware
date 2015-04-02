@@ -297,6 +297,7 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
       } // if flag present
     } // loop over PPS flags
   } // pps_extension_present_flag is non-zero
+  xWriteRbspTrailingBits();
 }
 
 Void TEncCavlc::codeVUI( const TComVUI *pcVUI, const TComSPS* pcSPS )
@@ -626,6 +627,7 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
       }
     }
   }
+  xWriteRbspTrailingBits();
 }
 
 Void TEncCavlc::codeVPS( const TComVPS* pcVPS )
@@ -699,8 +701,7 @@ Void TEncCavlc::codeVPS( const TComVPS* pcVPS )
   WRITE_FLAG( 0,                     "vps_extension_flag" );
 
   //future extensions here..
-
-  return;
+  xWriteRbspTrailingBits();
 }
 
 Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )

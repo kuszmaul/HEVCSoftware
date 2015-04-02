@@ -413,6 +413,7 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
       }
     }
   }
+  xReadRbspTrailingBits();
 }
 
 Void  TDecCavlc::parseVUI(TComVUI* pcVUI, TComSPS *pcSPS)
@@ -831,6 +832,8 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
       }
     }
   }
+
+  xReadRbspTrailingBits();
 }
 
 Void TDecCavlc::parseVPS(TComVPS* pcVPS)
@@ -925,7 +928,7 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
     }
   }
 
-  return;
+  xReadRbspTrailingBits();
 }
 
 Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *parameterSetManager, const Int prevTid0POC)
