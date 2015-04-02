@@ -970,7 +970,6 @@ public:
   Void                   setVuiParametersPresentFlag(Bool b)                                             { m_vuiParametersPresentFlag = b;                                      }
   TComVUI*               getVuiParameters()                                                              { return &m_vuiParameters;                                             }
   const TComVUI*         getVuiParameters() const                                                        { return &m_vuiParameters;                                             }
-  Void                   setHrdParameters( UInt frameRate, Bool useSubCpbParams, UInt bitRate, Bool randomAccess );
   const TComPTL*         getPTL() const                                                                  { return &m_pcPTL;                                                     }
   TComPTL*               getPTL()                                                                        { return &m_pcPTL;                                                     }
 

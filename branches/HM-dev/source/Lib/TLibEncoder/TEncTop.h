@@ -116,7 +116,8 @@ protected:
   Void  xInitVPS          ();                             ///< initialize VPS from encoder options
   Void  xInitSPS          ();                             ///< initialize SPS from encoder options
   Void  xInitPPS          ();                             ///< initialize PPS from encoder options
-  Void  xInitScalingLists();                              ///< initialize scaling lists
+  Void  xInitScalingLists ();                             ///< initialize scaling lists
+  Void  xInitHrdParameters();                             ///< initialize HRD parameters
 
   Void  xInitPPSforTiles  ();
   Void  xInitRPS          (Bool isFieldCoding);           ///< initialize PPS from encoder options
