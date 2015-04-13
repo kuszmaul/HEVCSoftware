@@ -110,7 +110,7 @@ static Void scalePlane(Pel* img, const UInt stride, const UInt width, const UInt
  * further details).
  *
  * \param pchFile          file name string
- * \param bWriteMode       file open mode: true=read, false=write
+ * \param bWriteMode       file open mode: true=write, false=read
  * \param fileBitDepth     bit-depth array of input/output file data.
  * \param MSBExtendedBitDepth
  * \param internalBitDepth bit-depth array to scale image data to/from when reading/writing.
