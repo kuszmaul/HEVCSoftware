@@ -422,7 +422,10 @@ static inline istream& operator >> (istream &in, SMultiValueInput<UInt> &values)
 {
   values.values.clear();
   string str;
-  in >> str;
+  while (!in.eof())
+  {
+    string tmp; in >> tmp; str+=" " + tmp;
+  }
   if (!str.empty())
   {
     const Char *pStr=str.c_str();
@@ -471,7 +474,10 @@ static inline istream& operator >> (istream &in, SMultiValueInput<Int> &values)
 {
   values.values.clear();
   string str;
-  in >> str;
+  while (!in.eof())
+  {
+    string tmp; in >> tmp; str+=" " + tmp;
+  }
   if (!str.empty())
   {
     const Char *pStr=str.c_str();
@@ -520,7 +526,10 @@ static inline istream& operator >> (istream &in, SMultiValueInput<Bool> &values)
 {
   values.values.clear();
   string str;
-  in >> str;
+  while (!in.eof())
+  {
+    string tmp; in >> tmp; str+=" " + tmp;
+  }
   if (!str.empty())
   {
     const Char *pStr=str.c_str();
