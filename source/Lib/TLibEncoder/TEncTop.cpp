@@ -543,6 +543,7 @@ Void TEncTop::xInitSPS()
   profileTierLevel.setBitDepthConstraint(m_bitDepthConstraintValue);
   profileTierLevel.setChromaFormatConstraint(m_chromaFormatConstraintValue);
   profileTierLevel.setIntraConstraintFlag(m_intraConstraintFlag);
+  profileTierLevel.setOnePictureOnlyConstraintFlag(m_onePictureOnlyConstraintFlag);
   profileTierLevel.setLowerBitRateConstraintFlag(m_lowerBitRateConstraintFlag);
 
   if ((m_profile == Profile::MAIN10) && (m_bitDepth[CHANNEL_TYPE_LUMA] == 8) && (m_bitDepth[CHANNEL_TYPE_CHROMA] == 8))
