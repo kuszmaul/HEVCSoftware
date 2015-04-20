@@ -92,6 +92,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setBitDepthConstraintValue                           ( m_bitDepthConstraint );
   m_cTEncTop.setChromaFormatConstraintValue                       ( m_chromaFormatConstraint );
   m_cTEncTop.setIntraConstraintFlag                               ( m_intraConstraintFlag );
+  m_cTEncTop.setOnePictureOnlyConstraintFlag                      ( m_onePictureOnlyConstraintFlag );
   m_cTEncTop.setLowerBitRateConstraintFlag                        ( m_lowerBitRateConstraintFlag );
 
   m_cTEncTop.setPrintMSEBasedSequencePSNR                         ( m_printMSEBasedSequencePSNR);

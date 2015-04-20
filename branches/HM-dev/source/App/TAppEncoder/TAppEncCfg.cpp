@@ -68,7 +68,8 @@ enum ExtendedProfileName // this is used for determining profile strings, where 
   // The following are RExt profiles, which would map to the MAINREXT profile idc.
   // The enumeration indicates the bit-depth constraint in the bottom 2 digits
   //                           the chroma format in the next digit
-  //                           the intra constraint in the top digit
+  //                           the intra constraint in the next digit
+  //                           If it is a RExt still picture, there is a '1' for the top digit.
   MONOCHROME_8      = 1008,
   MONOCHROME_12     = 1012,
   MONOCHROME_16     = 1016,
@@ -87,7 +88,9 @@ enum ExtendedProfileName // this is used for determining profile strings, where 
   MAIN_444_INTRA    = 2308,
   MAIN_444_10_INTRA = 2310,
   MAIN_444_12_INTRA = 2312,
-  MAIN_444_16_INTRA = 2316
+  MAIN_444_16_INTRA = 2316,
+  MAIN_444_STILL_PICTURE = 11308,
+  MAIN_444_16_STILL_PICTURE = 12316
 };
 
 
@@ -219,31 +222,40 @@ static const struct MapStrToExtendedProfile
 }
 strToExtendedProfile[] =
 {
-    {"none",               NONE             },
-    {"main",               MAIN             },
-    {"main10",             MAIN10           },
-    {"main-still-picture", MAINSTILLPICTURE },
-    {"main-RExt",          MAINREXT         },
-    {"high-throughput-RExt", HIGHTHROUGHPUTREXT },
-    {"monochrome",         MONOCHROME_8     },
-    {"monochrome12",       MONOCHROME_12    },
-    {"monochrome16",       MONOCHROME_16    },
-    {"main12",             MAIN_12          },
-    {"main_422_10",        MAIN_422_10      },
-    {"main_422_12",        MAIN_422_12      },
-    {"main_444",           MAIN_444         },
-    {"main_444_10",        MAIN_444_10      },
-    {"main_444_12",        MAIN_444_12      },
-    {"main_444_16",        MAIN_444_16      },
-    {"main_intra",         MAIN_INTRA       },
-    {"main_10_intra",      MAIN_10_INTRA    },
-    {"main_12_intra",      MAIN_12_INTRA    },
-    {"main_422_10_intra",  MAIN_422_10_INTRA},
-    {"main_422_12_intra",  MAIN_422_12_INTRA},
-    {"main_444_intra",     MAIN_444_INTRA   },
-    {"main_444_10_intra",  MAIN_444_10_INTRA},
-    {"main_444_12_intra",  MAIN_444_12_INTRA},
-    {"main_444_16_intra",  MAIN_444_16_INTRA}
+    {"none",                      NONE             },
+    {"main",                      MAIN             },
+    {"main10",                    MAIN10           },
+    {"main_still_picture",        MAINSTILLPICTURE },
+    {"main-still-picture",        MAINSTILLPICTURE },
+    {"main_RExt",                 MAINREXT         },
+    {"main-RExt",                 MAINREXT         },
+    {"main_rext",                 MAINREXT         },
+    {"main-rext",                 MAINREXT         },
+    {"high_throughput_RExt",      HIGHTHROUGHPUTREXT },
+    {"high-throughput-RExt",      HIGHTHROUGHPUTREXT },
+    {"high_throughput_rext",      HIGHTHROUGHPUTREXT },
+    {"high-throughput-rext",      HIGHTHROUGHPUTREXT },
+    {"monochrome",                MONOCHROME_8     },
+    {"monochrome12",              MONOCHROME_12    },
+    {"monochrome16",              MONOCHROME_16    },
+    {"main12",                    MAIN_12          },
+    {"main_422_10",               MAIN_422_10      },
+    {"main_422_12",               MAIN_422_12      },
+    {"main_444",                  MAIN_444         },
+    {"main_444_10",               MAIN_444_10      },
+    {"main_444_12",               MAIN_444_12      },
+    {"main_444_16",               MAIN_444_16      },
+    {"main_intra",                MAIN_INTRA       },
+    {"main_10_intra",             MAIN_10_INTRA    },
+    {"main_12_intra",             MAIN_12_INTRA    },
+    {"main_422_10_intra",         MAIN_422_10_INTRA},
+    {"main_422_12_intra",         MAIN_422_12_INTRA},
+    {"main_444_intra",            MAIN_444_INTRA   },
+    {"main_444_still_picture",    MAIN_444_STILL_PICTURE },
+    {"main_444_10_intra",         MAIN_444_10_INTRA},
+    {"main_444_12_intra",         MAIN_444_12_INTRA},
+    {"main_444_16_intra",         MAIN_444_16_INTRA},
+    {"main_444_16_still_picture", MAIN_444_16_STILL_PICTURE }
 };
 
 static const ExtendedProfileName validRExtProfileNames[2/* intraConstraintFlag*/][4/* bit depth constraint 8=0, 10=1, 12=2, 16=3*/][4/*chroma format*/]=
@@ -751,6 +763,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MaxBitDepthConstraint",                           m_bitDepthConstraint,                                0u, "Bit depth to use for profile-constraint for RExt profiles. 0=automatically choose based upon other parameters")
   ("MaxChromaFormatConstraint",                       tmpConstraintChromaFormat,                            0, "Chroma-format to use for the profile-constraint for RExt profiles. 0=automatically choose based upon other parameters")
   ("IntraConstraintFlag",                             m_intraConstraintFlag,                            false, "Value of general_intra_constraint_flag to use for RExt profiles (not used if an explicit RExt sub-profile is specified)")
+  ("OnePictureOnlyConstraintFlag",                    m_onePictureOnlyConstraintFlag,                   false, "Value of general_one_picture_only_constraint_flag to use for RExt profiles (not used if an explicit RExt sub-profile is specified)")
   ("LowerBitRateConstraintFlag",                      m_lowerBitRateConstraintFlag,                      true, "Value of general_lower_bit_rate_constraint_flag to use for RExt profiles")
 
   ("ProgressiveSource",                               m_progressiveSourceFlag,                          false, "Indicate that source is progressive")
@@ -1194,7 +1207,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_InputChromaFormatIDC = numberToChromaFormat(tmpInputChromaFormat);
   m_chromaFormatIDC      = ((tmpChromaFormat == 0) ? (m_InputChromaFormatIDC) : (numberToChromaFormat(tmpChromaFormat)));
 
-  if (extendedProfile >= 1000 && extendedProfile <= 2316)
+  if (extendedProfile >= 1000 && extendedProfile <= 12316)
   {
     m_profile = Profile::MAINREXT;
     if (m_bitDepthConstraint != 0 || tmpConstraintChromaFormat != 0)
@@ -1202,8 +1215,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       fprintf(stderr, "Error: The bit depth and chroma format constraints are not used when an explicit RExt profile is specified\n");
       exit(EXIT_FAILURE);
     }
-    m_bitDepthConstraint     = (extendedProfile%100);
-    m_intraConstraintFlag    = (extendedProfile>=2000);
+    m_bitDepthConstraint           = (extendedProfile%100);
+    m_intraConstraintFlag          = ((extendedProfile%10000)>=2000);
+    m_onePictureOnlyConstraintFlag = (extendedProfile >= 10000);
     switch ((extendedProfile/100)%10)
     {
       case 0:  tmpConstraintChromaFormat=400; break;
@@ -1239,15 +1253,29 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
                                            m_log2MaxTransformSkipBlockSize!=2;
       const Bool bUsingChromaQPAdjustment= m_diffCuChromaQpOffsetDepth >= 0;
       const Bool bUsingExtendedPrecision = m_extendedPrecisionProcessingFlag;
-      m_chromaFormatConstraint = NUM_CHROMA_FORMAT;
-      automaticallySelectRExtProfile(bUsingGeneralRExtTools,
-                                     bUsingChromaQPAdjustment,
-                                     bUsingExtendedPrecision,
-                                     m_intraConstraintFlag,
-                                     m_bitDepthConstraint,
-                                     m_chromaFormatConstraint,
-                                     m_chromaFormatIDC==CHROMA_400 ? m_internalBitDepth[CHANNEL_TYPE_LUMA] : std::max(m_internalBitDepth[CHANNEL_TYPE_LUMA], m_internalBitDepth[CHANNEL_TYPE_CHROMA]),
-                                     m_chromaFormatIDC);
+      if (m_onePictureOnlyConstraintFlag)
+      {
+        m_chromaFormatConstraint = CHROMA_444;
+        if (m_intraConstraintFlag != true)
+        {
+          fprintf(stderr, "Error: Intra constraint flag must be true when one_picture_only_constraint_flag is true\n");
+          exit(EXIT_FAILURE);
+        }
+        const Int maxBitDepth = m_chromaFormatIDC==CHROMA_400 ? m_internalBitDepth[CHANNEL_TYPE_LUMA] : std::max(m_internalBitDepth[CHANNEL_TYPE_LUMA], m_internalBitDepth[CHANNEL_TYPE_CHROMA]);
+        m_bitDepthConstraint = maxBitDepth>8 ? 16:8;
+      }
+      else
+      {
+        m_chromaFormatConstraint = NUM_CHROMA_FORMAT;
+        automaticallySelectRExtProfile(bUsingGeneralRExtTools,
+                                       bUsingChromaQPAdjustment,
+                                       bUsingExtendedPrecision,
+                                       m_intraConstraintFlag,
+                                       m_bitDepthConstraint,
+                                       m_chromaFormatConstraint,
+                                       m_chromaFormatIDC==CHROMA_400 ? m_internalBitDepth[CHANNEL_TYPE_LUMA] : std::max(m_internalBitDepth[CHANNEL_TYPE_LUMA], m_internalBitDepth[CHANNEL_TYPE_CHROMA]),
+                                       m_chromaFormatIDC);
+      }
     }
     else if (m_bitDepthConstraint == 0 || tmpConstraintChromaFormat == 0)
     {
@@ -1554,6 +1582,10 @@ Void TAppEncCfg::xCheckParameter()
       {
         xConfirmPara(bUsingGeneralRExtTools, "Combination of tools and profiles are not possible in the specified RExt profile.");
       }
+      xConfirmPara( m_onePictureOnlyConstraintFlag && m_chromaFormatConstraint!=CHROMA_444, "chroma format constraint must be 4:4:4 when one-picture-only constraint flag is 1");
+      xConfirmPara( m_onePictureOnlyConstraintFlag && m_bitDepthConstraint != 8 && m_bitDepthConstraint != 16, "bit depth constraint must be 8 or 16 when one-picture-only constraint flag is 1");
+      xConfirmPara( m_onePictureOnlyConstraintFlag && m_framesToBeEncoded > 1, "Number of frames to be encoded must be 1 when one-picture-only constraint flag is 1.");
+
       if (!m_intraConstraintFlag && m_bitDepthConstraint==16 && m_chromaFormatConstraint==CHROMA_444)
       {
         fprintf(stderr, "********************************************************************************************************\n");
@@ -1574,6 +1606,7 @@ Void TAppEncCfg::xCheckParameter()
     xConfirmPara(m_chromaFormatConstraint!=CHROMA_420, "ChromaFormatConstraint must be 420 for non main-RExt profiles.");
     xConfirmPara(m_intraConstraintFlag==true, "IntraConstraintFlag must be false for non main_RExt profiles.");
     xConfirmPara(m_lowerBitRateConstraintFlag==false, "LowerBitrateConstraintFlag must be true for non main-RExt profiles.");
+    xConfirmPara(m_profile == Profile::MAINSTILLPICTURE && m_framesToBeEncoded > 1, "Number of frames to be encoded must be 1 when main still picture profile is used.");
 
     xConfirmPara(m_crossComponentPredictionEnabledFlag==true, "CrossComponentPrediction must not be used for non main-RExt profiles.");
     xConfirmPara(m_log2MaxTransformSkipBlockSize!=2, "Transform Skip Log2 Max Size must be 2 for V1 profiles.");
@@ -2294,10 +2327,18 @@ Void TAppEncCfg::xPrintParameter()
   }
   if (m_profile == Profile::MAINREXT)
   {
-    const UInt intraIdx = m_intraConstraintFlag ? 1:0;
-    const UInt bitDepthIdx = (m_bitDepthConstraint == 8 ? 0 : (m_bitDepthConstraint ==10 ? 1 : (m_bitDepthConstraint == 12 ? 2 : (m_bitDepthConstraint == 16 ? 3 : 4 ))));
-    const UInt chromaFormatIdx = UInt(m_chromaFormatConstraint);
-    const ExtendedProfileName validProfileName = (bitDepthIdx > 3 || chromaFormatIdx>3) ? NONE : validRExtProfileNames[intraIdx][bitDepthIdx][chromaFormatIdx];
+    ExtendedProfileName validProfileName;
+    if (m_onePictureOnlyConstraintFlag)
+    {
+      validProfileName = m_bitDepthConstraint == 8 ? MAIN_444_STILL_PICTURE : (m_bitDepthConstraint == 16 ? MAIN_444_16_STILL_PICTURE : NONE);
+    }
+    else
+    {
+      const UInt intraIdx = m_intraConstraintFlag ? 1:0;
+      const UInt bitDepthIdx = (m_bitDepthConstraint == 8 ? 0 : (m_bitDepthConstraint ==10 ? 1 : (m_bitDepthConstraint == 12 ? 2 : (m_bitDepthConstraint == 16 ? 3 : 4 ))));
+      const UInt chromaFormatIdx = UInt(m_chromaFormatConstraint);
+      validProfileName = (bitDepthIdx > 3 || chromaFormatIdx>3) ? NONE : validRExtProfileNames[intraIdx][bitDepthIdx][chromaFormatIdx];
+    }
     std::string rextSubProfile;
     if (validProfileName!=NONE)
     {
