@@ -37,9 +37,6 @@
 
 #include "NALread.h"
 #include "TDecTop.h"
-#if RExt__DECODER_DEBUG_BIT_STATISTICS
-#include "TLibCommon/TComCodingStatistics.h"
-#endif
 
 //! \ingroup TLibDecoder
 //! \{
@@ -741,23 +738,14 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
   {
     case NAL_UNIT_VPS:
       xDecodeVPS(nalu.getBitstream().getFifo());
-#if RExt__DECODER_DEBUG_BIT_STATISTICS
-      TComCodingStatistics::IncrementStatisticEP(STATS__BYTE_ALIGNMENT_BITS, nalu.getBitstream().readByteAlignment(), 0);
-#endif
       return false;
 
     case NAL_UNIT_SPS:
       xDecodeSPS(nalu.getBitstream().getFifo());
-#if RExt__DECODER_DEBUG_BIT_STATISTICS
-      TComCodingStatistics::IncrementStatisticEP(STATS__BYTE_ALIGNMENT_BITS, nalu.getBitstream().readByteAlignment(), 0);
-#endif
       return false;
 
     case NAL_UNIT_PPS:
       xDecodePPS(nalu.getBitstream().getFifo());
-#if RExt__DECODER_DEBUG_BIT_STATISTICS
-      TComCodingStatistics::IncrementStatisticEP(STATS__BYTE_ALIGNMENT_BITS, nalu.getBitstream().readByteAlignment(), 0);
-#endif
       return false;
 
     case NAL_UNIT_PREFIX_SEI:
