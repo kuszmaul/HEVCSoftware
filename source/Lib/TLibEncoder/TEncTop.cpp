@@ -786,6 +786,7 @@ Void TEncTop::xInitHrdParameters()
       hrd->setBitRateValueMinus1( i, j, 0, ( bitrateValue - 1 ) );
       hrd->setCpbSizeValueMinus1( i, j, 0, ( cpbSizeValue - 1 ) );
       hrd->setDuCpbSizeValueMinus1( i, j, 0, ( duCpbSizeValue - 1 ) );
+      hrd->setDuBitRateValueMinus1( i, j, 0, ( duBitRateValue - 1 ) );
       hrd->setCbrFlag( i, j, 0, false );
 
       hrd->setBitRateValueMinus1( i, j, 1, ( bitrateValue - 1) );
