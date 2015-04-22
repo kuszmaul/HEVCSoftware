@@ -311,6 +311,7 @@
 #define SCM_FIX_PLT_MEM_LEAK                             1 ///< Fix for memory leak in palette mode
 #define SCM_FIX_T0227_INTEGRATION                        1 ///< Fix for bug in T0227 integration
 #define SCM_FIX_FOR_IBC_UNIFICATION                      1 ///< Fix for issue when IBC is turned off
+#define SCM_FIX_FOR_IBC_HASH_SEARCH                      1 ///< Fix for IBC has search with different CTU sizes
 
 //------------------------------------------------
 // Derived macros

@@ -7615,15 +7615,25 @@ Void TEncSearch::xIntraBCHashTableUpdate(TComDataCU* pcCU, Bool isRec)
   Int         iTempY;
   Int         iPicWidth = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
   Int         iPicHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
+#if SCM_FIX_FOR_IBC_HASH_SEARCH
+  UInt        uiMaxCuWidth=pcCU->getSlice()->getSPS()->getMaxCUWidth();
+  UInt        uiMaxCuHeight=pcCU->getSlice()->getSPS()->getMaxCUHeight();      
+#endif 
 
   Int        iOrgHashIndex;
   IntraBCHashNode* NewHashNode;
 
-
+#if SCM_FIX_FOR_IBC_HASH_SEARCH
+  for(int j = 0; j < uiMaxCuHeight; j++)
+  {
+    for(int i = 0; i < uiMaxCuWidth; i++)
+    {
+#else
   for(int j = 0; j < MAX_CU_SIZE; j++)
   {
     for(int i = 0; i < MAX_CU_SIZE; i++)
     {
+#endif 
       iTempX = cuPelX - iRoiWidth + 1 + i;
       iTempY = cuPelY - iRoiHeight + 1  + j;
 
