@@ -310,6 +310,7 @@
 #define SCM_FIX_FOX_TICKET_1376                          1 ///< Fix for ticket #1376
 #define SCM_FIX_PLT_MEM_LEAK                             1 ///< Fix for memory leak in palette mode
 #define SCM_FIX_T0227_INTEGRATION                        1 ///< Fix for bug in T0227 integration
+#define SCM_FIX_FOR_IBC_UNIFICATION                      1 ///< Fix for issue when IBC is turned off
 
 //------------------------------------------------
 // Derived macros
