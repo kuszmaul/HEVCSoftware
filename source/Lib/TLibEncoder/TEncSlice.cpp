@@ -1572,7 +1572,18 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
 
   if (pcSlice->getPPS()->getCabacInitPresentFlag() && !pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag())
   {
+#if SCM_IBC_CLEANUP_IDENTICAL_RDO
+    if ( pcSlice->isOnlyCurrentPictureAsReference() )
+    {
+      m_encCABACTableIdx = I_SLICE;
+    }
+    else
+    {
+      m_encCABACTableIdx = m_pcEntropyCoder->determineCabacInitIdx(pcSlice);
+    }
+#else
     m_encCABACTableIdx = m_pcEntropyCoder->determineCabacInitIdx(pcSlice);
+#endif
   }
   else
   {

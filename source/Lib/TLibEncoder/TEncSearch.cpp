@@ -1039,7 +1039,12 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
     // CU header
     if( uiAbsPartIdx == 0 )
     {
+#if SCM_IBC_CLEANUP_IDENTICAL_RDO
+      if ( !( pcCU->getSlice()->getSPS()->getUseIntraBlockCopy() && pcCU->getSlice()->isOnlyCurrentPictureAsReference() ) &&
+           !pcCU->getSlice()->isIntra() )
+#else
       if( !pcCU->getSlice()->isIntra() )
+#endif
       {
         if (pcCU->getSlice()->getPPS()->getTransquantBypassEnableFlag())
         {

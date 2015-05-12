@@ -312,6 +312,8 @@
 #define SCM_FIX_T0227_INTEGRATION                        1 ///< Fix for bug in T0227 integration
 #define SCM_FIX_FOR_IBC_UNIFICATION                      1 ///< Fix for issue when IBC is turned off
 #define SCM_FIX_FOR_IBC_HASH_SEARCH                      1 ///< Fix for IBC has search with different CTU sizes
+#define SCM_IBC_CLEANUP                                  1 ///< cleanup for Intra BC mode, align software with spec
+#define SCM_IBC_CLEANUP_IDENTICAL_RDO                    1 ///< let the encoder to generate identical RDO results
 
 //------------------------------------------------
 // Derived macros

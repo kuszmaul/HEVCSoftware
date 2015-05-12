@@ -130,7 +130,7 @@ Void TEncEntropy::encodeVPS( const TComVPS* pcVPS )
 
 Void TEncEntropy::encodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
+#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
   if ( pcCU->getSlice()->isIntra() && !pcCU->getSlice()->getSPS()->getUseIntraBlockCopy() )
 #else
   if ( pcCU->getSlice()->isIntra() )
@@ -172,13 +172,13 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
     uiAbsPartIdx = 0;
   }
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_FIX_FOR_IBC_UNIFICATION
+#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_FIX_FOR_IBC_UNIFICATION && !SCM_IBC_CLEANUP
   if ( pcCU->getSlice()->isIntra() && !pcCU->getSlice()->getSPS()->getUseIntraBlockCopy() )
   {
     return;
   }
 #else
-#if SCM_FIX_FOR_IBC_UNIFICATION
+#if SCM_FIX_FOR_IBC_UNIFICATION && !SCM_IBC_CLEANUP
   if ( pcCU->getSlice()->isIntra() && !pcCU->getSlice()->getSPS()->getUseIntraBlockCopy() )
 #else
   if ( pcCU->getSlice()->isIntra() )
@@ -199,7 +199,7 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
     return;
   }
 
-#if !SCM_FIX_FOR_IBC_UNIFICATION
+#if !SCM_FIX_FOR_IBC_UNIFICATION && !SCM_IBC_CLEANUP
   if( pcCU->isIntraBC( uiAbsPartIdx ) )
   {
     return;
