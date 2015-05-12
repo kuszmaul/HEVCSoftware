@@ -827,7 +827,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       WRITE_FLAG(0, "slice_reserved_flag[]");
     }
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
+#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
     if ( pcSlice->getSPS()->getUseIntraBlockCopy() && (pcSlice->getSliceType() == I_SLICE) )
     {
       WRITE_UVLC( P_SLICE, "slice_type" );
@@ -981,7 +981,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
 
     //check if numrefidxes match the defaults. If not, override
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
+#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
     if (!pcSlice->isIntra() || pcSlice->getSPS()->getUseIntraBlockCopy())
 #else
     if (!pcSlice->isIntra())
@@ -1004,12 +1004,12 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     }
     else
     {
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
+#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
       if ( !pcSlice->getSPS()->getUseIntraBlockCopy() )
       {
 #endif
       pcSlice->setNumRefIdx(REF_PIC_LIST_0, 0);
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
+#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
       }
 #endif
       pcSlice->setNumRefIdx(REF_PIC_LIST_1, 0);
@@ -1018,7 +1018,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     if( pcSlice->getPPS()->getListsModificationPresentFlag() && pcSlice->getNumRpsCurrTempList() > 1)
     {
       TComRefPicListModification* refPicListModification = pcSlice->getRefPicListModification();
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
+#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
       if(!pcSlice->isIntra() || pcSlice->getSPS()->getUseIntraBlockCopy())
 #else
       if(!pcSlice->isIntra())
@@ -1071,13 +1071,13 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       WRITE_FLAG( pcSlice->getMvdL1ZeroFlag() ? 1 : 0,   "mvd_l1_zero_flag");
     }
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
+#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
     if(!pcSlice->isIntra() || pcSlice->getSPS()->getUseIntraBlockCopy())
 #else
     if(!pcSlice->isIntra())
 #endif
     {
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
+#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
       if ((!pcSlice->isIntra() || pcSlice->getSPS()->getUseIntraBlockCopy()) && pcSlice->getPPS()->getCabacInitPresentFlag())
 #else
       if (!pcSlice->isIntra() && pcSlice->getPPS()->getCabacInitPresentFlag())
@@ -1098,7 +1098,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
         WRITE_FLAG( pcSlice->getColFromL0Flag(), "collocated_from_l0_flag" );
       }
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
+#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
       if ( (pcSlice->getSliceType() != I_SLICE || pcSlice->getSPS()->getUseIntraBlockCopy()) &&
 #else
       if ( pcSlice->getSliceType() != I_SLICE &&
@@ -1110,7 +1110,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       }
     }
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
+#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
     if ( (pcSlice->getPPS()->getUseWP() && (pcSlice->getSliceType()==P_SLICE || pcSlice->getSPS()->getUseIntraBlockCopy())) || (pcSlice->getPPS()->getWPBiPred() && pcSlice->getSliceType()==B_SLICE) )
 #else
     if ( (pcSlice->getPPS()->getUseWP() && pcSlice->getSliceType()==P_SLICE) || (pcSlice->getPPS()->getWPBiPred() && pcSlice->getSliceType()==B_SLICE) )
@@ -1119,7 +1119,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       xCodePredWeightTable( pcSlice );
     }
     assert(pcSlice->getMaxNumMergeCand()<=MRG_MAX_NUM_CANDS);
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
+#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
     if ( !pcSlice->isIntra() || pcSlice->getSPS()->getUseIntraBlockCopy() )
 #else
     if (!pcSlice->isIntra())

@@ -131,7 +131,7 @@ Void TEncSbac::resetEntropy           (const TComSlice *pSlice)
     eSliceType = encCABACTableIdx;
   }
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
+#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
   if ( eSliceType == I_SLICE && pSlice->getSPS()->getUseIntraBlockCopy() )
   {
     eSliceType = P_SLICE;

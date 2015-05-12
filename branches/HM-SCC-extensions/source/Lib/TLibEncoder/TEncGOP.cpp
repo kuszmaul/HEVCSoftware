@@ -1262,13 +1262,24 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     {
       pcSlice->setSliceType(I_SLICE);
     }
+
+#if SCM_IBC_CLEANUP
+    if ( pcSlice->getSliceType() == I_SLICE && pcSlice->getSPS()->getUseIntraBlockCopy() )
+    {
+      pcSlice->setSliceType( P_SLICE );
+    }
+#endif
     
     // Set the nal unit type
     pcSlice->setNalUnitType(getNalUnitType(pocCurr, m_iLastIDR, isField));
     if(pcSlice->getTemporalLayerNonReferenceFlag())
     {
       if (pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_TRAIL_R &&
+#if SCM_IBC_CLEANUP
+          !( m_iGopSize == 1 && ( pcSlice->getSliceType() == I_SLICE || pcSlice->getSPS()->getUseIntraBlockCopy() ) ) )
+#else
           !(m_iGopSize == 1 && pcSlice->getSliceType() == I_SLICE))
+#endif
         // Add this condition to avoid POC issues with encoder_intra_main.cfg configuration (see #1127 in bug tracker)
       {
         pcSlice->setNalUnitType(NAL_UNIT_CODED_SLICE_TRAIL_N);
@@ -1404,6 +1415,19 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice->setNumRefIdx(REF_PIC_LIST_0,min(m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive,pcSlice->getRPS()->getNumberOfPictures()));
     pcSlice->setNumRefIdx(REF_PIC_LIST_1,min(m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive,pcSlice->getRPS()->getNumberOfPictures()));
 
+#if SCM_IBC_CLEANUP
+    if ( pcSlice->getSPS()->getUseIntraBlockCopy() )
+    {
+      if ( m_pcCfg->getIntraPeriod() > 0 && pcSlice->getPOC() % m_pcCfg->getIntraPeriod() == 0 )
+      {
+        pcSlice->setNumRefIdx( REF_PIC_LIST_0, 0 );
+        pcSlice->setNumRefIdx( REF_PIC_LIST_1, 0 );
+      }
+
+      pcSlice->setNumRefIdx( REF_PIC_LIST_0, pcSlice->getNumRefIdx( REF_PIC_LIST_0 ) + 1 );
+    }
+#endif
+
     //  Set reference list
     pcSlice->setRefPicList ( rcListPic );
 
@@ -1412,6 +1436,12 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     {
       pcSlice->setSliceType ( P_SLICE );
     }
+#if SCM_IBC_CLEANUP
+    if ( pcSlice->getSPS()->getUseIntraBlockCopy() && pcSlice->getNumRefIdx( REF_PIC_LIST_0 ) == 1 )
+    {
+      m_pcSliceEncoder->setEncCABACTableIdx(P_SLICE);
+    }
+#endif
     pcSlice->setEncCABACTableIdx(m_pcSliceEncoder->getEncCABACTableIdx());
 
     if (pcSlice->getSliceType() == B_SLICE)
@@ -1445,7 +1475,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     uiColDir = 1-uiColDir;
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
+#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
     if ( pcSlice->getSPS()->getUseIntraBlockCopy() )
     {
       // add the current picture into the LIST_0 as the last picture
@@ -1536,7 +1566,12 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     pcSlice->setUseIntegerMv( false );
 #if SCM_T0069_AMVR_REFINEMENT
+#if SCM_IBC_CLEANUP
+    if ( ( !pcSlice->getSPS()->getUseIntraBlockCopy() && !pcSlice->isIntra() ) ||
+          ( pcSlice->getSPS()->getUseIntraBlockCopy() && !pcSlice->isOnlyCurrentPictureAsReference() ) )
+#else
     if ( !pcSlice->isIntra() )
+#endif
     {
       if ( m_pcCfg->getMotionVectorResolutionControlIdc() == 2 )
       {
@@ -1551,6 +1586,19 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     if ( !pcSlice->isIntra() && m_pcCfg->getUseAdaptiveMvResolution() )
     {
       pcSlice->setUseIntegerMv( xGetUseIntegerMv( pcSlice ) );
+    }
+#endif
+
+#if SCM_IBC_CLEANUP
+    if ( !pcSlice->isIntra() && pcSlice->getEnableTMVPFlag() )
+    {
+      TComPic *pColPic = pcSlice->getRefPic( RefPicList( pcSlice->isInterB() ? 1-pcSlice->getColFromL0Flag() : 0 ), pcSlice->getColRefIdx() );
+      if ( pColPic->getPOC() == pcSlice->getPOC() )
+      {
+        // 7.4.7.1
+        // It is a requirement of bitstream conformance that the picture referred to by collocated_ref_idx ...... shall not be the current picture itself.
+        pcSlice->setEnableTMVPFlag( false );
+      }
     }
 #endif
 
@@ -2374,7 +2422,7 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
   }
 
   Char c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
+#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
   if(pcSlice->isIntra() && pcSlice->getSPS()->getUseIntraBlockCopy())
   {
     c = 'P';

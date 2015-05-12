@@ -1471,7 +1471,11 @@ Void TComDataCU::getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPred, Int& n
 #endif
 
 #if SCM_T0116_IBCSEARCH_OPTIMIZE
+#if SCM_IBC_CLEANUP
+  if ( getSlice()->isOnlyCurrentPictureAsReference() )
+#else
   if(getSlice()->isIntra())
+#endif
   {
     TComMv cMvCol;
     Bool isColAvail=false;
@@ -4094,7 +4098,7 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int ctuRsAddr, Int uiPartUn
     return false;
   }
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
+#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
   if ( getSlice()->isIntra() )
   {
     return false;

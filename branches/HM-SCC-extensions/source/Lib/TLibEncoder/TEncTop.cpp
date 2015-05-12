@@ -843,6 +843,13 @@ Void TEncTop::xInitPPS()
     m_cPPS.setDependentSliceSegmentsEnabledFlag( true );
   }
   m_cPPS.setUseColourTrans( m_useColourTrans );
+
+#if SCM_IBC_CLEANUP
+  if ( getUseIntraBlockCopy() && m_iGOPSize > 1 )
+  {
+    m_cPPS.setListsModificationPresentFlag( true );
+  }
+#endif
 }
 
 //Function for initializing m_RPSList, a list of TComReferencePictureSet, based on the GOPEntry objects read from the config file.

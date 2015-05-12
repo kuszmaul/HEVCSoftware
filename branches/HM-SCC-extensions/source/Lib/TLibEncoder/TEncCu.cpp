@@ -569,7 +569,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
 
       // do inter modes, SKIP and 2Nx2N
+#if SCM_IBC_CLEANUP
+      if ( ( !rpcBestCU->getSlice()->getSPS()->getUseIntraBlockCopy() && rpcBestCU->getSlice()->getSliceType() != I_SLICE ) ||
+           ( rpcBestCU->getSlice()->getSPS()->getUseIntraBlockCopy() && !rpcBestCU->getSlice()->isOnlyCurrentPictureAsReference() ) )
+#else
       if( rpcBestCU->getSlice()->getSliceType() != I_SLICE )
+#endif
       {
         if ( m_pcEncCfg->getUseHashBasedME() )
         {
@@ -627,7 +632,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
 
         // do inter modes, NxN, 2NxN, and Nx2N
+#if SCM_IBC_CLEANUP
+        if ( ( !rpcBestCU->getSlice()->getSPS()->getUseIntraBlockCopy() && rpcBestCU->getSlice()->getSliceType() != I_SLICE ) ||
+             ( rpcBestCU->getSlice()->getSPS()->getUseIntraBlockCopy() && !rpcBestCU->getSlice()->isOnlyCurrentPictureAsReference() ) )
+#else
         if( rpcBestCU->getSlice()->getSliceType() != I_SLICE )
+#endif
         {
           // 2Nx2N, NxN
 
@@ -786,7 +796,13 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         Double dIntraBcCostPred = 0.0;
 
 #if SCM_T0116_IBCSEARCH_OPTIMIZE
+#if SCM_IBC_CLEANUP
+        if ( ( !rpcBestCU->getSlice()->getSPS()->getUseIntraBlockCopy() && rpcBestCU->getSlice()->getSliceType() == I_SLICE ) ||
+             ( rpcBestCU->getSlice()->getSPS()->getUseIntraBlockCopy() && rpcBestCU->getSlice()->isOnlyCurrentPictureAsReference() ) ||
+             !rpcBestCU->isSkipped(0) ) // avoid very complex intra if it is unlikely
+#else
         if( (rpcBestCU->getSlice()->getSliceType() == I_SLICE) || !rpcBestCU->isSkipped(0) ) // avoid very complex intra if it is unlikely
+#endif
 #else
         if((rpcBestCU->getSlice()->getSliceType() == I_SLICE)                                     ||
            (rpcBestCU->getCbf( 0, COMPONENT_Y  ) != 0)                                            ||
@@ -976,7 +992,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                     rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
                     intraCost = std::min( intraCost, adIntraBcCost[SIZE_Nx2N] );
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
+#if SCM_IBC_CLEANUP
+                    if ( ( !rpcBestCU->getSlice()->getSPS()->getUseIntraBlockCopy() && rpcBestCU->getSlice()->getSliceType() != I_SLICE ) ||
+                         ( rpcBestCU->getSlice()->getSPS()->getUseIntraBlockCopy() && !rpcBestCU->getSlice()->isOnlyCurrentPictureAsReference() ) )
+#else
                     if(rpcBestCU->getSlice()->getSliceType() != I_SLICE)
+#endif
                     {
                       xCheckRDCostIntraBCMixed( rpcBestCU, rpcTempCU, SIZE_Nx2N, adIntraBcCost[SIZE_Nx2N] DEBUG_STRING_PASS_INTO(sDebug), iMVCandList[SIZE_Nx2N]);
                       rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
@@ -995,7 +1016,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                     rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
                     intraCost = std::min( intraCost, adIntraBcCost[SIZE_2NxN] );
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
+#if SCM_IBC_CLEANUP
+                    if ( ( !rpcBestCU->getSlice()->getSPS()->getUseIntraBlockCopy() && rpcBestCU->getSlice()->getSliceType() != I_SLICE ) ||
+                         ( rpcBestCU->getSlice()->getSPS()->getUseIntraBlockCopy() && !rpcBestCU->getSlice()->isOnlyCurrentPictureAsReference() ) )
+#else
                     if(rpcBestCU->getSlice()->getSliceType() != I_SLICE)
+#endif
                     {
                       xCheckRDCostIntraBCMixed( rpcBestCU, rpcTempCU, SIZE_2NxN, adIntraBcCost[SIZE_2NxN] DEBUG_STRING_PASS_INTO(sDebug), iMVCandList[SIZE_2NxN]);
                       rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
@@ -1597,7 +1623,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     m_pcEntropyCoder->encodeCUTransquantBypassFlag( pcCU, uiAbsPartIdx );
   }
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
+#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
   if( !pcCU->getSlice()->isIntra() || pcCU->getSlice()->getSPS()->getUseIntraBlockCopy() )
 #else
   if( !pcCU->getSlice()->isIntra() )
