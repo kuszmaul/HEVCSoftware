@@ -3395,6 +3395,7 @@ TEncSearch::estIntraPredQTCT( TComDataCU* pcCU,
   const UInt         numberValidComponents = getNumberValidComponents(chFmt);
   Distortion         uiOverallDistY        = 0;
   Distortion         uiOverallDistC        = 0;
+  const TComSPS     &sps                   = *(pcCU->getSlice()->getSPS());
 
   Bool                bReuse               = !m_pcEncCfg->getRGBFormatFlag();
 
@@ -3456,7 +3457,10 @@ TEncSearch::estIntraPredQTCT( TComDataCU* pcCU,
     }
     else
     {
-
+      DistParam distParam;
+      const Bool bUseHadamard=pcCU->getCUTransquantBypass(0) == 0;
+      m_pcRdCost->setDistParam(distParam, sps.getBitDepth(CHANNEL_TYPE_LUMA), piOrg, uiStride, piPred, uiStride, puRect.width, puRect.height, bUseHadamard);
+      distParam.bApplyWeight = false;
       for( Int modeIdx = 0; modeIdx < numModesAvailable; modeIdx++ )
       {
         UInt       uiMode = modeIdx;
@@ -3466,7 +3470,7 @@ TEncSearch::estIntraPredQTCT( TComDataCU* pcCU,
         predIntraAng( COMPONENT_Y, uiMode, piOrg, uiStride, piPred, uiStride, tuRecurseWithPU, bAboveAvail, bLeftAvail, bUseFilter, TComPrediction::UseDPCMForFirstPassIntraEstimation(tuRecurseWithPU, uiMode) );
 
         //hadamard transform
-        uiSad += m_pcRdCost->calcHAD( pcCU->getSlice()->getSPS()->getBitDepth(toChannelType(COMPONENT_Y)), piOrg, uiStride, piPred, uiStride, puRect.width, puRect.height );
+        uiSad += distParam.DistFunc(&distParam);
 
         UInt iModeBits = 0;
         iModeBits     += xModeBitsIntra( pcCU, uiMode, uiPartOffset, uiDepth, uiInitTrDepth, CHANNEL_TYPE_LUMA );
