@@ -1463,6 +1463,20 @@ Void TDecSbac::parseIntraBC ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartId
 
   const TComMv cMv(mvx, mvy );
 
+#if SCM_T0048_IBC_VALIDATE_SLICES
+  UInt raster = g_auiZscanToRaster[uiAbsPartIdx];
+  TComPicSym *pcSym = pcCU->getPic()->getPicSym();
+  Int ctuX = (pcCU->getCUPelX() + g_auiRasterToPelX[raster] + mvx) / g_uiMaxCUWidth;
+  Int ctuY = (pcCU->getCUPelY() + g_auiRasterToPelY[raster] + mvy) / g_uiMaxCUHeight;
+  UInt ctuAddr = ctuX + ctuY*pcSym->getFrameWidthInCtus();
+  if( pcSym->getCtu(ctuAddr)->getSlice()->getSliceIdx() != pcCU->getSlice()->getSliceIdx() )
+  {
+    printf("BV (%i,%i) for PU%u in CU %u,%u+%u, slice %u points to CTU %u, slice %u\n",
+           mvx, mvy, uiPartIdx, pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu(), uiAbsPartIdx,
+           pcCU->getSlice()->getSliceIdx(), ctuAddr, pcSym->getCtu(ctuAddr)->getSlice()->getSliceIdx());
+  }
+#endif
+
   pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->setAllMv( cMv, pcCU->getPartitionSize( uiAbsPartIdx ), uiAbsPartIdx, uiDepth, uiPartIdx );
   if( pcCU->getLastIntraBCMv() != cMv)
   {

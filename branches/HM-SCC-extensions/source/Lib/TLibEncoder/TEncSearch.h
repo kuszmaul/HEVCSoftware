@@ -256,7 +256,13 @@ public:
                                 );
 
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
-  Bool isBlockVectorValid( Int xPos, Int yPos, Int width, Int height, Int picWidth, Int picHeight, Int xStartInCU, Int yStartInCU, Int xBv, Int yBv, Int ctuSize );
+  Bool isBlockVectorValid( Int xPos, Int yPos, Int width, Int height, 
+#if SCM_T0048_IBC_SLICE_BUGFIX
+                           TComDataCU *pcCU, UInt uiAbsPartIdx,
+#else
+                           Int picWidth, Int picHeight, 
+#endif 
+                           Int xStartInCU, Int yStartInCU, Int xBv, Int yBv, Int ctuSize );
 #endif
 
   Bool predIntraBCSearch        ( TComDataCU* pcCU,
@@ -375,6 +381,19 @@ public:
     {
       return false;
     }
+
+#if SCM_T0048_IBC_SLICE_BUGFIX
+    TComSlice *pcSlice = pcCU->getSlice();
+    if( pcSlice->getSliceMode() )
+    {
+      TComPicSym *pcSym = pcCU->getPic()->getPicSym();
+      Int      ctuX = (cuPelX + predX) / uiMaxCuWidth;
+      Int      ctuY = (cuPelY + predY) / uiMaxCuHeight;
+      UInt   refCtu = ctuX + pcSym->getFrameWidthInCtus()*ctuY;
+      UInt startCtu = pcSym->getCtuTsToRsAddrMap( pcCU->getSlice()->getSliceSegmentCurStartCtuTsAddr() );
+      if (refCtu < startCtu) return false;
+    }
+#endif
 
     // check boundary
     if ( pcCU->getWidth( 0 ) == 8 && pcCU->getPartitionSize( 0 ) != SIZE_2Nx2N && pcCU->getSlice()->getPic()->getPicYuvOrg()->getChromaFormat() != CHROMA_444 )

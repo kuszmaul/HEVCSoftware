@@ -470,6 +470,37 @@ Void TDecCu::xDecompressCU( TComDataCU* pCtu, UInt uiAbsPartIdx,  UInt uiDepth )
 Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
 {
 
+#if SCM_T0227_INTRABC_SIG_UNIFICATION && SCM_T0048_IBC_VALIDATE_SLICES
+  Int numParts = pcCU->getNumPartitions();
+  for (Int iPartIdx = 0; iPartIdx < numParts; iPartIdx++)
+  {
+    UInt uiPartAddr;
+    Int  iWidth, iHeight;
+    pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iWidth, iHeight );
+    for (int refList = 0; refList < 2; refList++)
+    {
+      RefPicList eRefPicList = RefPicList(refList);
+      Int        iRefIdx     = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );
+      if (iRefIdx != -1 && pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPOC() == pcCU->getSlice()->getPOC() )
+      {
+        TComMv cMv    = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr );
+        Int    mvx    = cMv.getHor()>>2, mvy = cMv.getVer()>>2; // Get integer position
+        UInt   raster = g_auiZscanToRaster[uiPartAddr];
+        TComPicSym *pcSym = pcCU->getPic()->getPicSym();
+        Int ctuX = (pcCU->getCUPelX() + g_auiRasterToPelX[raster] + mvx) / pcCU->getSlice()->getSPS()->getMaxCUWidth();
+        Int ctuY = (pcCU->getCUPelY() + g_auiRasterToPelY[raster] + mvy) / pcCU->getSlice()->getSPS()->getMaxCUHeight();
+        UInt ctuAddr = ctuX + ctuY*pcSym->getFrameWidthInCtus();
+        if (pcSym->getCtu(ctuAddr)->getSlice()->getSliceIdx() != pcCU->getSlice()->getSliceIdx())
+        {
+          printf("BV (%i,%i) for PU%i(%u)/%i in CU %u,%u, slice %u points to CTU %u, slice %u\n",
+                 mvx, mvy, iPartIdx, uiPartAddr, numParts, pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu(),
+                 pcCU->getSlice()->getSliceIdx(), ctuAddr, pcSym->getCtu(ctuAddr)->getSlice()->getSliceIdx());
+        }
+      }
+    }
+  }
+#endif
+
   // inter prediction
   m_pcPrediction->motionCompensation( pcCU, m_ppcYuvReco[uiDepth] );
 
