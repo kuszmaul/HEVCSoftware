@@ -1374,7 +1374,11 @@ Void TEncCavlc:: codePLTModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
   assert(0);
 }
 
+#if SCM_S0043_PLT_DELTA_QP
+Void TEncCavlc::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp, Bool* bCodeDQP, Bool* codeChromaQpAdjFlag)
+#else
 Void TEncCavlc::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp)
+#endif
 {
   assert(0);
 }

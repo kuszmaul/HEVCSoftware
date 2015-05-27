@@ -88,6 +88,38 @@ Void TEncEntropy::encodeSPS( const TComSPS* pcSPS )
   return;
 }
 
+#if SCM_S0043_PLT_DELTA_QP
+Void TEncEntropy::encodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD, Bool* bCodeDQP, Bool* codeChromaQpAdj )
+{
+  if ( pcCU->getSlice()->getSPS()->getUsePLTMode() )
+  {
+    if ( bRD )
+    {
+      uiAbsPartIdx = 0;
+    }
+
+#if SCM_T0058_REMOVE_64x64_PLT
+    if( !pcCU->isIntra( uiAbsPartIdx ) || pcCU->isIntraBC( uiAbsPartIdx ) )
+#else
+    if( !pcCU->isIntra( uiAbsPartIdx ) || pcCU->getWidth(uiAbsPartIdx) == 64 || pcCU->isIntraBC( uiAbsPartIdx ) )
+#endif
+    {
+      return;
+    }
+
+    m_pcEntropyCoderIf->codePLTModeFlag( pcCU, uiAbsPartIdx );
+    if ( pcCU->getPLTModeFlag( uiAbsPartIdx ) )
+    {
+      m_pcEntropyCoderIf->codePLTModeSyntax( pcCU, uiAbsPartIdx, 3, bCodeDQP, codeChromaQpAdj );
+
+      if (!bRD)
+      {
+        pcCU->saveLastPLTInLcuFinal( pcCU, uiAbsPartIdx, MAX_NUM_COMPONENT );
+      }
+    }
+  }
+}
+#else
 Void TEncEntropy::encodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   if ( pcCU->getSlice()->getSPS()->getUsePLTMode() )
@@ -111,6 +143,7 @@ Void TEncEntropy::encodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool b
     }
   }
 }
+#endif
 
 
 Void TEncEntropy::encodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
@@ -208,6 +241,8 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
 #endif
 
   m_pcEntropyCoderIf->codePredMode( pcCU, uiAbsPartIdx );
+
+#if !SCM_S0043_PLT_DELTA_QP
   if(pcCU->isIntra( uiAbsPartIdx ))
   {
     encodePLTModeInfo (pcCU, uiAbsPartIdx);
@@ -219,7 +254,7 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
       }
     }
   }
-
+#endif
 }
 
 //! encode split flag

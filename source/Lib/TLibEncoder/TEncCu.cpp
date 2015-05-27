@@ -1654,8 +1654,20 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   {
 #endif
     m_pcEntropyCoder->encodePredMode( pcCU, uiAbsPartIdx );
+
+#if SCM_S0043_PLT_DELTA_QP
+    Bool bCodeDQP = getdQPFlag();
+    Bool codeChromaQpAdj = getCodeChromaQpAdjFlag();
+
+    m_pcEntropyCoder->encodePLTModeInfo( pcCU, uiAbsPartIdx, false, &bCodeDQP, &codeChromaQpAdj );
+#endif
+
     if ( pcCU->getPLTModeFlag(uiAbsPartIdx) )
     {
+#if SCM_S0043_PLT_DELTA_QP
+      setCodeChromaQpAdjFlag( codeChromaQpAdj );
+      setdQPFlag( bCodeDQP );
+#endif
       finishCU(pcCU,uiAbsPartIdx,uiDepth);
       return;
     }
@@ -1681,8 +1693,11 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #endif
 
   // Encode Coefficients
+#if !SCM_S0043_PLT_DELTA_QP
   Bool bCodeDQP = getdQPFlag();
   Bool codeChromaQpAdj = getCodeChromaQpAdjFlag();
+#endif
+
   m_pcEntropyCoder->encodeCoeff( pcCU, uiAbsPartIdx, uiDepth, bCodeDQP, codeChromaQpAdj );
   setCodeChromaQpAdjFlag( codeChromaQpAdj );
   setdQPFlag( bCodeDQP );
@@ -2315,13 +2330,22 @@ Void TEncCu::xCheckRDCostIntraCSC( TComDataCU *&rpcBestCU,
 #endif
 
   m_pcEntropyCoder->encodePredMode( rpcTempCU, 0, true );
+#if SCM_S0043_PLT_DELTA_QP
+  Bool bCodeDQP = getdQPFlag();
+  Bool codeChromaQpAdjFlag = getCodeChromaQpAdjFlag();
+
+  m_pcEntropyCoder->encodePLTModeInfo( rpcTempCU, 0, true, &bCodeDQP, &codeChromaQpAdjFlag );
+#endif
   m_pcEntropyCoder->encodePartSize( rpcTempCU, 0, uiDepth, true );
   m_pcEntropyCoder->encodePredInfo( rpcTempCU, 0 );
   m_pcEntropyCoder->encodeIPCMInfo(rpcTempCU, 0, true );
 
   // Encode Coefficients
+#if !SCM_S0043_PLT_DELTA_QP
   Bool bCodeDQP = getdQPFlag();
   Bool codeChromaQpAdjFlag = getCodeChromaQpAdjFlag();
+#endif
+
   m_pcEntropyCoder->encodeCoeff( rpcTempCU, 0, uiDepth, bCodeDQP, codeChromaQpAdjFlag );
   setCodeChromaQpAdjFlag( codeChromaQpAdjFlag );
   setdQPFlag( bCodeDQP );
@@ -2400,13 +2424,21 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU *&rpcBestCU,
 #endif
 
   m_pcEntropyCoder->encodePredMode( rpcTempCU, 0,          true );
+#if SCM_S0043_PLT_DELTA_QP
+  Bool bCodeDQP = getdQPFlag();
+  Bool codeChromaQpAdjFlag = getCodeChromaQpAdjFlag();
+
+  m_pcEntropyCoder->encodePLTModeInfo( rpcTempCU, 0, true, &bCodeDQP, &codeChromaQpAdjFlag );
+#endif
   m_pcEntropyCoder->encodePartSize( rpcTempCU, 0, uiDepth, true );
   m_pcEntropyCoder->encodePredInfo( rpcTempCU, 0 );
   m_pcEntropyCoder->encodeIPCMInfo(rpcTempCU, 0, true );
 
   // Encode Coefficients
+#if !SCM_S0043_PLT_DELTA_QP
   Bool bCodeDQP = getdQPFlag();
   Bool codeChromaQpAdjFlag = getCodeChromaQpAdjFlag();
+#endif
   m_pcEntropyCoder->encodeCoeff( rpcTempCU, 0, uiDepth, bCodeDQP, codeChromaQpAdjFlag );
   setCodeChromaQpAdjFlag( codeChromaQpAdjFlag );
   setdQPFlag( bCodeDQP );
@@ -2831,6 +2863,9 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
 #endif
 
   m_pcEntropyCoder->encodePredMode ( rpcTempCU, 0,          true );
+#if SCM_S0043_PLT_DELTA_QP
+  m_pcEntropyCoder->encodePLTModeInfo( rpcTempCU, 0, true );
+#endif
   m_pcEntropyCoder->encodePartSize ( rpcTempCU, 0, uiDepth, true );
   m_pcEntropyCoder->encodeIPCMInfo ( rpcTempCU, 0, true );
 

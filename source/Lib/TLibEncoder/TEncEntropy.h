@@ -78,7 +78,11 @@ public:
 public:
   virtual Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codePLTModeFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#if SCM_S0043_PLT_DELTA_QP
+  virtual Void codePLTModeSyntax        (TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp, Bool* bCodeDQP, Bool* codeChromaQpAdjFlag) = 0;
+#else
   virtual Void codePLTModeSyntax        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp) = 0;
+#endif
   virtual Void codeScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
@@ -153,7 +157,11 @@ public:
   Void encodePPS               ( const TComPPS* pcPPS );
   Void encodeSplitFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );
   Void encodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+#if SCM_S0043_PLT_DELTA_QP
+  Void encodePLTModeInfo       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false, Bool* bCodeDQP = NULL, Bool* codeChromaQpAdj = NULL );
+#else
   Void encodePLTModeInfo       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+#endif
   Void encodeSkipFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodePUWise       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void encodeInterDirPU   ( TComDataCU* pcSubCU, UInt uiAbsPartIdx  );

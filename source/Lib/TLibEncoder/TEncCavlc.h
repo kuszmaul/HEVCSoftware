@@ -92,7 +92,11 @@ public:
   Void codeSAOBlkParam(SAOBlkParam& saoBlkParam, const BitDepths &bitDepths, Bool* sliceEnabled, Bool leftMergeAvail, Bool aboveMergeAvail, Bool onlyEstMergeInfo = false){printf("only supported in CABAC"); assert(0); exit(-1);}
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codePLTModeFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if SCM_S0043_PLT_DELTA_QP
+  Void codePLTModeSyntax        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp, Bool* bCodeDQP, Bool* codeChromaQpAdjFlag );
+#else
   Void codePLTModeSyntax        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp);
+#endif
   Void codeScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );

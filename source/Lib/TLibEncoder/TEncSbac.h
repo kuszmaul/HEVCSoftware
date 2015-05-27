@@ -136,7 +136,11 @@ protected:
 public:
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codePLTModeFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if SCM_S0043_PLT_DELTA_QP
+  Void codePLTModeSyntax      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp, Bool* bCodeDQP, Bool* codeChromaQpAdjFlag );
+#else
   Void codePLTModeSyntax      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp);
+#endif
 #if !SCM_T0064_REMOVE_PLT_SHARING
   Void codePLTSharingModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
