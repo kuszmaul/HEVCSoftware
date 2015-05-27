@@ -670,7 +670,11 @@ Void TDecSbac::parsePLTModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
   }
 }
 
+#if SCM_S0043_PLT_DELTA_QP
+Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiNumComp, Bool& bCodeDQP, Bool& codeChromaQpAdj)
+#else
 Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiNumComp)
+#endif
 {
   UInt uiWidth, uiHeight, uiTotal;
   UInt uiIdx, uiDictMaxSize, uiDictIdxBits;
@@ -716,10 +720,14 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
   //the bit length is dependent on QP
   //calculate the bitLen needed to represent the quantized escape values
   UInt uiMaxVal[3];
+
+#if !SCM_S0043_PLT_DELTA_QP
   for (Int comp = compBegin; comp < compBegin + uiNumComp; comp++)
   {
     uiMaxVal[comp] = pcCU->xCalcMaxVals(pcCU, ComponentID(comp));
   }
+#endif
+
   for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
   {
     ComponentID compID = (ComponentID)comp;
@@ -875,6 +883,25 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     if (paletteEscapeValPresentFlag)
     {
       uiSignalEscape = 1;
+
+#if SCM_S0043_PLT_DELTA_QP
+      if( pcCU->getSlice()->getPPS()->getUseDQP() && bCodeDQP )
+      {
+        parseDeltaQP( pcCU, uiAbsPartIdx, pcCU->getDepth( uiAbsPartIdx ) );
+        bCodeDQP = false;
+      }
+
+      if( pcCU->getSlice()->getUseChromaQpAdj() && codeChromaQpAdj )
+      {
+        parseChromaQpAdjustment( pcCU, uiAbsPartIdx, pcCU->getDepth( uiAbsPartIdx ) );
+        codeChromaQpAdj = false;
+      }
+
+      for (Int comp = compBegin; comp < compBegin + uiNumComp; comp++)
+      {
+        uiMaxVal[comp] = pcCU->xCalcMaxVals(pcCU, ComponentID(comp));
+      }
+#endif
     }
     else
     {

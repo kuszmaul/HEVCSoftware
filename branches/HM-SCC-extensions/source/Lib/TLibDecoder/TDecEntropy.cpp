@@ -70,6 +70,24 @@ Void TDecEntropy::decodeCUTransquantBypassFlag(TComDataCU* pcCU, UInt uiAbsPartI
   m_pcEntropyDecoderIf->parseCUTransquantBypassFlag( pcCU, uiAbsPartIdx, uiDepth );
 }
 
+#if SCM_S0043_PLT_DELTA_QP
+Void TDecEntropy::decodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool& bCodeDQP, Bool& isChromaQpAdjCoded )
+{
+#if SCM_T0058_REMOVE_64x64_PLT
+  if( pcCU->isIntra( uiAbsPartIdx ) && pcCU->getSlice()->getSPS()->getMaxCUWidth()>>uiDepth < 64 && !pcCU->isIntraBC( uiAbsPartIdx ) )
+#else
+  if( pcCU->isIntra( uiAbsPartIdx ) && !pcCU->isIntraBC( uiAbsPartIdx ) )
+#endif
+  {
+    m_pcEntropyDecoderIf->parsePLTModeFlag( pcCU, uiAbsPartIdx, uiDepth );
+    if ( pcCU->getPLTModeFlag( uiAbsPartIdx ) )
+    {
+      m_pcEntropyDecoderIf->parsePLTModeSyntax( pcCU, uiAbsPartIdx, uiDepth, 3, bCodeDQP, isChromaQpAdjCoded );
+      pcCU->saveLastPLTInLcuFinal( pcCU, uiAbsPartIdx, MAX_NUM_COMPONENT );
+    }
+  }
+}
+#else
 Void TDecEntropy::decodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   if ( pcCU->getSlice()->getSPS()->getUsePLTMode() )
@@ -88,7 +106,7 @@ Void TDecEntropy::decodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
     }
   }
 }
-
+#endif
 
 /** decode merge flag
  * \param pcSubCU
@@ -125,10 +143,12 @@ Void TDecEntropy::decodeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
 Void TDecEntropy::decodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   m_pcEntropyDecoderIf->parsePredMode( pcCU, uiAbsPartIdx, uiDepth );
+#if !SCM_S0043_PLT_DELTA_QP
   if ( pcCU->isIntra( uiAbsPartIdx ) )
   {
     decodePLTModeInfo( pcCU, uiAbsPartIdx, uiDepth );
   }
+#endif
 }
 
 Void TDecEntropy::decodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )

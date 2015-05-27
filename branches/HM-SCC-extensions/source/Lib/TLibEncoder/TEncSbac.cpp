@@ -575,7 +575,11 @@ Void TEncSbac:: codePLTSharingModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 }
 #endif
 
+#if SCM_S0043_PLT_DELTA_QP
+Void TEncSbac::codePLTModeSyntax( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp, Bool* bCodeDQP, Bool* codeChromaQpAdj )
+#else
 Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp)
+#endif
 {
   UInt uiIdx, uiDictMaxSize, uiDictIdxBits;
   UInt uiSampleBits[3];
@@ -650,10 +654,13 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   //the bit depth depends on QP
   //calculate the bitLen needed to represent the quantized escape values
   UInt uiMaxVal[3];
+
+#if !SCM_S0043_PLT_DELTA_QP
   for (Int comp = compBegin; comp < compBegin + uiNumComp; comp++)
   {
     uiMaxVal[comp] = pcCU->xCalcMaxVals(pcCU, ComponentID(comp));
   }
+#endif
 
 #if !SCM_T0064_REMOVE_PLT_SHARING
   codePLTSharingModeFlag(pcCU, uiAbsPartIdx);
@@ -706,6 +713,29 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   if (uiDictMaxSize > 0)
   {
     m_pcBinIf->encodeBinEP(uiSignalEscape);
+
+#if SCM_S0043_PLT_DELTA_QP
+    if( uiSignalEscape )
+    {
+      if( pcCU->getSlice()->getPPS()->getUseDQP() && bCodeDQP && *bCodeDQP )
+      {
+        codeDeltaQP( pcCU, uiAbsPartIdx );
+        *bCodeDQP = false;
+      }
+
+      if( pcCU->getSlice()->getUseChromaQpAdj() && codeChromaQpAdj && *codeChromaQpAdj )
+      {
+        codeChromaQpAdjustment( pcCU, uiAbsPartIdx );
+        *codeChromaQpAdj = false;
+      }
+
+      for (Int comp = compBegin; comp < compBegin + uiNumComp; comp++)
+      {
+        uiMaxVal[comp] = pcCU->xCalcMaxVals(pcCU, ComponentID(comp));
+      }
+    }
+#endif
+
     if (uiDictMaxSize + uiSignalEscape > 1)
     {
       codeScanRotationModeFlag(pcCU, uiAbsPartIdx);
