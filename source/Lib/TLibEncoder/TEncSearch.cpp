@@ -6801,13 +6801,8 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
 
     const Int boundY = (0 - iRoiHeight - puPelOffsetY);
 #if SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU
-#if SCM_FIX_FOX_TICKET_1376
     Int lowY = ((pcCU->getPartitionSize(uiPartAddr) == SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU) && m_pcEncCfg->getUseIntraBCFullFrameSearch())
              ? -cuPelY : max(iSrchRngVerTop, 0 - cuPelY);
-#else
-    Int lowY = (pcCU->getPartitionSize(uiPartAddr) == SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU)
-             ? -cuPelY : max(iSrchRngVerTop, 0 - cuPelY);
-#endif 
     for(Int y = boundY ; y >= lowY ; y-- )
 #else
     for ( Int y = boundY; y >= max( iSrchRngVerTop, 0 - cuPelY ); y-- )
@@ -6848,13 +6843,8 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
     }
 
 #if SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU
-#if SCM_FIX_FOX_TICKET_1376
     const Int boundX = ((pcCU->getPartitionSize(uiPartAddr) == SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU) && m_pcEncCfg->getUseIntraBCFullFrameSearch())
                      ? -cuPelX : max(iSrchRngHorLeft, - cuPelX);
-#else
-    const Int boundX = (pcCU->getPartitionSize(uiPartAddr) == SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU)
-                     ? -cuPelX : max(iSrchRngHorLeft, - cuPelX);
-#endif 
 #else
     const Int boundX = max(iSrchRngHorLeft, - cuPelX);
 #endif
