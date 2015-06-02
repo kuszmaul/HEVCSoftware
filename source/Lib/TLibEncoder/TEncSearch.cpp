@@ -1676,12 +1676,10 @@ TEncSearch::xRecurIntraCodingLumaQT(TComYuv*    pcOrgYuv,
   }
 #endif
 
-#if SCM_T0121_INFER_TU_SPLIT_ENCODER
   if(m_pcEncCfg->getTransquantBypassInferTUSplit() && pcCU->isLosslessCoded(uiAbsPartIdx) && bCheckFull)
   {
     bCheckSplit = false;
   }
-#endif
 
   Double     dSingleCost                        = MAX_DOUBLE;
   Distortion uiSingleDistLuma                   = 0;
@@ -2370,12 +2368,10 @@ TEncSearch::xRecurIntraCodingQTCSC( TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TComY
   const Bool          extendedPrecision     = rTu.getCU()->getSlice()->getSPS()->getUseExtendedPrecision();
 #endif
 
-#if SCM_T0121_INFER_TU_SPLIT_ENCODER
   if(m_pcEncCfg->getTransquantBypassInferTUSplit() && pcCU->isLosslessCoded(uiAbsPartIdx) && bCheckFull)
   {
     bCheckSplit = false;
   }
-#endif
 
   assert( bCheckFull || bCheckSplit );
   assert( chFmt == CHROMA_444);
@@ -3088,9 +3084,7 @@ TEncSearch::estIntraPredLumaQT(TComDataCU* pcCU,
 #if HHI_RQT_INTRA_SPEEDUP_MOD
     for( UInt ui =0; ui < 2; ++ui )
 #endif
-#if SCM_T0121_INFER_TU_SPLIT_ENCODER
     if(!m_pcEncCfg->getTransquantBypassInferTUSplit() || !pcCU->isLosslessCoded(0))
-#endif
     {
 #if HHI_RQT_INTRA_SPEEDUP_MOD
       UInt uiOrgMode   = ui ? uiSecondBestMode  : uiBestPUMode;
@@ -3546,11 +3540,7 @@ TEncSearch::estIntraPredQTCT( TComDataCU* pcCU,
       }
     }
 
-#if SCM_T0121_INFER_TU_SPLIT_ENCODER
     if((!m_pcEncCfg->getTransquantBypassInferTUSplit() || !pcCU->isLosslessCoded(0)) && (uiLog2TrSize > pcCU->getQuadtreeTULog2MinSizeInCU(uiPartOffset)) )
-#else
-    if( uiLog2TrSize  >  pcCU->getQuadtreeTULog2MinSizeInCU(uiPartOffset) )
-#endif
     {
       Distortion uiPUDistY = 0;
       Distortion uiPUDistC = 0;
@@ -8942,13 +8932,10 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
   const Int debugPredModeMask = DebugStringGetPredModeMask(pcCU->getPredictionMode(uiAbsPartIdx));
 #endif
 
-
-#if SCM_T0121_INFER_TU_SPLIT_ENCODER
   if(m_pcEncCfg->getTransquantBypassInferTUSplit() && pcCU->isLosslessCoded(uiAbsPartIdx) && (pcCU->getWidth(uiAbsPartIdx) >= 32) && (pcCU->isInter(uiAbsPartIdx) || pcCU->isIntraBC(uiAbsPartIdx)) && (pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N))
   {
     SplitFlag = 1;
   }
-#endif
 
   Bool bCheckFull;
 
@@ -8961,13 +8948,11 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
     bCheckFull =  ( uiLog2TrSize <= pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize() );
   }
 
-#if SCM_T0121_INFER_TU_SPLIT_ENCODER
   Bool bCheckSplit  = ( uiLog2TrSize >  pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) );
-  if(m_pcEncCfg->getTransquantBypassInferTUSplit() && pcCU->isLosslessCoded(uiAbsPartIdx) && (pcCU->isIntraBC(uiAbsPartIdx) || pcCU->isInter(uiAbsPartIdx)) && (pcCU->getWidth(uiAbsPartIdx) >= 32) && bCheckFull)
+  if ( m_pcEncCfg->getTransquantBypassInferTUSplit() && pcCU->isLosslessCoded( uiAbsPartIdx ) && (pcCU->isIntraBC( uiAbsPartIdx ) || pcCU->isInter( uiAbsPartIdx )) && (pcCU->getWidth( uiAbsPartIdx ) >= 32) && bCheckFull )
+  {
     bCheckSplit = false;
-#else
-  const Bool bCheckSplit  = ( uiLog2TrSize >  pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) );
-#endif
+  }
 
   assert( bCheckFull || bCheckSplit );
 
