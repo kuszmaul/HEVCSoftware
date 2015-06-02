@@ -288,7 +288,6 @@
 // Processing controls
 //------------------------------------------------
 
-#define SCM_T0227_INTRABC_SIG_UNIFICATION                1 ///< unify intra BC mode and inter mode
 #define SCM_IBC_CLEANUP_IDENTICAL_RDO                    1 ///< let the encoder to generate identical RDO results
 #define SCM_T0048_IBC_VALIDATE_SLICES                    1 ///< Print at decoder when IBC reaches outside of current slice
 #define SCM_S0043_PLT_DELTA_QP                           0 ///< JCTVC-S0043: delta qp signalling for palette mode
@@ -300,9 +299,7 @@
 #define SCM_S0067_NUM_CANDIDATES                         64 ///< Maximum number of candidates to store/test
 #define SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU               2 ///< Do full horizontal/vertical search for Nx2N
 #define SCM_S0067_MAX_CAND_SIZE                          32 ///< 32 or 64, 16 by default
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
 #define SCM_T0227_INTER_SEARCH_YUV                        1   // use 3 components for Inter in mixed CU decision(Intra BC and inter CU)
-#endif
 #define SCM_T0048_PLT_PRED_IN_PPS_REFRESH                16 ///< Periodicity of the palette refresh
 
 
@@ -441,9 +438,6 @@ enum PredMode
   MODE_INTER                 = 0,     ///< inter-prediction mode
   MODE_INTRA                 = 1,     ///< intra-prediction mode
   NUMBER_OF_PREDICTION_MODES = 2,
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  MODE_INTRABC               = 127    ///< intraBC mode - considered to be an intra mode with an intra_bc_flag=1 with a root cbf.
-#endif
 };
 
 /// reference list index
@@ -451,17 +445,9 @@ enum RefPicList
 {
   REF_PIC_LIST_0               = 0,   ///< reference list 0
   REF_PIC_LIST_1               = 1,   ///< reference list 1
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
   REF_PIC_LIST_INTRABC         = 0,
-#endif
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
   NUM_REF_PIC_LIST_01          = 2,
   NUM_REF_PIC_LIST_CU_MV_FIELD = 2,
-#else
-  REF_PIC_LIST_INTRABC         = 2,
-  NUM_REF_PIC_LIST_01          = 3,
-  NUM_REF_PIC_LIST_CU_MV_FIELD = 3,
-#endif
   REF_PIC_LIST_X               = 100  ///< special mark
 };
 

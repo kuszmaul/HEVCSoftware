@@ -92,16 +92,10 @@ TDecSbac::TDecSbac()
 , m_CUTransquantBypassFlagSCModel            ( 1,             1,                      NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX    , m_contextModels + m_numContextModels, m_numContextModels)
 , m_explicitRdpcmFlagSCModel                 ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_EXPLICIT_RDPCM_FLAG_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
 , m_explicitRdpcmDirSCModel                  ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_EXPLICIT_RDPCM_DIR_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-, m_cIntraBCPredFlagSCModel                  ( 1,             1,                      NUM_INTRABC_PRED_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
-#endif
 , m_cCrossComponentPredictionSCModel         ( 1,             1,                      NUM_CROSS_COMPONENT_PREDICTION_CTX   , m_contextModels + m_numContextModels, m_numContextModels)
 , m_ChromaQpAdjFlagSCModel                   ( 1,             1,                      NUM_CHROMA_QP_ADJ_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_ChromaQpAdjIdcSCModel                    ( 1,             1,                      NUM_CHROMA_QP_ADJ_IDC_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUColourTransformFlagSCModel            ( 1,             1,                      NUM_COLOUR_TRANS_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-, m_cIntraBCBVDSCModel                       ( 1,             1,                      NUM_INTRABC_BVD_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
-#endif
 , m_PLTModeFlagSCModel                       ( 1,             1,                      NUM_PLTMODE_FLAG_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
 , m_SPointSCModel                            ( 1,             1,                      NUM_SPOINT_CTX                       , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCopyTopRunSCModel                       ( 1,             1,                      NUM_TOP_RUN_CTX                      , m_contextModels + m_numContextModels, m_numContextModels)
@@ -136,9 +130,7 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
       sliceType = P_SLICE;
       break;
     default     :           // should not occur
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
       assert(0);
-#endif
       break;
     }
   }
@@ -171,16 +163,10 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_CUTransquantBypassFlagSCModel.initBuffer      ( sliceType, qp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
   m_explicitRdpcmFlagSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_EXPLICIT_RDPCM_FLAG);
   m_explicitRdpcmDirSCModel.initBuffer            ( sliceType, qp, (UChar*)INIT_EXPLICIT_RDPCM_DIR);
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  m_cIntraBCPredFlagSCModel.initBuffer            ( sliceType, qp, (UChar*)INIT_INTRABC_PRED_FLAG );
-#endif
   m_cCrossComponentPredictionSCModel.initBuffer   ( sliceType, qp, (UChar*)INIT_CROSS_COMPONENT_PREDICTION );
   m_ChromaQpAdjFlagSCModel.initBuffer             ( sliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
   m_ChromaQpAdjIdcSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
   m_cCUColourTransformFlagSCModel.initBuffer      ( sliceType, qp, (UChar*)INIT_COLOUR_TRANS);
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  m_cIntraBCBVDSCModel.initBuffer                 ( sliceType, qp, (UChar*)INIT_INTRABC_BVD );
-#endif
   m_PLTModeFlagSCModel.initBuffer                 ( sliceType, qp, (UChar*)INIT_PLTMODE_FLAG );
   m_SPointSCModel.initBuffer                      ( sliceType, qp, (UChar*)INIT_SPOINT );
   m_cCopyTopRunSCModel.initBuffer                 ( sliceType, qp, (UChar*)INIT_TOP_RUN);
@@ -1063,117 +1049,6 @@ Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   }
 }
 
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-Void TDecSbac::parseIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
-{
-  UInt uiSymbol = 0;
-
-  m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraBCPredFlagSCModel.get( 0, 0, 0 ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__INTRA_BLOCK_COPY_VECTOR));
-
-  DTRACE_CABAC_VL( g_nSymbolCounter++ );
-  DTRACE_CABAC_T( "\tIntraBCFlag" );
-  DTRACE_CABAC_T( "\tuiSymbol: ");
-  DTRACE_CABAC_V( uiSymbol );
-  DTRACE_CABAC_T( "\n");
-
-  if ( uiSymbol )
-  {
-    pcCU->setPredModeSubParts( MODE_INTRABC, uiAbsPartIdx, uiDepth );
-    pcCU->setTrIdxSubParts( 0, uiAbsPartIdx, uiDepth );
-    pcCU->setIntraDirSubParts ( CHANNEL_TYPE_LUMA, DC_IDX, uiAbsPartIdx, uiDepth);
-    pcCU->setIntraDirSubParts ( CHANNEL_TYPE_CHROMA, DC_IDX, uiAbsPartIdx, uiDepth);
-  }
-}
-
-Void TDecSbac::parseIntraBC ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
-{
-  Int mvx = 0, mvy = 0;
-  TComMv      MvPred[2], MvLast[2];
-  UInt        uiMvpIdx;
-  UInt        uiSymbol;
-
-  parseIntraBCBvd(pcCU, uiAbsPartIdx, uiPartIdx, uiDepth, REF_PIC_LIST_INTRABC);
-  
-  MvLast[0] = pcCU->getLastIntraBCMv(0);
-  MvLast[1] = pcCU->getLastIntraBCMv(1);
-  
-  pcCU->getIntraBCMVPs(uiAbsPartIdx, MvPred, MvLast);
-
-  xReadUnaryMaxSymbol(uiSymbol, m_cMVPIdxSCModel.get(0), 1, AMVP_MAX_NUM_CANDS-1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__MVP_IDX) );
-
-  uiMvpIdx = uiSymbol;
-
-  assert((uiMvpIdx == 0) || (uiMvpIdx == 1));
-
-  mvx = MvPred[uiMvpIdx].getHor() + pcCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMvd(uiAbsPartIdx).getHor();
-  mvy = MvPred[uiMvpIdx].getVer() + pcCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMvd(uiAbsPartIdx).getVer();
-
-  const TComMv cMv(mvx, mvy );
-
-#if SCM_T0048_IBC_VALIDATE_SLICES
-  UInt raster = g_auiZscanToRaster[uiAbsPartIdx];
-  TComPicSym *pcSym = pcCU->getPic()->getPicSym();
-  Int ctuX = (pcCU->getCUPelX() + g_auiRasterToPelX[raster] + mvx) / g_uiMaxCUWidth;
-  Int ctuY = (pcCU->getCUPelY() + g_auiRasterToPelY[raster] + mvy) / g_uiMaxCUHeight;
-  UInt ctuAddr = ctuX + ctuY*pcSym->getFrameWidthInCtus();
-  if( pcSym->getCtu(ctuAddr)->getSlice()->getSliceIdx() != pcCU->getSlice()->getSliceIdx() )
-  {
-    printf("BV (%i,%i) for PU%u in CU %u,%u+%u, slice %u points to CTU %u, slice %u\n",
-           mvx, mvy, uiPartIdx, pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu(), uiAbsPartIdx,
-           pcCU->getSlice()->getSliceIdx(), ctuAddr, pcSym->getCtu(ctuAddr)->getSlice()->getSliceIdx());
-  }
-#endif
-
-  pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->setAllMv( cMv, pcCU->getPartitionSize( uiAbsPartIdx ), uiAbsPartIdx, uiDepth, uiPartIdx );
-  if( pcCU->getLastIntraBCMv() != cMv)
-  {
-    pcCU->setLastIntraBCMv( pcCU->getLastIntraBCMv(0), 1 );
-    pcCU->setLastIntraBCMv( cMv );
-  }
-
-}
-
-Void TDecSbac::parseIntraBCBvd( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList )
-{
- 
-  UInt uiSymbol;
-  UInt uiHorAbs;
-  UInt uiVerAbs;
-  UInt uiHorSign = 0;
-  UInt uiVerSign = 0;
-  ContextModel *pCtx = m_cIntraBCBVDSCModel.get( 0 );
-
-  m_pcTDecBinIf->decodeBin( uiHorAbs, *pCtx RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__MVD) );
-
-  pCtx++;
-  m_pcTDecBinIf->decodeBin( uiVerAbs, *pCtx RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__MVD) );
-
-  const Bool bHorAbsGr0 = uiHorAbs != 0;
-  const Bool bVerAbsGr0 = uiVerAbs != 0;
-
-  if( bHorAbsGr0 )
-  {
-    xReadEpExGolomb( uiSymbol, INTRABC_BVD_CODING_EGORDER RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__MVD_EP) );
-    uiHorAbs += uiSymbol;
-
-    m_pcTDecBinIf->decodeBinEP( uiHorSign RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__MVD_EP) );
-  }
-
-  if( bVerAbsGr0 )
-  {
-    xReadEpExGolomb( uiSymbol, INTRABC_BVD_CODING_EGORDER RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__MVD_EP) );
-    uiVerAbs += uiSymbol;
-
-    m_pcTDecBinIf->decodeBinEP( uiVerSign RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__MVD_EP) );
-  }
-
-  const TComMv cMv( uiHorSign ? -Int( uiHorAbs ): uiHorAbs, uiVerSign ? -Int( uiVerAbs ) : uiVerAbs );
-  pcCU->getCUMvField( eRefList )->setAllMvd( cMv, pcCU->getPartitionSize( uiAbsPartIdx ), uiAbsPartIdx, uiDepth, uiPartIdx );
-
-  return; 
-}
-#endif
-
 /** parse merge flag
  * \param pcCU
  * \param uiAbsPartIdx
@@ -1270,10 +1145,6 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   const UChar cuHeight=UChar(pcCU->getSlice()->getSPS()->getMaxCUHeight()>>uiDepth);
   const Int log2DiffMaxMinCodingBlockSize = pcCU->getSlice()->getSPS()->getLog2DiffMaxMinCodingBlockSize();
 
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  assert( ! pcCU->isIntraBC( uiAbsPartIdx ) );
-#endif
-
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
   const TComCodingStatisticsClassType ctype(STATS__CABAC_BITS__PART_SIZE, g_aucConvertToBit[cuWidth]+2);
 #endif
@@ -1344,43 +1215,6 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   pcCU->setPartSizeSubParts( eMode, uiAbsPartIdx, uiDepth );
   pcCU->setSizeSubParts( cuWidth, cuHeight, uiAbsPartIdx, uiDepth );
 }
-
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-/** parse partition size for IBC
-* \param pcCU
-* \param uiAbsPartIdx
-* \param uiDepth
-* \returns Void
-*/
-Void TDecSbac::parsePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
-{
-#if RExt__DECODER_DEBUG_BIT_STATISTICS
- const TComCodingStatisticsClassType ctype(STATS__CABAC_BITS__PART_SIZE, g_aucConvertToBit[pcCU->getSlice()->getSPS()->getMaxCUWidth()>>uiDepth]+2);
-#endif
-
-  UInt uiMaxNumBits = 2;
-
-  if( uiDepth == pcCU->getSlice()->getSPS()->getLog2DiffMaxMinCodingBlockSize() )
-  {
-    uiMaxNumBits++;
-  }
-
-  UInt uiSymbol;
-  UInt uiMode = 0;
-
-  for ( UInt ui = 0; ui < uiMaxNumBits; ui++ )
-  {
-    m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, ui) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype) );
-    if ( uiSymbol )
-    {
-      break;
-    }
-    uiMode++;
-  }
-
-  pcCU->setPartSizeSubParts( (PartSize)uiMode, uiAbsPartIdx, uiDepth ) ;
-}
-#endif
 
 /** parse prediction mode
  * \param pcCU

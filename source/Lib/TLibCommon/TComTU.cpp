@@ -229,11 +229,7 @@ Bool TComTU::useDST(const ComponentID compID)
         TComDataCU *const pcCU       = getCU();
   const UInt              absPartIdx = GetAbsPartIdxTU(compID);
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
   return isLuma(compID) && pcCU->isIntra(absPartIdx);
-#else
-  return isLuma(compID) && (pcCU->isIntra(absPartIdx) || pcCU->isIntraBC(absPartIdx));
-#endif
 }
 
 

@@ -132,23 +132,12 @@ protected:
   Void  xCheckBestMode      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth DEBUG_STRING_FN_DECLARE(sParent) DEBUG_STRING_FN_DECLARE(sTest) DEBUG_STRING_PASS_INTO(Bool bAddSizeInfo=true));
 
   Void  xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU DEBUG_STRING_FN_DECLARE(sDebug), Bool *earlyDetectionSkipMode, Bool checkSkipOnly );
-
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
   Void  xCheckRDCostIntraBCMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU );
-#endif
 
 #if AMP_MRG
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize DEBUG_STRING_FN_DECLARE(sDebug), Bool bUseMRG = false, TComMv *iMVCandList = NULL );
 #else
-  Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize DEBUG_STRING_FN_DECLARE(sDebug), Bool bUseMRG = false  );
-#endif
-#else
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, TComMv *iMVCandList = NULL );
-#else
-  Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
-#endif
 #endif
 
   Void  xCheckRDCostIntra   ( TComDataCU *&rpcBestCU,
@@ -172,20 +161,16 @@ protected:
                              ,PartSize     eSize
                              ,Double&      rdCost
                              ,Bool         testPredOnly=false
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
-                             , TComMv *iMVCandList = NULL
-#endif
+                             ,TComMv*      iMVCandList = NULL
                               DEBUG_STRING_FN_DECLARE(sDebug)
                             );
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
   Void  xCheckRDCostIntraBCMixed( TComDataCU*& rpcBestCU,
                                   TComDataCU*& rpcTempCU,
                                   PartSize     eSize
-                                  , Double&      rdCost
+                                 ,Double&      rdCost
                                   DEBUG_STRING_FN_DECLARE( sDebug )
-                                  , TComMv *iMVCandList
+                                 ,TComMv*      iMVCandList
                                   );
-#endif
 
   Void  xCheckDQP           ( TComDataCU*  pcCU );
   Void  xCheckRDCostHashInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool& isPerfectMatch DEBUG_STRING_FN_DECLARE(sDebug) );

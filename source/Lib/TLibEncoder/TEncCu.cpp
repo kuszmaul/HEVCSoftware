@@ -478,11 +478,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   Bool isPerfectMatch = false;
   Bool terminateAllFurtherRDO = false;
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
   TComMv iMVCandList[4][10];
   memset( iMVCandList, 0, sizeof( TComMv )*4*10 );
-#endif
-
 
   if( uiDepth <= pps.getMaxCuDQPDepth() )
   {
@@ -634,11 +631,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
           if(doNotBlockPu)
           {
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_Nx2N DEBUG_STRING_PASS_INTO( sDebug ), false, iMVCandList[SIZE_Nx2N] );
-#else
-            xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_Nx2N DEBUG_STRING_PASS_INTO(sDebug)  );
-#endif
             rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
             if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_Nx2N )
             {
@@ -647,11 +640,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           }
           if(doNotBlockPu)
           {
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxN DEBUG_STRING_PASS_INTO( sDebug ), false, iMVCandList[SIZE_2NxN] );
-#else
-            xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxN DEBUG_STRING_PASS_INTO(sDebug)  );
-#endif
             rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
             if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_2NxN)
             {
@@ -899,23 +888,13 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         Bool bUse1DSearchFor8x8        = false;
         Bool bSkipIntraBlockCopySearch = false;
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
         if (rpcTempCU->getSlice()->getSPS()->getUseIntraBlockCopy())
         {
           xCheckRDCostIntraBCMerge2Nx2N( rpcBestCU, rpcTempCU );
           rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
         }
-#endif
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
         if( !rpcBestCU->isSkipped(0) ) // avoid very complex intra if it is unlikely
-#else
-        if( (rpcBestCU->getCbf( 0, COMPONENT_Y  ) != 0)                                             ||
-            ((rpcBestCU->getCbf( 0, COMPONENT_Cb ) != 0) && (numberValidComponents > COMPONENT_Cb)) ||
-            ((rpcBestCU->getCbf( 0, COMPONENT_Cr ) != 0) && (numberValidComponents > COMPONENT_Cr)) ||
-            (!rpcBestCU->isIntraBC(0) && !rpcBestCU->isSkipped(0))  
-          ) // avoid very complex intra if it is unlikely
-#endif
         {
           if (m_pcEncCfg->getUseIntraBlockCopyFastSearch())
           {
@@ -948,14 +927,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                   Double dTH3 = std::max( 66 * m_pcRdCost->getLambda(), 800.0 );
                   if( intraCost >= dTH2 ) // only check Nx2N depending on best intraCost (and intraBCcost so far)
                   {
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
                     xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, true, SIZE_Nx2N, adIntraBcCost[SIZE_Nx2N], false, (iMVCandList[SIZE_Nx2N]+8) DEBUG_STRING_PASS_INTO(sDebug));
-#else
-                    xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, true, SIZE_Nx2N, adIntraBcCost[SIZE_Nx2N] DEBUG_STRING_PASS_INTO(sDebug));
-#endif
                     rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
                     intraCost = std::min( intraCost, adIntraBcCost[SIZE_Nx2N] );
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
                     if ( ( !rpcBestCU->getSlice()->getSPS()->getUseIntraBlockCopy() && rpcBestCU->getSlice()->getSliceType() != I_SLICE ) ||
                          ( rpcBestCU->getSlice()->getSPS()->getUseIntraBlockCopy() && !rpcBestCU->getSlice()->isOnlyCurrentPictureAsReference() ) )
                     {
@@ -963,19 +937,13 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                       rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
                       intraCost = std::min( intraCost, adIntraBcCost[SIZE_Nx2N] );
                     }
-#endif
                   }
 
                   if( intraCost >= dTH2 && !bIsLosslessMode ) // only check 2NxN depending on best intraCost (and intraBCcost so far) and if it is not lossless
                   {
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
                     xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, ( bUse1DSearchFor8x8 || intraCost < dTH3 ), SIZE_2NxN, adIntraBcCost[SIZE_2NxN], false, (iMVCandList[SIZE_2NxN]+8) DEBUG_STRING_PASS_INTO(sDebug));
-#else
-                    xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, ( bUse1DSearchFor8x8 || intraCost < dTH3 ), SIZE_2NxN, adIntraBcCost[SIZE_2NxN] DEBUG_STRING_PASS_INTO(sDebug));
-#endif
                     rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
                     intraCost = std::min( intraCost, adIntraBcCost[SIZE_2NxN] );
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
                     if ( ( !rpcBestCU->getSlice()->getSPS()->getUseIntraBlockCopy() && rpcBestCU->getSlice()->getSliceType() != I_SLICE ) ||
                          ( rpcBestCU->getSlice()->getSPS()->getUseIntraBlockCopy() && !rpcBestCU->getSlice()->isOnlyCurrentPictureAsReference() ) )
                     {
@@ -983,25 +951,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                       rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
                       intraCost = std::min( intraCost, adIntraBcCost[SIZE_2NxN] );
                     }
-#endif
                 }
-
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-                dTH2 = std::max( 110 * m_pcRdCost->getLambda(), 60.0 );
-                dTH3 = std::max( 112 * m_pcRdCost->getLambda(), 66.0 );
-                if( intraCost >= dTH2 ) // only check NxN depending on best intraCost (and intraBCcost so far)
-                {
-                  xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, (intraCost < dTH3), SIZE_NxN, adIntraBcCost[SIZE_NxN] DEBUG_STRING_PASS_INTO(sDebug));
-                }
-                else
-                {
-                  xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, false, SIZE_NxN, adIntraBcCost[SIZE_NxN], true DEBUG_STRING_PASS_INTO(sDebug));
-                }
-                {
-                  rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-                  //intraCost = std::min( intraCost, adIntraBcCost[SIZE_2NxN] );
-                }
-#endif
               }
             }
             else
@@ -1012,14 +962,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
               rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
               xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, bUse1DSearchFor8x8, SIZE_2NxN, adIntraBcCost[SIZE_2NxN] DEBUG_STRING_PASS_INTO(sDebug));
               rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-
-              if( uiDepth == sps.getLog2DiffMaxMinCodingBlockSize() )
-              {
-                xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, bUse1DSearchFor8x8, SIZE_NxN, adIntraBcCost[SIZE_NxN] DEBUG_STRING_PASS_INTO(sDebug));
-                rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-              }
-#endif
             }
           }
         }
@@ -1049,7 +991,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     }
 
     // If Intra BC keep last coded Mv
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
     if(rpcBestCU->isInter(0))
     {
       Int iRefIdxFirst = rpcBestCU->getCUMvField( REF_PIC_LIST_0 )->getRefIdx( 0 );
@@ -1121,46 +1062,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         }
       }
     } // is inter
-#else
-    if( rpcBestCU->getPredictionMode(0) == MODE_INTRABC )
-    {
-      if( rpcBestCU->getPartitionSize( 0 ) == SIZE_2Nx2N)
-      {
-        if( rpcBestCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( rpcBestCU->getTotalNumPart() - 1 ) != rpcBestCU->getLastIntraBCMv(0))
-        {
-          rpcBestCU->setLastIntraBCMv( rpcBestCU->getLastIntraBCMv(0), 1 );
-          rpcBestCU->setLastIntraBCMv( rpcBestCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( rpcBestCU->getTotalNumPart() - 1 ) );
-        }
-      }
-      else if(rpcBestCU->getPartitionSize( 0 ) == SIZE_2NxN || rpcBestCU->getPartitionSize( 0 ) == SIZE_Nx2N)
-      {
-        // Part 0
-        if( rpcBestCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( 0 ) != rpcBestCU->getLastIntraBCMv())
-        {
-          rpcBestCU->setLastIntraBCMv( rpcBestCU->getLastIntraBCMv(), 1);
-          rpcBestCU->setLastIntraBCMv( rpcBestCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( 0 ) );
-        }
-        // Part 1
-        if( rpcBestCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( rpcBestCU->getTotalNumPart() - 1 ) != rpcBestCU->getLastIntraBCMv())
-        {
-          rpcBestCU->setLastIntraBCMv( rpcBestCU->getLastIntraBCMv(), 1);
-          rpcBestCU->setLastIntraBCMv( rpcBestCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( rpcBestCU->getTotalNumPart() - 1 ) );
-        }
-      }
-      else
-      {
-        // NxN
-        for(Int part=0; part<4; part++)
-        {
-          if( rpcBestCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( rpcBestCU->getTotalNumPart() - 4 + part ) != rpcBestCU->getLastIntraBCMv())
-          {
-            rpcBestCU->setLastIntraBCMv( rpcBestCU->getLastIntraBCMv(), 1 );
-            rpcBestCU->setLastIntraBCMv( rpcBestCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( rpcBestCU->getTotalNumPart() - 4 + part ) );
-          }
-        }
-      }
-    }
-#endif
     if (rpcBestCU->getPLTModeFlag(0))
     {
       rpcBestCU->saveLastPLTInLcuFinal( rpcBestCU, 0, MAX_NUM_COMPONENT );
@@ -1557,58 +1458,41 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     return;
   }
 
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  if (pcCU->getSlice()->getSPS()->getUseIntraBlockCopy())
+  m_pcEntropyCoder->encodePredMode( pcCU, uiAbsPartIdx );
+
+#if SCM_S0043_PLT_DELTA_QP
+  Bool bCodeDQP = getdQPFlag();
+  Bool codeChromaQpAdj = getCodeChromaQpAdjFlag();
+
+  m_pcEntropyCoder->encodePLTModeInfo( pcCU, uiAbsPartIdx, false, &bCodeDQP, &codeChromaQpAdj );
+#endif
+
+  if ( pcCU->getPLTModeFlag(uiAbsPartIdx) )
   {
-    m_pcEntropyCoder->encodeIntraBCFlag( pcCU, uiAbsPartIdx );
-    if ( pcCU->isIntraBC( uiAbsPartIdx ) )
-    {
-      m_pcEntropyCoder->encodePartSizeIntraBC( pcCU, uiAbsPartIdx );
-      m_pcEntropyCoder->encodeIntraBC( pcCU, uiAbsPartIdx );
-    }
+#if SCM_S0043_PLT_DELTA_QP
+    setCodeChromaQpAdjFlag( codeChromaQpAdj );
+    setdQPFlag( bCodeDQP );
+#endif
+    finishCU(pcCU,uiAbsPartIdx,uiDepth);
+    return;
   }
 
-  if ( !pcCU->isIntraBC( uiAbsPartIdx ) )
+  m_pcEntropyCoder->encodePartSize( pcCU, uiAbsPartIdx, uiDepth );
+
+  if (pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N )
   {
-#endif
-    m_pcEntropyCoder->encodePredMode( pcCU, uiAbsPartIdx );
+    m_pcEntropyCoder->encodeIPCMInfo( pcCU, uiAbsPartIdx );
 
-#if SCM_S0043_PLT_DELTA_QP
-    Bool bCodeDQP = getdQPFlag();
-    Bool codeChromaQpAdj = getCodeChromaQpAdjFlag();
-
-    m_pcEntropyCoder->encodePLTModeInfo( pcCU, uiAbsPartIdx, false, &bCodeDQP, &codeChromaQpAdj );
-#endif
-
-    if ( pcCU->getPLTModeFlag(uiAbsPartIdx) )
+    if(pcCU->getIPCMFlag(uiAbsPartIdx))
     {
-#if SCM_S0043_PLT_DELTA_QP
-      setCodeChromaQpAdjFlag( codeChromaQpAdj );
-      setdQPFlag( bCodeDQP );
-#endif
+      // Encode slice finish
       finishCU(pcCU,uiAbsPartIdx,uiDepth);
       return;
     }
-
-    m_pcEntropyCoder->encodePartSize( pcCU, uiAbsPartIdx, uiDepth );
-
-    if (pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N )
-    {
-      m_pcEntropyCoder->encodeIPCMInfo( pcCU, uiAbsPartIdx );
-
-      if(pcCU->getIPCMFlag(uiAbsPartIdx))
-      {
-        // Encode slice finish
-        finishCU(pcCU,uiAbsPartIdx,uiDepth);
-        return;
-      }
-    }
-
-    // prediction Info ( Intra : direction mode, Inter : Mv, reference idx )
-    m_pcEntropyCoder->encodePredInfo( pcCU, uiAbsPartIdx );
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
   }
-#endif
+
+  // prediction Info ( Intra : direction mode, Inter : Mv, reference idx )
+  m_pcEntropyCoder->encodePredInfo( pcCU, uiAbsPartIdx );
 
   // Encode Coefficients
 #if !SCM_S0043_PLT_DELTA_QP
@@ -1739,7 +1623,6 @@ Int  TEncCu::updateCtuDataISlice(TComDataCU* pCtu, Int width, Int height)
   return(iSumHad);
 }
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
 Void TEncCu::xCheckRDCostIntraBCMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
 {
   TComMvField  cMvFieldNeighbours[2 * MRG_MAX_NUM_CANDS]; // double length for mv of both lists
@@ -1883,7 +1766,6 @@ Void TEncCu::xCheckRDCostIntraBCMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*&
     }
   }
 }
-#endif
 
 /** check RD costs for a CU block encoded with merge
  * \param rpcBestCU
@@ -1936,12 +1818,10 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
       {
         if( !(bestIsSkip && uiNoResidual == 0) )
         {
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
           if ( (uhInterDirNeighbours[uiMergeCand] == 1 || uhInterDirNeighbours[uiMergeCand] == 3) && rpcTempCU->getSlice()->getRefPic( REF_PIC_LIST_0, cMvFieldNeighbours[uiMergeCand<<1].getRefIdx() )->getPOC() == rpcTempCU->getSlice()->getPOC() )
           {
             continue;
           }
-#endif
 
           DEBUG_STRING_NEW(tmpStr)
           // set MC parameters
@@ -2082,17 +1962,9 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 
 
 #if AMP_MRG
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
 Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize DEBUG_STRING_FN_DECLARE(sDebug), Bool bUseMRG, TComMv *iMVCandList)
 #else
-Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize DEBUG_STRING_FN_DECLARE(sDebug), Bool bUseMRG)
-#endif
-#else
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
 Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, TComMv *iMVCandList )
-#else
-Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize )
-#endif
 #endif
 {
   DEBUG_STRING_NEW(sTest)
@@ -2106,17 +1978,9 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
 #if AMP_MRG
   rpcTempCU->setMergeAMP (true);
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
   m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth] DEBUG_STRING_PASS_INTO(sTest), false, bUseMRG, iMVCandList );
 #else
-  m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth] DEBUG_STRING_PASS_INTO(sTest), false, bUseMRG );
-#endif
-#else
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
   m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], false, iMVCandList );
-#else
-  m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth] );
-#endif
 #endif
 
 #if AMP_MRG
@@ -2235,13 +2099,6 @@ Void TEncCu::xCheckRDCostIntraCSC( TComDataCU *&rpcBestCU,
 
   m_pcEntropyCoder->encodeSkipFlag ( rpcTempCU, 0, true );
 
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  if ( rpcTempCU->getSlice()->getSPS()->getUseIntraBlockCopy() )
-  {
-    m_pcEntropyCoder->encodeIntraBCFlag( rpcTempCU, 0, true );
-  }
-#endif
-
   m_pcEntropyCoder->encodePredMode( rpcTempCU, 0, true );
 #if SCM_S0043_PLT_DELTA_QP
   Bool bCodeDQP = getdQPFlag();
@@ -2328,14 +2185,6 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU *&rpcBestCU,
   }
 
   m_pcEntropyCoder->encodeSkipFlag ( rpcTempCU, 0,          true );
-
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  if (rpcTempCU->getSlice()->getSPS()->getUseIntraBlockCopy())
-  {
-    m_pcEntropyCoder->encodeIntraBCFlag ( rpcTempCU, 0,       true );
-  }
-#endif
-
   m_pcEntropyCoder->encodePredMode( rpcTempCU, 0,          true );
 #if SCM_S0043_PLT_DELTA_QP
   Bool bCodeDQP = getdQPFlag();
@@ -2373,11 +2222,9 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
                                   TComDataCU *&rpcTempCU,
                                   Bool         bUse1DSearchFor8x8,
                                   PartSize     eSize,
-                                  Double      &rdCost
-                                , Bool         testPredOnly
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
-                                , TComMv *iMVCandList
-#endif
+                                  Double      &rdCost,
+                                  Bool         testPredOnly,
+                                  TComMv      *iMVCandList
                                   DEBUG_STRING_FN_DECLARE(sDebug))
 {
   DEBUG_STRING_NEW(sTest)
@@ -2386,11 +2233,7 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
   rpcTempCU->setDepthSubParts( uiDepth, 0 );
   rpcTempCU->setSkipFlagSubParts( false, 0, uiDepth );
   rpcTempCU->setPartSizeSubParts( eSize, 0, uiDepth );
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
   rpcTempCU->setPredModeSubParts( MODE_INTER, 0, uiDepth );
-#else
-  rpcTempCU->setPredModeSubParts( MODE_INTRABC, 0, uiDepth );
-#endif
 
   rpcTempCU->setIntraDirSubParts( CHANNEL_TYPE_LUMA, DC_IDX, 0, uiDepth );
   rpcTempCU->setIntraDirSubParts( CHANNEL_TYPE_CHROMA, DC_IDX, 0, uiDepth );
@@ -2411,11 +2254,10 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
                                                     m_ppcRecoYuvTemp[uiDepth]
                                                     DEBUG_STRING_PASS_INTO(sTest),
                                                     bUse1DSearchFor8x8,
-                                                    false
-                                                  , testPredOnly
+                                                    false,
+                                                    testPredOnly
                                                     );
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
   if ( bValid && (rpcTempCU->getWidth( 0 ) <= 16) && (eSize == SIZE_2NxN || eSize == SIZE_Nx2N) )
   {
     Int iDummyWidth, iDummyHeight;
@@ -2424,7 +2266,6 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
     iMVCandList[0] = rpcTempCU->getCUMvField( REF_PIC_LIST_0 )->getMv( 0 );
     iMVCandList[1] = rpcTempCU->getCUMvField( REF_PIC_LIST_0 )->getMv( uiPartAddr );
   }
-#endif
   if( rpcTempCU->getSlice()->getPPS()->getUseColourTrans() && m_pcEncCfg->getRGBFormatFlag() && (!rpcTempCU->getCUTransquantBypass(0) || (sps.getBitDepth( CHANNEL_TYPE_LUMA ) == sps.getBitDepth( CHANNEL_TYPE_CHROMA ))) )
   {
     m_ppcOrigYuv[uiDepth]->copyFromPicYuv( rpcTempCU->getPic()->getPicYuvOrg(), rpcTempCU->getCtuRsAddr(), rpcTempCU->getZorderIdxInCtu() );
@@ -2451,82 +2292,75 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
 
       if( uiColourTransform && m_pcEncCfg->getRGBFormatFlag())
       {
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
         m_pcPredSearch->motionCompensation ( rpcTempCU, m_ppcPredYuvTemp[uiDepth] );
-#else
-        for ( Int iPartIdx = 0; iPartIdx < rpcTempCU->getNumPartitions(); iPartIdx++ )
-        {
-          m_pcPredSearch->intraBlockCopy( rpcTempCU, m_ppcPredYuvTemp[uiDepth], iPartIdx );
-        }
-#endif
       }
 
       rpcTempCU->setColourTransformSubParts((uiColourTransform? true: false), 0, uiDepth);
       m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uiDepth], (bColourTrans ? m_ppcPredYuvBest[uiDepth] : m_ppcPredYuvTemp[uiDepth]), m_ppcResiYuvTemp[uiDepth], m_ppcResiYuvBest[uiDepth], m_ppcRecoYuvTemp[uiDepth], false, m_ppcNoCorrYuv  [uiDepth] DEBUG_STRING_PASS_INTO(sTest) );
-    rpcTempCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
-    rdCost = rpcTempCU->getTotalCost();
+      rpcTempCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
+      rdCost = rpcTempCU->getTotalCost();
 
 #ifdef DEBUG_STRING
-    DebugInterPredResiReco(sTest, *(m_ppcPredYuvTemp[uiDepth]), *(m_ppcResiYuvBest[uiDepth]), *(m_ppcRecoYuvTemp[uiDepth]), DebugStringGetPredModeMask(rpcTempCU->getPredictionMode(0)));
+      DebugInterPredResiReco(sTest, *(m_ppcPredYuvTemp[uiDepth]), *(m_ppcResiYuvBest[uiDepth]), *(m_ppcRecoYuvTemp[uiDepth]), DebugStringGetPredModeMask(rpcTempCU->getPredictionMode(0)));
 #endif
 
-    if(!i)
-    {
-      if( rdCost < m_ppcBestCU[uiDepth]->tmpIntraBCRDCost )
+      if(!i)
       {
-        m_ppcBestCU[uiDepth]->tmpIntraBCRDCost   = rdCost;
-        m_ppcBestCU[uiDepth]->bIntraBCCSCEnabled = true;
-        m_ppcTempCU[uiDepth]->tmpIntraBCRDCost   = rdCost;
-        m_ppcTempCU[uiDepth]->bIntraBCCSCEnabled = true;
-      }
-    }
-    else
-    {
-      if( rdCost < m_ppcBestCU[uiDepth]->tmpIntraBCRDCost )
-      {
-        m_ppcBestCU[uiDepth]->tmpIntraBCRDCost   = rdCost;
-        m_ppcBestCU[uiDepth]->bIntraBCCSCEnabled = false;
-        m_ppcTempCU[uiDepth]->tmpIntraBCRDCost   = rdCost;
-        m_ppcTempCU[uiDepth]->bIntraBCCSCEnabled = false;
-      }
-    }
-    xCheckDQP( rpcTempCU );
-    rpcTempCUPre = rpcTempCU;
-    xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTest));
-    if( bEnableTrans )
-    {
-      if( testPredOnly || !rpcBestCU->isIntraBC(0) )
-      {
-        return;
-      }
-      Bool bParentUseCSC = ( ((uiDepth > 2)) && (m_ppcBestCU[uiDepth -1]->bIntraBCCSCEnabled) );
-      if(!i && (!rpcTempCUPre->getQtRootCbf(0) || bParentUseCSC))
-      {
-        return;
-      }
-      else if(!i)
-      {
-        dCostFst = rdCost;
-        if( rpcTempCU != rpcTempCUPre )
+        if( rdCost < m_ppcBestCU[uiDepth]->tmpIntraBCRDCost )
         {
-          rpcTempCU->initEstData( uiDepth, orgQP, bTransquantBypassFlag );
-          rpcTempCU->copyPartFrom( rpcBestCU, 0, uiDepth );
-          bColourTrans = true;
+          m_ppcBestCU[uiDepth]->tmpIntraBCRDCost   = rdCost;
+          m_ppcBestCU[uiDepth]->bIntraBCCSCEnabled = true;
+          m_ppcTempCU[uiDepth]->tmpIntraBCRDCost   = rdCost;
+          m_ppcTempCU[uiDepth]->bIntraBCCSCEnabled = true;
         }
       }
       else
       {
-        if ( rpcTempCU == rpcTempCUPre )
+        if( rdCost < m_ppcBestCU[uiDepth]->tmpIntraBCRDCost )
         {
-          rdCost = dCostFst;
+          m_ppcBestCU[uiDepth]->tmpIntraBCRDCost   = rdCost;
+          m_ppcBestCU[uiDepth]->bIntraBCCSCEnabled = false;
+          m_ppcTempCU[uiDepth]->tmpIntraBCRDCost   = rdCost;
+          m_ppcTempCU[uiDepth]->bIntraBCCSCEnabled = false;
         }
       }
+      xCheckDQP( rpcTempCU );
+      rpcTempCUPre = rpcTempCU;
+      xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(sDebug) DEBUG_STRING_PASS_INTO(sTest));
+      if( bEnableTrans )
+      {
+        if( testPredOnly || !rpcBestCU->isIntraBC(0) )
+        {
+          return;
+        }
+        Bool bParentUseCSC = ( ((uiDepth > 2)) && (m_ppcBestCU[uiDepth -1]->bIntraBCCSCEnabled) );
+        if(!i && (!rpcTempCUPre->getQtRootCbf(0) || bParentUseCSC))
+        {
+          return;
+        }
+        else if(!i)
+        {
+          dCostFst = rdCost;
+          if( rpcTempCU != rpcTempCUPre )
+          {
+            rpcTempCU->initEstData( uiDepth, orgQP, bTransquantBypassFlag );
+            rpcTempCU->copyPartFrom( rpcBestCU, 0, uiDepth );
+            bColourTrans = true;
+          }
+        }
+        else
+        {
+          if ( rpcTempCU == rpcTempCUPre )
+          {
+            rdCost = dCostFst;
+          }
+        }
+      }
+      else
+      {
+        return;
+      }
     }
-    else
-    {
-      return;
-    }
-  }
   }
   else
   {
@@ -2534,7 +2368,6 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
   }
 }
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
 Void TEncCu::xCheckRDCostIntraBCMixed( TComDataCU *&rpcBestCU,
                                                 TComDataCU *&rpcTempCU,
                                                 PartSize     eSize,
@@ -2643,7 +2476,6 @@ Void TEncCu::xCheckRDCostIntraBCMixed( TComDataCU *&rpcBestCU,
     rdCost = MAX_DOUBLE;
   }
 }
-#endif
 
 Void TEncCu::xCheckRDCostHashInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool& isPerfectMatch DEBUG_STRING_FN_DECLARE(sDebug) )
 {
@@ -2767,14 +2599,6 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
   }
 
   m_pcEntropyCoder->encodeSkipFlag ( rpcTempCU, 0,          true );
-
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  if (rpcTempCU->getSlice()->getSPS()->getUseIntraBlockCopy())
-  {
-    m_pcEntropyCoder->encodeIntraBCFlag ( rpcTempCU, 0,       true );
-  }
-#endif
-
   m_pcEntropyCoder->encodePredMode ( rpcTempCU, 0,          true );
 #if SCM_S0043_PLT_DELTA_QP
   m_pcEntropyCoder->encodePLTModeInfo( rpcTempCU, 0, true );

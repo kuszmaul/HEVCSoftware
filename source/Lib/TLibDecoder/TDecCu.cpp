@@ -290,7 +290,7 @@ Void TDecCu::xDecodeCU( TComDataCU*const pcCU, const UInt uiAbsPartIdx, const UI
         pcCU->setMVPNumSubParts( 0, RefPicList( uiRefListIdx ), uiAbsPartIdx, 0, uiDepth);
         pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvd( cTmpMv, SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
         pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvField( cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ], SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
+
         if ( uiRefListIdx == 0 && uhInterDirNeighbours[uiMergeIndex] == 1 &&
              pcCU->getSlice()->getRefPic( REF_PIC_LIST_0, cMvFieldNeighbours[uiMergeIndex<<1].getRefIdx() )->getPOC() == pcCU->getSlice()->getPOC() )
         {
@@ -300,77 +300,48 @@ Void TDecCu::xDecodeCU( TComDataCU*const pcCU, const UInt uiAbsPartIdx, const UI
             pcCU->setLastIntraBCMv( cMvFieldNeighbours[uiMergeIndex<<1].getMv() );
           }
         }
-#endif
       }
     }
     xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, isLastCtuOfSliceSegment );
     return;
   }
 
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  if (pcCU->getSlice()->getSPS()->getUseIntraBlockCopy())
-  {
-    m_pcEntropyDecoder->decodeIntraBCFlag( pcCU, uiAbsPartIdx, 0, uiDepth );
-  }
-
-  if ( pcCU->isIntraBC( uiAbsPartIdx ) )
-  {
-    pcCU->setSizeSubParts( pcCU->getSlice()->getSPS()->getMaxCUWidth()>>uiDepth, pcCU->getSlice()->getSPS()->getMaxCUHeight()>>uiDepth, uiAbsPartIdx, uiDepth );
-    m_pcEntropyDecoder->decodePartSizeIntraBC( pcCU, uiAbsPartIdx, uiDepth );
-
-    const PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
-    const UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxTotalCUDepth() - uiDepth ) << 1 ) ) >> 4;
-    const UInt iNumPart = pcCU->getNumPartitions( uiAbsPartIdx );
-
-    UInt tempOffset = uiAbsPartIdx;
-    for( UInt iPartIdx = 0; iPartIdx < iNumPart ; ++iPartIdx )
-    {
-      m_pcEntropyDecoder->decodeIntraBC( pcCU, tempOffset, iPartIdx, uiDepth );
-      tempOffset += uiPUOffset;
-    }
-  }
-  else
-  {
-#endif
-    m_pcEntropyDecoder->decodePredMode( pcCU, uiAbsPartIdx, uiDepth );
+  m_pcEntropyDecoder->decodePredMode( pcCU, uiAbsPartIdx, uiDepth );
 
 #if SCM_S0043_PLT_DELTA_QP
-    Bool bCodeDQP = getdQPFlag();
-    Bool isChromaQpAdjCoded = getIsChromaQpAdjCoded();
+  Bool bCodeDQP = getdQPFlag();
+  Bool isChromaQpAdjCoded = getIsChromaQpAdjCoded();
 
-    m_pcEntropyDecoder->decodePLTModeInfo( pcCU, uiAbsPartIdx, uiDepth, bCodeDQP, isChromaQpAdjCoded );
+  m_pcEntropyDecoder->decodePLTModeInfo( pcCU, uiAbsPartIdx, uiDepth, bCodeDQP, isChromaQpAdjCoded );
 #endif
 
-    if (pcCU->getPLTModeFlag(uiAbsPartIdx) )
-    {
+  if (pcCU->getPLTModeFlag(uiAbsPartIdx) )
+  {
 #if SCM_S0043_PLT_DELTA_QP
-      setIsChromaQpAdjCoded( isChromaQpAdjCoded );
+    setIsChromaQpAdjCoded( isChromaQpAdjCoded );
 #else
-      Bool bCodeDQP = getdQPFlag();
+    Bool bCodeDQP = getdQPFlag();
 #endif
-      setdQPFlag(bCodeDQP);
+    setdQPFlag(bCodeDQP);
+    xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, isLastCtuOfSliceSegment );
+    return;
+  }
+
+  m_pcEntropyDecoder->decodePartSize( pcCU, uiAbsPartIdx, uiDepth );
+
+  if (pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N )
+  {
+    m_pcEntropyDecoder->decodeIPCMInfo( pcCU, uiAbsPartIdx, uiDepth );
+
+    if(pcCU->getIPCMFlag(uiAbsPartIdx))
+    {
       xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, isLastCtuOfSliceSegment );
       return;
     }
-
-    m_pcEntropyDecoder->decodePartSize( pcCU, uiAbsPartIdx, uiDepth );
-
-    if (pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N )
-    {
-      m_pcEntropyDecoder->decodeIPCMInfo( pcCU, uiAbsPartIdx, uiDepth );
-
-      if(pcCU->getIPCMFlag(uiAbsPartIdx))
-      {
-        xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, isLastCtuOfSliceSegment );
-        return;
-      }
-    }
-
-    // prediction mode ( Intra : direction mode, Inter : Mv, reference idx )
-    m_pcEntropyDecoder->decodePredInfo( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth]);
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
   }
-#endif
+
+  // prediction mode ( Intra : direction mode, Inter : Mv, reference idx )
+  m_pcEntropyDecoder->decodePredInfo( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth]);
 
   // Coefficient decoding
 #if !SCM_S0043_PLT_DELTA_QP
@@ -448,11 +419,6 @@ Void TDecCu::xDecompressCU( TComDataCU* pCtu, UInt uiAbsPartIdx,  UInt uiDepth )
     case MODE_INTRA:
       xReconIntraQT( m_ppcCU[uiDepth], uiDepth );
       break;
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION  
-    case MODE_INTRABC:
-      xReconIntraBC( m_ppcCU[uiDepth], uiDepth );
-      break;
-#endif
     default:
       assert(0);
       break;
@@ -483,7 +449,7 @@ Void TDecCu::xDecompressCU( TComDataCU* pCtu, UInt uiAbsPartIdx,  UInt uiDepth )
 Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
 {
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION && SCM_T0048_IBC_VALIDATE_SLICES
+#if SCM_T0048_IBC_VALIDATE_SLICES
   Int numParts = pcCU->getNumPartitions();
   for (Int iPartIdx = 0; iPartIdx < numParts; iPartIdx++)
   {
@@ -552,75 +518,6 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
 #endif
 
 }
-
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-Void TDecCu::xReconIntraBC( TComDataCU* pcCU, UInt uiDepth )
-{
-  // intra prediction
-  const UInt iNumPart = pcCU->getNumPartitions();
-  for( Int iPartIdx = 0 ; iPartIdx < iNumPart ; ++iPartIdx )
-  {
-    // Check Mv validity
-    Int         iWidth;
-    Int         iHeight;
-    UInt        uiPartAddr;
-
-    pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iWidth, iHeight );
-    TComMv  cMv         = pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->getMv( uiPartAddr );
-    const UInt uiMaxCuWidth         = pcCU->getSlice()->getSPS()->getMaxCUWidth();
-    const UInt uiMaxCuHeight        = pcCU->getSlice()->getSPS()->getMaxCUHeight();
-
-    // Curr position
-    Int posX         = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiPartAddr] ];
-    Int posY         = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiPartAddr] ];
-    // Ref Position
-    Int refPosX      = posX + cMv.getHor() + iWidth - 1;
-    Int refPosY      = posY + cMv.getVer() + iHeight - 1;
-    // CTB Position
-    Int currCTBPosX  = posX / uiMaxCuWidth;
-    Int currCTBPosY  = posY / uiMaxCuHeight;
-    Int refCTBPosX   = refPosX / uiMaxCuWidth;
-    Int refCTBPosY   = refPosY / uiMaxCuHeight;
-
-    const Int diffX = currCTBPosX - refCTBPosX;
-    const Int diffY = currCTBPosY - refCTBPosY;
-
-    if(  diffY < -diffX )
-    {
-      printf("Error Position uiDepth:%d Pos:(%d,%d) CTB_Curr:(%d,%d) mv:(%d,%d) CTB_REF:(%d,%d) \n", uiDepth, posX, posY, currCTBPosX, currCTBPosY, cMv.getHor(), cMv.getVer(), refCTBPosX, refCTBPosY);
-      fflush(stdout);
-      assert(0);
-    }
-    m_pcPrediction->intraBlockCopy( pcCU, m_ppcYuvReco[uiDepth], iPartIdx );
-  }
-
-#ifdef DEBUG_STRING
-  const Int debugPredModeMask=DebugStringGetPredModeMask(MODE_INTRABC);
-  if (DebugOptionList::DebugString_Pred.getInt()&debugPredModeMask) printBlockToStream(std::cout, "###inter-pred: ", *(m_ppcYuvReco[uiDepth]));
-#endif
-
-  // texture recon
-  xDecodeInterTexture( pcCU, uiDepth );
-
-#ifdef DEBUG_STRING
-  if (DebugOptionList::DebugString_Resi.getInt()&debugPredModeMask) printBlockToStream(std::cout, "###inter-resi: ", *(m_ppcYuvResi[uiDepth]));
-#endif
-
-  // clip for only non-zero cbp case
-  if  ( pcCU->getQtRootCbf( 0) )
-  {
-    m_ppcYuvReco[uiDepth]->addClip( m_ppcYuvReco[uiDepth], m_ppcYuvResi[uiDepth], 0, pcCU->getWidth( 0 ), pcCU->getSlice()->getSPS()->getBitDepths() );
-  }
-  else
-  {
-    m_ppcYuvReco[uiDepth]->copyPartToPartYuv( m_ppcYuvReco[uiDepth],0, pcCU->getWidth( 0 ),pcCU->getHeight( 0 ));
-  }
-#ifdef DEBUG_STRING
-  if (DebugOptionList::DebugString_Reco.getInt()&debugPredModeMask) printBlockToStream(std::cout, "###inter-reco: ", *(m_ppcYuvReco[uiDepth]));
-#endif
-
-}
-#endif
 
 Void
 TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,

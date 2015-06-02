@@ -108,9 +108,6 @@ public:
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 
   Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  Void codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
   Void codeColourTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
 
   Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -146,13 +143,6 @@ public:
   Void codeDFSvlc       ( Int   iCode, const Char *pSymbolName );
 
   Void codeExplicitRdpcmMode( TComTU &rTu, const ComponentID compID );
-
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  Void codeIntraBCFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  Void codeIntraBC       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  Void codeIntraBCBvd    ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
-  Void estBvdBin0Cost    (Int *Bin0Cost) { assert(0); }
-#endif
 };
 
 //! \}
