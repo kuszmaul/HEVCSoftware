@@ -6779,13 +6779,9 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
     }
 
     const Int boundY = (0 - iRoiHeight - puPelOffsetY);
-#if SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU
     Int lowY = ((pcCU->getPartitionSize(uiPartAddr) == SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU) && m_pcEncCfg->getUseIntraBCFullFrameSearch())
              ? -cuPelY : max(iSrchRngVerTop, 0 - cuPelY);
     for(Int y = boundY ; y >= lowY ; y-- )
-#else
-    for ( Int y = boundY; y >= max( iSrchRngVerTop, 0 - cuPelY ); y-- )
-#endif
     {
       if ( !isValidIntraBCSearchArea( pcCU, iPartIdx, 0, chromaROIStartXInPixels, y, chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels, uiPartOffset ) )
       {
@@ -6821,12 +6817,8 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
       }
     }
 
-#if SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU
     const Int boundX = ((pcCU->getPartitionSize(uiPartAddr) == SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU) && m_pcEncCfg->getUseIntraBCFullFrameSearch())
                      ? -cuPelX : max(iSrchRngHorLeft, - cuPelX);
-#else
-    const Int boundX = max(iSrchRngHorLeft, - cuPelX);
-#endif
     for(Int x = 0 - iRoiWidth - puPelOffsetX ; x >= boundX ; --x )
     {
       if (!isValidIntraBCSearchArea(pcCU, iPartIdx, x, chromaROIStartXInPixels, 0, chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset))
