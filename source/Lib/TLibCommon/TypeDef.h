@@ -289,7 +289,6 @@
 //------------------------------------------------
 
 #define SCM_T0227_INTRABC_SIG_UNIFICATION                1 ///< unify intra BC mode and inter mode
-#define SCM_T0132_ACT_CLIP                               1 ///< IACT Clipping
 #define SCM_FIX_FOX_TICKET_1376                          1 ///< Fix for ticket #1376
 #define SCM_FIX_PLT_MEM_LEAK                             1 ///< Fix for memory leak in palette mode
 #define SCM_FIX_T0227_INTEGRATION                        1 ///< Fix for bug in T0227 integration

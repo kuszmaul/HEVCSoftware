@@ -2364,9 +2364,7 @@ TEncSearch::xRecurIntraCodingQTCSC( TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TComY
   const UInt          numberValidComponents = getNumberValidComponents(chFmt);
   Bool                bCheckFull            = ( uiLog2TrSize  <= pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize() );
   Bool                bCheckSplit           = ( bTestMaxTUSize && bCheckFull )? false: ( uiLog2TrSize  >  pcCU->getQuadtreeTULog2MinSizeInCU(uiAbsPartIdx) );
-#if SCM_T0132_ACT_CLIP
   const Bool          extendedPrecision     = rTu.getCU()->getSlice()->getSPS()->getUseExtendedPrecision();
-#endif
 
   if(m_pcEncCfg->getTransquantBypassInferTUSplit() && pcCU->isLosslessCoded(uiAbsPartIdx) && bCheckFull)
   {
@@ -2433,11 +2431,7 @@ TEncSearch::xRecurIntraCodingQTCSC( TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TComY
       }
     }
 
-#if SCM_T0132_ACT_CLIP
     pcResiYuv->convert(extendedPrecision, rTu.getRect(COMPONENT_Y).x0, rTu.getRect(COMPONENT_Y).y0, rTu.getRect(COMPONENT_Y).width, true, pcCU->getSlice()->getSPS()->getBitDepths(), pcCU->isLosslessCoded(0));
-#else
-    pcResiYuv->convert(rTu.getRect(COMPONENT_Y).x0, rTu.getRect(COMPONENT_Y).y0, rTu.getRect(COMPONENT_Y).width, true, pcCU->getSlice()->getSPS()->getBitDepths(), pcCU->isLosslessCoded(0));
-#endif
     Char preCalcAlpha[MAX_NUM_COMPONENT] = {0, 0, 0};
 
     if( pcCU->getSlice()->getPPS()->getUseCrossComponentPrediction() && !m_pcEncCfg->getUseReconBasedCrossCPredictionEstimate() ) 
@@ -2609,11 +2603,7 @@ TEncSearch::xRecurIntraCodingQTCSC( TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TComY
 
     uiSingleBits = xGetIntraBitsQT( rTu, true, true, false );
 
-#if SCM_T0132_ACT_CLIP
     m_pcQTTempTComYuv[ uiQTLayer ].convert(extendedPrecision, rTu.getRect(COMPONENT_Y).x0, rTu.getRect(COMPONENT_Y).y0, rTu.getRect(COMPONENT_Y).width, false, pcCU->getSlice()->getSPS()->getBitDepths(), pcCU->isLosslessCoded(0));
-#else
-    m_pcQTTempTComYuv[ uiQTLayer ].convert(rTu.getRect(COMPONENT_Y).x0, rTu.getRect(COMPONENT_Y).y0, rTu.getRect(COMPONENT_Y).width, false, pcCU->getSlice()->getSPS()->getBitDepths(), pcCU->isLosslessCoded(0));
-#endif
 
     for( UInt ch = 0; ch < numberValidComponents; ch++ )
     {
@@ -8587,9 +8577,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
   // The pcCU is not marked as skip-mode at this point, and its m_pcTrCoeff, m_pcArlCoeff, m_puhCbf, m_puhTrIdx will all be 0.
   // due to prior calls to TComDataCU::initEstData(  );
   const Bool iColourTransform = pcCU->getColourTransform(0);
-#if SCM_T0132_ACT_CLIP
   const Bool extendedPrecision = pcCU->getSlice()->getSPS()->getUseExtendedPrecision();
-#endif
   if ( bSkipResidual ) //  No residual coding : SKIP mode
   {
     pcCU->setSkipFlagSubParts( true, 0, pcCU->getDepth(0) );
@@ -8657,12 +8645,8 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     const UInt csy=pcYuvOrg->getComponentScaleY(COMPONENT_Cb);
     zeroDistortion += m_pcRdCost->getDistPart(pcCU->getSlice()->getSPS()->getBitDepth( CHANNEL_TYPE_CHROMA ), m_pTempPel, cuWidthPixels >> csx, pcYuvResi->getAddr( COMPONENT_Cb, 0 ), pcYuvResi->getStride(COMPONENT_Cb), cuWidthPixels >> csx, cuHeightPixels >> csy, COMPONENT_Cb ); // initialized with zero residual destortion
     zeroDistortion += m_pcRdCost->getDistPart(pcCU->getSlice()->getSPS()->getBitDepth( CHANNEL_TYPE_CHROMA ), m_pTempPel, cuWidthPixels >> csx, pcYuvResi->getAddr( COMPONENT_Cr, 0 ), pcYuvResi->getStride(COMPONENT_Cr), cuWidthPixels >> csx, cuHeightPixels >> csy, COMPONENT_Cr ); // initialized with zero residual destortion
- 
-#if SCM_T0132_ACT_CLIP
-     pcYuvResi->convert(extendedPrecision, 0, 0, cuWidthPixels, true, pcCU->getSlice()->getSPS()->getBitDepths(), pcCU->isLosslessCoded(0), pcYuvNoCorrResi);
-#else
-     pcYuvResi->convert(0, 0, cuWidthPixels, true, pcCU->getSlice()->getSPS()->getBitDepths(), pcCU->isLosslessCoded(0), pcYuvNoCorrResi);
-#endif
+
+    pcYuvResi->convert(extendedPrecision, 0, 0, cuWidthPixels, true, pcCU->getSlice()->getSPS()->getBitDepths(), pcCU->isLosslessCoded(0), pcYuvNoCorrResi);
   }
 
   m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ pcCU->getDepth( 0 ) ][ CI_CURR_BEST ] );
@@ -8734,11 +8718,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
 
   if(iColourTransform)
   {
-#if SCM_T0132_ACT_CLIP
     pcYuvResiBest->convert(extendedPrecision, 0, 0, cuWidthPixels, false, pcCU->getSlice()->getSPS()->getBitDepths(), pcCU->isLosslessCoded(0));
-#else
-    pcYuvResiBest->convert(0, 0, cuWidthPixels, false, pcCU->getSlice()->getSPS()->getBitDepths(), pcCU->isLosslessCoded(0));
-#endif
   }
 
   pcYuvRec->addClip ( pcYuvPred, pcYuvResiBest, 0, cuWidthPixels, sps.getBitDepths() );
@@ -8776,9 +8756,7 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
   const UInt subTUDepth   = uiTrMode + 1;
   const UInt numValidComp = pcCU->getPic()->getNumberValidComponents();
   const Bool iColourTransform = pcCU->getColourTransform(0);
-#if SCM_T0132_ACT_CLIP
   const Bool extendedPrecision = pcCU->getSlice()->getSPS()->getUseExtendedPrecision();
-#endif
   DEBUG_STRING_NEW(sSingleStringComp[MAX_NUM_COMPONENT])
 
   assert( pcCU->getDepth( 0 ) == pcCU->getDepth( uiAbsPartIdx ) );
@@ -9212,11 +9190,7 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
 
           m_pcQTTempTComYuv[uiQTTempAccessLayer].copyPartToPartComponentMxN(compID, &m_tmpYuvPred, tuCompRectTmp);
         }
-#if SCM_T0132_ACT_CLIP
-     m_tmpYuvPred.convert( extendedPrecision, rTu.getRect(COMPONENT_Y).x0, rTu.getRect(COMPONENT_Y).y0, rTu.getRect(COMPONENT_Y).width, false, pcCU->getSlice()->getSPS()->getBitDepths(), pcCU->isLosslessCoded(uiAbsPartIdx) );  
-#else
-     m_tmpYuvPred.convert( rTu.getRect(COMPONENT_Y).x0, rTu.getRect(COMPONENT_Y).y0, rTu.getRect(COMPONENT_Y).width, false, pcCU->getSlice()->getSPS()->getBitDepths(), pcCU->isLosslessCoded(uiAbsPartIdx) );  
-#endif
+        m_tmpYuvPred.convert( extendedPrecision, rTu.getRect(COMPONENT_Y).x0, rTu.getRect(COMPONENT_Y).y0, rTu.getRect(COMPONENT_Y).width, false, pcCU->getSlice()->getSPS()->getBitDepths(), pcCU->isLosslessCoded(uiAbsPartIdx) );  
 
         uiSingleDistComp[COMPONENT_Y ][0] = m_pcRdCost->getDistPart(pcCU->getSlice()->getSPS()->getBitDepth( CHANNEL_TYPE_LUMA ), m_tmpYuvPred.getAddrPix( COMPONENT_Y, tuCompRect.x0, tuCompRect.y0 ), m_tmpYuvPred.getStride(COMPONENT_Y),
           pcOrgResi->getAddrPix( COMPONENT_Y, tuCompRect.x0, tuCompRect.y0 ), pcOrgResi->getStride(COMPONENT_Y), tuCompRect.width, tuCompRect.height, COMPONENT_Y );
