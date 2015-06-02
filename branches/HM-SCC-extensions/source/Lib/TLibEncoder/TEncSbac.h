@@ -241,9 +241,7 @@ private:
   ContextModel3DBuffer m_SPointSCModel;
   ContextModel3DBuffer m_cCopyTopRunSCModel;
   ContextModel3DBuffer m_cRunSCModel;
-#if SCM_T0065_PLT_IDX_GROUP
   ContextModel3DBuffer m_PLTLastRunTypeSCModel;
-#endif
   ContextModel3DBuffer m_PLTScanRotationModeFlagSCModel;
   ContextModel3DBuffer m_ChromaQpAdjFlagSCModel;
   ContextModel3DBuffer m_ChromaQpAdjIdcSCModel;
