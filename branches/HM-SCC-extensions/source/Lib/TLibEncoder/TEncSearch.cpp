@@ -5007,12 +5007,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
 }
 
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
-Bool TEncSearch::isBlockVectorValid( Int xPos, Int yPos, Int width, Int height,
-#if SCM_T0048_IBC_SLICE_BUGFIX
-                                     TComDataCU *pcCU, UInt uiAbsPartIdx,
-#else
-                                     Int picWidth, Int picHeight,
-#endif
+Bool TEncSearch::isBlockVectorValid( Int xPos, Int yPos, Int width, Int height, TComDataCU *pcCU, UInt uiAbsPartIdx,
                                      Int xStartInCU, Int yStartInCU, Int xBv, Int yBv, Int ctuSize )
 {
   static const Int s_floorLog2[65] =
@@ -5030,10 +5025,8 @@ Bool TEncSearch::isBlockVectorValid( Int xPos, Int yPos, Int width, Int height,
 
   Int refRightX = xPos + xBv + width - 1;   // including
   Int refBottomY = yPos + yBv + height - 1; // including
-#if SCM_T0048_IBC_SLICE_BUGFIX
   Int picWidth = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
   Int picHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
-#endif
 
   if ( xPos + xBv < 0 )
   {
@@ -5056,7 +5049,6 @@ Bool TEncSearch::isBlockVectorValid( Int xPos, Int yPos, Int width, Int height,
     return false;
   }
 
-#if SCM_T0048_IBC_SLICE_BUGFIX
   TComSlice *pcSlice = pcCU->getSlice();
   if( pcSlice->getSliceMode() )
   {
@@ -5067,7 +5059,6 @@ Bool TEncSearch::isBlockVectorValid( Int xPos, Int yPos, Int width, Int height,
     UInt startCtu = /*pcCU->getSlice()->getSliceSegmentCurStartCtuTsAddr();*/ pcSym->getCtuTsToRsAddrMap( pcCU->getSlice()->getSliceSegmentCurStartCtuTsAddr() );
     if (refCtu < startCtu) return false;
   }
-#endif
 
   if ( refBottomY>>ctuSizeLog2 < yPos>>ctuSizeLog2 )
   {
@@ -5311,12 +5302,7 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
           continue;
         }
 
-        if ( !isBlockVectorValid( xCUStart+xStartInCU, yCUStart+yStartInCU, width, height,
-# if SCM_T0048_IBC_SLICE_BUGFIX
-          pcCU, uiPartAddr,
-# else
-          pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples(), pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples(),
-# endif
+        if ( !isBlockVectorValid( xCUStart+xStartInCU, yCUStart+yStartInCU, width, height, pcCU, uiPartAddr,
           xStartInCU, yStartInCU, (cMvFieldNeighbours[mrgIdxTemp<<1].getHor() >> 2), (cMvFieldNeighbours[mrgIdxTemp<<1].getVer()>>2), pcCU->getSlice()->getSPS()->getMaxCUWidth() ) )
         {
           continue;
@@ -5627,12 +5613,7 @@ Bool TEncSearch::predMixedIntraBCInterSearch( TComDataCU * pcCU,
               continue;
             }
 
-            if ( !isBlockVectorValid( xCUStart+xStartInCU, yCUStart+yStartInCU, iDummyWidth, iDummyHeight,
-#if SCM_T0048_IBC_SLICE_BUGFIX
-              pcCU, uiPartAddr,
-#else
-              pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples(), pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples(),
-#endif
+            if ( !isBlockVectorValid( xCUStart+xStartInCU, yCUStart+yStartInCU, iDummyWidth, iDummyHeight, pcCU, uiPartAddr,
               xStartInCU, yStartInCU, (cMvFieldNeighboursIBC[mrgIdxTemp<<1].getHor() >> 2), (cMvFieldNeighboursIBC[mrgIdxTemp<<1].getVer() >> 2), pcCU->getSlice()->getSPS()->getMaxCUWidth() ) )
             {
               continue;
@@ -6380,7 +6361,6 @@ Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, UInt 
   {
     srLeft  = -1 * cuPelX;
     srTop   = -1 * cuPelY;
-#if SCM_T0048_IBC_SLICE_BUGFIX
     TComSlice *pcSlice = pcCU->getSlice();
     if( pcSlice->getSliceMode() )
     {
@@ -6388,7 +6368,6 @@ Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, UInt 
       UInt addr = pcSym->getCtuTsToRsAddrMap( pcSlice->getSliceSegmentCurStartCtuTsAddr() );
       srTop += pcSym->getCtu(addr)->getCUPelY();
     }
-#endif
 
     srRight = iPicWidth - cuPelX - iRoiWidth;
     srBottom = lcuHeight - cuPelY % lcuHeight - iRoiHeight;
@@ -7479,20 +7458,18 @@ Void TEncSearch::xIntraBCHashTableUpdate(TComDataCU* pcCU, Bool isRec)
   UInt        uiMaxCuHeight=pcCU->getSlice()->getSPS()->getMaxCUHeight();
   Int         iOrgHashIndex;
   IntraBCHashNode* NewHashNode;
-#if SCM_T0048_IBC_SLICE_BUGFIX
   TComPicSym *pcSym = pcCU->getPic()->getPicSym();
   UInt       startCtu = !pcCU->getSlice()->getSliceMode() ? 0
                       : pcSym->getCtuTsToRsAddrMap(pcCU->getSlice()->getSliceSegmentCurStartCtuTsAddr());
   UInt       refY     = pcSym->getCtu(startCtu)->getCUPelY();
-#endif
 
   for(int j = 0; j < uiMaxCuHeight; j++)
   {
     iTempY = cuPelY - iRoiHeight + 1  + j;
-#if SCM_T0048_IBC_SLICE_BUGFIX    
-    if( pcCU->getSlice()->getSliceMode() && iTempY < refY )
+    if ( pcCU->getSlice()->getSliceMode() && iTempY < refY )
+    {
       continue;
-#endif
+    }
     for(int i = 0; i < uiMaxCuWidth; i++)
     {
       iTempX = cuPelX - iRoiWidth + 1 + i;
@@ -7501,15 +7478,16 @@ Void TEncSearch::xIntraBCHashTableUpdate(TComDataCU* pcCU, Bool isRec)
       {
         continue;
       }
-#if SCM_T0048_IBC_SLICE_BUGFIX
       if( pcCU->getSlice()->getSliceMode() )
       {
         Int      ctuX = iTempX / pcCU->getSlice()->getSPS()->getMaxCUWidth();
         Int      ctuY = iTempY / pcCU->getSlice()->getSPS()->getMaxCUHeight();
         UInt   refCtu = ctuX + pcSym->getFrameWidthInCtus()*ctuY;
-        if (refCtu < startCtu) continue;
+        if ( refCtu < startCtu )
+        {
+          continue;
+        }
       }
-#endif
 
       iOrgHashIndex = xIntraBCHashTableIndex(pcCU, iTempX, iTempY, iRoiWidth, iRoiHeight, isRec);
 
