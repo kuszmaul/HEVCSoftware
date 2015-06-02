@@ -98,11 +98,8 @@ Void TEncEntropy::encodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool b
       uiAbsPartIdx = 0;
     }
 
-#if SCM_T0058_REMOVE_64x64_PLT
-    if( !pcCU->isIntra( uiAbsPartIdx ) || pcCU->isIntraBC( uiAbsPartIdx ) )
-#else
+    // Note: the condition is log2CbSize < MaxTbLog2SizeY in 7.3.8.5 of JCTVC-T1005-v2
     if( !pcCU->isIntra( uiAbsPartIdx ) || pcCU->getWidth(uiAbsPartIdx) == 64 || pcCU->isIntraBC( uiAbsPartIdx ) )
-#endif
     {
       return;
     }
@@ -129,12 +126,11 @@ Void TEncEntropy::encodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool b
       uiAbsPartIdx = 0;
     }
 
-#if SCM_T0058_REMOVE_64x64_PLT
+    // Note: the condition is log2CbSize < MaxTbLog2SizeY in 7.3.8.5 of JCTVC-T1005-v2
     if( pcCU->getWidth(uiAbsPartIdx) == 64)
     {
       return;
     }
-#endif
 
     m_pcEntropyCoderIf->codePLTModeFlag( pcCU, uiAbsPartIdx );
     if ( pcCU->getPLTModeFlag( uiAbsPartIdx ) )
