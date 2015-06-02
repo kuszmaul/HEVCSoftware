@@ -73,11 +73,8 @@ Void TDecEntropy::decodeCUTransquantBypassFlag(TComDataCU* pcCU, UInt uiAbsPartI
 #if SCM_S0043_PLT_DELTA_QP
 Void TDecEntropy::decodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool& bCodeDQP, Bool& isChromaQpAdjCoded )
 {
-#if SCM_T0058_REMOVE_64x64_PLT
+  // Note: the condition is log2CbSize < MaxTbLog2SizeY in 7.3.8.5 of JCTVC-T1005-v2
   if( pcCU->isIntra( uiAbsPartIdx ) && pcCU->getSlice()->getSPS()->getMaxCUWidth()>>uiDepth < 64 && !pcCU->isIntraBC( uiAbsPartIdx ) )
-#else
-  if( pcCU->isIntra( uiAbsPartIdx ) && !pcCU->isIntraBC( uiAbsPartIdx ) )
-#endif
   {
     m_pcEntropyDecoderIf->parsePLTModeFlag( pcCU, uiAbsPartIdx, uiDepth );
     if ( pcCU->getPLTModeFlag( uiAbsPartIdx ) )
@@ -92,12 +89,11 @@ Void TDecEntropy::decodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
 {
   if ( pcCU->getSlice()->getSPS()->getUsePLTMode() )
   {
-#if SCM_T0058_REMOVE_64x64_PLT
+    // Note: the condition is log2CbSize < MaxTbLog2SizeY in 7.3.8.5 of JCTVC-T1005-v2
     if( pcCU->getSlice()->getSPS()->getMaxCUWidth()>>uiDepth == 64)
     {
       return;
     }
-#endif
     m_pcEntropyDecoderIf->parsePLTModeFlag( pcCU, uiAbsPartIdx, uiDepth );
     if ( pcCU->getPLTModeFlag( uiAbsPartIdx ) )
     {

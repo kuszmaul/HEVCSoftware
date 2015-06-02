@@ -2887,12 +2887,11 @@ Void TEncCu::xCheckPLTMode(TComDataCU *&rpcBestCU, TComDataCU *&rpcTempCU, Bool 
 Void TEncCu::xCheckPLTMode(TComDataCU *&rpcBestCU, TComDataCU *&rpcTempCU, Bool bCheckPLTSharingMode)
 #endif
 {
-#if SCM_T0058_REMOVE_64x64_PLT
+  // Note: the condition is log2CbSize < MaxTbLog2SizeY in 7.3.8.5 of JCTVC-T1005-v2
   if( rpcTempCU->getWidth(0) == 64)
   {
     return;
   }
-#endif
   UInt uiDepth = rpcTempCU->getDepth( 0 );
 
   rpcTempCU->setSkipFlagSubParts( false, 0, uiDepth );
