@@ -1339,9 +1339,7 @@ private:
   Bool                       m_enableTMVPFlag;
   Bool                       m_useIntegerMv;
 
-#if SCM_T0116_IBCSEARCH_OPTIMIZE
   TComPic*                   m_pcLastEncPic;
-#endif
 
   SliceType                  m_encCABACTableIdx;           // Used to transmit table selection across slices.
 
@@ -1569,10 +1567,8 @@ public:
   Void setUseIntegerMv           ( Bool b    )    { m_useIntegerMv = b; }
   Bool getUseIntegerMv           ()               { return m_useIntegerMv; }
 
-#if SCM_T0116_IBCSEARCH_OPTIMIZE
   TComPic*                    getLastEncPic()                                        { return m_pcLastEncPic;                                        }
   Void                        setLastEncPic(TComPic *pcPic)                          { m_pcLastEncPic=pcPic;                                         }
-#endif
 
   Void                        setEncCABACTableIdx( SliceType idx )                   { m_encCABACTableIdx = idx;                                     }
   SliceType                   getEncCABACTableIdx() const                            { return m_encCABACTableIdx;                                    }

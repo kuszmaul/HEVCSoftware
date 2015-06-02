@@ -256,11 +256,7 @@ public:
 #if !SCM_T0227_INTRABC_SIG_UNIFICATION
   Void          getIntraBCMVPs(UInt uiAbsPartIdx, TComMv* MvPred, TComMv* MvLast);
 #endif
-#if SCM_T0116_IBCSEARCH_OPTIMIZE
   Void          getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPredEnc, Int& nbPred, Int iPartIdx);
-#else
-  Void          getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPredEnc, Int& nbPred);
-#endif
   Bool          getDerivedBV(UInt uiAbsPartIdx, const TComMv& currentMv, TComMv& derivedMv);
   Char*         getPartitionSize      ()                        { return m_pePartSize;        }
   PartSize      getPartitionSize      ( UInt uiIdx )            { return static_cast<PartSize>( m_pePartSize[uiIdx] ); }

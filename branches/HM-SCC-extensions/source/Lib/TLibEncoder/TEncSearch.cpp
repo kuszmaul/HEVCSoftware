@@ -6843,11 +6843,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
 
     TComMv cMvPredEncOnly[16];
     Int nbPreds = 0;
-#if SCM_T0116_IBCSEARCH_OPTIMIZE
     pcCU->getIntraBCMVPsEncOnly(uiPartAddr, cMvPredEncOnly, nbPreds, iPartIdx );
-#else
-    pcCU->getIntraBCMVPsEncOnly(uiPartAddr, cMvPredEncOnly, nbPreds );
-#endif
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
     m_uiNumBVs = MergeCandLists(m_acBVs, m_uiNumBVs, cMvPredEncOnly, nbPreds, true);
 #else
@@ -6927,17 +6923,9 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
     Int lowY = (pcCU->getPartitionSize(uiPartAddr) == SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU)
              ? -cuPelY : max(iSrchRngVerTop, 0 - cuPelY);
 #endif 
-#if SCM_T0116_IBCSEARCH_OPTIMIZE
     for(Int y = boundY ; y >= lowY ; y-- )
 #else
-    for(Int y = lowY ; y <= boundY ; ++y )
-#endif
-#else
-#if SCM_T0116_IBCSEARCH_OPTIMIZE
     for ( Int y = boundY; y >= max( iSrchRngVerTop, 0 - cuPelY ); y-- )
-#else
-    for ( Int y = max( iSrchRngVerTop, 0 - cuPelY ); y <= boundY; ++y )
-#endif
 #endif
     {
       if ( !isValidIntraBCSearchArea( pcCU, iPartIdx, 0, chromaROIStartXInPixels, y, chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels, uiPartOffset ) )
@@ -7344,7 +7332,6 @@ Int TEncSearch::xIntraBCHashTableIndex(TComDataCU* pcCU, Int pos_X, Int pos_Y, I
   }
   else
   {
-#if SCM_T0116_IBCSEARCH_OPTIMIZE
     if( pcCU->getSlice()->getPPS()->getUseColourTrans () && m_pcEncCfg->getRGBFormatFlag() )
     {
       HashPic = pcCU->getPic()->getPicYuvResi();
@@ -7353,9 +7340,6 @@ Int TEncSearch::xIntraBCHashTableIndex(TComDataCU* pcCU, Int pos_X, Int pos_Y, I
     {
       HashPic = pcCU->getPic()->getPicYuvOrg();
     }
-#else
-    HashPic = pcCU->getPic()->getPicYuvOrg();
-#endif
   }
 
   for(Int chan=0; chan < iNumComp; chan++)
@@ -7422,11 +7406,7 @@ Int TEncSearch::xIntraBCHashTableIndex(TComDataCU* pcCU, Int pos_X, Int pos_Y, I
 
   grad = grad/(iTotalSamples);
 
-#if SCM_T0116_IBCSEARCH_OPTIMIZE
   if(grad < 5 - (m_pcEncCfg->getRGBFormatFlag()))
-#else
-  if(grad < 5)
-#endif
   {
     return -1;
   }
