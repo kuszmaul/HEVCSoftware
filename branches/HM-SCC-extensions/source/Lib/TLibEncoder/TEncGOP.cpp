@@ -1739,7 +1739,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
       m_uiSeqOrder = 1;
     }
-#if SCM_T0048_PLT_PRED_IN_PPS_REFRESH
     else if( m_uiSeqOrder < pcSlice->getPPS()->getPPSId()+1 )
     {
       OutputNALUnit nalu(NAL_UNIT_PPS);
@@ -1751,7 +1750,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       actualTotalBits += UInt(accessUnit.back()->m_nalUnitData.str().size()) * 8;
       m_uiSeqOrder = pcSlice->getPPS()->getPPSId()+1;
     }
-#endif
 
     // create prefix SEI associated with a picture
     xCreatePerPictureSEIMessages(iGOPid, leadingSeiMessages, nestedSeiMessages, pcSlice);
