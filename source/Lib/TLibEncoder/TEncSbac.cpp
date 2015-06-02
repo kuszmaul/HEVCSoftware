@@ -546,18 +546,11 @@ Void TEncSbac::encodeSPoint( TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiIdx, UI
   }
 
   UInt uiTraIdx = m_puiScanOrder[uiIdx];
-#if !SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
-  UInt uiCtx = pcCU->getCtxSPoint( uiAbsPartIdx, uiTraIdx, pSPoint );
-#endif
 
   if( uiTraIdx >= uiWidth && pSPoint[m_puiScanOrder[uiIdx - 1]] != PLT_RUN_ABOVE )
   {
     UInt mode = pSPoint[uiTraIdx];
-#if SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
     m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, 0 ) );
-#else
-    m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, uiCtx ) );
-#endif
   }
 }
 
@@ -799,15 +792,9 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
 #endif
   while ( uiIdx < uiTotal )
   {
-#if !SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
-    UInt uiCtx = 0;
-#endif
     UInt uiTraIdx = m_puiScanOrder[uiIdx];  //unified position variable (raster scan)
     if (uiIndexMaxSize > 1)
     {
-#if !SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
-      uiCtx = pcCU->getCtxSPoint( uiAbsPartIdx, uiTraIdx, pSPoint );
-#endif
       if ( uiTraIdx >= width && pSPoint[m_puiScanOrder[uiIdx - 1]] != PLT_RUN_ABOVE )
       {
         UInt mode = pSPoint[uiTraIdx];
@@ -815,11 +802,7 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
         if ( uiNumIndices && uiIdx < uiTotal - 1 )
         {
 #endif
-#if SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
           m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, 0 ) );
-#else
-          m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, uiCtx ) );
-#endif
 #if SCM_T0065_PLT_IDX_GROUP
         }
 #endif
