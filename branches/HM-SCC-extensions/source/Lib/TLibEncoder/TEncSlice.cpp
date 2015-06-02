@@ -817,7 +817,11 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
   Bool refresh = false;
   if( !pcSlice->getSliceIdx() )
   {
+#if SCM_IBC_CLEANUP
+    if( pcSlice->isOnlyCurrentPictureAsReference() ) m_numIDRs++;
+#else
     if( pcSlice->isIntra() ) m_numIDRs++;
+#endif
     m_numFrames++;
     refresh = m_numIDRs > SCM_T0048_PLT_PRED_IN_PPS_REFRESH ||
               (m_numIDRs && m_numFrames > SCM_T0048_PLT_PRED_IN_PPS_REFRESH) ||
