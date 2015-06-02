@@ -288,7 +288,6 @@
 // Processing controls
 //------------------------------------------------
 
-#define SCM_T0121_INFER_TU_SPLIT_ENCODER                 1 ///< encoder operation to infer split_transform_flag
 #define SCM_T0227_INTRABC_SIG_UNIFICATION                1 ///< unify intra BC mode and inter mode
 #define SCM_T0140_ACT_QP_OFFSET                          1 ///< Signal qp offsets for ACT color components at PPS/Slice level 
 #define SCM_T0063_NUM_PLT_ENTRY                          1 ///< use EG0 to code number of new palette entries
