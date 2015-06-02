@@ -256,12 +256,7 @@ public:
                                 );
 
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
-  Bool isBlockVectorValid( Int xPos, Int yPos, Int width, Int height, 
-#if SCM_T0048_IBC_SLICE_BUGFIX
-                           TComDataCU *pcCU, UInt uiAbsPartIdx,
-#else
-                           Int picWidth, Int picHeight, 
-#endif 
+  Bool isBlockVectorValid( Int xPos, Int yPos, Int width, Int height, TComDataCU *pcCU, UInt uiAbsPartIdx,
                            Int xStartInCU, Int yStartInCU, Int xBv, Int yBv, Int ctuSize );
 #endif
 
@@ -382,7 +377,6 @@ public:
       return false;
     }
 
-#if SCM_T0048_IBC_SLICE_BUGFIX
     TComSlice *pcSlice = pcCU->getSlice();
     if( pcSlice->getSliceMode() )
     {
@@ -393,7 +387,6 @@ public:
       UInt startCtu = pcSym->getCtuTsToRsAddrMap( pcCU->getSlice()->getSliceSegmentCurStartCtuTsAddr() );
       if (refCtu < startCtu) return false;
     }
-#endif
 
     // check boundary
     if ( pcCU->getWidth( 0 ) == 8 && pcCU->getPartitionSize( 0 ) != SIZE_2Nx2N && pcCU->getSlice()->getPic()->getPicYuvOrg()->getChromaFormat() != CHROMA_444 )

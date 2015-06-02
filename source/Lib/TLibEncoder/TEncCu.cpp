@@ -1821,13 +1821,8 @@ Void TEncCu::xCheckRDCostIntraBCMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*&
             continue;
           }
 
-          if ( !m_pcPredSearch->isBlockVectorValid( xPos, yPos, width, height,
-#if SCM_T0048_IBC_SLICE_BUGFIX
-            rpcTempCU, 0,
-#else
-            rpcTempCU->getSlice()->getSPS()->getPicWidthInLumaSamples(), rpcTempCU->getSlice()->getSPS()->getPicHeightInLumaSamples(),
-#endif 
-            0, 0, (cMvFieldNeighbours[uiMergeCand<<1].getHor() >> 2), (cMvFieldNeighbours[uiMergeCand<<1].getVer()>>2), sps.getMaxCUWidth() ) )
+          if ( !m_pcPredSearch->isBlockVectorValid( xPos, yPos, width, height, rpcTempCU, 0,
+                  0, 0, (cMvFieldNeighbours[uiMergeCand<<1].getHor() >> 2), (cMvFieldNeighbours[uiMergeCand<<1].getVer()>>2), sps.getMaxCUWidth() ) )
           {
             continue;
           }
