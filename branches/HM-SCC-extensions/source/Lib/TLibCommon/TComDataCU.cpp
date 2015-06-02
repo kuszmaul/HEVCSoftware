@@ -3732,17 +3732,7 @@ Int TComDataCU::xCalcMaxVals(TComDataCU *pcCU, ComponentID compID)
   Int quantiserScale;
   Int quantiserRightShift;
   Int rightShiftOffset;
-#if !SCM_T0118_T0112_ESCAPE_COLOR_CODING
-  UInt uiMaxBit = 0;
 
-  Int quantStep = baseQp ? static_cast<Int>(pow(2.0, (baseQp - 4) / 6.0) + 0.5) : 1;
-  UInt uiMaxBD = ((1 << pcCU->getSlice()->getSPS()->getBitDepth( compID > 0 ? CHANNEL_TYPE_CHROMA : CHANNEL_TYPE_LUMA )) - 1) / quantStep;
-  while (uiMaxBD)
-  {
-    uiMaxBD >>= 1;
-    uiMaxBit++;
-  }
-#endif 
   iQPrem = baseQp % 6;
   iQPper = baseQp / 6;
   quantiserScale = g_quantScales[iQPrem];
@@ -3755,66 +3745,9 @@ Int TComDataCU::xCalcMaxVals(TComDataCU *pcCU, ComponentID compID)
   }
   else
   {
-#if SCM_T0118_T0112_ESCAPE_COLOR_CODING
     return Pel((( (1 << pcCU->getSlice()->getSPS()->getBitDepth( compID > 0 ? CHANNEL_TYPE_CHROMA : CHANNEL_TYPE_LUMA ) ) - 1) * quantiserScale + rightShiftOffset) >> quantiserRightShift);
-#else
-    return Pel(ClipBD<Int>((((1 << pcCU->getSlice()->getSPS()->getBitDepth( compID > 0 ? CHANNEL_TYPE_CHROMA : CHANNEL_TYPE_LUMA )) - 1) * quantiserScale + rightShiftOffset) >> quantiserRightShift, uiMaxBit));
-#endif 
   }
 }
-
-#if !SCM_T0118_T0112_ESCAPE_COLOR_CODING
-Void TComDataCU::xCalcMaxBits(TComDataCU *pcCU, UInt uiMaxBit[3])
-{
-  Bool bLossless = pcCU->getCUTransquantBypass(0);
-  Int qp = bLossless ? 0 : pcCU->getQP(0);
-  Int baseQp[3];
-  if (qp)
-  {
-    baseQp[0] = qp + pcCU->getSlice()->getSPS()->getQpBDOffset(CHANNEL_TYPE_LUMA);
-    Int bdOffset = pcCU->getSlice()->getSPS()->getQpBDOffset(CHANNEL_TYPE_CHROMA);
-    Int chromaOffset = pcCU->getSlice()->getPPS()->getQpOffset(COMPONENT_Cb) + pcCU->getSlice()->getSliceChromaQpDelta(COMPONENT_Cb);
-    baseQp[1] = Clip3(-bdOffset, (chromaQPMappingTableSize - 1), qp + chromaOffset);
-    if (baseQp[1] < 0)
-    {
-      baseQp[1] += bdOffset;
-    }
-    else
-    {
-      baseQp[1] = getScaledChromaQP(baseQp[1], pcCU->getPic()->getChromaFormat()) + bdOffset;
-    }
-
-    chromaOffset = pcCU->getSlice()->getPPS()->getQpOffset(COMPONENT_Cr) + pcCU->getSlice()->getSliceChromaQpDelta(COMPONENT_Cr);
-    baseQp[2] = Clip3(-bdOffset, (chromaQPMappingTableSize - 1), qp + chromaOffset);
-    if (baseQp[2] < 0)
-    {
-      baseQp[2] += bdOffset;
-    }
-    else
-    {
-      baseQp[2] = getScaledChromaQP(baseQp[2], pcCU->getPic()->getChromaFormat()) + bdOffset;
-    }
-  }
-  else
-  {
-    baseQp[0] = 0;
-    baseQp[1] = 0;
-    baseQp[2] = 0;
-  }
-
-  for (Int i = 0; i < 3; i++)
-  {
-    uiMaxBit[i] = 0;
-    Int quantStep = baseQp[i] ? static_cast<Int>(pow(2.0, (baseQp[i] - 4) / 6.0) + 0.5) : 1; ///< picture Qstep
-    UInt uiMaxBD = ((1 << pcCU->getSlice()->getSPS()->getBitDepth( i > 0 ? CHANNEL_TYPE_CHROMA : CHANNEL_TYPE_LUMA )) - 1) / quantStep; ///< assume that luma
-    while (uiMaxBD)
-    {
-      uiMaxBD >>= 1;
-      uiMaxBit[i]++;
-    }
-  }
-}
-#endif 
 
 /** Test whether the block at uiPartIdx is skipped.
  * \param uiPartIdx Partition index

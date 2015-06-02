@@ -445,9 +445,6 @@ public:
   Pel           getLastPLTInLcuFinal         (UChar ucCh, UInt uiPLTIdx)              { return m_piLastPLTInLcuFinal[ucCh][uiPLTIdx];    }
   Void          setLastPLTInLcuFinal         (UChar ucCh, Pel uiValue, UInt uiPLTIdx) { m_piLastPLTInLcuFinal[ucCh][uiPLTIdx] = uiValue; }
   Void          saveLastPLTInLcuFinal( TComDataCU *pcSrc, UInt uiAbsPartIdx, UInt numValidComp );
-#if !SCM_T0118_T0112_ESCAPE_COLOR_CODING
-  Void          xCalcMaxBits(TComDataCU *pcCU, UInt uiMaxBit[3]);
-#endif
   Int           xCalcMaxVals(TComDataCU *pcCU, ComponentID compID);
   Bool          getPLTScanRotationModeFlag (UInt uiIdx )             { return m_pbPLTScanRotationModeFlag[uiIdx]; }
   Bool*         getPLTScanRotationModeFlag ()                        { return m_pbPLTScanRotationModeFlag;        }

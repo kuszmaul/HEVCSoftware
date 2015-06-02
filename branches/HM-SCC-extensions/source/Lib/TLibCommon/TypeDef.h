@@ -289,7 +289,6 @@
 //------------------------------------------------
 
 #define SCM_T0227_INTRABC_SIG_UNIFICATION                1 ///< unify intra BC mode and inter mode
-#define SCM_T0118_T0112_ESCAPE_COLOR_CODING              1 ///< Improvement to escape color coding
 #define SCM_T0064_REMOVE_PLT_SHARING                     1 ///< JCTVC-T0064: remove palette sharing flag
 #define SCM_T0065_PLT_IDX_GROUP                          1 ///< JCTVC-T0065: group index at front
 #define SCM_T0048_PLT_PRED_IN_PPS                        1 ///< Initialize palette predictor from PPS
