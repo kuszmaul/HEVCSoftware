@@ -7475,12 +7475,9 @@ Void TEncSearch::xIntraBCHashTableUpdate(TComDataCU* pcCU, Bool isRec)
   Int         iTempY;
   Int         iPicWidth = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
   Int         iPicHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
-#if SCM_FIX_FOR_IBC_HASH_SEARCH
   UInt        uiMaxCuWidth=pcCU->getSlice()->getSPS()->getMaxCUWidth();
-  UInt        uiMaxCuHeight=pcCU->getSlice()->getSPS()->getMaxCUHeight();      
-#endif 
-
-  Int        iOrgHashIndex;
+  UInt        uiMaxCuHeight=pcCU->getSlice()->getSPS()->getMaxCUHeight();
+  Int         iOrgHashIndex;
   IntraBCHashNode* NewHashNode;
 #if SCM_T0048_IBC_SLICE_BUGFIX
   TComPicSym *pcSym = pcCU->getPic()->getPicSym();
@@ -7489,7 +7486,6 @@ Void TEncSearch::xIntraBCHashTableUpdate(TComDataCU* pcCU, Bool isRec)
   UInt       refY     = pcSym->getCtu(startCtu)->getCUPelY();
 #endif
 
-#if SCM_FIX_FOR_IBC_HASH_SEARCH
   for(int j = 0; j < uiMaxCuHeight; j++)
   {
     iTempY = cuPelY - iRoiHeight + 1  + j;
@@ -7499,17 +7495,6 @@ Void TEncSearch::xIntraBCHashTableUpdate(TComDataCU* pcCU, Bool isRec)
 #endif
     for(int i = 0; i < uiMaxCuWidth; i++)
     {
-#else
-  for(int j = 0; j < MAX_CU_SIZE; j++)
-  {
-   iTempY = cuPelY - iRoiHeight + 1  + j;
-#if SCM_T0048_IBC_SLICE_BUGFIX
-    if( pcCU->getSlice()->getSliceMode() && iTempY < refY )
-      continue;
-#endif
-    for(int i = 0; i < MAX_CU_SIZE; i++)
-    {
-#endif 
       iTempX = cuPelX - iRoiWidth + 1 + i;
 
       if((iTempX < 0) || (iTempY < 0) || ((iTempX + iRoiWidth) >= iPicWidth) || ((iTempY + iRoiHeight) >= iPicHeight))
