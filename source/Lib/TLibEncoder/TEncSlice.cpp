@@ -138,10 +138,8 @@ Void TEncSlice::init( TEncTop* pcEncTop )
   m_piRdPicQp         = (Int*   )xMalloc( Int,    m_pcCfg->getDeltaQpRD() * 2 + 1 );
   m_pcRateCtrl        = pcEncTop->getRateCtrl();
 
-#if SCM_T0048_PLT_PRED_IN_PPS_REFRESH
   m_numIDRs     = SCM_T0048_PLT_PRED_IN_PPS_REFRESH;
   m_numFrames   = 0;
-#endif
 }
 
 
@@ -784,7 +782,6 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
 
   TComPPS *pcPPS = m_pcGOPEncoder->getPPS();
 
-#if SCM_T0048_PLT_PRED_IN_PPS_REFRESH
   Bool refresh = false;
   if( !pcSlice->getSliceIdx() )
   {
@@ -798,9 +795,6 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
               (m_numIDRs && m_numFrames > SCM_T0048_PLT_PRED_IN_PPS_REFRESH) ||
               m_numFrames > 5*m_pcCfg->getFrameRate();
   }
-#else
-  Bool refresh = !pcSlice->getSliceIdx() && !pcPPS->getNumPLTPred() && !pcPic->getPOC();
-#endif
   if( pcSlice->getSPS()->getUsePLTMode() && m_pcCfg->getPalettePredInPPSEnabled() && refresh )
   {
     // for every CTU in image
@@ -924,7 +918,6 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
       }
     }
 
-#if SCM_T0048_PLT_PRED_IN_PPS_REFRESH
     if( srcCtu == -1 || numPreds < 4 )
     {
       // refresh failed, wait a bit longer before retrying
@@ -935,18 +928,14 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
       m_numIDRs   = m_numIDRs>>1;
       m_numFrames = m_numFrames>>1;
     }
-    else
-#endif
-    if( srcCtu != -1 )
+    else if( srcCtu != -1 )
     {
-#if SCM_T0048_PLT_PRED_IN_PPS_REFRESH
       if( pcSlice->getPOC() )
       {
         UInt ppsid = pcPPS->getPPSId()+1;
         pcPPS->setPPSId(ppsid);
         pcSlice->setPPSId(ppsid);
       }
-#endif
       numPreds = std::min(lastPLTSize[0], (UChar)pcSlice->getSPS()->getPLTMaxPredSize());
       pcPPS->setNumPLTPred(numPreds);
       //printf("PPS %u: %u palette entries from CTU %u/%u (%u analysed)\n", pcPPS->getPPSId(), numPreds, srcCtu, numCtus, count );
@@ -954,10 +943,8 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
       {
         memcpy( pcPPS->getPLTPred( i ), lastPLT[i], sizeof( Pel )*numPreds );
       }
-#if SCM_T0048_PLT_PRED_IN_PPS_REFRESH
       m_numIDRs   = 0;
       m_numFrames = 0;
-#endif
     }
 
     // restore predictor in any case

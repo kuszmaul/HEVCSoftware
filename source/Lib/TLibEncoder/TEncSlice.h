@@ -100,9 +100,7 @@ private:
   PaletteInfoBuffer       m_lastSliceSegmentEndPaletteState;
   PaletteInfoBuffer       m_entropyCodingSyncPaletteState;
   SliceType               m_encCABACTableIdx;
-#if SCM_T0048_PLT_PRED_IN_PPS_REFRESH
   Int                     m_numIDRs, m_numFrames, m_refreshRate;
-#endif
 
   Void     setUpLambda(TComSlice* slice, const Double dLambda, Int iQP);
   Void     calculateBoundingCtuTsAddrForSlice(UInt &startCtuTSAddrSlice, UInt &boundingCtuTSAddrSlice, Bool &haveReachedTileBoundary, TComPic* pcPic, const Int sliceMode, const Int sliceArgument, const UInt uiSliceCurEndCtuTSAddr);
