@@ -242,9 +242,7 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
 
   pps_extension_flags[PPS_EXT__SCC] = (
      pcPPS->getUseColourTrans()
-#if SCM_T0048_PLT_PRED_IN_PPS
   || pcPPS->getNumPLTPred() > 0
-#endif
     );
 
   // Other PPS extension flags checked here.
@@ -315,8 +313,7 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
                WRITE_SVLC( (pcPPS->getActQpOffset(COMPONENT_Cb) + 5 ), "pps_act_cb_qp_offset_plus5");
                WRITE_SVLC( (pcPPS->getActQpOffset(COMPONENT_Cr) + 3 ), "pps_act_cr_qp_offset_plus3");
             }
-#if SCM_T0048_PLT_PRED_IN_PPS
-            WRITE_FLAG( (pcPPS->getNumPLTPred() ? 1 : 0),                         "palette_predictor_initializer_flag" );            
+            WRITE_FLAG( (pcPPS->getNumPLTPred() ? 1 : 0),                         "palette_predictor_initializer_flag" );
             if( pcPPS->getNumPLTPred() )
             {
               //printf("PPS %u: %u palette entries\n", pcPPS->getPPSId(), pcPPS->getNumPLTPred());
@@ -332,7 +329,6 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
                 }
               }
             }
-#endif
             break;
           default:
             assert(pps_extension_flags[i]==false); // Should never get here with an active PPS extension flag.

@@ -409,7 +409,6 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
               pcPPS->setActQpOffset(COMPONENT_Cb, -5);
               pcPPS->setActQpOffset(COMPONENT_Cr, -3);
             }
-#if SCM_T0048_PLT_PRED_IN_PPS
             READ_FLAG( uiCode, "palette_predictor_initializer_flag" );
             if( uiCode )
             {
@@ -437,7 +436,6 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
             {
               pcPPS->setNumPLTPred(0);
             }
-#endif
             break;
           default:
             bSkipTrailingExtensionBits=true;

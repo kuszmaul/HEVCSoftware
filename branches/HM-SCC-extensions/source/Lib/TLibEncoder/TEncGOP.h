@@ -121,11 +121,7 @@ private:
   TEncSampleAdaptiveOffset*  m_pcSAO;
   TEncRateCtrl*           m_pcRateCtrl;
   // indicate sequence first
-#if SCM_T0048_PLT_PRED_IN_PPS
   UInt                    m_uiSeqOrder;
-#else
-  Bool                    m_bSeqFirst;
-#endif
 
   // clean decoding refresh
   Bool                    m_bRefreshPending;
@@ -170,9 +166,7 @@ public:
   NalUnitType getNalUnitType( Int pocCurr, Int lastIdr, Bool isField );
   Void arrangeLongtermPicturesInRPS(TComSlice *, TComList<TComPic*>& );
 
-#if SCM_T0048_PLT_PRED_IN_PPS
   TComPPS* getPPS();
-#endif
 
 protected:
   TEncRateCtrl* getRateCtrl()       { return m_pcRateCtrl;  }

@@ -289,7 +289,6 @@
 //------------------------------------------------
 
 #define SCM_T0227_INTRABC_SIG_UNIFICATION                1 ///< unify intra BC mode and inter mode
-#define SCM_T0048_PLT_PRED_IN_PPS                        1 ///< Initialize palette predictor from PPS
 #define SCM_S0181_S0150_GROUP_ESCAPE_COLOR_AT_END        1 ///< grouping escape color at the end of palette coding, according to meeting note
 #define SCM_T0132_ACT_CLIP                               1 ///< IACT Clipping
 #define SCM_FIX_FOX_TICKET_1376                          1 ///< Fix for ticket #1376
@@ -313,9 +312,7 @@
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
 #define SCM_T0227_INTER_SEARCH_YUV                        1   // use 3 components for Inter in mixed CU decision(Intra BC and inter CU)
 #endif
-#if SCM_T0048_PLT_PRED_IN_PPS
 #define SCM_T0048_PLT_PRED_IN_PPS_REFRESH                16 ///< Periodicity of the palette refresh
-#endif
 
 
 //------------------------------------------------

@@ -1062,9 +1062,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("PaletteMaxSize",                                  m_uiPLTMaxSize,                                       63u,  "Maximum palette size")
   ("PaletteMaxPredSize",                              m_uiPLTMaxPredSize,                                  128u,  "Maximum palette predictor size")
   ("MotionVectorResolutionControlIdc",                m_motionVectorResolutionControlIdc,                    0, "0 (default): use 1/4-pel mv; 1: use integer-pel mv; 2: adaptive mv resolution (not valid in V1 profiles)")
-#if SCM_T0048_PLT_PRED_IN_PPS
   ("PalettePredInPPSEnabled",                         m_palettePredInPPSEnabled,                          false, "Transmit palette predictor in PPS")
-#endif
   ;
 
   for(Int i=1; i<MAX_GOP+1; i++)

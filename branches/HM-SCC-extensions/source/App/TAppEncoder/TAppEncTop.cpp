@@ -391,9 +391,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setPLTMaxSize                                        ( m_uiPLTMaxSize                 );
   m_cTEncTop.setPLTMaxPredSize                                    ( m_uiPLTMaxPredSize             );
   m_cTEncTop.setMotionVectorResolutionControlIdc                  ( m_motionVectorResolutionControlIdc );
-#if SCM_T0048_PLT_PRED_IN_PPS
   m_cTEncTop.setPalettePredInPPSEnabled                           ( m_palettePredInPPSEnabled );
-#endif
 }
 
 Void TAppEncTop::xCreateLib()
