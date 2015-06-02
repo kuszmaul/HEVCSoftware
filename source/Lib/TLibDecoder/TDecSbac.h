@@ -100,11 +100,9 @@ private:
   Void  xDecodeRun          (UInt & ruiSymbol, Bool bCopyTopMode, const UInt uiPltIdx, const UInt uiMaxRun, const class TComCodingStatisticsClassType &whichStat);
   Void  xDecodePLTPredIndicator (UChar *bReusedPrev, UInt uiPLTSizePrev, UInt uiMaxPLTSize, const class TComCodingStatisticsClassType &whichStat);
   Void  xReadTruncBinCode   (UInt& ruiSymbol, UInt uiMaxSymbol, const class TComCodingStatisticsClassType &whichStat);
-#if SCM_T0065_PLT_IDX_GROUP
-  Void xAdjustPLTIndex(UInt siCurLevel, UInt uiIdx, Pel *pLevel, Int iMaxSymbol,
+  Void  xAdjustPLTIndex(UInt siCurLevel, UInt uiIdx, Pel *pLevel, Int iMaxSymbol,
                       const class TComCodingStatisticsClassType &whichStat, UChar *pSPoint = 0, Int iWidth = 0,
                       UChar *pEscapeFlag = 0);
-#endif
   Pel   xReadPLTIndex       (UInt uiIdx, Pel *pLevel, Int iMaxSymbol, const class TComCodingStatisticsClassType &whichStat, UChar *pSPoint = 0, Int iWidth = 0, UChar *pEscapeFlag = 0);
   UInt xReadTruncUnarySymbol( ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut, const class TComCodingStatisticsClassType &whichStat);
   UInt xReadTruncMsbP1RefinementBits( ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut, const class TComCodingStatisticsClassType &whichStat);
@@ -117,10 +115,8 @@ private:
   Void  xDecodeRun          (UInt & ruiSymbol, Bool bCopyTopMode, const UInt uiPltIdx, const UInt uiMaxRun);
   Void  xDecodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, UInt uiMaxPLTSize);
   Void  xReadTruncBinCode       (UInt& ruiSymbol, UInt uiMaxSymbol);
-#if SCM_T0065_PLT_IDX_GROUP
-  Void xAdjustPLTIndex(UInt siCurLevel, UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0,
+  Void  xAdjustPLTIndex(UInt siCurLevel, UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0,
                        UChar *pEscapeFlag = 0);
-#endif
   Pel   xReadPLTIndex           (UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0, UChar *pEscapeFlag = 0);
   UInt xReadTruncUnarySymbol( ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut);
   UInt xReadTruncMsbP1RefinementBits( ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut);
@@ -236,10 +232,8 @@ private:
   ContextModel3DBuffer m_SPointSCModel;
   ContextModel3DBuffer m_cCopyTopRunSCModel;
   ContextModel3DBuffer m_cRunSCModel;
-#if SCM_T0065_PLT_IDX_GROUP
-  ContextModel3DBuffer m_PLTLastRunTypeSCModel;  
-#endif
-  ContextModel3DBuffer m_PLTScanRotationModeFlagSCModel;  
+  ContextModel3DBuffer m_PLTLastRunTypeSCModel;
+  ContextModel3DBuffer m_PLTScanRotationModeFlagSCModel;
 };
 
 //! \}
