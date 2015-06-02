@@ -1323,7 +1323,7 @@ private:
   Int                        m_iLastIDR;
   Int                        m_iAssociatedIRAP;
   NalUnitType                m_iAssociatedIRAPType;
-  TComReferencePictureSet*   m_pcRPS;
+  const TComReferencePictureSet*   m_pcRPS;
   TComReferencePictureSet    m_LocalRPS;
   Int                        m_iBDidx;
   TComRefPicListModification m_RefPicListModification;
@@ -1426,8 +1426,8 @@ public:
   Bool                        getPicOutputFlag() const                               { return m_PicOutputFlag;                                       }
   Void                        setSaoEnabledFlag(ChannelType chType, Bool s)          {m_saoEnabledFlag[chType] =s;                                   }
   Bool                        getSaoEnabledFlag(ChannelType chType) const            { return m_saoEnabledFlag[chType];                              }
-  Void                        setRPS( TComReferencePictureSet *pcRPS )               { m_pcRPS = pcRPS;                                              }
-  TComReferencePictureSet*    getRPS()                                               { return m_pcRPS;                                               }
+  Void                        setRPS( const TComReferencePictureSet *pcRPS )         { m_pcRPS = pcRPS;                                              }
+  const TComReferencePictureSet*    getRPS()                                               { return m_pcRPS;                                               }
   TComReferencePictureSet*    getLocalRPS()                                          { return &m_LocalRPS;                                           }
 
   Void                        setRPSidx( Int iBDidx )                                { m_iBDidx = iBDidx;                                            }
