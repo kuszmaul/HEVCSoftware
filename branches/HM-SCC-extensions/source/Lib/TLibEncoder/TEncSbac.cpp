@@ -87,9 +87,6 @@ TEncSbac::TEncSbac()
 , m_CUTransquantBypassFlagSCModel      ( 1,             1,                      NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX    , m_contextModels + m_numContextModels, m_numContextModels)
 , m_explicitRdpcmFlagSCModel           ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_EXPLICIT_RDPCM_FLAG_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
 , m_explicitRdpcmDirSCModel            ( 1,             MAX_NUM_CHANNEL_TYPE,   NUM_EXPLICIT_RDPCM_DIR_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-, m_cIntraBCPredFlagSCModel            ( 1,             1,                      NUM_INTRABC_PRED_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
-#endif
 , m_cCrossComponentPredictionSCModel   ( 1,             1,                      NUM_CROSS_COMPONENT_PREDICTION_CTX   , m_contextModels + m_numContextModels, m_numContextModels)
 , m_PLTModeFlagSCModel                 ( 1,             1,                      NUM_PLTMODE_FLAG_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
 , m_SPointSCModel                      ( 1,             1,                      NUM_SPOINT_CTX                       , m_contextModels + m_numContextModels, m_numContextModels)
@@ -100,9 +97,6 @@ TEncSbac::TEncSbac()
 , m_ChromaQpAdjFlagSCModel             ( 1,             1,                      NUM_CHROMA_QP_ADJ_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_ChromaQpAdjIdcSCModel              ( 1,             1,                      NUM_CHROMA_QP_ADJ_IDC_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUColourTransformFlagSCModel      ( 1,             1,                      NUM_COLOUR_TRANS_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-, m_cIntraBCBVDSCModel                 (1,              1,                      NUM_INTRABC_BVD_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
-#endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
 }
@@ -154,9 +148,6 @@ Void TEncSbac::resetEntropy           (const TComSlice *pSlice)
   m_CUTransquantBypassFlagSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
   m_explicitRdpcmFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_EXPLICIT_RDPCM_FLAG);
   m_explicitRdpcmDirSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_EXPLICIT_RDPCM_DIR);
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  m_cIntraBCPredFlagSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_INTRABC_PRED_FLAG );
-#endif
   m_cCrossComponentPredictionSCModel.initBuffer   ( eSliceType, iQp, (UChar*)INIT_CROSS_COMPONENT_PREDICTION  );
   m_PLTModeFlagSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_PLTMODE_FLAG );
   m_SPointSCModel.initBuffer                      ( eSliceType, iQp, (UChar*)INIT_SPOINT );
@@ -167,9 +158,6 @@ Void TEncSbac::resetEntropy           (const TComSlice *pSlice)
   m_ChromaQpAdjFlagSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
   m_ChromaQpAdjIdcSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
   m_cCUColourTransformFlagSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_COLOUR_TRANS );
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  m_cIntraBCBVDSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_INTRABC_BVD);
-#endif
 
   for (UInt statisticIndex = 0; statisticIndex < RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS ; statisticIndex++)
   {
@@ -228,9 +216,6 @@ SliceType TEncSbac::determineCabacInitIdx(const TComSlice *pSlice)
       curCost += m_CUTransquantBypassFlagSCModel.calcCost      ( curSliceType, qp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
       curCost += m_explicitRdpcmFlagSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_EXPLICIT_RDPCM_FLAG);
       curCost += m_explicitRdpcmDirSCModel.calcCost            ( curSliceType, qp, (UChar*)INIT_EXPLICIT_RDPCM_DIR);
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-      curCost += m_cIntraBCPredFlagSCModel.calcCost            ( curSliceType, qp, (UChar*)INIT_INTRABC_PRED_FLAG );
-#endif
       curCost += m_cCrossComponentPredictionSCModel.calcCost   ( curSliceType, qp, (UChar*)INIT_CROSS_COMPONENT_PREDICTION );
       curCost += m_PLTModeFlagSCModel.calcCost                 ( curSliceType, qp, (UChar*)INIT_PLTMODE_FLAG );
       curCost += m_SPointSCModel.calcCost                      ( curSliceType, qp, (UChar*)INIT_SPOINT );
@@ -241,9 +226,6 @@ SliceType TEncSbac::determineCabacInitIdx(const TComSlice *pSlice)
       curCost += m_ChromaQpAdjFlagSCModel.calcCost             ( curSliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
       curCost += m_ChromaQpAdjIdcSCModel.calcCost              ( curSliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
       curCost += m_cCUColourTransformFlagSCModel.calcCost      ( curSliceType, qp, (UChar*)INIT_COLOUR_TRANS );
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-      curCost += m_cIntraBCBVDSCModel.calcCost                 ( curSliceType, qp, (UChar*)INIT_INTRABC_BVD );
-#endif
 
       if (curCost < bestCost)
       {
@@ -943,10 +925,6 @@ Void TEncSbac::codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRef
 
 Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  assert( !pcCU->isIntraBC( uiAbsPartIdx ) );
-#endif
-
   PartSize eSize         = pcCU->getPartitionSize( uiAbsPartIdx );
   const UInt log2DiffMaxMinCodingBlockSize = pcCU->getSlice()->getSPS()->getLog2DiffMaxMinCodingBlockSize();
 
@@ -1030,43 +1008,6 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   }
 }
 
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-Void TEncSbac::codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
-{
-  const UInt uiSymbol = pcCU->getPartitionSize(uiAbsPartIdx);
-  if( pcCU->getDepth(uiAbsPartIdx) == pcCU->getSlice()->getSPS()->getLog2DiffMaxMinCodingBlockSize() )
-  {
-    // size can be 2Nx2N, NxN, 2NxN, Nx2N
-    if( uiSymbol == SIZE_2Nx2N )
-    {
-      m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 0 ) );
-    }
-    else
-    {
-      m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0 ) );
-      m_pcBinIf->encodeBin( ( uiSymbol == SIZE_2NxN ? 1 : 0 ), m_cCUPartSizeSCModel.get( 0, 0, 1 ) );
-      if( uiSymbol != SIZE_2NxN )
-      {
-        m_pcBinIf->encodeBin( ( uiSymbol == SIZE_Nx2N ? 1 : 0 ), m_cCUPartSizeSCModel.get( 0, 0, 2 ) );
-      }
-    }
-  }
-  else
-  {
-    // size can be 2Nx2N, 2NxN, Nx2N
-    if( uiSymbol == SIZE_2Nx2N )
-    {
-      m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 0 ) );
-    }
-    else
-    {
-      m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0 ) );
-      m_pcBinIf->encodeBin( ( uiSymbol == SIZE_Nx2N ? 0 : 1 ), m_cCUPartSizeSCModel.get( 0, 0, 1 ) );
-    }
-  }
-}
-#endif
-
 /** code prediction mode
  * \param pcCU
  * \param uiAbsPartIdx
@@ -1075,9 +1016,6 @@ Void TEncSbac::codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
 Void TEncSbac::codePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   // get context function is here
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION  
-  assert(!pcCU->isIntraBC(uiAbsPartIdx));
-#endif
   m_pcBinIf->encodeBin( pcCU->isIntra( uiAbsPartIdx ) ? 1 : 0, m_cCUPredModeSCModel.get( 0, 0, 0 ) );
 }
 
@@ -1276,88 +1214,6 @@ Void TEncSbac::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
 
   return;
 }
-
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-/** code intraBC flag
- * \param pcCU
- * \param uiAbsPartIdx
- * \returns Void
- */
-Void TEncSbac::codeIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
-{
-  // get context function is here
-  const UInt uiSymbol = pcCU->isIntraBC( uiAbsPartIdx ) ? 1 : 0;
-
-  m_pcBinIf->encodeBin(uiSymbol, m_cIntraBCPredFlagSCModel.get( 0, 0, 0 ));
-
-  DTRACE_CABAC_VL( g_nSymbolCounter++ );
-  DTRACE_CABAC_T( "\tuiSymbol: ");
-  DTRACE_CABAC_V( uiSymbol );
-  DTRACE_CABAC_T( "\n");
-}
-
-/** code intraBC
- * \param pcCU
- * \param uiAbsPartIdx
- * \returns Void
- */
-Void TEncSbac::codeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
-{
-  const PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
-  const UInt iNumPart = pcCU->getNumPartitions( uiAbsPartIdx );
-  const UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxTotalCUDepth() - pcCU->getDepth(uiAbsPartIdx) ) << 1 ) ) >> 4;
-
-  for(UInt iPartIdx = 0; iPartIdx < iNumPart; iPartIdx ++)
-  {
-    codeIntraBCBvd(pcCU, uiAbsPartIdx + iPartIdx * uiPUOffset, REF_PIC_LIST_INTRABC);
-    Int iSymbol = pcCU->getMVPIdx(REF_PIC_LIST_INTRABC, uiAbsPartIdx + iPartIdx * uiPUOffset);
-    xWriteUnaryMaxSymbol(iSymbol, m_cMVPIdxSCModel.get(0), 1, AMVP_MAX_NUM_CANDS-1);
-  }
-}
-
-Void TEncSbac::codeIntraBCBvd( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
-{ 
-  const TComCUMvField* pcCUMvField = pcCU->getCUMvField( eRefList );
-  
-  const Int iHor = pcCUMvField->getMvd( uiAbsPartIdx ).getHor();
-  const Int iVer = pcCUMvField->getMvd( uiAbsPartIdx ).getVer();
-
-  ContextModel* pCtx = m_cIntraBCBVDSCModel.get( 0 );
-  
-  m_pcBinIf->encodeBin( iHor != 0 ? 1 : 0, *pCtx );
-  
-  pCtx++;
-  m_pcBinIf->encodeBin( iVer != 0 ? 1 : 0, *pCtx );
-  
-  const Bool bHorAbsGr0 = iHor != 0;
-  const Bool bVerAbsGr0 = iVer != 0;
-  const UInt uiHorAbs   = 0 > iHor ? -iHor : iHor;
-  const UInt uiVerAbs   = 0 > iVer ? -iVer : iVer;
-  
-  if( bHorAbsGr0 )
-  {
-    xWriteEpExGolomb( uiHorAbs-1, INTRABC_BVD_CODING_EGORDER );
-    m_pcBinIf->encodeBinEP( 0 > iHor ? 1 : 0 );
-  }
-  
-  if( bVerAbsGr0 )
-  {
-    xWriteEpExGolomb( uiVerAbs-1, INTRABC_BVD_CODING_EGORDER );
-    m_pcBinIf->encodeBinEP( 0 > iVer ? 1 : 0 );
-  }
-  return;
-}
-
-Void  TEncSbac::estBvdBin0Cost(Int *Bin0Cost)
-{
-  ContextModel* pCtx = m_cIntraBCBVDSCModel.get( 0 );
-  Bin0Cost[0] = pCtx->getEntropyBits(0);
-  Bin0Cost[1] = pCtx->getEntropyBits(1);
-  pCtx++;
-  Bin0Cost[2] = pCtx->getEntropyBits(0);
-  Bin0Cost[3] = pCtx->getEntropyBits(1);
-}
-#endif
 
 Void TEncSbac::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {

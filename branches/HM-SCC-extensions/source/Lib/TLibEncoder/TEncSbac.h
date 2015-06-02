@@ -149,9 +149,6 @@ public:
   Void codeMVPIdx        ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
 
   Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  Void codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
   Void codeColourTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -175,13 +172,6 @@ public:
   Void codeLastSignificantXY ( UInt uiPosX, UInt uiPosY, Int width, Int height, ComponentID component, UInt uiScanIdx );
   Void codeCoeffNxN            ( TComTU &rTu, TCoeff* pcCoef, const ComponentID compID );
   Void codeTransformSkipFlags ( TComTU &rTu, ComponentID component );
-
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  Void codeIntraBCFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  Void codeIntraBC             ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  Void codeIntraBCBvd          ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
-  Void estBvdBin0Cost          (Int *Bin0Cost);
-#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // for RD-optimizatioon
@@ -233,9 +223,6 @@ private:
   ContextModel3DBuffer m_CUTransquantBypassFlagSCModel;
   ContextModel3DBuffer m_explicitRdpcmFlagSCModel;
   ContextModel3DBuffer m_explicitRdpcmDirSCModel;
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  ContextModel3DBuffer m_cIntraBCPredFlagSCModel;
-#endif
   ContextModel3DBuffer m_cCrossComponentPredictionSCModel;
   ContextModel3DBuffer m_PLTModeFlagSCModel;
   ContextModel3DBuffer m_SPointSCModel;
@@ -246,9 +233,6 @@ private:
   ContextModel3DBuffer m_ChromaQpAdjFlagSCModel;
   ContextModel3DBuffer m_ChromaQpAdjIdcSCModel;
   ContextModel3DBuffer m_cCUColourTransformFlagSCModel;
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  ContextModel3DBuffer m_cIntraBCBVDSCModel;
-#endif
 
   UInt m_golombRiceAdaptationStatistics[RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS];
 };

@@ -1267,13 +1267,6 @@ Void TEncCavlc::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   assert(0);
 }
 
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-Void TEncCavlc::codePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
-{
-  assert(0);
-}
-#endif
-
 Void TEncCavlc::codePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
@@ -1372,28 +1365,12 @@ Void TEncCavlc::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-Void TEncCavlc::codeIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
-{
-  assert(0);
-}
 
-Void TEncCavlc::codeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
-{
-  assert(0);
-}
-#endif
 Void TEncCavlc::codeColourTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
 
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-Void TEncCavlc::codeIntraBCBvd( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
-{
-  assert(0);
-}
-#endif
 Void TEncCavlc::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);

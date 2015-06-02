@@ -814,7 +814,6 @@ Void TEncTop::xInitPPS()
     }
   }
   assert(bestPos <= 15);
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
   if ( m_cSPS.getUseIntraBlockCopy() )
   {
     m_cPPS.setNumRefIdxL0DefaultActive( bestPos + 1 );
@@ -823,9 +822,6 @@ Void TEncTop::xInitPPS()
   {
     m_cPPS.setNumRefIdxL0DefaultActive(bestPos);
   }
-#else
-  m_cPPS.setNumRefIdxL0DefaultActive(bestPos);
-#endif
   m_cPPS.setNumRefIdxL1DefaultActive(bestPos);
   m_cPPS.setTransquantBypassEnableFlag(getTransquantBypassEnableFlag());
   m_cPPS.setUseTransformSkip( m_useTransformSkip );

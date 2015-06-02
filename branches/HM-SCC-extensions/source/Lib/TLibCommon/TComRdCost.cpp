@@ -296,34 +296,6 @@ UInt TComRdCost::xGetComponentBits( Int iVal )
 
   return uiLength;
 }
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-UInt TComRdCost::xGetBvdComponentBits( Int iVal, Int bComponent )
-{
-  if(iVal == 0)
-  {
-    return m_mvdBin0Cost[0 + (bComponent << 1)];
-  }
-
-  UInt uiLength;
-  Int numBins = 0;
-  UInt uiCount = INTRABC_BVD_CODING_EGORDER; 
-  UInt uiTemp  = ( iVal <= 0) ? (-iVal-1): (iVal- 1);
-
-  while( uiTemp >= (UInt)(1<<uiCount) )
-  {
-    numBins++;
-    uiTemp -= 1 << uiCount;
-    uiCount  ++;
-  }
-  
-  numBins++;
-
-  uiLength = (2 + numBins + uiCount) << 15;
-  uiLength+= m_mvdBin0Cost[1 + (bComponent << 1)];
-  
-  return uiLength;
-}
-#endif
 
 Void TComRdCost::setDistParam( UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc, DistParam& rcDistParam )
 {

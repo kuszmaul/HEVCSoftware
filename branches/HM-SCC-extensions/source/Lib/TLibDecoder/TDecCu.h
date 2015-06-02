@@ -98,9 +98,6 @@ protected:
   Void xDecompressCU            ( TComDataCU* pCtu, UInt uiAbsPartIdx, UInt uiDepth );
 
   Void xReconInter              ( TComDataCU* pcCU, UInt uiDepth );
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  Void xReconIntraBC            ( TComDataCU* pcCU, UInt uiDepth );
-#endif
   Void xReconPLTMode          ( TComDataCU* pcCU, UInt uiDepth );
   Void xDecodePLTTexture      ( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPalette,  Pel* pLevel, UChar *pSPoint, Pel *pPixelValue, Pel* piReco,const UInt uiStride, const UInt uiWidth, const UInt uiHeight, const ComponentID compID, UChar* pEscapeFlag);
   Void xReconIntraQT            ( TComDataCU* pcCU, UInt uiDepth );

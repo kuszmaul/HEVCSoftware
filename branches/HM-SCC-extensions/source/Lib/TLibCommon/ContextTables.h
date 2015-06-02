@@ -162,12 +162,6 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 
 #define NUM_CROSS_COMPONENT_PREDICTION_CTX 10
 
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-#define NUM_INTRABC_PRED_CTX          1
-
-#define NUM_INTRABC_BVD_CTX           2
-#endif
-
 #define CNU                          154      ///< dummy initialization value for unused context models 'Context model Not Used'
 
 #define NUM_PLTMODE_FLAG_CTX          1
@@ -185,10 +179,6 @@ struct PaletteInfoBuffer
 
   PaletteInfoBuffer() { std::memset( this, 0, sizeof( PaletteInfoBuffer ) ); }
 };
-
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-#define INTRABC_BVD_CODING_EGORDER    3
-#endif
 
 // ====================================================================================================================
 // Tables
@@ -569,25 +559,6 @@ INIT_EXPLICIT_RDPCM_DIR[NUMBER_OF_SLICE_TYPES][2*NUM_EXPLICIT_RDPCM_DIR_CTX] =
   {139, 139},
   {CNU, CNU}
 };
-
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-static const UChar
-INIT_INTRABC_PRED_FLAG[3][NUM_INTRABC_PRED_CTX] =
-{
-  { 185, },
-  { 197, },
-  { 197, }
-};
-
-static const UChar 
-INIT_INTRABC_BVD[NUMBER_OF_SLICE_TYPES][NUM_INTRABC_BVD_CTX] = 
-{
-  {154,154 },
-  {154,154 },
-  {154,154 },
-};
-#endif
-
 
 static const UChar
 INIT_CROSS_COMPONENT_PREDICTION[NUMBER_OF_SLICE_TYPES][NUM_CROSS_COMPONENT_PREDICTION_CTX] =

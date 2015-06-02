@@ -253,13 +253,6 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   m_pcEntropyCoderIf->codePartSize( pcCU, uiAbsPartIdx, uiDepth );
 }
 
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-Void TEncEntropy::encodePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
-{
-  m_pcEntropyCoderIf->codePartSizeIntraBC( pcCU, uiAbsPartIdx );
-}
-#endif
-
 /** Encode I_PCM information.
  * \param pcCU          pointer to CU
  * \param uiAbsPartIdx  CU index
@@ -509,28 +502,8 @@ Void TEncEntropy::encodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx 
 #endif
 }
 
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-Void TEncEntropy::encodeIntraBCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
-{
-  if( bRD )
-  {
-    uiAbsPartIdx = 0;
-  }
-  m_pcEntropyCoderIf->codeIntraBCFlag( pcCU, uiAbsPartIdx );
-}
-
-Void TEncEntropy::encodeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx )
-{
-  m_pcEntropyCoderIf->codeIntraBC( pcCU, uiAbsPartIdx );
-}
-#endif
-
 Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  assert ( !pcCU->isIntraBC( uiAbsPartIdx ) );
-#endif
-
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.
   {
     encodeIntraDirModeLuma  ( pcCU, uiAbsPartIdx,true );

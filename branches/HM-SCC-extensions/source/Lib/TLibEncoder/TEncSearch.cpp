@@ -1062,18 +1062,6 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
         m_pcEntropyCoder->encodePLTModeInfo(pcCU, 0, true);
       }
 
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-      if (pcCU->getSlice()->getSPS()->getUseIntraBlockCopy())
-      {
-        m_pcEntropyCoder->encodeIntraBCFlag ( pcCU, 0, true );
-        if ( pcCU->isIntraBC( 0 ) )
-        {
-          m_pcEntropyCoder->encodePartSizeIntraBC( pcCU, 0 );
-          m_pcEntropyCoder->encodeIntraBC( pcCU, 0 );
-          return;
-        }
-      }
-#endif
       if (pcCU->getPLTModeFlag(0))
       {
         return;
@@ -1107,13 +1095,6 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
       }
     }
   }
-
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  if( pcCU->isIntraBC( 0 ) )
-  {
-    return;
-  }
-#endif
 
   if( bChroma )
   {
@@ -4350,11 +4331,7 @@ Void TEncSearch::xGetInterPredictionError( TComDataCU* pcCU, TComYuv* pcYuvOrg, 
 }
 
 //! estimation of best merge coding
-Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUIdx, UInt& uiInterDir, TComMvField* pacMvField, UInt& uiMergeIndex, Distortion& ruiCost, TComMvField* cMvFieldNeighbours, UChar* uhInterDirNeighbours, Int& numValidMergeCand 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
-    ,Int iCostCalcType
-#endif
-)
+Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUIdx, UInt& uiInterDir, TComMvField* pacMvField, UInt& uiMergeIndex, Distortion& ruiCost, TComMvField* cMvFieldNeighbours, UChar* uhInterDirNeighbours, Int& numValidMergeCand, Int iCostCalcType )
 {
   UInt uiAbsPartIdx = 0;
   Int iWidth = 0;
@@ -4381,21 +4358,17 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
   xRestrictBipredMergeCand( pcCU, iPUIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
 
   ruiCost = std::numeric_limits<Distortion>::max();
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
   if ( iCostCalcType )
   {
     m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass( uiAbsPartIdx ) );
   }
-#endif
   
   for( UInt uiMergeCand = 0; uiMergeCand < numValidMergeCand; ++uiMergeCand )
   {
-#if SCM_T0227_INTRABC_SIG_UNIFICATION 
     if ( (uhInterDirNeighbours[uiMergeCand] == 1 || uhInterDirNeighbours[uiMergeCand] == 3) && pcCU->getSlice()->getRefPic( REF_PIC_LIST_0, cMvFieldNeighbours[uiMergeCand<<1].getRefIdx() )->getPOC() == pcCU->getSlice()->getPOC() )
     {
       continue;
     }
-#endif
     Distortion uiCostCand = std::numeric_limits<Distortion>::max();
     UInt       uiBitsCand = 0;
 
@@ -4404,7 +4377,6 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
     pcCU->getCUMvField(REF_PIC_LIST_0)->setAllMvField( cMvFieldNeighbours[0 + 2*uiMergeCand], ePartSize, uiAbsPartIdx, 0, iPUIdx );
     pcCU->getCUMvField(REF_PIC_LIST_1)->setAllMvField( cMvFieldNeighbours[1 + 2*uiMergeCand], ePartSize, uiAbsPartIdx, 0, iPUIdx );
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
     if ( !iCostCalcType )
     {
       xGetInterPredictionError( pcCU, pcYuvOrg, iPUIdx, uiCostCand, m_pcEncCfg->getUseHADME() );
@@ -4425,13 +4397,13 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
 
         uiCostCand += getSAD( pRef, iRefStride, pOrg, iOrgStride, iTempWidth, iTempHeight, pcCU->getSlice()->getSPS()->getBitDepths() );
 
-        if(uiCostCand >= ruiCost)
+        if ( uiCostCand >= ruiCost )
+        {
           break;
+        }
       }
     }
-#else
-    xGetInterPredictionError( pcCU, pcYuvOrg, iPUIdx, uiCostCand, m_pcEncCfg->getUseHADME() );
-#endif
+
     uiBitsCand = uiMergeCand + 1;
     if (uiMergeCand == m_pcEncCfg->getMaxNumMergeCand() -1)
     {
@@ -4474,17 +4446,9 @@ Void TEncSearch::xRestrictBipredMergeCand( TComDataCU* pcCU, UInt puIdx, TComMvF
 
 //! search of the best candidate for inter prediction
 #if AMP_MRG
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
 Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, TComYuv* pcRecoYuv DEBUG_STRING_FN_DECLARE(sDebug), Bool bUseRes, Bool bUseMRG, TComMv* iMVCandList )
 #else
-Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, TComYuv* pcRecoYuv DEBUG_STRING_FN_DECLARE(sDebug), Bool bUseRes, Bool bUseMRG )
-#endif
-#else
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
 Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, TComYuv* pcRecoYuv, Bool bUseRes, TComMv* iMVCandList )
-#else
-Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, TComYuv* pcRecoYuv, Bool bUseRes )
-#endif
 #endif
 {
   for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
@@ -4588,16 +4552,12 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
     {
       RefPicList  eRefPicList = ( iRefList ? REF_PIC_LIST_1 : REF_PIC_LIST_0 );
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
       Int refPicNumber = pcCU->getSlice()->getNumRefIdx( eRefPicList );
       if ( pcCU->getSlice()->getSPS()->getUseIntraBlockCopy() && eRefPicList == REF_PIC_LIST_0 )
       {
         refPicNumber--;
       }
       for ( Int iRefIdxTemp = 0; iRefIdxTemp < refPicNumber; iRefIdxTemp++ )
-#else
-      for ( Int iRefIdxTemp = 0; iRefIdxTemp < pcCU->getSlice()->getNumRefIdx(eRefPicList); iRefIdxTemp++ )
-#endif
       {
         uiBitsTemp = uiMbBits[iRefList];
         if ( pcCU->getSlice()->getNumRefIdx(eRefPicList) > 1 )
@@ -4651,12 +4611,10 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
         xCopyAMVPInfo(pcCU->getCUMvField(eRefPicList)->getAMVPInfo(), &aacAMVPInfo[iRefList][iRefIdxTemp]); // must always be done ( also when AMVP_MODE = AM_NONE )
         xCheckBestMVP(pcCU, eRefPicList, cMvTemp[iRefList][iRefIdxTemp], cMvPred[iRefList][iRefIdxTemp], aaiMvpIdx[iRefList][iRefIdxTemp], uiBitsTemp, uiCostTemp);
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
         if ( iRefList <= 1 && iRefIdxTemp <= 1 && (ePartSize == SIZE_2NxN || ePartSize == SIZE_Nx2N) && pcCU->getWidth( 0 ) <= 16 )
         {
           iMVCandList[4*iRefList + 2*iRefIdxTemp + iPartIdx] = cMvTemp[iRefList][iRefIdxTemp];
         }
-#endif
         if ( iRefList == 0 )
         {
           uiCostTempL0[iRefIdxTemp] = uiCostTemp;
@@ -4783,12 +4741,10 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
 
         iRefStart = 0;
         iRefEnd   = pcCU->getSlice()->getNumRefIdx(eRefPicList)-1;
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
         if ( pcCU->getSlice()->getSPS()->getUseIntraBlockCopy() && eRefPicList == REF_PIC_LIST_0 )
         {
           iRefEnd--;
         }
-#endif
 
         for ( Int iRefIdxTemp = iRefStart; iRefIdxTemp <= iRefEnd; iRefIdxTemp++ )
         {
@@ -5006,7 +4962,6 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
   return;
 }
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
 Bool TEncSearch::isBlockVectorValid( Int xPos, Int yPos, Int width, Int height, TComDataCU *pcCU, UInt uiAbsPartIdx,
                                      Int xStartInCU, Int yStartInCU, Int xBv, Int yBv, Int ctuSize )
 {
@@ -5105,7 +5060,6 @@ Bool TEncSearch::isBlockVectorValid( Int xPos, Int yPos, Int width, Int height, 
 
   return true;
 }
-#endif
 
 // based on predInterSearch()
 Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
@@ -5139,46 +5093,18 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
   Distortion uiTotalCost = 0;
   for( Int iPartIdx = 0; iPartIdx < iNumPart; ++iPartIdx )
   {
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
     Int width, height;
-#else
-    Int iDummyWidth, iDummyHeight;
-#endif
     UInt uiPartAddr = 0;
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
     pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, width, height );
-#else
-    pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iDummyWidth, iDummyHeight );
-#endif
 
     TComMvField cMEMvField;
     Distortion  uiCost;
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
     TComMv      cMv, cMvd, cMvPred[2];
     AMVPInfo currAMVPInfo;
     pcCU->fillMvpCand( iPartIdx, uiPartAddr, REF_PIC_LIST_0, pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) - 1, &currAMVPInfo );
     cMvPred[0].set( currAMVPInfo.m_acMvCand[0].getHor() >> 2, currAMVPInfo.m_acMvCand[0].getVer() >> 2);
     cMvPred[1].set( currAMVPInfo.m_acMvCand[1].getHor() >> 2, currAMVPInfo.m_acMvCand[1].getVer() >> 2);
-#else
-    TComMv  cMv, cMvd, cMvPred[2], MvLast[2];
-    
-    for(Int idx = 0; idx < 2; idx++)
-    {
-      MvLast[idx] = pcCU->getLastIntraBCMv(idx);
-    }
-    
-    for(Int tmpPartIdx=1; tmpPartIdx<=iPartIdx; tmpPartIdx++)
-    {
-      TComMv tmpMv = pcCU->getCUMvField(REF_PIC_LIST_INTRABC)->getMv( uiPartAddr - iPartIdx + tmpPartIdx - 1 );
-      if( tmpMv != MvLast[0])
-      {
-      MvLast[1] = MvLast[0];
-      MvLast[0] = tmpMv;
-      }
-    }
-    pcCU->getIntraBCMVPs(uiPartAddr, cMvPred, MvLast); 
-#endif
 
     xIntraBlockCopyEstimation ( pcCU, pcOrgYuv, iPartIdx, cMvPred, cMv, uiCost, bUse1DSearchFor8x8, testOnlyPred );
 
@@ -5195,7 +5121,6 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
       uiCost = std::min(uiIntraBCECost, uiCost);
     }
     uiTotalCost += uiCost;
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
     // choose one MVP and compare with merge mode
     // no valid intra BV
     if ( cMv.getHor() == 0 && cMv.getVer() == 0 )
@@ -5254,11 +5179,7 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
     for ( mvpIdxTemp=0; mvpIdxTemp<currAMVPInfo.iN; mvpIdxTemp++ )
     {
       m_pcRdCost->setPredictor( cMvPred[mvpIdxTemp] );
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
       bitsAMVPTemp = m_pcRdCost->getBits( cMv.getHor(), cMv.getVer() );
-#else
-      bitsAMVPTemp = m_pcRdCost->getBvBits( cMv.getHor(), cMv.getVer() );
-#endif
       if ( bitsAMVPTemp < bitsAMVPBest )
       {
         bitsAMVPBest = bitsAMVPTemp;
@@ -5371,28 +5292,7 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
       pcCU->setMVPIdxSubParts( -1, REF_PIC_LIST_0, uiPartAddr, iPartIdx, uiDepth );
       pcCU->setMVPIdxSubParts( -1, REF_PIC_LIST_1, uiPartAddr, iPartIdx, uiDepth );
     }
-#else
 
-    // store intra BV in REF_PIC_LIST_0
-    cMEMvField.setMvField( cMv, REF_PIC_LIST_INTRABC);
-    pcCU->getCUMvField( REF_PIC_LIST_INTRABC )->setAllMvField( cMEMvField, ePartSize, uiPartAddr, 0, iPartIdx );
-
-  UInt uiMVPIdx = pcCU->getMVPIdx(REF_PIC_LIST_INTRABC, uiPartAddr);
-  cMvd.setHor(cMv.getHor() - cMvPred[uiMVPIdx].getHor());
-  cMvd.setVer(cMv.getVer() - cMvPred[uiMVPIdx].getVer());
-
-    pcCU->getCUMvField(REF_PIC_LIST_INTRABC )->setAllMvd(cMvd, ePartSize, uiPartAddr, 0, iPartIdx);
-
-    // no valid intra BV
-    if (cMv.getHor() == 0 && cMv.getVer() == 0)
-    {
-      if ( testOnlyPred )
-      {
-        m_lastCandCost = MAX_UINT;
-      }
-      return false;
-    }
-#endif
   }
 
   Distortion abortThreshold = pcCU->getWidth(0)*pcCU->getHeight(0)*2;
@@ -5413,19 +5313,11 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
   // motion compensation
   if( !pcCU->getSlice()->getPPS()->getUseColourTrans() || !m_pcEncCfg->getRGBFormatFlag() || (pcCU->getCUTransquantBypass(0) && (pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA) != pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_CHROMA))) )
   {
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
     motionCompensation ( pcCU, rpcPredYuv );
-#else
-    for( Int iPartIdx = 0; iPartIdx < iNumPart; iPartIdx ++ )
-    {
-      intraBlockCopy ( pcCU, rpcPredYuv, iPartIdx );
-    }
-#endif
   }
   return true;
 }
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
 // based on predInterSearch()
 Bool TEncSearch::predMixedIntraBCInterSearch( TComDataCU * pcCU,
                                               TComYuv    * pcOrgYuv,
@@ -5968,7 +5860,6 @@ Bool TEncSearch::predMixedIntraBCInterSearch( TComDataCU * pcCU,
 
   return true;
 }
-#endif
 
 Void TEncSearch::addToSortList( list<BlockHash>& listBlockHash, list<Int>& listCost, Int cost, const BlockHash& blockHash )
 {
@@ -6169,16 +6060,12 @@ Bool TEncSearch::xHashInterEstimation( TComDataCU* pcCU, Int width, Int height, 
   for ( Int iRefList = 0; iRefList < iNumPredDir; iRefList++ )
   {
     RefPicList eRefPicList = (iRefList==0) ? REF_PIC_LIST_0 : REF_PIC_LIST_1;
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
     Int refPicNumber = pcCU->getSlice()->getNumRefIdx( eRefPicList );
     if ( pcCU->getSlice()->getSPS()->getUseIntraBlockCopy() && eRefPicList == REF_PIC_LIST_0 )
     {
       refPicNumber--;
     }
     for ( Int iRefIdx = 0; iRefIdx < refPicNumber; iRefIdx++ )
-#else
-    for ( Int iRefIdx = 0; iRefIdx < pcCU->getSlice()->getNumRefIdx( eRefPicList ); iRefIdx++ )
-#endif
     {
       Int bitsOnRefIdx = iRefIdx+1;
       if ( iRefIdx+1 == pcCU->getSlice()->getNumRefIdx( eRefPicList ) )
@@ -6313,32 +6200,9 @@ Void TEncSearch::xIntraBlockCopyEstimation( TComDataCU *pcCU,
   m_pcRdCost->setPredictors(pcMvPred);
   m_pcRdCost->setCostScale  ( 0 );
 
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  m_pcEntropyCoder->m_pcEntropyCoderIf->estBvdBin0Cost( m_pcRdCost->getMvdBin0CostPtr());  
-#endif
-
   //  Do integer search
   xIntraPatternSearch      ( pcCU, iPartIdx, uiPartAddr, pcPatternKey, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost, iRoiWidth, iRoiHeight, pcMvPred, bUse1DSearchFor8x8, testOnlyPred );
   //printf("ruiCost = %d\n", ruiCost);
-
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  UInt uiMvBits = 0;
-  UInt uiMvBitsBest = MAX_UINT;
-  UInt predIdxBest = 0;
-  for(UInt idx = 0; idx < 2; idx++)
-  {
-    m_pcRdCost->setPredictor( pcMvPred[idx] );
-    uiMvBits = m_pcRdCost->getBvBits( rcMv.getHor(), rcMv.getVer() );
-
-    if( uiMvBits < uiMvBitsBest)
-    {
-      uiMvBitsBest = uiMvBits;
-      predIdxBest = idx;
-    }
-  }
-
-  pcCU->setMVPIdxSubParts( predIdxBest, REF_PIC_LIST_INTRABC, uiPartAddr, iPartIdx, pcCU->getDepth(uiPartAddr));
-#endif
 }
 
 // based on xSetSearchRange
@@ -6553,29 +6417,19 @@ Int TEncSearch::xIntraBCSearchMVChromaRefine( TComDataCU* pcCU,
   return iBestCandIdx;
 }
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
 static UInt MergeCandLists(TComMv *dst, UInt dn, TComMv *src, UInt sn, Bool isSrcQuarPel)
-#else
-static UInt MergeCandLists(TComMv *dst, UInt dn, TComMv *src, UInt sn)
-#endif
 {
   for(UInt cand = 0; cand < sn && dn<SCM_S0067_NUM_CANDIDATES; cand++)
   {
     Bool found = false;
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
     TComMv TempMv = src[cand];
     if ( !isSrcQuarPel )
     {
       TempMv <<= 2;
     }
-#endif
     for(int j=0; j<dn; j++)
     {
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
       if( TempMv == dst[j] )
-#else
-      if( src[cand] == dst[j] )
-#endif
       {
         found = true;
         break;
@@ -6584,11 +6438,7 @@ static UInt MergeCandLists(TComMv *dst, UInt dn, TComMv *src, UInt sn)
 
     if( !found )
     {
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
       dst[dn] = TempMv;
-#else
-      dst[dn] = src[cand];
-#endif
       dn++;
     }
   }
@@ -6708,20 +6558,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
     TComMv cMvPredEncOnly[16];
     Int nbPreds = 0;
     pcCU->getIntraBCMVPsEncOnly(uiPartAddr, cMvPredEncOnly, nbPreds, iPartIdx );
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
     m_uiNumBVs = MergeCandLists(m_acBVs, m_uiNumBVs, cMvPredEncOnly, nbPreds, true);
-#else
-    m_uiNumBVs = MergeCandLists(m_acBVs, m_uiNumBVs, cMvPredEncOnly, nbPreds);
-#endif
     for(UInt cand = 0; cand < m_uiNumBVs; cand++)
     {
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
       Int xPred = m_acBVs[cand].getHor()>>2;
       Int yPred = m_acBVs[cand].getVer()>>2;
-#else
-      Int xPred = m_acBVs[cand].getHor();
-      Int yPred = m_acBVs[cand].getVer();
-#endif
       if ( !( xPred==0 && yPred==0)
             && !( (yPred < srTop)  || (yPred > srBottom) )
             && !( (xPred < srLeft) || (xPred > srRight) ) )
@@ -7132,11 +6973,7 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
 end:
   if(iRoiWidth+iRoiHeight > 8)
   {
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
     m_uiNumBVs = MergeCandLists(m_acBVs, m_uiNumBVs, cMVCand, CHROMA_REFINEMENT_CANDIDATES, false);
-#else
-    m_uiNumBVs = MergeCandLists(m_acBVs, m_uiNumBVs, cMVCand, CHROMA_REFINEMENT_CANDIDATES);
-#endif
 
     if(iRoiWidth+iRoiHeight==32)
     {
@@ -7318,11 +7155,6 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
   m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
   m_pcRdCost->setPredictor(*pcMvPred);
   m_pcRdCost->setCostScale  ( 0 );
-
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  m_pcEntropyCoder->m_pcEntropyCoderIf->estBvdBin0Cost( m_pcRdCost->getMvdBin0CostPtr());  
-#endif
-
   m_pcRdCost->setDistParam( pcPatternKey, piRefY, iRefStride,  m_cDistParam );
 
   setDistParamComp(COMPONENT_Y);
@@ -7408,30 +7240,7 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
   Int iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, 0);
   rcMv = cMVCand[iBestCandIdx];
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
   m_uiNumBVs = MergeCandLists(m_acBVs, m_uiNumBVs, cMVCand, CHROMA_REFINEMENT_CANDIDATES, false);
-#else
-  m_uiNumBVs = MergeCandLists(m_acBVs, m_uiNumBVs, cMVCand, CHROMA_REFINEMENT_CANDIDATES);
-#endif
-
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-  UInt uiMvBits = 0;
-  UInt uiMvBitsBest = MAX_UINT;
-  UInt predIdxBest = 0;
-  for(UInt idx = 0; idx < 2; idx++)
-  {
-    m_pcRdCost->setPredictor( pcMvPred[idx] );
-    uiMvBits = m_pcRdCost->getBvBits( rcMv.getHor(), rcMv.getVer() );
-
-    if( uiMvBits < uiMvBitsBest)
-    {
-      uiMvBitsBest = uiMvBits;
-      predIdxBest = idx;
-    }
-  }
-
-  pcCU->setMVPIdxSubParts( predIdxBest, REF_PIC_LIST_INTRABC, uiPartAddr, iPartIdx, pcCU->getDepth(uiPartAddr));
-#endif
 
   return;
 }
@@ -8615,11 +8424,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
   const UInt   zeroResiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
   const Double zeroCost     = (pcCU->isLosslessCoded( 0 )) ? (nonZeroCost+1) : (m_pcRdCost->calcRdCost( zeroResiBits, zeroDistortion ));
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION
   if ( zeroCost < nonZeroCost || !pcCU->getQtRootCbf(0) )
-#else
-  if ( zeroCost < nonZeroCost || !pcCU->getQtRootCbf(0) || (!pcCU->isLosslessCoded( 0 ) && pcCU->isIntraBC(0) && zeroDistortion == nonZeroDistortion) )
-#endif
   {
     const UInt uiQPartNum = tuLevel0.GetAbsPartIdxNumParts();
     ::memset( pcCU->getTransformIdx()     , 0, uiQPartNum * sizeof(UChar) );
@@ -9621,25 +9426,9 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     }
 
     m_pcEntropyCoder->encodeSkipFlag ( pcCU, 0, true );
-
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION
-    if (pcCU->getSlice()->getSPS()->getUseIntraBlockCopy())
-    {
-      m_pcEntropyCoder->encodeIntraBCFlag(pcCU, 0, true);
-      if ( pcCU->isIntraBC( 0 ) )
-      {
-        m_pcEntropyCoder->encodePartSizeIntraBC( pcCU, 0 );
-        m_pcEntropyCoder->encodeIntraBC( pcCU, 0 );
-      }
-    }
-
-    if( !pcCU->isIntraBC(0))
-#endif
-    {
-      m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
-      m_pcEntropyCoder->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
-      m_pcEntropyCoder->encodePredInfo( pcCU, 0 );
-    }
+    m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
+    m_pcEntropyCoder->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
+    m_pcEntropyCoder->encodePredInfo( pcCU, 0 );
 
     Bool codeDeltaQp = false;
     Bool codeChromaQpAdj = false;
