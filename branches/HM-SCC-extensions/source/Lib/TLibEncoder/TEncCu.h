@@ -191,11 +191,7 @@ protected:
   Void  xCheckRDCostHashInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool& isPerfectMatch DEBUG_STRING_FN_DECLARE(sDebug) );
 
   Void  xCheckIntraPCM      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
-#if SCM_T0064_REMOVE_PLT_SHARING
   Void  xCheckPLTMode       ( TComDataCU *&rpcBestCU, TComDataCU*& rpcTempCU, Bool forcePLTPrediction );
-#else
-  Void  xCheckPLTMode       ( TComDataCU *&rpcBestCU, TComDataCU*& rpcTempCU, Bool bCheckPLTSharingMode );
-#endif
   Void  xCopyAMVPInfo       ( AMVPInfo* pSrc, AMVPInfo* pDst );
   Void  xCopyYuv2Pic        (TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsPartIdx, UInt uiDepth, UInt uiSrcDepth, TComDataCU* pcCU, UInt uiLPelX, UInt uiTPelY );
   Void  xCopyYuv2Tmp        ( UInt uhPartUnitIdx, UInt uiDepth );

@@ -95,9 +95,6 @@ public:
 #else
   Void parsePLTModeSyntax        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiNumComp);
 #endif
-#if !SCM_T0064_REMOVE_PLT_SHARING
-  Void parsePLTSharingModeFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
   Void parseScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseScanTraverseModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );

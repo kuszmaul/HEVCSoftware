@@ -140,9 +140,6 @@ public:
 #else
   Void parsePLTModeSyntax        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt unNumComp);
 #endif
-#if !SCM_T0064_REMOVE_PLT_SHARING
-  Void parsePLTSharingModeFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
   Void parseScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
@@ -239,9 +236,6 @@ private:
   ContextModel3DBuffer m_SPointSCModel;
   ContextModel3DBuffer m_cCopyTopRunSCModel;
   ContextModel3DBuffer m_cRunSCModel;
-#if !SCM_T0064_REMOVE_PLT_SHARING
-  ContextModel3DBuffer m_PLTSharingModeFlagSCModel;
-#endif
 #if SCM_T0065_PLT_IDX_GROUP
   ContextModel3DBuffer m_PLTLastRunTypeSCModel;  
 #endif

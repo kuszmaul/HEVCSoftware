@@ -95,9 +95,6 @@ TEncSbac::TEncSbac()
 , m_SPointSCModel                      ( 1,             1,                      NUM_SPOINT_CTX                       , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCopyTopRunSCModel                 ( 1,             1,                      NUM_TOP_RUN_CTX                      , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cRunSCModel                        ( 1,             1,                      NUM_LEFT_RUN_CTX                     , m_contextModels + m_numContextModels, m_numContextModels)
-#if !SCM_T0064_REMOVE_PLT_SHARING
-, m_PLTSharingModeFlagSCModel          ( 1,             1,                      NUM_PLT_REUSE_FLAG_CTX               , m_contextModels + m_numContextModels, m_numContextModels)
-#endif
 #if SCM_T0065_PLT_IDX_GROUP
 , m_PLTLastRunTypeSCModel              ( 1,             1,                      NUM_PLT_LAST_RUN_TYPE_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
@@ -174,9 +171,6 @@ Void TEncSbac::resetEntropy           (const TComSlice *pSlice)
   m_SPointSCModel.initBuffer                      ( eSliceType, iQp, (UChar*)INIT_SPOINT );
   m_cCopyTopRunSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_TOP_RUN);
   m_cRunSCModel.initBuffer                        ( eSliceType, iQp, (UChar*)INIT_RUN);
-#if !SCM_T0064_REMOVE_PLT_SHARING
-  m_PLTSharingModeFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_PLT_REUSE_FLAG);
-#endif
 #if SCM_T0065_PLT_IDX_GROUP
   m_PLTLastRunTypeSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_PLT_LAST_RUN_TYPE);
 #endif
@@ -253,9 +247,6 @@ SliceType TEncSbac::determineCabacInitIdx(const TComSlice *pSlice)
       curCost += m_SPointSCModel.calcCost                      ( curSliceType, qp, (UChar*)INIT_SPOINT );
       curCost += m_cCopyTopRunSCModel.calcCost                 ( curSliceType, qp, (UChar*)INIT_TOP_RUN );
       curCost += m_cRunSCModel.calcCost                        ( curSliceType, qp, (UChar*)INIT_RUN );
-#if !SCM_T0064_REMOVE_PLT_SHARING
-      curCost += m_PLTSharingModeFlagSCModel.calcCost          ( curSliceType, qp, (UChar*)INIT_PLT_REUSE_FLAG );
-#endif
 #if SCM_T0065_PLT_IDX_GROUP
       curCost += m_PLTLastRunTypeSCModel.calcCost              (curSliceType, qp, (UChar*)INIT_PLT_LAST_RUN_TYPE);
 #endif
@@ -560,14 +551,6 @@ Void TEncSbac::codePLTModeFlag(TComDataCU *pcCU, UInt uiAbsPartIdx)
   m_pcBinIf->encodeBin(uiSymbol, m_PLTModeFlagSCModel.get(0, 0, 0));
 }
 
-#if !SCM_T0064_REMOVE_PLT_SHARING
-Void TEncSbac:: codePLTSharingModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
-{
-  UInt uiSymbol = pcCU->getPLTSharingModeFlag(uiAbsPartIdx);
-  m_pcBinIf->encodeBin( uiSymbol, m_PLTSharingModeFlagSCModel.get(0,0,0) );
-}
-#endif
-
 #if SCM_S0043_PLT_DELTA_QP
 Void TEncSbac::codePLTModeSyntax( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp, Bool* bCodeDQP, Bool* codeChromaQpAdj )
 #else
@@ -630,9 +613,6 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
     uiIndexMaxSize++;
   }
 
-#if !SCM_T0064_REMOVE_PLT_SHARING
-  UInt uiPLTUsedSizePrev;
-#endif
   UInt uiPLTSizePrev;
   //the bit depth depends on QP
   //calculate the bitLen needed to represent the quantized escape values
@@ -645,17 +625,8 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   }
 #endif
 
-#if !SCM_T0064_REMOVE_PLT_SHARING
-  codePLTSharingModeFlag(pcCU, uiAbsPartIdx);
-  Bool bUsePLTSharingMode = pcCU->getPLTSharingModeFlag(uiAbsPartIdx);
-  if ( !bUsePLTSharingMode )
-#endif
   {
-#if SCM_T0064_REMOVE_PLT_SHARING
     pcCU->getPLTPred( pcCU, uiAbsPartIdx, compBegin, uiPLTSizePrev );
-#else
-    pcCU->getPLTPred( pcCU, uiAbsPartIdx, compBegin, uiPLTSizePrev, uiPLTUsedSizePrev );
-#endif
     UChar *bReusedPrev;
     UInt uiNumPLTRceived = uiDictMaxSize, uiNumPLTPredicted = 0;
 
@@ -748,9 +719,7 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
 
     UInt uiCurrParam = 2 + uiIndexMaxSize / 6;
     UInt uiMappedValue;
-#if SCM_T0064_REMOVE_PLT_SHARING
     Bool bUsePLTSharingMode = false;
-#endif
     assert(uiNumIndices);
     UInt uiInterval = bUsePLTSharingMode ? 8 : 32;
     UInt uiZeroPosition = bUsePLTSharingMode ? 3 : uiIndexMaxSize;

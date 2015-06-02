@@ -1001,11 +1001,7 @@ Void TComPrediction::preCalcPLTIndex(TComDataCU* pcCU, Pel *Palette[3], Pel* pSr
 
 Void  TComPrediction::reorderPLT(TComDataCU* pcCU, Pel *pPalette[3], UInt uiNumComp)
 {
-
   UInt uiPLTSizePrev, uiDictMaxSize;
-#if !SCM_T0064_REMOVE_PLT_SHARING
-  UInt uiPLTUsedSizePrev;
-#endif
   Pel * pPalettePrev[3];
   UInt uiMaxPLTSize = pcCU->getSlice()->getSPS()->getPLTMaxSize();
   UInt uiMaxPLTPredSize = pcCU->getSlice()->getSPS()->getPLTMaxPredSize();
@@ -1018,11 +1014,7 @@ Void  TComPrediction::reorderPLT(TComDataCU* pcCU, Pel *pPalette[3], UInt uiNumC
 
   for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
   {
-#if SCM_T0064_REMOVE_PLT_SHARING
     pPalettePrev[comp] = pcCU->getPLTPred(pcCU, pcCU->getZorderIdxInCtu(), comp, uiPLTSizePrev);
-#else
-    pPalettePrev[comp] = pcCU->getPLTPred(pcCU, pcCU->getZorderIdxInCtu(), comp, uiPLTSizePrev, uiPLTUsedSizePrev);
-#endif
     for (UInt i = 0; i < uiMaxPLTSize; i++)
     {
       pPaletteTemp[comp][i] = pPalette[comp][i];
@@ -1374,28 +1366,21 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
   delete[] psInitial;
 }
 
-#if SCM_T0064_REMOVE_PLT_SHARING
 Void TComPrediction::derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize, Bool forcePLTPrediction)
-#else
-Void TComPrediction::derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize)
-#endif
 {
   std::vector<SortingElement> psList;
   SortingElement sElement;
   Int uiIdx = 0;
   UInt uiPos;
 
-#if SCM_T0064_REMOVE_PLT_SHARING
   const UInt maxPLTSizeSPS = pcCU->getSlice()->getSPS()->getPLTMaxSize();
   uiPLTSize = 0;
 
   const Pel * const pPred[3] = { pcCU->getLastPLTInLcuFinal(0), pcCU->getLastPLTInLcuFinal(1), pcCU->getLastPLTInLcuFinal(2) };
-#endif
 
   UInt uiScaleX = pcCU->getPic()->getComponentScaleX(COMPONENT_Cb);
   UInt uiScaleY = pcCU->getPic()->getComponentScaleY(COMPONENT_Cb);
 
-#if SCM_T0064_REMOVE_PLT_SHARING
   if( forcePLTPrediction )
   {
     UInt pltPredIndexUsed[MAX_PLT_PRED_SIZE];
@@ -1457,7 +1442,6 @@ Void TComPrediction::derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* p
       uiIdx++;
     }
   }
-#endif
 
   uiIdx = 0;
   for (UInt uiY = 0; uiY < uiHeight; uiY++)
@@ -1466,9 +1450,6 @@ Void TComPrediction::derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* p
     {
       uiPos = uiY * uiWidth + uiX;
       UInt uiPosC = (uiY>>uiScaleY) * (uiWidth>>uiScaleX) + (uiX>>uiScaleX);
-
-#if SCM_T0064_REMOVE_PLT_SHARING
-
       Int iBestIdx = -1;
 
       if( forcePLTPrediction )
@@ -1490,7 +1471,6 @@ Void TComPrediction::derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* p
       {
         continue;
       }
-#endif
       Int i = 0;
       sElement.setAll(pSrc[0][uiPos], pSrc[1][uiPosC], pSrc[2][uiPosC]);
       for (i = uiIdx - 1; i >= 0; i--)
@@ -1513,25 +1493,14 @@ Void TComPrediction::derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* p
   //insertion sort, high frequency -> low frequency
   std::stable_sort(psList.begin(), psList.end());
   UInt uiPLTSizePrev;
-#if !SCM_T0064_REMOVE_PLT_SHARING
-  UInt uiPLTUsedSizePrev;
-#endif
   Pel *pPalettePrev[3];
   for (UInt comp = 0; comp < 3; comp++)
   {
-#if SCM_T0064_REMOVE_PLT_SHARING
     pPalettePrev[comp] = pcCU->getPLTPred(pcCU, pcCU->getZorderIdxInCtu(), comp, uiPLTSizePrev);
-#else
-    pPalettePrev[comp] = pcCU->getPLTPred(pcCU, pcCU->getZorderIdxInCtu(), comp, uiPLTSizePrev, uiPLTUsedSizePrev);
-#endif
   }
 
-#if SCM_T0064_REMOVE_PLT_SHARING
   if( uiPLTSize < maxPLTSizeSPS )
   {
-#else
-  uiPLTSize = 0;
-#endif
     for (Int i = 0; i < uiIdx; i++)
     {
       for (Int j = i - 1; j >= 0; j--)
@@ -1585,9 +1554,7 @@ Void TComPrediction::derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* p
         }
       }
     }
-#if SCM_T0064_REMOVE_PLT_SHARING
   }
-#endif
 }
 
 Void TComPrediction::calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalette[3], Pel* pValue, Pel*paPixelValue[3], Pel * paRecoValue[3], UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiIdx )
@@ -1779,7 +1746,6 @@ Void  TComPrediction::rotationScan( Pel* pLevel, UInt uiWidth, UInt uiHeight, Bo
   }
 }
 
-#if SCM_T0064_REMOVE_PLT_SHARING
 Void TComPrediction::derivePLTLossyForcePrediction(TComDataCU *pcCU, Pel *Palette[3], Pel *pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize, TComRdCost *pcCost)
 {
   const Int iErrorLimit = getPLTErrLimit();
@@ -2029,6 +1995,5 @@ Void TComPrediction::derivePLTLossyForcePrediction(TComDataCU *pcCU, Pel *Palett
   delete[] psList;
   delete[] pListSort;
 }
-#endif
 
 //! \}

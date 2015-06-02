@@ -174,9 +174,6 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 #define NUM_SPOINT_CTX                1
 #define NUM_TOP_RUN_CTX               3
 #define NUM_LEFT_RUN_CTX              5
-#if !SCM_T0064_REMOVE_PLT_SHARING
-#define NUM_PLT_REUSE_FLAG_CTX        1
-#endif
 #if SCM_T0065_PLT_IDX_GROUP
 #define NUM_PLT_LAST_RUN_TYPE_CTX     1
 #endif
@@ -185,9 +182,6 @@ static const UInt notFirstGroupNeighbourhoodContextOffset[MAX_NUM_CHANNEL_TYPE] 
 
 struct PaletteInfoBuffer
 {
-#if !SCM_T0064_REMOVE_PLT_SHARING
-  UChar lastPLTUsedSize[3];
-#endif
   UChar lastPLTSize[3];
   Pel   lastPLT[3][MAX_PLT_PRED_SIZE];
 
@@ -233,15 +227,6 @@ INIT_RUN[NUMBER_OF_SLICE_TYPES][NUM_LEFT_RUN_CTX] =
   { 154, 154, 154, 154, 154 }, 
 };
 
-#if !SCM_T0064_REMOVE_PLT_SHARING
-static const UChar
-INIT_PLT_REUSE_FLAG[NUMBER_OF_SLICE_TYPES][NUM_PLT_REUSE_FLAG_CTX] =
-{
-  { 154 },
-  { 154 },
-  { 154 },
-};
-#endif
 #if SCM_T0065_PLT_IDX_GROUP
 static const UChar
 INIT_PLT_LAST_RUN_TYPE[NUMBER_OF_SLICE_TYPES][NUM_PLT_LAST_RUN_TYPE_CTX] =

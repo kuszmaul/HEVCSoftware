@@ -1795,13 +1795,6 @@ Void TDecCavlc::parsePLTModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   assert(0);
 }
 
-#if !SCM_T0064_REMOVE_PLT_SHARING
-Void TDecCavlc::parsePLTSharingModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
-{
-  assert(0);
-}
-#endif
-
 Void TDecCavlc::parseCUTransquantBypassFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 {
   assert(0);
