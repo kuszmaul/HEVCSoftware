@@ -149,9 +149,6 @@ private:
   Pel*          m_piLastPLTInLcuFinal[MAX_NUM_COMPONENT]; ///< Palette
   UChar         m_uhLastPLTSizeFinal[MAX_NUM_COMPONENT];
   UChar         m_uhLastPLTUsedSizeFinal[MAX_NUM_COMPONENT];
-#if !SCM_T0064_REMOVE_PLT_SHARING
-  Bool*         m_pbPLTSharingModeFlag;
-#endif
   Bool*         m_pbPLTScanRotationModeFlag;
   Bool*         m_pbPLTScanTraverseModeFlag;
   UChar*        m_piEscapeFlag[MAX_NUM_COMPONENT];
@@ -425,19 +422,7 @@ public:
   Void          setPrevPLTReusedFlag  (UChar ucCh, UInt uiIdx, UChar uiValue, UInt uiPLTIdx) { m_bPrevPLTReusedFlag[ucCh][(uiIdx >> 2) * m_PLTMaxPredSize + uiPLTIdx] = uiValue; }
   Void          setPrevPLTReusedFlagSubParts(UChar ucCh, UChar uiValue, UInt uiPLTIdx, UInt uiAbsPartIdx, UInt uiDepth);
 
-#if SCM_T0064_REMOVE_PLT_SHARING
   Pel*          getPLTPred(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ch, UInt &uiPLTSizePrev);
-#else
-  Bool*         getPLTSharingModeFlag      ()                        { return m_pbPLTSharingModeFlag;        }
-  Bool          getPLTSharingModeFlag      (UInt uiIdx)              { return m_pbPLTSharingModeFlag[uiIdx]; }
-  Void          setPLTSharingModeFlag      (UInt uiIdx, Bool b)      { m_pbPLTSharingModeFlag[uiIdx] = b;    }
-  Void          setPLTSharingFlagSubParts  (Bool bPLTSharingFlag, UInt uiAbsPartIdx, UInt uiDepth);
-  
-  Pel*          getPLTPred(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ch, UInt &uiPLTSizePrev, UInt &uiPLTUsedSizePrev);
-  UChar         getLastPLTInLcuUsedSizeFinal (UChar ucCh)             { return m_uhLastPLTUsedSizeFinal[ucCh]; }
-  Void          setLastPLTInLcuUsedSizeFinal (UChar ucCh, UChar uh)   { m_uhLastPLTUsedSizeFinal[ucCh] = uh;   }
-#endif
-
   UChar         getLastPLTInLcuSizeFinal     (UChar ucCh)           { return m_uhLastPLTSizeFinal[ucCh]; }
   Void          setLastPLTInLcuSizeFinal     (UChar ucCh, UChar uh) { m_uhLastPLTSizeFinal[ucCh] = uh;   }
 

@@ -67,20 +67,13 @@ Void TDecSlice::init(TDecEntropy* pcEntropyDecoder, TDecCu* pcCuDecoder)
 }
 
 #if SCM_T0048_PLT_PRED_IN_PPS
-Void TDecSlice::xSetPredFromPPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT],
-#if !SCM_T0064_REMOVE_PLT_SHARING
-                                UChar lastPLTUsedSize[MAX_NUM_COMPONENT],
-#endif
-                                const TComPPS *pcPPS, const TComSPS *pcSPS)
+Void TDecSlice::xSetPredFromPPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT], const TComPPS *pcPPS, const TComSPS *pcSPS)
 {
   UInt num = std::min(pcPPS->getNumPLTPred(), pcSPS->getPLTMaxPredSize());
   if( num )
   {
     for(int i=0; i<3; i++)
     {
-#if !SCM_T0064_REMOVE_PLT_SHARING
-      lastPLTUsedSize[i] = std::min(num, pcSPS->getPLTMaxSize());
-#endif
       lastPLTSize[i] = num;
       memcpy(lastPLT[i], pcPPS->getPLTPred(i), num*sizeof(Pel));
     }
@@ -120,9 +113,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
   g_bJustDoIt = g_bEncDecTraceDisable;
 #endif
 
-#if !SCM_T0064_REMOVE_PLT_SHARING
-  UChar lastPLTUsedSize[MAX_NUM_COMPONENT] = { PLT_SIZE_INVALID, PLT_SIZE_INVALID, PLT_SIZE_INVALID };
-#endif
   UChar lastPLTSize[MAX_NUM_COMPONENT] = { 0, 0, 0 };
   Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE];
   for(UChar comp=0; comp<MAX_NUM_COMPONENT; comp++)
@@ -130,11 +120,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
     memset(lastPLT[comp], 0, sizeof(Pel) * pcSlice->getSPS()->getPLTMaxPredSize());
   }
 #if SCM_T0048_PLT_PRED_IN_PPS
-  xSetPredFromPPS(lastPLT, lastPLTSize,
-#if !SCM_T0064_REMOVE_PLT_SHARING
-                  lastPLTUsedSize,
-#endif
-                  pcSlice->getPPS(), pcSlice->getSPS());
+  xSetPredFromPPS(lastPLT, lastPLTSize, pcSlice->getPPS(), pcSlice->getSPS());
 #endif
 
   // The first CTU of the slice is the first coded substream, but the global substream number, as calculated by getSubstreamForCtuAddr may be higher.
@@ -156,9 +142,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
         pcSbacDecoder->loadContexts(&m_lastSliceSegmentEndContextState);
         for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
         {
-#if !SCM_T0064_REMOVE_PLT_SHARING
-          lastPLTUsedSize[comp] = m_lastSliceSegmentEndPaletteState.lastPLTUsedSize[comp];
-#endif
           lastPLTSize[comp] = m_lastSliceSegmentEndPaletteState.lastPLTSize[comp];
           for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
           {
@@ -212,9 +195,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
           pcSbacDecoder->loadContexts( &m_entropyCodingSyncContextState );
           for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
           {
-#if !SCM_T0064_REMOVE_PLT_SHARING
-            lastPLTUsedSize[comp] = m_entropyCodingSyncPaletteState.lastPLTUsedSize[comp];
-#endif
             lastPLTSize[comp] = m_entropyCodingSyncPaletteState.lastPLTSize[comp];
             for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
             {
@@ -227,9 +207,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
 
     for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
     {
-#if !SCM_T0064_REMOVE_PLT_SHARING
-      pCtu->setLastPLTInLcuUsedSizeFinal(comp, lastPLTUsedSize[comp]);
-#endif
       pCtu->setLastPLTInLcuSizeFinal(comp, lastPLTSize[comp]);
       for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
       {
@@ -281,15 +258,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
     m_pcCuDecoder->decodeCtu     ( pCtu, isLastCtuOfSliceSegment );
     m_pcCuDecoder->decompressCtu ( pCtu );
 
-#if !SCM_T0064_REMOVE_PLT_SHARING
-    if( pCtu->getLastPLTInLcuUsedSizeFinal( COMPONENT_Y ) != PLT_SIZE_INVALID )
-    {
-      for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
-      {
-        lastPLTUsedSize[comp] = pCtu->getLastPLTInLcuUsedSizeFinal(comp);
-      }
-    }
-#endif
     if( pCtu->getLastPLTInLcuSizeFinal( COMPONENT_Y ) )
     {
       for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
@@ -313,9 +281,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
       m_entropyCodingSyncContextState.loadContexts( pcSbacDecoder );
       for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
       {
-#if !SCM_T0064_REMOVE_PLT_SHARING
-        m_entropyCodingSyncPaletteState.lastPLTUsedSize[comp] = lastPLTUsedSize[comp];
-#endif
         m_entropyCodingSyncPaletteState.lastPLTSize[comp] = lastPLTSize[comp];
         for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
         {
@@ -359,9 +324,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
     m_lastSliceSegmentEndContextState.loadContexts( pcSbacDecoder );//ctx end of dep.slice
     for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
     {
-#if !SCM_T0064_REMOVE_PLT_SHARING
-      m_lastSliceSegmentEndPaletteState.lastPLTUsedSize[comp] = lastPLTUsedSize[comp];
-#endif
       m_lastSliceSegmentEndPaletteState.lastPLTSize[comp] = lastPLTSize[comp];
       for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
       {

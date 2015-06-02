@@ -3886,12 +3886,7 @@ Void TEncSearch::xEncPCM (TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* pOrg, Pel* p
   }
 }
 
-#if SCM_T0064_REMOVE_PLT_SHARING
 Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv *& rpcResiBestYuv, TComYuv*& rpcRecoYuv, Bool forcePLTPrediction)
-#else
-Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv *& rpcResiBestYuv,
-                           TComYuv*& rpcRecoYuv, Bool bCheckPLTSharingMode)
-#endif
 {
   UInt  uiDepth      = pcCU->getDepth(0);
   Distortion  uiDistortion = 0;
@@ -3915,7 +3910,6 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
 
   UInt uiPLTSize = 1;
 
-#if SCM_T0064_REMOVE_PLT_SHARING
   if( pcCU->getCUTransquantBypass(0) )
   {
     derivePLTLossless(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), pcCU->getHeight(0), uiPLTSize, forcePLTPrediction);
@@ -3933,70 +3927,6 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
   pcCU->setPLTSizeSubParts(1, uiPLTSize, 0, pcCU->getDepth(0));
   pcCU->setPLTSizeSubParts(2, uiPLTSize, 0, pcCU->getDepth(0));
   reorderPLT(pcCU, paPalette, 3);
-#else
-  Bool bPLTSharingModeAvailable = bCheckPLTSharingMode;
-  Pel* pPalettePrev[3]          = {NULL, NULL, NULL};
-  UInt uiPLTSizePrev            = 1;
-  UInt uiPLTUsedSizePrev        = 1;
-  if(bPLTSharingModeAvailable)
-  {
-    for (UInt comp=0; comp < MAX_NUM_COMPONENT; comp++)
-    {
-      pPalettePrev[comp] = pcCU->getPLTPred (pcCU,  pcCU->getZorderIdxInCtu(), comp, uiPLTSizePrev, uiPLTUsedSizePrev);
-      assert( pPalettePrev[comp] && (uiPLTSizePrev != 0) );
-    }
-  }
-
-  pcCU->setPLTSharingFlagSubParts(bPLTSharingModeAvailable, 0, pcCU->getDepth(0));
-
-  if(bPLTSharingModeAvailable)
-  {
-    uiPLTSize = uiPLTUsedSizePrev;
-    for (UInt comp = 0; comp < MAX_NUM_COMPONENT; comp++)
-    {
-      for (UInt i = 0; i < uiPLTSize; i++)
-      {
-        paPalette[comp][i] = pPalettePrev[comp][i];
-      }
-    }
-    for(UInt uiIdxPrev = 0; uiIdxPrev < pcCU->getSlice()->getSPS()->getPLTMaxPredSize(); uiIdxPrev++)
-    {
-      if(uiIdxPrev < uiPLTSize)
-      {
-        for (UInt comp = 0; comp < MAX_NUM_COMPONENT; comp++)
-        {
-          pcCU->setPrevPLTReusedFlagSubParts(comp, 1, uiIdxPrev, 0, pcCU->getDepth(0));
-        }
-      }
-      else
-      {
-        for (UInt comp = 0; comp < MAX_NUM_COMPONENT; comp++)
-        {
-          pcCU->setPrevPLTReusedFlagSubParts(comp, 0, uiIdxPrev, 0, pcCU->getDepth(0));
-        }
-      }
-    }
-    pcCU->setPLTSizeSubParts(0, uiPLTSize, 0, pcCU->getDepth(0));
-    pcCU->setPLTSizeSubParts(1, uiPLTSize, 0, pcCU->getDepth(0));
-    pcCU->setPLTSizeSubParts(2, uiPLTSize, 0, pcCU->getDepth(0));
-  }
-  else
-  {
-    Bool bLossless = pcCU->getCUTransquantBypass(0);
-    if (bLossless)
-    {
-      derivePLTLossless(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), pcCU->getHeight(0), uiPLTSize);
-    }
-    else
-    {
-      derivePLTLossy(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), pcCU->getHeight(0), uiPLTSize, m_pcRdCost);
-    }
-    pcCU->setPLTSizeSubParts(0, uiPLTSize,0, pcCU->getDepth(0));
-    pcCU->setPLTSizeSubParts(1, uiPLTSize, 0, pcCU->getDepth(0));
-    pcCU->setPLTSizeSubParts(2, uiPLTSize, 0, pcCU->getDepth(0));
-    reorderPLT (pcCU, paPalette, 3);
-  }
-#endif
 
   preCalcPLTIndex(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), uiPLTSize);
 

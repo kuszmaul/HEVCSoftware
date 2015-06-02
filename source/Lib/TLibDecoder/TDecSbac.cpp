@@ -106,9 +106,6 @@ TDecSbac::TDecSbac()
 , m_SPointSCModel                            ( 1,             1,                      NUM_SPOINT_CTX                       , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCopyTopRunSCModel                       ( 1,             1,                      NUM_TOP_RUN_CTX                      , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cRunSCModel                              ( 1,             1,                      NUM_LEFT_RUN_CTX                     , m_contextModels + m_numContextModels, m_numContextModels)
-#if !SCM_T0064_REMOVE_PLT_SHARING
-, m_PLTSharingModeFlagSCModel                ( 1,             1,                      NUM_PLT_REUSE_FLAG_CTX               , m_contextModels + m_numContextModels, m_numContextModels)
-#endif
 #if SCM_T0065_PLT_IDX_GROUP
 , m_PLTLastRunTypeSCModel                    ( 1,             1,                      NUM_PLT_LAST_RUN_TYPE_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
@@ -201,9 +198,6 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_SPointSCModel.initBuffer                      ( sliceType, qp, (UChar*)INIT_SPOINT );
   m_cCopyTopRunSCModel.initBuffer                 ( sliceType, qp, (UChar*)INIT_TOP_RUN);
   m_cRunSCModel.initBuffer                        ( sliceType, qp, (UChar*)INIT_RUN);
-#if !SCM_T0064_REMOVE_PLT_SHARING
-  m_PLTSharingModeFlagSCModel.initBuffer          ( sliceType, qp, (UChar*)INIT_PLT_REUSE_FLAG );
-#endif
 #if SCM_T0065_PLT_IDX_GROUP
   m_PLTLastRunTypeSCModel.initBuffer              (sliceType, qp, (UChar*)INIT_PLT_LAST_RUN_TYPE);
 #endif
@@ -458,15 +452,6 @@ Void TDecSbac::parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx,
   pcCU->setCUTransquantBypassSubParts(uiSymbol ? true : false, uiAbsPartIdx, uiDepth);
 }
 
-#if !SCM_T0064_REMOVE_PLT_SHARING
-Void TDecSbac::parsePLTSharingModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
-{
-  UInt uiSymbol;
-  m_pcTDecBinIf->decodeBin( uiSymbol, m_PLTSharingModeFlagSCModel.get( 0, 0, 0 ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS) );
-  pcCU->setPLTSharingFlagSubParts(uiSymbol? true: false, uiAbsPartIdx, uiDepth);
-}
-#endif
-
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
 Void TDecSbac::xReadTruncBinCode(UInt& ruiSymbol, UInt uiMaxSymbol, const class TComCodingStatisticsClassType &whichStat)
 #else
@@ -707,9 +692,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
   UInt uiStride = uiWidth;
 
   UInt uiPLTSizePrev;
-#if !SCM_T0064_REMOVE_PLT_SHARING
-  UInt uiPLTUsedSizePrev;
-#endif
   Pel *pPalettePrev[3];
   //the bit length is dependent on QP
   //calculate the bitLen needed to represent the quantized escape values
@@ -725,11 +707,7 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
   for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
   {
     ComponentID compID = (ComponentID)comp;
-#if SCM_T0064_REMOVE_PLT_SHARING
     pPalettePrev[comp] = pcCU->getPLTPred(pcCU, uiAbsPartIdx, comp, uiPLTSizePrev);
-#else
-    pPalettePrev[comp] = pcCU->getPLTPred(pcCU, uiAbsPartIdx, comp, uiPLTSizePrev, uiPLTUsedSizePrev);
-#endif
 
     if ( comp == compBegin )
     {
@@ -744,41 +722,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
 
   Bool isScanTraverseMode = true;
 
-#if !SCM_T0064_REMOVE_PLT_SHARING
-  parsePLTSharingModeFlag(pcCU, uiAbsPartIdx, uiDepth);
-  Bool bUsePLTSharingMode = pcCU->getPLTSharingModeFlag(uiAbsPartIdx);
-
-  if(bUsePLTSharingMode)
-  { 
-    uiDictMaxSize = uiPLTUsedSizePrev;
-    for(UInt comp = 0; comp < MAX_NUM_COMPONENT; comp++) 
-    {
-      for(UInt i = 0; i < uiDictMaxSize; i++)
-      {
-        pPalette[comp][i] = pPalettePrev[comp][i];
-        pcCU->setPLTSubParts(comp, pPalette[comp][i], i, uiAbsPartIdx, uiDepth);
-      }
-    }
-    for ( UInt uiIdxPrev = 0; uiIdxPrev < pcCU->getSlice()->getSPS()->getPLTMaxPredSize(); uiIdxPrev++)
-    {
-      if ( uiIdxPrev < uiDictMaxSize )
-      {
-        for ( UInt comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
-        {
-          pcCU->setPrevPLTReusedFlagSubParts( comp, 1, uiIdxPrev, uiAbsPartIdx, uiDepth );
-        }
-      }
-      else
-      {
-        for ( UInt comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
-        {
-          pcCU->setPrevPLTReusedFlagSubParts( comp, 0, uiIdxPrev, uiAbsPartIdx, uiDepth );
-        }
-      }
-    }
-  }
-  else
-#endif
   {
     UChar *bReusedPrev = pcCU->getPrevPLTReusedFlag( compBegin, uiAbsPartIdx );
     UInt uiNumPLTRceived = 0, uiNumPLTPredicted = 0;
@@ -906,9 +849,7 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     UInt uiCurrParam = 2 + uiIndexMaxSize / 6;
     xReadCoefRemainExGolomb(uiNumIndices, uiCurrParam, false, MAX_NUM_CHANNEL_TYPE
       RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-#if SCM_T0064_REMOVE_PLT_SHARING
     Bool bUsePLTSharingMode = false;
-#endif
     UInt uiInterval = bUsePLTSharingMode ? 8 : 32;
     UInt uiZeroPosition = bUsePLTSharingMode ? 3 : uiIndexMaxSize;
     Int iNumResPos = uiZeroPosition - 1;
