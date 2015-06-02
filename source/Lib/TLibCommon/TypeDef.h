@@ -289,7 +289,6 @@
 //------------------------------------------------
 
 #define SCM_T0227_INTRABC_SIG_UNIFICATION                1 ///< unify intra BC mode and inter mode
-#define SCM_T0072_T0109_T0120_PLT_NON444                 1 ///< palette mode support for non-444 formats
 #define SCM_T0118_T0112_ESCAPE_COLOR_CODING              1 ///< Improvement to escape color coding
 #define SCM_T0064_REMOVE_PLT_SHARING                     1 ///< JCTVC-T0064: remove palette sharing flag
 #define SCM_T0065_PLT_IDX_GROUP                          1 ///< JCTVC-T0065: group index at front
