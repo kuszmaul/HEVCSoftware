@@ -680,19 +680,13 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
   UInt uiIdx, uiDictMaxSize, uiDictIdxBits;
   UInt uiSampleBits[3] = { 0 };
   Pel  *pLevel = 0, *pPalette[3] = { 0 };
-#if SCM_T0072_T0109_T0120_PLT_NON444
   ComponentID compBegin = COMPONENT_Y;
-#else
-  const ComponentID compBegin = ComponentID(uiNumComp == 2 ? 1 : 0);
-#endif
   const UInt minCoeffSizeY = pcCU->getPic()->getMinCUWidth() * pcCU->getPic()->getMinCUHeight();
   const UInt offsetY = minCoeffSizeY * uiAbsPartIdx;
   const UInt offset = offsetY >> (pcCU->getPic()->getComponentScaleX(compBegin) + pcCU->getPic()->getComponentScaleY(compBegin));
-#if SCM_T0072_T0109_T0120_PLT_NON444
   UInt uiScaleX = pcCU->getPic()->getComponentScaleX(COMPONENT_Cb);
   UInt uiScaleY = pcCU->getPic()->getComponentScaleY(COMPONENT_Cb);
   const UInt offsetC = offsetY >> (uiScaleX + uiScaleY);
-#endif
 
   UInt uiSymbol = 0;
   Pel *pPixelValue[3] = { 0 };
@@ -737,7 +731,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     pPalettePrev[comp] = pcCU->getPLTPred(pcCU, uiAbsPartIdx, comp, uiPLTSizePrev, uiPLTUsedSizePrev);
 #endif
 
-#if SCM_T0072_T0109_T0120_PLT_NON444
     if ( comp == compBegin )
     {
       pPixelValue[comp] = pcCU->getLevel( compID ) + offset;
@@ -746,19 +739,8 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     {
       pPixelValue[comp] = pcCU->getLevel(compID) + offsetC;
     }
-#else
-    pPixelValue[comp] = pcCU->getLevel(compID) + offset;
-#endif
     pPalette[comp] = pcCU->getPLT(comp, uiAbsPartIdx);
   }
-
-#if !SCM_T0072_T0109_T0120_PLT_NON444
-#if SCM_T0064_REMOVE_PLT_SHARING
-  pcCU->getPLTPred(pcCU, uiAbsPartIdx, compBegin, uiPLTSizePrev);
-#else  
-  pcCU->getPLTPred(pcCU, uiAbsPartIdx, compBegin, uiPLTSizePrev, uiPLTUsedSizePrev);
-#endif
-#endif
 
   Bool isScanTraverseMode = true;
 
@@ -804,7 +786,7 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     if ( uiPLTSizePrev )
     {
       xDecodePLTPredIndicator(bReusedPrev, uiPLTSizePrev, pcCU->getSlice()->getSPS()->getPLTMaxSize() RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-#if SCM_T0072_T0109_T0120_PLT_NON444
+
       for ( UInt comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
       {
         for ( UInt uiIdxPrev = 0; uiIdxPrev < pcCU->getSlice()->getSPS()->getPLTMaxPredSize(); uiIdxPrev++ )
@@ -812,7 +794,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
           pcCU->setPrevPLTReusedFlagSubParts( comp, bReusedPrev[uiIdxPrev], uiIdxPrev, uiAbsPartIdx, uiDepth );
         }
       }
-#endif
       for ( Int uiIdxPrev = 0; uiIdxPrev < uiPLTSizePrev; uiIdxPrev++ )
       {
         if ( bReusedPrev[uiIdxPrev] )
@@ -844,14 +825,10 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     }
   }
 
-#if SCM_T0072_T0109_T0120_PLT_NON444
   for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
   {
     pcCU->setPLTSizeSubParts(comp, uiDictMaxSize, uiAbsPartIdx, uiDepth);
   }
-#else
-  pcCU->setPLTSizeSubParts(compBegin, uiDictMaxSize, uiAbsPartIdx, uiDepth);
-#endif
   uiDictIdxBits = 0;
   while ((1 << uiDictIdxBits) < uiDictMaxSize)
   {
@@ -1054,7 +1031,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
 #if !SCM_S0181_S0150_GROUP_ESCAPE_COLOR_AT_END
         if( sEscapeColor )
         {
-#if SCM_T0072_T0109_T0120_PLT_NON444
           UInt uiY, uiX;
           uiY = uiTraIdx/uiWidth;
           uiX = uiTraIdx%uiWidth;
@@ -1097,13 +1073,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
             xReadTruncBinCode(uiSymbol, uiMaxVal[compBegin] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
             pPixelValue[compBegin][uiTraIdx] = uiSymbol;
           }
-#else
-          for (Int comp = compBegin; comp < compBegin + uiNumComp; comp++)
-          {
-            xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-            pPixelValue[comp][uiTraIdx] = uiSymbol;
-          }
-#endif
         }
 #endif
         uiPos = 0;
@@ -1118,7 +1087,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
 #if !SCM_S0181_S0150_GROUP_ESCAPE_COLOR_AT_END
           if( sEscapeColor )
           {
-#if SCM_T0072_T0109_T0120_PLT_NON444
             UInt uiY, uiX;
             uiY = uiTraIdx/uiWidth;
             uiX = uiTraIdx%uiWidth;
@@ -1161,13 +1129,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
               xReadTruncBinCode(uiSymbol, uiMaxVal[compBegin] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
               pPixelValue[compBegin][uiTraIdx] = uiSymbol;
             }
-#else
-            for (Int comp = compBegin; comp < compBegin + uiNumComp; comp++)
-            {
-              xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-              pPixelValue[comp][uiTraIdx] = uiSymbol;
-            }
-#endif
           }
 #endif
         }
@@ -1180,7 +1141,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
 #if !SCM_S0181_S0150_GROUP_ESCAPE_COLOR_AT_END
         if( pEscapeFlag[uiTraIdx] )
         {
-#if SCM_T0072_T0109_T0120_PLT_NON444
           UInt uiY, uiX;
           uiY = uiTraIdx/uiWidth;
           uiX = uiTraIdx%uiWidth;
@@ -1223,13 +1183,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
             xReadTruncBinCode(uiSymbol, uiMaxVal[compBegin] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
             pPixelValue[compBegin][uiTraIdx] = uiSymbol;
           }
-#else
-          for (Int comp = compBegin; comp < compBegin + uiNumComp; comp++)
-          {
-            xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-            pPixelValue[comp][uiTraIdx] = uiSymbol;
-          }
-#endif
         }
 #endif
         uiPos = 0;
@@ -1244,7 +1197,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
 #if !SCM_S0181_S0150_GROUP_ESCAPE_COLOR_AT_END
           if( pEscapeFlag[uiTraIdx] )
           {
-#if SCM_T0072_T0109_T0120_PLT_NON444
             UInt uiY, uiX;
             uiY = uiTraIdx/uiWidth;
             uiX = uiTraIdx%uiWidth;
@@ -1286,14 +1238,7 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
             { 
               xReadTruncBinCode(uiSymbol, uiMaxVal[compBegin] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
               pPixelValue[compBegin][uiTraIdx] = uiSymbol;
-            }     
-#else
-            for (Int comp = compBegin; comp < compBegin + uiNumComp; comp++)
-            {
-              xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-              pPixelValue[comp][uiTraIdx] = uiSymbol;
             }
-#endif
           }
 #endif
         }
@@ -1309,7 +1254,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     UInt uiTraIdx = m_puiScanOrder[uiIdx];
     if( pEscapeFlag[uiTraIdx] )
     {
-#if SCM_T0072_T0109_T0120_PLT_NON444
       UInt uiY, uiX;
       uiY = uiTraIdx/uiWidth;
       uiX = uiTraIdx%uiWidth;
@@ -1351,13 +1295,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
         xReadTruncBinCode(uiSymbol, uiMaxVal[compBegin] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
         pPixelValue[compBegin][uiTraIdx] = uiSymbol;
       }
-#else
-      for (Int comp = compBegin; comp < compBegin + uiNumComp; comp++)
-      {
-        xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-        pPixelValue[comp][uiTraIdx] = uiSymbol;
-      }
-#endif
     }
   }
 #endif

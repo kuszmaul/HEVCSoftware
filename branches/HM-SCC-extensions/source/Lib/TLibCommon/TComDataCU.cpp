@@ -3624,11 +3624,7 @@ Void TComDataCU::saveLastPLTInLcuFinal( TComDataCU *pcSrc, UInt uiAbsPartIdx, UI
   } chinfo[MAX_NUM_COMPONENT] = { { { 0, }, 0, } };
   for (UInt ch=0; ch<numValidComp; ch++)
   {
-#if SCM_T0072_T0109_T0120_PLT_NON444
-    UInt srcCh = ch; 
-#else
-    UInt srcCh = (!ch || pcSrc->getSlice()->getSPS()->getChromaFormatIdc()==CHROMA_444) ? 0 : 1;
-#endif
+    UInt srcCh = ch;
     UInt size  = pcSrc->getPLTSize( srcCh, uiAbsPartIdx );
     UInt numEl = std::min( size, (UInt)m_PLTMaxPredSize );
     ::memcpy( chinfo[ch].values, pcSrc->getPLT(ch, uiAbsPartIdx ), numEl*sizeof(Pel) );
@@ -3658,11 +3654,7 @@ Void TComDataCU::saveLastPLTInLcuFinal( TComDataCU *pcSrc, UInt uiAbsPartIdx, UI
   for (UInt ch=0; ch<numValidComp; ch++)
   {
 #if !SCM_T0064_REMOVE_PLT_SHARING
-#if SCM_T0072_T0109_T0120_PLT_NON444
     UInt srcCh = ch;
-#else
-    UInt srcCh = (!ch || pcSrc->getSlice()->getSPS()->getChromaFormatIdc()==CHROMA_444) ? 0 : 1;
-#endif
     setLastPLTInLcuUsedSizeFinal( ch, pcSrc->getPLTSize( srcCh, uiAbsPartIdx ) );
 #endif
     setLastPLTInLcuSizeFinal( ch, chinfo[ch].size );

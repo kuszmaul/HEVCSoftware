@@ -579,22 +579,16 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   Pel *pLevel, *pPalette;
   TCoeff *pRun;
   Pel *pPixelValue[3];
-#if SCM_T0072_T0109_T0120_PLT_NON444
   ComponentID compBegin = COMPONENT_Y;
-#else
-  ComponentID compBegin = ComponentID(uiNumComp == 2 ? 1 : 0);
-#endif
   const UInt minCoeffSizeY = pcCU->getPic()->getMinCUWidth() * pcCU->getPic()->getMinCUHeight();
   const UInt offsetY = minCoeffSizeY * uiAbsPartIdx;
   const UInt offset = offsetY >> (pcCU->getPic()->getComponentScaleX(compBegin) + pcCU->getPic()->getComponentScaleY(compBegin));
   UInt width = pcCU->getWidth(uiAbsPartIdx) >> pcCU->getPic()->getComponentScaleX(compBegin);
   UInt height = pcCU->getHeight(uiAbsPartIdx) >> pcCU->getPic()->getComponentScaleY(compBegin);
   UInt uiTotal = width * height;
-#if SCM_T0072_T0109_T0120_PLT_NON444
   UInt uiScaleX = pcCU->getPic()->getComponentScaleX(COMPONENT_Cb);
   UInt uiScaleY = pcCU->getPic()->getComponentScaleY(COMPONENT_Cb);
   const UInt offsetC = offsetY >> (uiScaleX + uiScaleY);
-#endif
 
   UInt uiRun = 0;
   uiIdx = 0;
@@ -606,7 +600,6 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
   {
     uiSampleBits[comp] = pcCU->getSlice()->getSPS()->getBitDepth(toChannelType(ComponentID(comp)));
-#if SCM_T0072_T0109_T0120_PLT_NON444
     if ( comp == compBegin )
     {
       pPixelValue[comp] = pcCU->getLevel( ComponentID( comp ) ) + offset;
@@ -615,9 +608,6 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
     {
       pPixelValue[comp] = pcCU->getLevel( ComponentID( comp ) ) + offsetC;
     }
-#else
-    pPixelValue[comp] = pcCU->getLevel(ComponentID(comp)) + offset;
-#endif
   }
 
   uiDictMaxSize = pcCU->getPLTSize(compBegin, uiAbsPartIdx);
@@ -854,7 +844,6 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
       {
         if( pEscapeFlag[m_puiScanOrder[uiIdx]] )
         {
-#if SCM_T0072_T0109_T0120_PLT_NON444
           UInt uiY, uiX;
           uiTraIdx = m_puiScanOrder[uiIdx];
           uiY = uiTraIdx/width;
@@ -891,12 +880,6 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
           {
             xWriteTruncBinCode( (UInt)pPixelValue[compBegin][uiTraIdx], uiMaxVal[compBegin] + 1 );
           }
-#else
-          for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
-          {
-            xWriteTruncBinCode( (UInt)pPixelValue[comp][m_puiScanOrder[uiIdx]], uiMaxVal[comp] + 1 );
-          }
-#endif
         }
       }
 #else
@@ -912,7 +895,6 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
     UInt uiTraIdx = m_puiScanOrder[uiIdx];
     if( pEscapeFlag[uiTraIdx] )
     {
-#if SCM_T0072_T0109_T0120_PLT_NON444
       UInt uiY, uiX;
       uiY = uiTraIdx/width;
       uiX = uiTraIdx%width;
@@ -951,12 +933,6 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
       {
         xWriteTruncBinCode( (UInt)pPixelValue[compBegin][uiTraIdx], uiMaxVal[compBegin] + 1 );
       }
-#else
-      for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
-      {
-        xWriteTruncBinCode( (UInt)pPixelValue[comp][m_puiScanOrder[uiIdx]], uiMaxVal[comp] + 1 );
-      }
-#endif
     }
   }
 #endif
