@@ -1610,13 +1610,8 @@ Void TComPrediction::calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalett
     quantiserScale[ch] = g_quantScales[iQPrem[ch]];
     quantiserRightShift[ch] = QUANT_SHIFT + iQPper[ch];
     rightShiftOffset[ch] = 1 << (quantiserRightShift[ch] - 1);
-#if SCM_T0118_T0112_ESCAPE_COLOR_CODING
     InvquantiserRightShift[ch] = IQUANT_SHIFT;
     iAdd[ch] = 1 << (InvquantiserRightShift[ch] - 1);
-#else
-    InvquantiserRightShift[ch] = (IQUANT_SHIFT - iQPper[ch]);
-    iAdd[ch] = InvquantiserRightShift[ch] == 0 ? 0 : 1 << (InvquantiserRightShift[ch] - 1);
-#endif 
   }
 
   UInt uiY, uiX;
@@ -1641,16 +1636,11 @@ Void TComPrediction::calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalett
     uiScanIdxC = uiYC * (uiStrideOrg>>uiScaleY) + uiXC;
     uiYIdxRasterC = uiXC * (uiStrideOrg>>uiScaleX) + uiYC;
   }
-#if SCM_T0118_T0112_ESCAPE_COLOR_CODING
   UInt uiMaxVal[3];
   for (UInt ch = 0; ch < MAX_NUM_COMPONENT; ch++)
   {
     uiMaxVal[ch] = pcCU->xCalcMaxVals(pcCU, ComponentID(ch));
   }
-#else
-  UInt uiMaxBit[3];
-  pcCU->xCalcMaxBits(pcCU, uiMaxBit);
-#endif
 
   if (bLossless)
   {
@@ -1681,13 +1671,8 @@ Void TComPrediction::calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalett
     {
       if( ch == 0 )
       {
-#if SCM_T0118_T0112_ESCAPE_COLOR_CODING
         paPixelValue[ch][uiScanIdx] = Pel(Clip3<Int>( 0, uiMaxVal[ch], ((pOrg[ch][uiYIdxRaster] * quantiserScale[ch] + rightShiftOffset[ch]) >> quantiserRightShift[ch]) ));
         paRecoValue[ch][uiYIdxRaster] = (((paPixelValue[ch][uiScanIdx]*g_invQuantScales[iQPrem[ch]])<<iQPper[ch]) + iAdd[ch])>>InvquantiserRightShift[ch];
-#else
-        paPixelValue[ch][uiScanIdx] = Pel(ClipBD<Int>((pOrg[ch][uiYIdxRaster] * quantiserScale[ch] + rightShiftOffset[ch]) >> quantiserRightShift[ch], uiMaxBit[ch]));
-        paRecoValue[ch][uiYIdxRaster] = (paPixelValue[ch] [uiScanIdx]*g_invQuantScales[iQPrem[ch]] + iAdd[ch])>>InvquantiserRightShift[ch];
-#endif
         paRecoValue[ch][uiYIdxRaster] = Pel(ClipBD<Int>(paRecoValue[ch][uiYIdxRaster], bitDepths.recon[ch? 1:0]));
       }
       else
@@ -1697,13 +1682,8 @@ Void TComPrediction::calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalett
             ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(0) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(0) && ((uiY&1) == 0))) )
           )
         {
-#if SCM_T0118_T0112_ESCAPE_COLOR_CODING
           paPixelValue[ch][uiScanIdxC] = Pel(Clip3<Int>( 0, uiMaxVal[ch], ((pOrg[ch][uiYIdxRasterC] * quantiserScale[ch] + rightShiftOffset[ch]) >> quantiserRightShift[ch]) ));
           paRecoValue[ch][uiYIdxRasterC] = (((paPixelValue[ch][uiScanIdxC]*g_invQuantScales[iQPrem[ch]])<<iQPper[ch]) + iAdd[ch])>>InvquantiserRightShift[ch];
-#else
-          paPixelValue[ch][uiScanIdxC] = Pel(ClipBD<Int>((pOrg[ch][uiYIdxRasterC] * quantiserScale[ch] + rightShiftOffset[ch]) >> quantiserRightShift[ch], uiMaxBit[ch]));
-          paRecoValue[ch][uiYIdxRasterC] = (paPixelValue[ch] [uiScanIdxC]*g_invQuantScales[iQPrem[ch]] + iAdd[ch])>>InvquantiserRightShift[ch];
-#endif 
           paRecoValue[ch][uiYIdxRasterC] = Pel(ClipBD<Int>(paRecoValue[ch][uiYIdxRasterC], bitDepths.recon[ch? 1:0]));
         }
       }
