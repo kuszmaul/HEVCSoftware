@@ -130,24 +130,13 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
     switch (sliceType)
     {
     case P_SLICE:           // change initialization table to B_SLICE initialization
-#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
-      if( pSlice->getSPS()->getUseIntraBlockCopy() && (pSlice->getNumRefIdx(REF_PIC_LIST_0) == 1))
-      {
-        sliceType = P_SLICE;
-      }
-      else
-      {
-        sliceType = B_SLICE;
-      }
-#else
       sliceType = B_SLICE;
-#endif
       break;
     case B_SLICE:           // change initialization table to P_SLICE initialization
       sliceType = P_SLICE;
       break;
     default     :           // should not occur
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION || SCM_IBC_CLEANUP
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
       assert(0);
 #endif
       break;
@@ -1048,11 +1037,7 @@ Void TDecSbac::parseScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, U
  */
 Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
-  if( pcCU->getSlice()->isIntra() && !pcCU->getSlice()->getSPS()->getUseIntraBlockCopy() )
-#else
   if( pcCU->getSlice()->isIntra() )
-#endif
   {
     return;
   }
@@ -1405,11 +1390,7 @@ Void TDecSbac::parsePartSizeIntraBC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
  */
 Void TDecSbac::parsePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
-  if( pcCU->getSlice()->isIntra() && !pcCU->getSlice()->getSPS()->getUseIntraBlockCopy() )
-#else
   if( pcCU->getSlice()->isIntra() )
-#endif
   {
     pcCU->setPredModeSubParts( MODE_INTRA, uiAbsPartIdx, uiDepth );
     return;

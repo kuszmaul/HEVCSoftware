@@ -1269,18 +1269,8 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
         }
       }
     }
-
-#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
-    if(sps->getUseIntraBlockCopy())
-    {
-      assert(pcSlice->getNumRefIdx( REF_PIC_LIST_0) > 0);
-      pcSlice->setNumRefIdx(REF_PIC_LIST_0, pcSlice->getNumRefIdx( REF_PIC_LIST_0) - 1);
-    }
-#endif
     // }
-#if SCM_IBC_CLEANUP
     pcSlice->setSPS( sps );
-#endif
     TComRefPicListModification* refPicListModification = pcSlice->getRefPicListModification();
     if(!pcSlice->isIntra())
     {

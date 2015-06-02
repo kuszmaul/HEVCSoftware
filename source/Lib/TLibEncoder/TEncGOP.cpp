@@ -1259,23 +1259,17 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       pcSlice->setSliceType(I_SLICE);
     }
 
-#if SCM_IBC_CLEANUP
     if ( pcSlice->getSliceType() == I_SLICE && pcSlice->getSPS()->getUseIntraBlockCopy() )
     {
       pcSlice->setSliceType( P_SLICE );
     }
-#endif
-    
+
     // Set the nal unit type
     pcSlice->setNalUnitType(getNalUnitType(pocCurr, m_iLastIDR, isField));
     if(pcSlice->getTemporalLayerNonReferenceFlag())
     {
       if (pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_TRAIL_R &&
-#if SCM_IBC_CLEANUP
           !( m_iGopSize == 1 && ( pcSlice->getSliceType() == I_SLICE || pcSlice->getSPS()->getUseIntraBlockCopy() ) ) )
-#else
-          !(m_iGopSize == 1 && pcSlice->getSliceType() == I_SLICE))
-#endif
         // Add this condition to avoid POC issues with encoder_intra_main.cfg configuration (see #1127 in bug tracker)
       {
         pcSlice->setNalUnitType(NAL_UNIT_CODED_SLICE_TRAIL_N);
@@ -1411,7 +1405,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice->setNumRefIdx(REF_PIC_LIST_0,min(m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive,pcSlice->getRPS()->getNumberOfPictures()));
     pcSlice->setNumRefIdx(REF_PIC_LIST_1,min(m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive,pcSlice->getRPS()->getNumberOfPictures()));
 
-#if SCM_IBC_CLEANUP
     if ( pcSlice->getSPS()->getUseIntraBlockCopy() )
     {
       if ( m_pcCfg->getIntraPeriod() > 0 && pcSlice->getPOC() % m_pcCfg->getIntraPeriod() == 0 )
@@ -1422,7 +1415,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
       pcSlice->setNumRefIdx( REF_PIC_LIST_0, pcSlice->getNumRefIdx( REF_PIC_LIST_0 ) + 1 );
     }
-#endif
 
     //  Set reference list
     pcSlice->setRefPicList ( rcListPic );
@@ -1432,12 +1424,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     {
       pcSlice->setSliceType ( P_SLICE );
     }
-#if SCM_IBC_CLEANUP
     if ( pcSlice->getSPS()->getUseIntraBlockCopy() && pcSlice->getNumRefIdx( REF_PIC_LIST_0 ) == 1 )
     {
       m_pcSliceEncoder->setEncCABACTableIdx(P_SLICE);
     }
-#endif
     pcSlice->setEncCABACTableIdx(m_pcSliceEncoder->getEncCABACTableIdx());
 
     if (pcSlice->getSliceType() == B_SLICE)
@@ -1470,18 +1460,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     }
 
     uiColDir = 1-uiColDir;
-
-#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
-    if ( pcSlice->getSPS()->getUseIntraBlockCopy() )
-    {
-      // add the current picture into the LIST_0 as the last picture
-      Int orgRefNumInList0 = pcSlice->getNumRefIdx( REF_PIC_LIST_0 );
-      pcSlice->setRefPic( pcSlice->getPic(), REF_PIC_LIST_0, orgRefNumInList0 );
-      pcSlice->setNumRefIdx( REF_PIC_LIST_0, orgRefNumInList0+1 );
-      pcSlice->getRefPic( REF_PIC_LIST_0, orgRefNumInList0 )->setIsLongTerm( true );
-      pcSlice->setIsUsedAsLongTerm( REF_PIC_LIST_0, orgRefNumInList0, true );
-    }
-#endif
 
     //-------------------------------------------------------------
     pcSlice->setRefPOCList();
@@ -1561,12 +1539,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcPic->getSlice(pcSlice->getSliceIdx())->setMvdL1ZeroFlag(pcSlice->getMvdL1ZeroFlag());
 
     pcSlice->setUseIntegerMv( false );
-#if SCM_IBC_CLEANUP
     if ( ( !pcSlice->getSPS()->getUseIntraBlockCopy() && !pcSlice->isIntra() ) ||
           ( pcSlice->getSPS()->getUseIntraBlockCopy() && !pcSlice->isOnlyCurrentPictureAsReference() ) )
-#else
-    if ( !pcSlice->isIntra() )
-#endif
     {
       if ( m_pcCfg->getMotionVectorResolutionControlIdc() == 2 )
       {
@@ -1578,7 +1552,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       }
     }
 
-#if SCM_IBC_CLEANUP
     if ( !pcSlice->isIntra() && pcSlice->getEnableTMVPFlag() )
     {
       TComPic *pColPic = pcSlice->getRefPic( RefPicList( pcSlice->isInterB() ? 1-pcSlice->getColFromL0Flag() : 0 ), pcSlice->getColRefIdx() );
@@ -1589,7 +1562,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         pcSlice->setEnableTMVPFlag( false );
       }
     }
-#endif
 
     Double lambda            = 0.0;
     Int actualHeadBits       = 0;
@@ -2395,13 +2367,6 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
   }
 
   Char c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
-#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
-  if(pcSlice->isIntra() && pcSlice->getSPS()->getUseIntraBlockCopy())
-  {
-    c = 'P';
-    assert(pcSlice->getNumRefIdx(REF_PIC_LIST_0) == 1);
-  }
-#endif
   if (!pcSlice->isReferenced())
   {
     c += 32;

@@ -154,13 +154,6 @@ Void TDecGop::filterPicture(TComPic* pcPic)
 
   pcPic->compressMotion();
   Char c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
-#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
-  if(pcSlice->isIntra() && pcSlice->getSPS()->getUseIntraBlockCopy())
-  {
-    c = 'P';
-    assert(pcSlice->getNumRefIdx(REF_PIC_LIST_0) == 1);
-  }
-#endif
 
   if (!pcSlice->isReferenced())
   {

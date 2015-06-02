@@ -126,13 +126,6 @@ Void TEncSbac::resetEntropy           (const TComSlice *pSlice)
     eSliceType = encCABACTableIdx;
   }
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
-  if ( eSliceType == I_SLICE && pSlice->getSPS()->getUseIntraBlockCopy() )
-  {
-    eSliceType = P_SLICE;
-  }
-#endif
-
   m_cCUSplitFlagSCModel.initBuffer                ( eSliceType, iQp, (UChar*)INIT_SPLIT_FLAG );
   m_cCUSkipFlagSCModel.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_SKIP_FLAG );
   m_cCUMergeFlagExtSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_MERGE_FLAG_EXT);

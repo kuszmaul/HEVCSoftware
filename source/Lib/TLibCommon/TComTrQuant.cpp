@@ -1245,11 +1245,7 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
     }
 #endif
 
-#if SCM_IBC_CLEANUP
     const Int iAdd   = (pcCU->getSlice()->getSliceType()==I_SLICE || pcCU->getSlice()->isOnlyCurrentPictureAsReference() ? 171 : 85) << (iQBits-9);
-#else
-    const Int iAdd   = (pcCU->getSlice()->getSliceType()==I_SLICE ? 171 : 85) << (iQBits-9);
-#endif
     const Int qBits8 = iQBits - 8;
 
     for( Int uiBlockPos = 0; uiBlockPos < uiWidth*uiHeight; uiBlockPos++ )
@@ -3443,11 +3439,7 @@ Void TComTrQuant::transformSkipQuantOneSample(TComTU &rTu, const ComponentID com
   const Int iQBits = QUANT_SHIFT + cQP.per + iTransformShift;
   // QBits will be OK for any internal bit depth as the reduction in transform shift is balanced by an increase in Qp_per due to QpBDOffset
 
-#if SCM_IBC_CLEANUP
   const Int iAdd = ( bUseHalfRoundingPoint ? 256 : (pcCU->getSlice()->getSliceType() == I_SLICE || pcCU->getSlice()->isOnlyCurrentPictureAsReference() ? 171 : 85) ) << (iQBits - 9);
-#else
-  const Int iAdd = ( bUseHalfRoundingPoint ? 256 : (pcCU->getSlice()->getSliceType() == I_SLICE ? 171 : 85) ) << (iQBits - 9);
-#endif
 
   TCoeff transformedCoefficient;
 

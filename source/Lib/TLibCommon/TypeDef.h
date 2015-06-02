@@ -289,7 +289,6 @@
 //------------------------------------------------
 
 #define SCM_T0227_INTRABC_SIG_UNIFICATION                1 ///< unify intra BC mode and inter mode
-#define SCM_IBC_CLEANUP                                  1 ///< cleanup for Intra BC mode, align software with spec
 #define SCM_IBC_CLEANUP_IDENTICAL_RDO                    1 ///< let the encoder to generate identical RDO results
 #define SCM_T0048_IBC_VALIDATE_SLICES                    1 ///< Print at decoder when IBC reaches outside of current slice
 #define SCM_S0043_PLT_DELTA_QP                           0 ///< JCTVC-S0043: delta qp signalling for palette mode

@@ -562,9 +562,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   if (!pcSlice->getDependentSliceSegmentFlag())
   {
     pcSlice->checkCRA(pcSlice->getRPS(), m_pocCRA, m_associatedIRAPType, m_cListPic );
-#if SCM_IBC_CLEANUP
     pcSlice->setPic( m_pcPic );
-#endif
     // Set reference list
     pcSlice->setRefPicList( m_cListPic, true );
 
@@ -607,17 +605,6 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
       pcSlice->setCheckLDC(bLowDelay);
     }
 
-#if SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_IBC_CLEANUP
-    if ( pcSlice->getSPS()->getUseIntraBlockCopy() )
-    {
-      // add the current picture into the LIST_0 as the last picture
-      Int orgRefNumInList0 = pcSlice->getNumRefIdx( REF_PIC_LIST_0 );
-      pcSlice->setRefPic( m_pcPic, REF_PIC_LIST_0, orgRefNumInList0 );
-      pcSlice->setNumRefIdx( REF_PIC_LIST_0, orgRefNumInList0+1 );
-      pcSlice->getRefPic( REF_PIC_LIST_0, orgRefNumInList0 )->setIsLongTerm( true );
-      pcSlice->setIsUsedAsLongTerm( REF_PIC_LIST_0, orgRefNumInList0, true );
-    }
-#endif
     //---------------
     pcSlice->setRefPOCList();
   }
@@ -658,17 +645,10 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   m_bFirstSliceInPicture = false;
   m_uiSliceIdx++;
 
-#if SCM_IBC_CLEANUP
   if ( pcSlice->getSPS()->getUseIntraBlockCopy() )
   {
     pcSlice->getPic()->setIsLongTerm( false );
   }
-#elif SCM_T0227_INTRABC_SIG_UNIFICATION
-  if ( pcSlice->getSPS()->getUseIntraBlockCopy() )
-  {
-    pcSlice->getRefPic( REF_PIC_LIST_0, pcSlice->getNumRefIdx( REF_PIC_LIST_0 ) - 1 )->setIsLongTerm( false );
-  }
-#endif
 
   return false;
 }
