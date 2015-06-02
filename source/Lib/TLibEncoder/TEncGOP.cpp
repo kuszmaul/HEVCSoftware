@@ -89,11 +89,7 @@ TEncGOP::TEncGOP()
   m_pcSbacCoder         = NULL;
   m_pcBinCABAC          = NULL;
 
-#if SCM_T0048_PLT_PRED_IN_PPS
   m_uiSeqOrder          = 0;
-#else
-  m_bSeqFirst           = true;
-#endif
 
   m_bRefreshPending     = 0;
   m_pocCRA            = 0;
@@ -1732,11 +1728,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     // Set entropy coder
     m_pcEntropyCoder->setEntropyCoder   ( m_pcCavlcCoder );
 
-#if SCM_T0048_PLT_PRED_IN_PPS
     if ( m_uiSeqOrder == 0 )
-#else
-    if ( m_bSeqFirst )
-#endif
     {
       // write various parameter sets
       actualTotalBits += xWriteParameterSets(accessUnit, pcSlice);
@@ -1745,13 +1737,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       leadingSeiMessages.clear();
       xCreateIRAPLeadingSEIMessages(leadingSeiMessages, pcSlice->getSPS(), pcSlice->getPPS());
 
-#if SCM_T0048_PLT_PRED_IN_PPS
       m_uiSeqOrder = 1;
-#else
-      m_bSeqFirst = false;
-#endif
     }
-#if SCM_T0048_PLT_PRED_IN_PPS && SCM_T0048_PLT_PRED_IN_PPS_REFRESH
+#if SCM_T0048_PLT_PRED_IN_PPS_REFRESH
     else if( m_uiSeqOrder < pcSlice->getPPS()->getPPSId()+1 )
     {
       OutputNALUnit nalu(NAL_UNIT_PPS);
@@ -2927,11 +2915,9 @@ Void TEncGOP::applyDeblockingFilterMetric( TComPic* pcPic, UInt uiNumSlices )
   free(rowSAD);
 }
 
-#if SCM_T0048_PLT_PRED_IN_PPS
 TComPPS* TEncGOP::getPPS()
 {
   return m_pcEncTop->getPPS();
 }
-#endif
 
 //! \}

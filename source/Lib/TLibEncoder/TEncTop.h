@@ -152,9 +152,7 @@ public:
   TEncSbac***             getRDSbacCoder        () { return  m_pppcRDSbacCoder;       }
   TEncSbac*               getRDGoOnSbacCoder    () { return  &m_cRDGoOnSbacCoder;     }
   TEncRateCtrl*           getRateCtrl           () { return &m_cRateCtrl;             }
-#if SCM_T0048_PLT_PRED_IN_PPS
-  TComPPS*                getPPS                () { return &m_cPPS; }
-#endif
+  TComPPS*                getPPS                () { return  &m_cPPS;                 }
   Void selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid );
   Int getReferencePictureSetIdxForSOP(TComSlice* slice, Int POCCurr, Int GOPid );
   // -------------------------------------------------------------------------------------------------------------------

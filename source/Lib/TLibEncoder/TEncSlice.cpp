@@ -660,7 +660,6 @@ Void TEncSlice::calCostSliceI(TComPic* pcPic)
   m_pcRateCtrl->getRCPic()->setTotalIntraCost(iSumHadSlice);
 }
 
-#if SCM_T0048_PLT_PRED_IN_PPS
 Void TEncSlice::xSetPredFromPPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT], TComSlice *pcSlice)
 {
   const TComSPS *pcSPS = pcSlice->getSPS();
@@ -683,7 +682,6 @@ Void TEncSlice::xSetPredFromPPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE
     pcPPS->setPalettePredictorBitDepth( ChannelType( ch ), pcSPS->getBitDepth( ChannelType( ch ) ) );
   }
 }
-#endif
 
 /** \param pcPic   picture class
  */
@@ -758,9 +756,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
   {
     memset(lastPLT[comp], 0, sizeof(Pel) * pcSlice->getSPS()->getPLTMaxPredSize());
   }
-#if SCM_T0048_PLT_PRED_IN_PPS
   xSetPredFromPPS(lastPLT, lastPLTSize, pcSlice);
-#endif
 
   // Adjust initial state if this is the start of a dependent slice.
   {
@@ -786,7 +782,6 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
     }
   }
 
-#if SCM_T0048_PLT_PRED_IN_PPS
   TComPPS *pcPPS = m_pcGOPEncoder->getPPS();
 
 #if SCM_T0048_PLT_PRED_IN_PPS_REFRESH
@@ -991,7 +986,6 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
     m_dPicRdCost     = 0;
     m_uiPicDist      = 0;
   }
-#endif // ~SCM_T0048_PLT_PRED_IN_PPS
 
   // for every CTU in the slice segment (may terminate sooner if there is a byte limit on the slice-segment)
 
@@ -1281,9 +1275,7 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
 
   UChar lastPLTSize[3] = { 0, 0, 0 };
   Pel lastPLT[3][MAX_PLT_PRED_SIZE];
-#if SCM_T0048_PLT_PRED_IN_PPS
   xSetPredFromPPS(lastPLT, lastPLTSize, pcSlice);
-#endif
 
   if (depSliceSegmentsEnabled)
   {

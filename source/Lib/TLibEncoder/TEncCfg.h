@@ -233,9 +233,7 @@ protected:
   UInt      m_uiPLTMaxSize;
   UInt      m_uiPLTMaxPredSize;
   Int       m_motionVectorResolutionControlIdc;
-#if SCM_T0048_PLT_PRED_IN_PPS
   Bool      m_palettePredInPPSEnabled;
-#endif
 
   Bool      m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];
   Int*      m_aidQP;
@@ -638,10 +636,8 @@ public:
   UInt getPLTMaxPredSize()                                           const { return m_uiPLTMaxPredSize; }
   Void setMotionVectorResolutionControlIdc             ( Int idc )         { m_motionVectorResolutionControlIdc = idc; }
   Int  getMotionVectorResolutionControlIdc             ()            const { return m_motionVectorResolutionControlIdc; }
-#if SCM_T0048_PLT_PRED_IN_PPS
   Void setPalettePredInPPSEnabled                      ( Bool b )          { m_palettePredInPPSEnabled = b; }
   Bool getPalettePredInPPSEnabled                      ()            const { return m_palettePredInPPSEnabled; }
-#endif
   Bool getUseResidualDPCM                              (const RDPCMSignallingMode signallingMode)        const      { return m_useResidualDPCM[signallingMode];  }
   Void setUseResidualDPCM                              (const RDPCMSignallingMode signallingMode, const Bool value) { m_useResidualDPCM[signallingMode] = value; }
   Bool getUseTransformSkipFast                         ()      { return m_useTransformSkipFast;    }

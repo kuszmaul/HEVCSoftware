@@ -1920,9 +1920,7 @@ TComPPS::TComPPS()
 , m_listsModificationPresentFlag     (0)
 , m_numExtraSliceHeaderBits          (0)
 , m_useColourTrans                   (false)
-#if SCM_T0048_PLT_PRED_IN_PPS
 , m_uiNumPLTPred                     (0) // Implies palette pred in PPS deactivated
-#endif
 {
   for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
   {
@@ -1930,12 +1928,10 @@ TComPPS::TComPPS()
   }
   m_ChromaQpAdjTableIncludingNullEntry[0].u.comp.CbOffset = 0; // Array includes entry [0] for the null offset used when cu_chroma_qp_offset_flag=0. This is initialised here and never subsequently changed.
   m_ChromaQpAdjTableIncludingNullEntry[0].u.comp.CrOffset = 0;
-#if SCM_T0048_PLT_PRED_IN_PPS
   for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
   {
     m_palettePredictorBitDepth[ch] = 8;
   }
-#endif
 }
 
 TComPPS::~TComPPS()
