@@ -185,12 +185,9 @@ protected:
 
   Int       m_chromaCbQpOffset;                 //  Chroma Cb QP Offset (0:default)
   Int       m_chromaCrQpOffset;                 //  Chroma Cr Qp Offset (0:default)
-
-#if SCM_T0140_ACT_QP_OFFSET
   Int       m_actYQpOffset;
   Int       m_actCbQpOffset;
   Int       m_actCrQpOffset;
-#endif
 
   ChromaFormat m_chromaFormatIDC;
 
@@ -496,12 +493,9 @@ public:
 
   Void      setChromaCbQpOffset             ( Int   i )      { m_chromaCbQpOffset = i; }
   Void      setChromaCrQpOffset             ( Int   i )      { m_chromaCrQpOffset = i; }
-
-#if SCM_T0140_ACT_QP_OFFSET
   Void      setActQpYOffset                 ( Int   i )      { m_actYQpOffset  = i; }
   Void      setActQpCbOffset                ( Int   i )      { m_actCbQpOffset = i; }
   Void      setActQpCrOffset                ( Int   i )      { m_actCrQpOffset = i; }
-#endif
 
   Void      setChromaFormatIdc              ( ChromaFormat cf ) { m_chromaFormatIDC = cf; }
   ChromaFormat  getChromaFormatIdc          ( )              { return m_chromaFormatIDC; }

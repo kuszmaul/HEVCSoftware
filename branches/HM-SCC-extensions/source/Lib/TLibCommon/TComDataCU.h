@@ -279,9 +279,7 @@ public:
   Void          setPredModeSubParts   ( PredMode eMode, UInt uiAbsPartIdx, UInt uiDepth );
   Bool*         getColourTransform( )                              { return m_ColourTransform;         }
   Bool          getColourTransform( UInt uiIdx)                    { return m_ColourTransform[uiIdx];  }
-#if SCM_T0140_ACT_QP_OFFSET
   Bool          getColourTransform( UInt uiIdx)              const { return m_ColourTransform[uiIdx];  }
-#endif
 
   Char*         getCrossComponentPredictionAlpha( ComponentID compID )             { return m_crossComponentPredictionAlpha[compID];         }
   Char          getCrossComponentPredictionAlpha( UInt uiIdx, ComponentID compID ) { return m_crossComponentPredictionAlpha[compID][uiIdx];  }

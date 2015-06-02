@@ -754,12 +754,9 @@ Void TEncTop::xInitPPS()
 
   m_cPPS.setQpOffset(COMPONENT_Cb, m_chromaCbQpOffset );
   m_cPPS.setQpOffset(COMPONENT_Cr, m_chromaCrQpOffset );
-
-#if SCM_T0140_ACT_QP_OFFSET
   m_cPPS.setActQpOffset(COMPONENT_Y, m_actYQpOffset );
   m_cPPS.setActQpOffset(COMPONENT_Cb, m_actCbQpOffset );
   m_cPPS.setActQpOffset(COMPONENT_Cr, m_actCrQpOffset );
-#endif
 
   m_cPPS.setEntropyCodingSyncEnabledFlag( m_iWaveFrontSynchro > 0 );
   m_cPPS.setTilesEnabledFlag( (m_iNumColumnsMinus1 > 0 || m_iNumRowsMinus1 > 0) );

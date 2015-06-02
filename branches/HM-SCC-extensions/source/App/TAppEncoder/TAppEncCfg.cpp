@@ -807,12 +807,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   ("CbQpOffset,-cbqpofs",                             m_cbQpOffset,                                         0, "Chroma Cb QP Offset")
   ("CrQpOffset,-crqpofs",                             m_crQpOffset,                                         0, "Chroma Cr QP Offset")
-
-#if SCM_T0140_ACT_QP_OFFSET
   ("ActQpYOffset",                                    m_actYQpOffset,                                      -5, "ACT Y QP Offset")
   ("ActQpCbOffset",                                   m_actCbQpOffset,                                     -5, "ACT Cb QP Offset")
   ("ActQpCrOffset",                                   m_actCrQpOffset,                                     -3, "ACT Cr QP Offset")
-#endif
 
 #if ADAPTIVE_QP_SELECTION
   ("AdaptiveQpSelection,-aqps",                       m_bUseAdaptQpSelect,                              false, "AdaptiveQpSelection")

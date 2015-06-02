@@ -393,7 +393,6 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
             break;
           case PPS_EXT__SCC:
             READ_FLAG( uiCode, "adaptive_colour_trans_flag"    );           pcPPS->setUseColourTrans(uiCode != 0);
-#if SCM_T0140_ACT_QP_OFFSET
             if( pcPPS->getUseColourTrans() )
             {
                READ_FLAG( uiCode, "pps_slice_act_qp_offset_present_flag"    ); pcPPS->setUseSliceACTOffset(uiCode != 0);
@@ -410,7 +409,6 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
               pcPPS->setActQpOffset(COMPONENT_Cb, -5);
               pcPPS->setActQpOffset(COMPONENT_Cr, -3);
             }
-#endif
 #if SCM_T0048_PLT_PRED_IN_PPS
             READ_FLAG( uiCode, "palette_predictor_initializer_flag" );
             if( uiCode )
@@ -1482,7 +1480,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
       pcSlice->setUseChromaQpAdj(false);
     }
 
-#if SCM_T0140_ACT_QP_OFFSET
     if( pps->getUseSliceACTOffset () )
     {
       READ_SVLC(iCode, "slice_act_y_qp_offset"); pcSlice->setSliceActQpDelta(COMPONENT_Y, iCode);
@@ -1525,7 +1522,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
       assert( (pps->getActQpOffset(COMPONENT_Cr) + pcSlice->getSliceActQpDelta(COMPONENT_Cr)) >= -12 );
       assert( (pps->getActQpOffset(COMPONENT_Cr) + pcSlice->getSliceActQpDelta(COMPONENT_Cr)) <=  12 );
     }
-#endif
 
     if (pps->getDeblockingFilterControlPresentFlag())
     {

@@ -148,12 +148,9 @@ protected:
 
   Int       m_cbQpOffset;                                     ///< Chroma Cb QP Offset (0:default)
   Int       m_crQpOffset;                                     ///< Chroma Cr QP Offset (0:default)
-
-#if SCM_T0140_ACT_QP_OFFSET
   Int       m_actYQpOffset;
   Int       m_actCbQpOffset;
   Int       m_actCrQpOffset;
-#endif
 
 #if ADAPTIVE_QP_SELECTION
   Bool      m_bUseAdaptQpSelect;
