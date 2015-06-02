@@ -968,27 +968,16 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
   uiIdx = 0;
   while (uiIdx < uiTotal)
   {
-#if !SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
-    UInt uiCtx = 0;
-#endif
     UInt uiTraIdx = m_puiScanOrder[uiIdx];
     if (uiIndexMaxSize > 1)
     {
-#if !SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
-      uiCtx = pcCU->getCtxSPoint(uiAbsPartIdx, uiTraIdx, pSPoint);
-#endif
       if (uiTraIdx >= uiWidth && pSPoint[m_puiScanOrder[uiIdx - 1]] != PLT_RUN_ABOVE)
       {
 #if SCM_T0065_PLT_IDX_GROUP
         if (iNumCopyIndexRuns && uiIdx < uiTotal - 1)
         {
-#if SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
           m_pcTDecBinIf->decodeBin(uiSymbol, m_SPointSCModel.get(0, 0, 0)
                                  RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-#else
-          m_pcTDecBinIf->decodeBin(uiSymbol, m_SPointSCModel.get(0, 0, uiCtx)
-                                   RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-#endif
         }
         else
         {
@@ -1002,11 +991,7 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
           }
         }
 #else
-#if SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
         m_pcTDecBinIf->decodeBin(uiSymbol, m_SPointSCModel.get(0, 0, 0)   RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-#else
-        m_pcTDecBinIf->decodeBin(uiSymbol, m_SPointSCModel.get(0, 0, uiCtx)   RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-#endif
 #endif
       }
       else

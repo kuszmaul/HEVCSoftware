@@ -577,9 +577,6 @@ public:
   UInt          getCtxSplitFlag                 ( UInt   uiAbsPartIdx, UInt uiDepth                   );
   UInt          getCtxQtCbf                     ( TComTU &rTu, const ChannelType chType );
   UInt          getCtxEscapeFlag                ( UInt   uiAbsPartIdx, UInt uiIdx,  Pel *pEscapeFlag  );
-#if !SCM_T0078_REMOVE_PLT_RUN_MODE_CTX
-  UInt          getCtxSPoint                    ( UInt   uiAbsPartIdx, UInt uiIdx,  UChar *SPoint     );
-#endif
   UInt          getCtxSkipFlag                  ( UInt   uiAbsPartIdx                                 );
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
 
