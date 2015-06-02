@@ -1397,11 +1397,7 @@ Void TComDataCU::getIntraBCMVPs(UInt uiAbsPartIdx, TComMv* MvPred, TComMv* MvLas
 }
 #endif
 
-#if SCM_T0116_IBCSEARCH_OPTIMIZE
 Void TComDataCU::getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPred, Int& nbPred, Int iPartIdx)
-#else
-Void TComDataCU::getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPred, Int& nbPred)
-#endif
 {
   UInt            uiTempPartIdx;
   UInt            uiLeft, uiAbove;
@@ -1458,19 +1454,6 @@ Void TComDataCU::getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPred, Int& n
       nbPred++;
   }
 
-#if !SCM_T0227_INTRABC_SIG_UNIFICATION && !SCM_T0116_IBCSEARCH_OPTIMIZE
-  // Co-located
-  TComMv cMvCol;
-  Bool isColAvail = xGetColMVPIBC( getCtuRsAddr(), m_absZIdxInCtu + uiAbsPartIdx, cMvCol );
-  if( isColAvail )
-  {
-    MvPred[nbPred++] = cMvCol;
-    if( getDerivedBV( uiAbsPartIdx, MvPred[nbPred-1], MvPred[nbPred]) )
-      nbPred++;
-  }
-#endif
-
-#if SCM_T0116_IBCSEARCH_OPTIMIZE
 #if SCM_IBC_CLEANUP
   if ( getSlice()->isOnlyCurrentPictureAsReference() )
 #else
@@ -1529,7 +1512,6 @@ Void TComDataCU::getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPred, Int& n
       }
     }
   }
-#endif
 
   // Below Left predictor search
   TComDataCU* pcTempBelowLeftCU = getPUBelowLeft( uiTempPartIdx, uiPartIdxLB, false);
@@ -4149,22 +4131,14 @@ Bool TComDataCU::xGetColMVPIBC( Int ctuRsAddr, Int uiPartUnitIdx, TComMv& rcMv)
 {
   UInt uiAbsPartAddr = uiPartUnitIdx;
 
-#if !SCM_T0116_IBCSEARCH_OPTIMIZE
-  Int iCurrPOC = m_pcSlice->getPOC();
-#endif
   // use coldir.
-#if SCM_T0116_IBCSEARCH_OPTIMIZE
   TComPic *pColPic = getSlice()->getLastEncPic();
-#else
-  TComPic *pColPic = getSlice()->getRefPic( REF_PIC_LIST_INTRABC, 0);
-#endif
   if( !pColPic )
   {
     return false;
   }
 
   TComDataCU *pColCU = pColPic->getCtu( ctuRsAddr );
-#if SCM_T0116_IBCSEARCH_OPTIMIZE
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
   if(pColCU->getCUMvField(REF_PIC_LIST_0)->getRefIdx(uiAbsPartAddr) < 0)
   {
@@ -4172,18 +4146,6 @@ Bool TComDataCU::xGetColMVPIBC( Int ctuRsAddr, Int uiPartUnitIdx, TComMv& rcMv)
   }
 #else
   if(pColCU->getCUMvField(REF_PIC_LIST_INTRABC)->getRefIdx(uiAbsPartAddr) != REF_PIC_LIST_INTRABC)
-  {
-    return false;
-  }
-#endif
-#else
-  Int iColPOC = pColCU->getSlice()->getPOC();
-  if(iColPOC == iCurrPOC || pColCU->getPic()==0||pColCU->getPartitionSize(uiPartUnitIdx)==NUMBER_OF_PART_SIZES)
-  {
-    return false;
-  }
-
-  if( !pColCU->isIntraBC( uiAbsPartAddr ) )
   {
     return false;
   }
@@ -4253,7 +4215,7 @@ Void TComDataCU::compressMV()
   Int scaleFactor = 4 * AMVP_DECIMATION_FACTOR / m_unitSize;
   if (scaleFactor > 0)
   {
-#if SCM_T0116_IBCSEARCH_OPTIMIZE && !SCM_T0227_INTRABC_SIG_UNIFICATION
+#if !SCM_T0227_INTRABC_SIG_UNIFICATION
     for(UInt i=0; i<REF_PIC_LIST_INTRABC; i++)
 #else
     for(UInt i=0; i<NUM_REF_PIC_LIST_CU_MV_FIELD; i++)

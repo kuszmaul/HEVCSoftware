@@ -289,7 +289,6 @@
 //------------------------------------------------
 
 #define SCM_T0227_INTRABC_SIG_UNIFICATION                1 ///< unify intra BC mode and inter mode
-#define SCM_T0116_IBCSEARCH_OPTIMIZE                     1 ///< IBC search improvement
 #define SCM_T0134_DELTA_PLT_PREDICTOR_SIZE               1 ///< Delta signaling for palette predictor size
 #define SCM_T0183_INFER_PLT_ESC_PRESENT_VAL_FLAG         1 ///< Include inference rule for value of syntax element pallete_escape_val_present_flag when not present
 #define SCM_T0072_T0109_T0120_PLT_NON444                 1 ///< palette mode support for non-444 formats

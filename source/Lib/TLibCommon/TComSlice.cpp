@@ -107,9 +107,7 @@ TComSlice::TComSlice()
 , m_LFCrossSliceBoundaryFlag      ( false )
 , m_enableTMVPFlag                ( true )
 , m_useIntegerMv                  ( false )
-#if SCM_T0116_IBCSEARCH_OPTIMIZE
 , m_pcLastEncPic                  ( NULL )
-#endif
 , m_encCABACTableIdx              (I_SLICE)
 {
   for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
@@ -367,7 +365,6 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
       }
 #endif
 
-#if SCM_T0116_IBCSEARCH_OPTIMIZE
       if( m_pcRPS->getNumberOfPictures() == 0 )
       {
         TComPic *pPrevPic = xGetRefPic(rcListPic, max(0, getPOC()-1));
@@ -377,7 +374,6 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
         }
         setLastEncPic(pPrevPic);
       }
-#endif
       return;
     }
 

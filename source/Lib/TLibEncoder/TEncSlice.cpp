@@ -803,13 +803,6 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
     }
   }
 
-#if !SCM_T0116_IBCSEARCH_OPTIMIZE
-  if( pcSlice->getPPS()->getUseColourTrans () && m_pcCfg->getRGBFormatFlag() )
-  {
-    pcPic->getPicYuvResi()->DefaultConvertPix( pcPic->getPicYuvOrg(), pcSlice->getSPS()->getBitDepths() );
-  }
-#endif
-
 #if SCM_T0048_PLT_PRED_IN_PPS
   TComPPS *pcPPS = m_pcGOPEncoder->getPPS();
 
