@@ -1565,7 +1565,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcPic->getSlice(pcSlice->getSliceIdx())->setMvdL1ZeroFlag(pcSlice->getMvdL1ZeroFlag());
 
     pcSlice->setUseIntegerMv( false );
-#if SCM_T0069_AMVR_REFINEMENT
 #if SCM_IBC_CLEANUP
     if ( ( !pcSlice->getSPS()->getUseIntraBlockCopy() && !pcSlice->isIntra() ) ||
           ( pcSlice->getSPS()->getUseIntraBlockCopy() && !pcSlice->isOnlyCurrentPictureAsReference() ) )
@@ -1582,12 +1581,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         pcSlice->setUseIntegerMv( m_pcCfg->getMotionVectorResolutionControlIdc() == 0 ? false : true );
       }
     }
-#else
-    if ( !pcSlice->isIntra() && m_pcCfg->getUseAdaptiveMvResolution() )
-    {
-      pcSlice->setUseIntegerMv( xGetUseIntegerMv( pcSlice ) );
-    }
-#endif
 
 #if SCM_IBC_CLEANUP
     if ( !pcSlice->isIntra() && pcSlice->getEnableTMVPFlag() )
