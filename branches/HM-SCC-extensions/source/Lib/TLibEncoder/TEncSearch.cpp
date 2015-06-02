@@ -3921,11 +3921,7 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
 #endif
 {
   UInt  uiDepth      = pcCU->getDepth(0);
-#if SCM_HIGH_BIT_DEPTH_BUG_FIX
   Distortion  uiDistortion = 0;
-#else
-  UInt  uiDistortion = 0;
-#endif
   Pel *paOrig[3], *paPalette[3];
   TCoeff *pRun;
   UChar *paSPoint[3];
@@ -5291,11 +5287,7 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
     return false;
 
   const Int iNumPart = pcCU->getNumPartitions();
-#if SCM_HIGH_BIT_DEPTH_BUG_FIX
   Distortion uiTotalCost = 0;
-#else
-  UInt uiTotalCost = 0;
-#endif
   for( Int iPartIdx = 0; iPartIdx < iNumPart; ++iPartIdx )
   {
 #if SCM_T0227_INTRABC_SIG_UNIFICATION
@@ -5349,13 +5341,8 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
         || pcCU->getIntraBCSearchAreaWidth( m_pcEncCfg->getIntraBCSearchWidthInCTUs() ) != pcCU->getIntraBCSearchAreaWidth( m_pcEncCfg->getIntraBCNonHashSearchWidthInCTUs() ))
       )
     {
-#if SCM_HIGH_BIT_DEPTH_BUG_FIX
-    Distortion uiIntraBCECost = uiCost;
-    xIntraBCHashSearch ( pcCU, pcOrgYuv, iPartIdx, cMvPred, cMv, (UInt)uiIntraBCECost);
-#else
-    UInt uiIntraBCECost = uiCost;
-    xIntraBCHashSearch ( pcCU, pcOrgYuv, iPartIdx, cMvPred, cMv, uiIntraBCECost);
-#endif
+      Distortion uiIntraBCECost = uiCost;
+      xIntraBCHashSearch ( pcCU, pcOrgYuv, iPartIdx, cMvPred, cMv, (UInt)uiIntraBCECost);
       uiCost = std::min(uiIntraBCECost, uiCost);
     }
     uiTotalCost += uiCost;
@@ -6420,11 +6407,7 @@ Bool TEncSearch::xHashInterEstimation( TComDataCU* pcCU, Int width, Int height, 
 
           if ( currCost < bestCost )
           {
-#if SCM_HIGH_BIT_DEPTH_BUG_FIX
             bestCost = (Int)currCost;
-#else
-            bestCost = currCost;
-#endif 
             bestRefPicList = eRefPicList;
             bestRefIndex = iRefIdx;
             bestMv.set( (*it).x - currBlockHash.x, (*it).y - currBlockHash.y );
