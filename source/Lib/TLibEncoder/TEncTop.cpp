@@ -1109,10 +1109,8 @@ Void TEncTop::selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid
     slice->setRPSidx(m_iGOPSize+m_extraRPSs);
   }
 
-  TComReferencePictureSet *rps=slice->getLocalRPS();
-  (*rps) = *(slice->getSPS()->getRPSList()->getReferencePictureSet(slice->getRPSidx()));
+  const TComReferencePictureSet *rps = (slice->getSPS()->getRPSList()->getReferencePictureSet(slice->getRPSidx()));
   slice->setRPS(rps);
-  slice->getRPS()->setNumberOfPictures(slice->getRPS()->getNumberOfNegativePictures()+slice->getRPS()->getNumberOfPositivePictures());
 }
 
 Int TEncTop::getReferencePictureSetIdxForSOP(Int POCCurr, Int GOPid )
