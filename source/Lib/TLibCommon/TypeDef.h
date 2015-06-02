@@ -289,7 +289,6 @@
 //------------------------------------------------
 
 #define SCM_T0227_INTRABC_SIG_UNIFICATION                1 ///< unify intra BC mode and inter mode
-#define SCM_T0087_IMPROVED_PALETTE_TABLE_GENERATION      1 ///< improved palette table generation
 #define SCM_T0069_AMVR_REFINEMENT                        1 ///< high-level syntax refinement for adaptive motion vector resolution
 #define SCM_T0058_REMOVE_64x64_PLT                       1 ///< Disallow palette mode for 64x64 CUs
 #define SCM_T0078_REMOVE_PLT_RUN_MODE_CTX                1 ///< Remove context in palette mode
@@ -948,7 +947,7 @@ public:
     }
     uiData[0] = ui0; uiData[1] = ui1; uiData[2] = ui2;
   }
-#if SCM_T0087_IMPROVED_PALETTE_TABLE_GENERATION
+
   Bool EqualData(SortingElement sElement)
   {
     return (uiData[0] == sElement.uiData[0]) && (uiData[1] == sElement.uiData[1]) && (uiData[2] == sElement.uiData[2]);
@@ -960,7 +959,7 @@ public:
     uiData[0] = uiData[1] = uiData[2] = 0;
     uiSumData[0] = uiSumData[1] = uiSumData[2] = 0;
   }
-#endif
+
   Bool almostEqualData(SortingElement sElement, Int iErrorLimit, const BitDepths& bitDepths)
   {
     return ( std::abs(uiData[0] - sElement.uiData[0]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_LUMA]  -8) ) <= iErrorLimit

@@ -1163,7 +1163,6 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
   UInt uiScaleY = pcCU->getPic()->getComponentScaleY(COMPONENT_Cb);
 #endif
 
-#if SCM_T0087_IMPROVED_PALETTE_TABLE_GENERATION
   SortingElement *psListHistogram = new SortingElement[uiTotalSize];
   SortingElement *psInitial = new SortingElement[uiTotalSize];
   UInt uiHisIdx = 0;
@@ -1305,49 +1304,6 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
       }
     }
   }
-#else
-  for( UInt uiY = 0; uiY < uiHeight; uiY++ )
-  {
-    for( UInt uiX = 0; uiX < uiWidth; uiX++ )
-    {
-      uiPos = uiY * uiWidth+ uiX;
-#if SCM_T0072_T0109_T0120_PLT_NON444
-      UInt uiPosC = (uiY>>uiScaleY) * (uiWidth>>uiScaleX) + (uiX>>uiScaleX);
-      sElement.setAll (pSrc[0][uiPos], pSrc[1][uiPosC], pSrc[2][uiPosC]);
-#else
-      sElement.setAll (pSrc[0][uiPos], pSrc[1][uiPos], pSrc[2][uiPos]);
-#endif
-
-      Int besti = last, bestSAD = (last == -1) ? MAX_UINT : psList[last].getSAD(sElement, pcCU->getSlice()->getSPS()->getBitDepths());
-      if( bestSAD )
-      {
-        for( Int i = uiIdx-1; i>=0; i-- )
-        {
-          UInt sad = psList[i].getSAD(sElement, pcCU->getSlice()->getSPS()->getBitDepths());
-          if( sad < bestSAD )
-          {
-            bestSAD = sad;
-            besti = i;
-            if( !sad ) break;
-          }
-        }
-      }
-
-      if (besti>=0 && psList[besti].almostEqualData(sElement, iErrorLimit, pcCU->getSlice()->getSPS()->getBitDepths()))
-      {
-        psList[besti].addElement(sElement);
-        last = besti;
-      }
-      else
-      {
-        psList[uiIdx].copyDataFrom(sElement);
-        psList[uiIdx].uiCnt = 1;
-        last = uiIdx;
-        uiIdx ++;
-      }
-    }
-  }
-#endif
 
   for (Int i = 0; i < uiDictMaxSize; i++)
   {
@@ -1452,10 +1408,8 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
   delete [] psList;
   delete [] pListSort;
 
-#if SCM_T0087_IMPROVED_PALETTE_TABLE_GENERATION
   delete[] psListHistogram;
   delete[] psInitial;
-#endif
 }
 
 #if SCM_T0064_REMOVE_PLT_SHARING
