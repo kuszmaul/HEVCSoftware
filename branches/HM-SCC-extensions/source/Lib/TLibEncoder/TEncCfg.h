@@ -232,11 +232,7 @@ protected:
   Bool      m_usePaletteMode;
   UInt      m_uiPLTMaxSize;
   UInt      m_uiPLTMaxPredSize;
-#if SCM_T0069_AMVR_REFINEMENT
   Int       m_motionVectorResolutionControlIdc;
-#else
-  Bool      m_useAdaptiveMvResolution;
-#endif
 #if SCM_T0048_PLT_PRED_IN_PPS
   Bool      m_palettePredInPPSEnabled;
 #endif
@@ -640,13 +636,8 @@ public:
   UInt getPLTMaxSize()                                               const { return m_uiPLTMaxSize; }
   Void setPLTMaxPredSize                                (const UInt value) { m_uiPLTMaxPredSize = value; }
   UInt getPLTMaxPredSize()                                           const { return m_uiPLTMaxPredSize; }
-#if SCM_T0069_AMVR_REFINEMENT
   Void setMotionVectorResolutionControlIdc             ( Int idc )         { m_motionVectorResolutionControlIdc = idc; }
   Int  getMotionVectorResolutionControlIdc             ()            const { return m_motionVectorResolutionControlIdc; }
-#else
-  Void setUseAdaptiveMvResolution                      ( Bool b )          { m_useAdaptiveMvResolution = b; }
-  Bool getUseAdaptiveMvResolution                      ()            const { return m_useAdaptiveMvResolution; }
-#endif
 #if SCM_T0048_PLT_PRED_IN_PPS
   Void setPalettePredInPPSEnabled                      ( Bool b )          { m_palettePredInPPSEnabled = b; }
   Bool getPalettePredInPPSEnabled                      ()            const { return m_palettePredInPPSEnabled; }

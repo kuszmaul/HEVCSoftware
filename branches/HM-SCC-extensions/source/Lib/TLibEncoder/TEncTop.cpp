@@ -629,11 +629,7 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUsePLTMode                  (       m_usePaletteMode     );
   m_cSPS.setPLTMaxSize                  (       m_uiPLTMaxSize       );
   m_cSPS.setPLTMaxPredSize              (       m_uiPLTMaxPredSize   );
-#if SCM_T0069_AMVR_REFINEMENT
   m_cSPS.setMotionVectorResolutionControlIdc( m_motionVectorResolutionControlIdc );
-#else
-  m_cSPS.setUseAdaptiveMvResolution( m_useAdaptiveMvResolution );
-#endif
 
   for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
   {

@@ -1727,11 +1727,7 @@ TComSPS::TComSPS()
 , m_usePaletteMode            (false)
 , m_uiPLTMaxSize              ( 31)
 , m_uiPLTMaxPredSize          ( 64)
-#if SCM_T0069_AMVR_REFINEMENT
 , m_motionVectorResolutionControlIdc(0)
-#else
-, m_useAdaptiveMvResolution   (false)
-#endif
 , m_disableIntraBoundaryFilter(false)
 , m_bPCMFilterDisableFlag     (false)
 , m_disableIntraReferenceSmoothing(false)
