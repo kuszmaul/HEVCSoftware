@@ -121,9 +121,7 @@ TComSlice::TComSlice()
   {
     m_lambdas            [component] = 0.0;
     m_iSliceChromaQpDelta[component] = 0;
-#if SCM_T0140_ACT_QP_OFFSET
     m_iSliceACTQpDelta   [component] = 0;
-#endif
   }
 
   initEqualRef();
@@ -172,9 +170,7 @@ Void TComSlice::initSlice()
   for (UInt component = 0; component < MAX_NUM_COMPONENT; component++)
   {
     m_iSliceChromaQpDelta[component] = 0;
-#if SCM_T0140_ACT_QP_OFFSET
     m_iSliceACTQpDelta   [component] = 0;
-#endif
   }
 
   m_maxNumMergeCand = MRG_MAX_NUM_CANDS;
@@ -1908,12 +1904,10 @@ TComPPS::TComPPS()
 , m_ChromaQpAdjTableSize             (0)
 , m_chromaCbQpOffset                 (0)
 , m_chromaCrQpOffset                 (0)
-#if SCM_T0140_ACT_QP_OFFSET
 , m_useSliceACTOffset                (false)
 , m_actYQpOffset                     (-5)
 , m_actCbQpOffset                    (-5)
 , m_actCrQpOffset                    (-3)
-#endif
 , m_numRefIdxL0DefaultActive         (1)
 , m_numRefIdxL1DefaultActive         (1)
 , m_useCrossComponentPrediction      (false)

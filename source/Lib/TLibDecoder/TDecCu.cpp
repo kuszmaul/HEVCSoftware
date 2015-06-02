@@ -831,9 +831,6 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
   TComDataCU         *pcCU        = rTu.getCU();
   const UInt         uiAbsPartIdx = rTu.GetAbsPartIdxTU();
   const ChromaFormat chFmt        = rTu.GetChromaFormat();
-#if !SCM_T0140_ACT_QP_OFFSET
-  Bool bModifyQP = !pcCU->isLosslessCoded(0) && pcCU->getColourTransform( 0 );
-#endif 
 #if SCM_T0132_ACT_CLIP
   const Bool             extendedPrecision = pcCU->getSlice()->getSPS()->getUseExtendedPrecision();
 #endif
@@ -875,15 +872,6 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
 
     //===== inverse transform =====
     QpParam cQP(*pcCU, compID);
-#if !SCM_T0140_ACT_QP_OFFSET
-    if(bModifyQP)
-    {
-      cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr? DELTA_QP_FOR_YCgCo_TRANS_V:DELTA_QP_FOR_YCgCo_TRANS);
-      cQP.Qp = std::max<Int>( cQP.Qp, 0 );
-      cQP.per = cQP.Qp/6;
-      cQP.rem= cQP.Qp%6;
-    }
-#endif
 
     DEBUG_STRING_NEW( sDebug );
 #ifdef DEBUG_STRING

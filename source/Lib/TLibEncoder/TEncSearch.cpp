@@ -2481,21 +2481,9 @@ TEncSearch::xRecurIntraCodingQTCSC( TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TComY
       QpParam cQP(*pcCU, compID);
       if(!pcCU->isLosslessCoded(0))
       {
-#if !SCM_T0140_ACT_QP_OFFSET
-        cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS);
-        cQP.Qp = std::max<Int>( cQP.Qp, 0 );
-        cQP.per = cQP.Qp/6;
-        cQP.rem= cQP.Qp%6;
-#endif
-
-#if SCM_T0140_ACT_QP_OFFSET
         Int deltaQP = pcCU->getSlice()->getPPS()->getActQpOffset(compID) + pcCU->getSlice()->getSliceActQpDelta(compID);
         m_pcTrQuant->adjustBitDepthandLambdaForColourTrans( deltaQP );
         m_pcRdCost->adjustLambdaForColourTrans( deltaQP, pcCU->getSlice()->getSPS()->getBitDepths() );
-#else
-        m_pcTrQuant->adjustBitDepthandLambdaForColourTrans(compID==COMPONENT_Cr? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS );
-        m_pcRdCost->adjustLambdaForColourTrans(compID==COMPONENT_Cr? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS, pcCU->getSlice()->getSPS()->getBitDepths() );
-#endif
       }
 
       Bool bCheckTransformSkip = pcCU->getSlice()->getPPS()->getUseTransformSkip() &&
@@ -2610,14 +2598,9 @@ TEncSearch::xRecurIntraCodingQTCSC( TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TComY
       m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[ uiFullDepth ][ CI_TEMP_BEST ] );
       if(!pcCU->isLosslessCoded(0))
       {
-#if SCM_T0140_ACT_QP_OFFSET
         Int deltaQP = pcCU->getSlice()->getPPS()->getActQpOffset(compID) + pcCU->getSlice()->getSliceActQpDelta(compID);
         m_pcTrQuant->adjustBitDepthandLambdaForColourTrans( - deltaQP );
         m_pcRdCost->adjustLambdaForColourTrans            ( - deltaQP, pcCU->getSlice()->getSPS()->getBitDepths() );
-#else
-        m_pcTrQuant->adjustBitDepthandLambdaForColourTrans( compID==COMPONENT_Cr? -DELTA_QP_FOR_YCgCo_TRANS_V: -DELTA_QP_FOR_YCgCo_TRANS);
-        m_pcRdCost->adjustLambdaForColourTrans            ( compID==COMPONENT_Cr? -DELTA_QP_FOR_YCgCo_TRANS_V: -DELTA_QP_FOR_YCgCo_TRANS, pcCU->getSlice()->getSPS()->getBitDepths());
-#endif
       }
     }
 
@@ -9008,21 +8991,9 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
         QpParam cQP(*pcCU, compID);
         if(!pcCU->isLosslessCoded(0) && iColourTransform)
         {
-#if !SCM_T0140_ACT_QP_OFFSET
-          cQP.Qp = cQP.Qp + (compID==COMPONENT_Cr? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS);
-          cQP.Qp = std::max<Int>( cQP.Qp, 0 );
-          cQP.per = cQP.Qp/6;
-          cQP.rem= cQP.Qp%6;
-#endif
-
-#if SCM_T0140_ACT_QP_OFFSET
           Int deltaQP = pcCU->getSlice()->getPPS()->getActQpOffset(compID) + pcCU->getSlice()->getSliceActQpDelta(compID);
           m_pcTrQuant->adjustBitDepthandLambdaForColourTrans( deltaQP );
           m_pcRdCost->adjustLambdaForColourTrans( deltaQP, pcCU->getSlice()->getSPS()->getBitDepths() );
-#else
-          m_pcTrQuant->adjustBitDepthandLambdaForColourTrans(compID==COMPONENT_Cr? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS );
-          m_pcRdCost->adjustLambdaForColourTrans(compID==COMPONENT_Cr? DELTA_QP_FOR_YCgCo_TRANS_V: DELTA_QP_FOR_YCgCo_TRANS, pcCU->getSlice()->getSPS()->getBitDepths() );
-#endif
         }
 
         checkTransformSkip[compID] = pcCU->getSlice()->getPPS()->getUseTransformSkip() &&
@@ -9347,14 +9318,9 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
 
         if(!pcCU->isLosslessCoded(0) && iColourTransform)
         {
-#if SCM_T0140_ACT_QP_OFFSET
           Int deltaQP = pcCU->getSlice()->getPPS()->getActQpOffset(compID) + pcCU->getSlice()->getSliceActQpDelta(compID);
           m_pcTrQuant->adjustBitDepthandLambdaForColourTrans( - deltaQP );
           m_pcRdCost->adjustLambdaForColourTrans( - deltaQP, pcCU->getSlice()->getSPS()->getBitDepths() );
-#else
-          m_pcTrQuant->adjustBitDepthandLambdaForColourTrans(compID==COMPONENT_Cr? -DELTA_QP_FOR_YCgCo_TRANS_V: - DELTA_QP_FOR_YCgCo_TRANS);
-          m_pcRdCost->adjustLambdaForColourTrans(compID==COMPONENT_Cr? -DELTA_QP_FOR_YCgCo_TRANS_V: - DELTA_QP_FOR_YCgCo_TRANS, pcCU->getSlice()->getSPS()->getBitDepths());
-#endif
         }
       } // processing section
     } // component loop
