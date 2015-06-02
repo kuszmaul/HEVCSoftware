@@ -831,9 +831,7 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
   TComDataCU         *pcCU        = rTu.getCU();
   const UInt         uiAbsPartIdx = rTu.GetAbsPartIdxTU();
   const ChromaFormat chFmt        = rTu.GetChromaFormat();
-#if SCM_T0132_ACT_CLIP
-  const Bool             extendedPrecision = pcCU->getSlice()->getSPS()->getUseExtendedPrecision();
-#endif
+  const Bool    extendedPrecision = pcCU->getSlice()->getSPS()->getUseExtendedPrecision();
 
   for(UInt ch = 0; ch < MAX_NUM_COMPONENT; ch++)
   {
@@ -911,11 +909,7 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
 
   if( pcCU->getColourTransform(uiAbsPartIdx) && (pcCU->getCbf(uiAbsPartIdx,COMPONENT_Y)||pcCU->getCbf(uiAbsPartIdx,COMPONENT_Cb)|| pcCU->getCbf(uiAbsPartIdx,COMPONENT_Cr)))
   {
-#if SCM_T0132_ACT_CLIP
     pcResiYuv->convert(extendedPrecision, rTu.getRect(COMPONENT_Y).x0, rTu.getRect(COMPONENT_Y).y0, rTu.getRect(COMPONENT_Y).width, false, pcCU->getSlice()->getSPS()->getBitDepths(), pcCU->isLosslessCoded(uiAbsPartIdx));
-#else
-    pcResiYuv->convert(rTu.getRect(COMPONENT_Y).x0, rTu.getRect(COMPONENT_Y).y0, rTu.getRect(COMPONENT_Y).width, false, pcCU->getSlice()->getSPS()->getBitDepths(), pcCU->isLosslessCoded(uiAbsPartIdx));
-#endif  
   }
 
   //===== reconstruction =====

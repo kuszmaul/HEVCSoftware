@@ -439,13 +439,8 @@ Void TComYuv::removeHighFreq( const TComYuv* pcYuvSrc, const UInt uiPartIdx, con
   }
 }
 
-#if SCM_T0132_ACT_CLIP
 Void TComYuv::convert(const Bool extendedPrecision, const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, Bool bForwardConversion, const BitDepths& bitDepths, Bool bLossless, TComYuv* pcYuvNoCorrResi)
-#else
-Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, Bool bForwardConversion, const BitDepths& bitDepths, Bool bLossless, TComYuv* pcYuvNoCorrResi)
-#endif 
 {
-#if SCM_T0132_ACT_CLIP
   const Int lumaBitDepth   = bitDepths.recon[CHANNEL_TYPE_LUMA];
   const Int chromaBitDepth = bitDepths.recon[CHANNEL_TYPE_CHROMA];
 
@@ -453,7 +448,6 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
   Int CoeffMinC = -(1<<(extendedPrecision? std::max(15, chromaBitDepth+6):15));
   Int CoeffMaxY =  (1<<(extendedPrecision? std::max(15, lumaBitDepth+6):15)) - 1;
   Int CoeffMaxC =  (1<<(extendedPrecision? std::max(15, chromaBitDepth+6):15)) - 1;
-#endif
   assert(getChromaFormat() == CHROMA_444);
   UInt uiPartSize = uiWidth;
 
@@ -547,15 +541,10 @@ Void TComYuv::convert(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, 
       for(Int x=0; x<uiPartSize; x++)
       {
         Int y0, cg, co;
-#if SCM_T0132_ACT_CLIP
         y0 = Clip3<Int>(CoeffMinY,CoeffMaxY, pOrg0[x]);
         cg = Clip3<Int>(CoeffMinC,CoeffMaxC, pOrg1[x]);
         co = Clip3<Int>(CoeffMinC,CoeffMaxC, pOrg2[x]);
-#else
-        y0 = pOrg0[x];
-        cg = pOrg1[x];
-        co = pOrg2[x];
-#endif
+
         if(!bLossless)
         {
           y0 <<= iShiftLuma;
