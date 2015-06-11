@@ -1521,7 +1521,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   }
 
   m_uiMaxTotalCUDepth = m_uiMaxCUDepth + uiAddCUDepth + getMaxCUDepthOffset(m_chromaFormatIDC, m_uiQuadtreeTULog2MinSize); // if minimum TU larger than 4x4, allow for additional part indices for 4:2:2 SubTUs.
-  uiAddCUDepth++;
   m_uiLog2DiffMaxMinCodingBlockSize = m_uiMaxCUDepth - 1;
 
   // print-out parameters
