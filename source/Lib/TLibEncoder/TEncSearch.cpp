@@ -112,6 +112,20 @@ static Void offsetSubTUCBFs(TComTU &rTu, const ComponentID compID)
 
 
 TEncSearch::TEncSearch()
+: m_puhQTTempTrIdx(NULL)
+, m_pcQTTempTComYuv(NULL)
+, m_pcEncCfg (NULL)
+, m_pcTrQuant (NULL)
+, m_pcRdCost (NULL)
+, m_pcEntropyCoder (NULL)
+, m_iSearchRange (0)
+, m_bipredSearchRange (0)
+, m_iFastSearch (0)
+, m_pppcRDSbacCoder (NULL)
+, m_pcRDGoOnSbacCoder (NULL)
+, m_pTempPel (NULL)
+, m_puiDFilter (NULL)
+, m_isInitialized (false)
 {
   for (UInt ch=0; ch<MAX_NUM_COMPONENT; ch++)
   {
@@ -130,19 +144,23 @@ TEncSearch::TEncSearch()
 #endif
     m_puhQTTempTransformSkipFlag[ch]               = NULL;
   }
-  m_puhQTTempTrIdx                                 = NULL;
-  m_pcQTTempTComYuv                                = NULL;
-  m_pcEncCfg                                       = NULL;
-  m_pcEntropyCoder                                 = NULL;
-  m_pTempPel                                       = NULL;
+
+  for (Int i=0; i<MAX_NUM_REF_LIST_ADAPT_SR; i++)
+  {
+    memset (m_aaiAdaptSR[i], 0, MAX_IDX_ADAPT_SR * sizeof (Int));
+  }
+  for (Int i=0; i<AMVP_MAX_NUM_CANDS+1; i++)
+  {
+    memset (m_auiMVPIdxCost[i], 0, (AMVP_MAX_NUM_CANDS+1) * sizeof (UInt) );
+  }
+
   setWpScalingDistParam( NULL, -1, REF_PIC_LIST_X );
 }
 
 
-
-
-TEncSearch::~TEncSearch()
+Void TEncSearch::destroy()
 {
+  assert (m_isInitialized);
   if ( m_pTempPel )
   {
     delete [] m_pTempPel;
@@ -193,6 +211,15 @@ TEncSearch::~TEncSearch()
   m_pcQTTempTransformSkipTComYuv.destroy();
 
   m_tmpYuvPred.destroy();
+  m_isInitialized = false;
+}
+
+TEncSearch::~TEncSearch()
+{
+  if (m_isInitialized)
+  {
+    destroy();
+  }
 }
 
 
@@ -212,6 +239,7 @@ Void TEncSearch::init(TEncCfg*      pcEncCfg,
                       TEncSbac*   pcRDGoOnSbacCoder
                       )
 {
+  assert (!m_isInitialized);
   m_pcEncCfg             = pcEncCfg;
   m_pcTrQuant            = pcTrQuant;
   m_iSearchRange         = iSearchRange;
@@ -292,6 +320,7 @@ Void TEncSearch::init(TEncCfg*      pcEncCfg,
   }
   m_pcQTTempTransformSkipTComYuv.create( maxCUWidth, maxCUHeight, pcEncCfg->getChromaFormatIdc() );
   m_tmpYuvPred.create(MAX_CU_SIZE, MAX_CU_SIZE, pcEncCfg->getChromaFormatIdc());
+  m_isInitialized = true;
 }
 
 #define TZ_SEARCH_CONFIGURATION                                                                                 \
