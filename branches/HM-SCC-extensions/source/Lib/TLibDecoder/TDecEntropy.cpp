@@ -283,15 +283,6 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
         uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
         pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
       }
-      if ( uhInterDirNeighbours[uiMergeIndex] == 1 &&
-           pcCU->getSlice()->getRefPic( REF_PIC_LIST_0, cMvFieldNeighbours[uiMergeIndex<<1].getRefIdx() )->getPOC() == pcCU->getSlice()->getPOC() )
-      {
-        if( pcCU->getLastIntraBCMv() != cMvFieldNeighbours[uiMergeIndex<<1].getMv())
-        {
-          pcCU->setLastIntraBCMv( pcCU->getLastIntraBCMv(0), 1 );
-          pcCU->setLastIntraBCMv( cMvFieldNeighbours[uiMergeIndex<<1].getMv() );
-        }
-      }
 
       pcCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
 
@@ -436,14 +427,6 @@ Void TDecEntropy::decodeMVPIdxPU( TComDataCU* pcSubCU, UInt uiPartAddr, UInt uiD
     else
     {
       cMv += pcSubCUMvField->getMvd( uiPartAddr );
-    }
-    if ((eRefList == REF_PIC_LIST_0) && (pcSubCU->getSlice()->getRefPic( eRefList, iRefIdx )->getPOC() == pcSubCU->getSlice()->getPOC()) )
-    {
-      if( pcCU->getLastIntraBCMv() != cMv)
-      {
-        pcCU->setLastIntraBCMv( pcCU->getLastIntraBCMv(0), 1 );
-        pcCU->setLastIntraBCMv( cMv );
-      }
     }
   }
 

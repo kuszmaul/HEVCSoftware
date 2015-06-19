@@ -290,16 +290,6 @@ Void TDecCu::xDecodeCU( TComDataCU*const pcCU, const UInt uiAbsPartIdx, const UI
         pcCU->setMVPNumSubParts( 0, RefPicList( uiRefListIdx ), uiAbsPartIdx, 0, uiDepth);
         pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvd( cTmpMv, SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
         pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvField( cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ], SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
-
-        if ( uiRefListIdx == 0 && uhInterDirNeighbours[uiMergeIndex] == 1 &&
-             pcCU->getSlice()->getRefPic( REF_PIC_LIST_0, cMvFieldNeighbours[uiMergeIndex<<1].getRefIdx() )->getPOC() == pcCU->getSlice()->getPOC() )
-        {
-          if( pcCU->getLastIntraBCMv() != cMvFieldNeighbours[uiMergeIndex<<1].getMv())
-          {
-            pcCU->setLastIntraBCMv( pcCU->getLastIntraBCMv(0), 1 );
-            pcCU->setLastIntraBCMv( cMvFieldNeighbours[uiMergeIndex<<1].getMv() );
-          }
-        }
       }
     }
     xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, isLastCtuOfSliceSegment );
