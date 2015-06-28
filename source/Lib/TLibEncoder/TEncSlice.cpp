@@ -1013,6 +1013,16 @@ Void TEncSlice::compressSlice( TComPic* pcPic )
       }
     }
 
+#if SCM_T0056_IBC_VALIDATE_TILES
+    if( ctuRsAddr == firstCtuRsAddrOfTile && ctuRsAddr != 0)
+    {
+      if( m_pcCfg->getUseHashBasedIntraBCSearch() )
+      {
+        m_pcPredSearch->xClearIntraBCHashTable();
+      }
+    }
+#endif
+
     for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
     {
       pCtu->setLastPLTInLcuSizeFinal(comp, lastPLTSize[comp]);

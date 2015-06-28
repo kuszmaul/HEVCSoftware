@@ -290,6 +290,9 @@
 
 #define SCM_IBC_CLEANUP_IDENTICAL_RDO                    1 ///< let the encoder to generate identical RDO results
 #define SCM_T0048_IBC_VALIDATE_SLICES                    1 ///< Print at decoder when IBC reaches outside of current slice
+#define SCM_T0056_IBC_VALIDATE_TILES                     1 ///< Print at decoder when IBC reaches outside of current tile
+#define SCM_GET_DERIVED_BV_BUGFIX                        1 ///< Bug fix in related to block vector derivation
+#define SCM_IBC_MVP_ENC_ONLY_BUGFIX                      1 ///< Encoder only bug fix for IBC block vector predictor derivation
 #define SCM_S0043_PLT_DELTA_QP                           0 ///< JCTVC-S0043: delta qp signalling for palette mode
 
 //------------------------------------------------
