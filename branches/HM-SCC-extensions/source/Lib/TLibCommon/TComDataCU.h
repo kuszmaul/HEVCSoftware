@@ -247,7 +247,11 @@ public:
   Bool          isIntraBC(UInt uiAbsPartIdx);
 
   Void          getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPredEnc, Int& nbPred, Int iPartIdx);
+#if SCM_GET_DERIVED_BV_BUGFIX
+  Bool          getDerivedBV(UInt uiAbsPartIdx, const TComMv& currentMv, TComMv& derivedMv, UInt width, UInt height);
+#else
   Bool          getDerivedBV(UInt uiAbsPartIdx, const TComMv& currentMv, TComMv& derivedMv);
+#endif
   Char*         getPartitionSize      ()                        { return m_pePartSize;        }
   PartSize      getPartitionSize      ( UInt uiIdx )            { return static_cast<PartSize>( m_pePartSize[uiIdx] ); }
   Void          setPartitionSize      ( UInt uiIdx, PartSize uh){ m_pePartSize[uiIdx] = uh;   }

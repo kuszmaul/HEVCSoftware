@@ -372,6 +372,23 @@ public:
       return false;
     }
 
+#if SCM_T0056_IBC_VALIDATE_TILES
+    const UInt curTileIdx = pcCU->getPic()->getPicSym()->getTileIdxMap( pcCU->getCtuRsAddr() );
+    TComTile* curTile = pcCU->getPic()->getPicSym()->getTComTile( curTileIdx );
+
+    const Int tileAreaRight  = (curTile->getRightEdgePosInCtus() + 1) * uiMaxCuWidth;
+    const Int tileAreaBottom = (curTile->getBottomEdgePosInCtus() + 1) * uiMaxCuHeight;
+
+    const Int tileAreaLeft   = tileAreaRight - curTile->getTileWidthInCtus() * uiMaxCuWidth;
+    const Int tileAreaTop    = tileAreaBottom - curTile->getTileHeightInCtus() * uiMaxCuHeight;
+
+    if( (cuPelX + predX + roiWidth > tileAreaRight) || (cuPelY + predY + roiHeight > tileAreaBottom) ||
+      (cuPelX + predX < tileAreaLeft) || (cuPelY + predY < tileAreaTop) )        
+    {
+      return false;
+    }
+#endif
+
     TComSlice *pcSlice = pcCU->getSlice();
     if( pcSlice->getSliceMode() )
     {
