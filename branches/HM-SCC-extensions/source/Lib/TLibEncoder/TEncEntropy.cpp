@@ -36,7 +36,7 @@
 */
 
 #include "TEncEntropy.h"
-#include "TLibCommon/TypeDef.h"
+#include "TLibCommon/CommonDef.h"
 #include "TLibCommon/TComSampleAdaptiveOffset.h"
 #include "TLibCommon/TComTU.h"
 
@@ -91,7 +91,7 @@ Void TEncEntropy::encodeSPS( const TComSPS* pcSPS )
 #if SCM_S0043_PLT_DELTA_QP
 Void TEncEntropy::encodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD, Bool* bCodeDQP, Bool* codeChromaQpAdj )
 {
-  if ( pcCU->getSlice()->getSPS()->getUsePLTMode() )
+  if ( pcCU->getSlice()->getSPS()->getSpsScreenExtension().getUsePLTMode() )
   {
     if ( bRD )
     {
@@ -119,7 +119,7 @@ Void TEncEntropy::encodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool b
 #else
 Void TEncEntropy::encodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
-  if ( pcCU->getSlice()->getSPS()->getUsePLTMode() )
+  if ( pcCU->getSlice()->getSPS()->getSpsScreenExtension().getUsePLTMode() )
   {
     if ( bRD )
     {
@@ -657,9 +657,9 @@ Void TEncEntropy::encodeQtCbfZero( TComTU &rTu, const ChannelType chType )
   m_pcEntropyCoderIf->codeQtCbfZero( rTu, chType );
 }
 
-Void TEncEntropy::encodeQtRootCbfZero( TComDataCU* pcCU )
+Void TEncEntropy::encodeQtRootCbfZero( )
 {
-  m_pcEntropyCoderIf->codeQtRootCbfZero( pcCU );
+  m_pcEntropyCoderIf->codeQtRootCbfZero( );
 }
 
 // dQP

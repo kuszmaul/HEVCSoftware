@@ -64,7 +64,9 @@ TComPicSym::TComPicSym()
 ,m_puiTileIdxMap(NULL)
 ,m_ctuRsToTsAddrMap(NULL)
 ,m_saoBlkParams(NULL)
+#if ADAPTIVE_QP_SELECTION
 ,m_pParentARLBuffer(NULL)
+#endif
 {}
 
 
@@ -163,8 +165,10 @@ Void TComPicSym::destroy()
     delete[] m_saoBlkParams; m_saoBlkParams = NULL;
   }
 
+#if ADAPTIVE_QP_SELECTION
   delete [] m_pParentARLBuffer;
   m_pParentARLBuffer = NULL;
+#endif
 }
 
 Void TComPicSym::allocateNewSlice()
@@ -253,7 +257,7 @@ Void TComPicSym::xInitTiles()
     }
   }
 
-#if TILE_SIZE_CHECK
+  // Tile size check
   Int minWidth  = 1;
   Int minHeight = 1;
   const Int profileIdc = m_sps.getPTL()->getGeneralPTL()->getProfileIdc();
@@ -274,7 +278,6 @@ Void TComPicSym::xInitTiles()
       assert (m_tileParameters[tileIdx].getTileHeightInCtus() >= minHeight);
     }
   }
-#endif
 
   //initialize each tile of the current picture
   for( Int row=0; row < numRows; row++ )

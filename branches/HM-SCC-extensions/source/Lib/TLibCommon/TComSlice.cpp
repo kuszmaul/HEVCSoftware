@@ -434,7 +434,7 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
     pcRefPic->setCheckLTMSBPresent(m_pcRPS->getCheckLTMSBPresent(i));
   }
 
-  if ( getSPS()->getUseIntraBlockCopy() )
+  if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
   {
     RefPicSetLtCurr[NumPicLtCurr] = getPic();
     getPic()->setIsLongTerm( true );
@@ -453,7 +453,7 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
     // - Otherwise, when the current picture contains a P or B slice, the value of NumPocTotalCurr shall not be equal to 0.
     if (getRapPicFlag())
     {
-      if ( getSPS()->getUseIntraBlockCopy() )
+      if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
       {
         assert( numPicTotalCurr == 1 );
       }
@@ -514,7 +514,7 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
 
   ::memset(m_bIsUsedAsLongTerm, 0, sizeof(m_bIsUsedAsLongTerm));
 
-  if ( getSPS()->getUseIntraBlockCopy() && getPPS()->getListsModificationPresentFlag() && !checkNumPocTotalCurr )
+  if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && getPPS()->getListsModificationPresentFlag() && !checkNumPocTotalCurr )
   {
     // checkNumPocTotalCurr is false at encoder side and true at decoder side
     Bool needRPLM = false;
@@ -578,7 +578,7 @@ Int TComSlice::getNumRpsCurrTempList() const
       numRpsCurrTempList++;
     }
   }
-  if ( getSPS()->getUseIntraBlockCopy() )
+  if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
   {
     numRpsCurrTempList++;
   }
@@ -686,7 +686,7 @@ Void TComSlice::checkCRA(const TComReferencePictureSet *pReferencePictureSet, In
  * Note that the current picture is already placed in the reference list and its marking is not changed.
  * If the current picture has a nal_ref_idc that is not 0, it will remain marked as "used for reference".
  */
-Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComList<TComPic*>& rcListPic)
+Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComList<TComPic*>& rcListPic, const bool bEfficientFieldIRAPEnabled)
 {
   TComPic* rpcPic;
   Int      pocCurr = getPOC();
@@ -717,14 +717,14 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
     {
       pocCRA = pocCurr;
     }
-#if EFFICIENT_FIELD_IRAP
-    bRefreshPending = true;
-#endif
+    if (bEfficientFieldIRAPEnabled)
+    {
+      bRefreshPending = true;
+    }
   }
   else // CRA or No DR
   {
-#if EFFICIENT_FIELD_IRAP
-    if(getAssociatedIRAPType() == NAL_UNIT_CODED_SLICE_IDR_N_LP || getAssociatedIRAPType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL)
+    if(bEfficientFieldIRAPEnabled && (getAssociatedIRAPType() == NAL_UNIT_CODED_SLICE_IDR_N_LP || getAssociatedIRAPType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL))
     {
       if (bRefreshPending==true && pocCurr > m_iLastIDR) // IDR reference marking pending 
       {
@@ -744,7 +744,6 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
     }
     else
     {
-#endif
       if (bRefreshPending==true && pocCurr > pocCRA) // CRA reference marking pending
       {
         TComList<TComPic*>::iterator iterPic = rcListPic.begin();
@@ -760,9 +759,7 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
         }
         bRefreshPending = false;
       }
-#if EFFICIENT_FIELD_IRAP
     }
-#endif
     if ( getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA ) // CRA picture found
     {
       bRefreshPending = true;
@@ -999,12 +996,10 @@ Void TComSlice::checkLeadingPictureRestrictions(TComList<TComPic*>& rcListPic)
   while ( iterPic != rcListPic.end())
   {
     rpcPic = *(iterPic++);
-#if BUGFIX_INTRAPERIOD
     if(!rpcPic->getReconMark())
     {
       continue;
     }
-#endif
     if (rpcPic->getPOC() == this->getPOC())
     {
       continue;
@@ -1185,16 +1180,10 @@ Void TComSlice::applyReferencePictureSet( TComList<TComPic*>& rcListPic, const T
 
 /** Function for applying picture marking based on the Reference Picture Set in pReferencePictureSet.
 */
-#if ALLOW_RECOVERY_POINT_AS_RAP
 Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, const TComReferencePictureSet *pReferencePictureSet, Bool printErrors, Int pocRandomAccess, Bool bUseRecoveryPoint)
-#else
-Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, const TComReferencePictureSet *pReferencePictureSet, Bool printErrors, Int pocRandomAccess)
-#endif
 {
-#if ALLOW_RECOVERY_POINT_AS_RAP
   Int atLeastOneUnabledByRecoveryPoint = 0;
   Int atLeastOneFlushedByPreviousIDR = 0;
-#endif
   TComPic* rpcPic;
   Int i, isAvailable;
   Int atLeastOneLost = 0;
@@ -1215,7 +1204,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
       {
         if(rpcPic->getIsLongTerm() && (rpcPic->getPicSym()->getSlice(0)->getPOC()) == pReferencePictureSet->getPOC(i) && rpcPic->getSlice(0)->isReferenced())
         {
-#if ALLOW_RECOVERY_POINT_AS_RAP
           if(bUseRecoveryPoint && this->getPOC() > pocRandomAccess && this->getPOC() + pReferencePictureSet->getDeltaPOC(i) < pocRandomAccess)
           {
             isAvailable = 0;
@@ -1224,9 +1212,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
           {
             isAvailable = 1;
           }
-#else
-          isAvailable = 1;
-#endif
         }
       }
       else
@@ -1236,7 +1221,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
         Int refPoc = pReferencePictureSet->getPOC(i) & (pocCycle-1);
         if(rpcPic->getIsLongTerm() && curPoc == refPoc && rpcPic->getSlice(0)->isReferenced())
         {
-#if ALLOW_RECOVERY_POINT_AS_RAP
           if(bUseRecoveryPoint && this->getPOC() > pocRandomAccess && this->getPOC() + pReferencePictureSet->getDeltaPOC(i) < pocRandomAccess)
           {
             isAvailable = 0;
@@ -1245,9 +1229,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
           {
             isAvailable = 1;
           }
-#else
-          isAvailable = 1;
-#endif
         }
       }
     }
@@ -1270,7 +1251,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
 
         if (rpcPic->getSlice(0)->isReferenced() && curPoc == refPoc)
         {
-#if ALLOW_RECOVERY_POINT_AS_RAP
           if(bUseRecoveryPoint && this->getPOC() > pocRandomAccess && this->getPOC() + pReferencePictureSet->getDeltaPOC(i) < pocRandomAccess)
           {
             isAvailable = 0;
@@ -1281,11 +1261,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
             rpcPic->setIsLongTerm(1);
             break;
           }
-#else
-          isAvailable = 1;
-          rpcPic->setIsLongTerm(1);
-          break;
-#endif
         }
       }
     }
@@ -1313,7 +1288,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
           iPocLost=this->getPOC() + pReferencePictureSet->getDeltaPOC(i);
         }
       }
-#if ALLOW_RECOVERY_POINT_AS_RAP
       else if(bUseRecoveryPoint && this->getPOC() > pocRandomAccess)
       {
         atLeastOneUnabledByRecoveryPoint = 1;
@@ -1322,7 +1296,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
       {
         atLeastOneFlushedByPreviousIDR = 1;
       }
-#endif
     }
   }
   // loop through all short-term pictures in the Reference Picture Set
@@ -1338,7 +1311,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
 
       if(!rpcPic->getIsLongTerm() && rpcPic->getPicSym()->getSlice(0)->getPOC() == this->getPOC() + pReferencePictureSet->getDeltaPOC(i) && rpcPic->getSlice(0)->isReferenced())
       {
-#if ALLOW_RECOVERY_POINT_AS_RAP
         if(bUseRecoveryPoint && this->getPOC() > pocRandomAccess && this->getPOC() + pReferencePictureSet->getDeltaPOC(i) < pocRandomAccess)
         {
           isAvailable = 0;
@@ -1347,9 +1319,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
         {
           isAvailable = 1;
         }
-#else
-        isAvailable = 1;
-#endif
       }
     }
     // report that a picture is lost if it is in the Reference Picture Set
@@ -1376,7 +1345,6 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
           iPocLost=this->getPOC() + pReferencePictureSet->getDeltaPOC(i);
         }
       }
-#if ALLOW_RECOVERY_POINT_AS_RAP
       else if(bUseRecoveryPoint && this->getPOC() > pocRandomAccess)
       {
         atLeastOneUnabledByRecoveryPoint = 1;
@@ -1385,16 +1353,13 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
       {
         atLeastOneFlushedByPreviousIDR = 1;
       }
-#endif
     }
   }
 
-#if ALLOW_RECOVERY_POINT_AS_RAP
   if(atLeastOneUnabledByRecoveryPoint || atLeastOneFlushedByPreviousIDR)
   {
     return -1;
   }    
-#endif
   if(atLeastOneLost)
   {
     return iPocLost+1;
@@ -1411,11 +1376,7 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, c
 
 /** Function for constructing an explicit Reference Picture Set out of the available pictures in a referenced Reference Picture Set
 */
-#if ALLOW_RECOVERY_POINT_AS_RAP
-Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, const TComReferencePictureSet *pReferencePictureSet, Bool isRAP, Int pocRandomAccess, Bool bUseRecoveryPoint)
-#else
-Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, const TComReferencePictureSet *pReferencePictureSet, Bool isRAP)
-#endif
+Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, const TComReferencePictureSet *pReferencePictureSet, Bool isRAP, Int pocRandomAccess, Bool bUseRecoveryPoint, const Bool bEfficientFieldIRAPEnabled)
 {
   TComPic* rpcPic;
   Int i, j;
@@ -1423,9 +1384,7 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
   Int nrOfNegativePictures = 0;
   Int nrOfPositivePictures = 0;
   TComReferencePictureSet* pcRPS = this->getLocalRPS();
-#if EFFICIENT_FIELD_IRAP
-  Bool irapIsInRPS = false;
-#endif
+  Bool irapIsInRPS = false; // Used when bEfficientFieldIRAPEnabled==true
 
   // loop through all pictures in the Reference Picture Set
   for(i=0;i<pReferencePictureSet->getNumberOfPictures();i++)
@@ -1444,9 +1403,10 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
         // and should be added to the explicit Reference Picture Set
         pcRPS->setDeltaPOC(k, pReferencePictureSet->getDeltaPOC(i));
         pcRPS->setUsed(k, pReferencePictureSet->getUsed(i) && (!isRAP));
-#if ALLOW_RECOVERY_POINT_AS_RAP
-        pcRPS->setUsed(k, pcRPS->getUsed(k) && !(bUseRecoveryPoint && this->getPOC() > pocRandomAccess && this->getPOC() + pReferencePictureSet->getDeltaPOC(i) < pocRandomAccess) ); 
-#endif
+        if (bEfficientFieldIRAPEnabled)
+        {
+          pcRPS->setUsed(k, pcRPS->getUsed(k) && !(bUseRecoveryPoint && this->getPOC() > pocRandomAccess && this->getPOC() + pReferencePictureSet->getDeltaPOC(i) < pocRandomAccess) );
+        }
 
         if(pcRPS->getDeltaPOC(k) < 0)
         {
@@ -1454,12 +1414,10 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
         }
         else
         {
-#if EFFICIENT_FIELD_IRAP
-          if(rpcPic->getPicSym()->getSlice(0)->getPOC() == this->getAssociatedIRAPPOC() && this->getAssociatedIRAPPOC() == this->getPOC()+1)
+          if(bEfficientFieldIRAPEnabled && rpcPic->getPicSym()->getSlice(0)->getPOC() == this->getAssociatedIRAPPOC() && this->getAssociatedIRAPPOC() == this->getPOC()+1)
           {
             irapIsInRPS = true;
           }
-#endif
           nrOfPositivePictures++;
         }
         k++;
@@ -1467,10 +1425,9 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
     }
   }
 
-#if EFFICIENT_FIELD_IRAP
   Bool useNewRPS = false;
   // if current picture is complimentary field associated to IRAP, add the IRAP to its RPS. 
-  if(m_pcPic->isField() && !irapIsInRPS)
+  if(bEfficientFieldIRAPEnabled && m_pcPic->isField() && !irapIsInRPS)
   {
     TComList<TComPic*>::iterator iterPic = rcListPic.begin();
     while ( iterPic != rcListPic.end())
@@ -1486,18 +1443,13 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
       }
     }
   }
-#endif
   pcRPS->setNumberOfNegativePictures(nrOfNegativePictures);
   pcRPS->setNumberOfPositivePictures(nrOfPositivePictures);
   pcRPS->setNumberOfPictures(nrOfNegativePictures+nrOfPositivePictures);
   // This is a simplistic inter rps example. A smarter encoder will look for a better reference RPS to do the
   // inter RPS prediction with.  Here we just use the reference used by pReferencePictureSet.
   // If pReferencePictureSet is not inter_RPS_predicted, then inter_RPS_prediction is for the current RPS also disabled.
-  if (!pReferencePictureSet->getInterRPSPrediction()
-#if EFFICIENT_FIELD_IRAP
-    || useNewRPS
-#endif
-    )
+  if (!pReferencePictureSet->getInterRPSPrediction() || useNewRPS )
   {
     pcRPS->setInterRPSPrediction(false);
     pcRPS->setNumRefIdc(0);
@@ -1586,7 +1538,7 @@ Void  TComSlice::resetWpScaling()
 //! init WP table
 Void  TComSlice::initWpScaling(const TComSPS *sps)
 {
-  const Bool bUseHighPrecisionPredictionWeighting = sps->getUseHighPrecisionPredictionWeighting();
+  const Bool bUseHighPrecisionPredictionWeighting = sps->getSpsRangeExtension().getHighPrecisionOffsetsEnabledFlag();
   for ( Int e=0 ; e<NUM_REF_PIC_LIST_01 ; e++ )
   {
     for ( Int i=0 ; i<MAX_NUM_REF ; i++ )
@@ -1643,6 +1595,31 @@ TComVPS::~TComVPS()
 // Sequence parameter set (SPS)
 // ------------------------------------------------------------------------------------------------
 
+TComSPSRExt::TComSPSRExt()
+ : m_transformSkipRotationEnabledFlag   (false)
+ , m_transformSkipContextEnabledFlag    (false)
+// m_rdpcmEnabledFlag initialized below
+ , m_extendedPrecisionProcessingFlag    (false)
+ , m_intraSmoothingDisabledFlag         (false)
+ , m_highPrecisionOffsetsEnabledFlag    (false)
+ , m_persistentRiceAdaptationEnabledFlag(false)
+ , m_cabacBypassAlignmentEnabledFlag    (false)
+{
+  for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
+  {
+    m_rdpcmEnabledFlag[signallingModeIndex] = false;
+  }
+}
+
+TComSPSSCC::TComSPSSCC()
+: m_useIntraBlockCopy         (false)
+, m_usePaletteMode            (false)
+, m_uiPLTMaxSize              ( 31)
+, m_uiPLTMaxPredSize          ( 64)
+, m_motionVectorResolutionControlIdc(0)
+, m_disableIntraBoundaryFilter(false)
+{}
+
 TComSPS::TComSPS()
 : m_SPSId                     (  0)
 , m_VPSId                     (  0)
@@ -1665,20 +1642,7 @@ TComSPS::TComSPS()
 , m_usePCM                    (false)
 , m_pcmLog2MaxSize            (  5)
 , m_uiPCMLog2MinSize          (  7)
-, m_useExtendedPrecision      (false)
-, m_useIntraBlockCopy         (false)
-, m_useHighPrecisionPredictionWeighting(false)
-, m_useResidualRotation       (false)
-, m_useSingleSignificanceMapContext(false)
-, m_useGolombRiceParameterAdaptation(false)
-, m_alignCABACBeforeBypass    (false)
-, m_usePaletteMode            (false)
-, m_uiPLTMaxSize              ( 31)
-, m_uiPLTMaxPredSize          ( 64)
-, m_motionVectorResolutionControlIdc(0)
-, m_disableIntraBoundaryFilter(false)
 , m_bPCMFilterDisableFlag     (false)
-, m_disableIntraReferenceSmoothing(false)
 , m_uiBitsForPOC              (  8)
 , m_numLongTermRefPicSPS      (  0)
 , m_uiMaxTrSize               ( 32)
@@ -1706,11 +1670,6 @@ TComSPS::TComSPS()
     m_numReorderPics[i]       = 0;
   }
 
-  for (UInt signallingModeIndex = 0; signallingModeIndex < NUMBER_OF_RDPCM_SIGNALLING_MODES; signallingModeIndex++)
-  {
-    m_useResidualDPCM[signallingModeIndex] = false;
-  }
-
   ::memset(m_ltRefPicPocLsbSps, 0, sizeof(m_ltRefPicPocLsbSps));
   ::memset(m_usedByCurrPicLtSPSFlag, 0, sizeof(m_usedByCurrPicLtSPSFlag));
 }
@@ -1726,115 +1685,39 @@ Void  TComSPS::createRPSList( Int numRPS )
   m_RPSList.create(numRPS);
 }
 
-Void TComSPS::setHrdParameters( UInt frameRate, Bool useSubCpbParams, UInt bitRate, Bool randomAccess )
-{
-  if( !getVuiParametersPresentFlag() )
-  {
-    return;
-  }
-
-  TComVUI *vui = getVuiParameters();
-  TComHRD *hrd = vui->getHrdParameters();
-
-  TimingInfo *timingInfo = vui->getTimingInfo();
-  timingInfo->setTimingInfoPresentFlag( true );
-  switch( frameRate )
-  {
-  case 24:
-    timingInfo->setNumUnitsInTick( 1125000 );    timingInfo->setTimeScale    ( 27000000 );
-    break;
-  case 25:
-    timingInfo->setNumUnitsInTick( 1080000 );    timingInfo->setTimeScale    ( 27000000 );
-    break;
-  case 30:
-    timingInfo->setNumUnitsInTick( 900900 );     timingInfo->setTimeScale    ( 27000000 );
-    break;
-  case 50:
-    timingInfo->setNumUnitsInTick( 540000 );     timingInfo->setTimeScale    ( 27000000 );
-    break;
-  case 60:
-    timingInfo->setNumUnitsInTick( 450450 );     timingInfo->setTimeScale    ( 27000000 );
-    break;
-  default:
-    timingInfo->setNumUnitsInTick( 1001 );       timingInfo->setTimeScale    ( 60000 );
-    break;
-  }
-
-  Bool rateCnt = ( bitRate > 0 );
-  hrd->setNalHrdParametersPresentFlag( rateCnt );
-  hrd->setVclHrdParametersPresentFlag( rateCnt );
-
-  hrd->setSubPicCpbParamsPresentFlag( useSubCpbParams );
-
-  if( hrd->getSubPicCpbParamsPresentFlag() )
-  {
-    hrd->setTickDivisorMinus2( 100 - 2 );                          //
-    hrd->setDuCpbRemovalDelayLengthMinus1( 7 );                    // 8-bit precision ( plus 1 for last DU in AU )
-    hrd->setSubPicCpbParamsInPicTimingSEIFlag( true );
-    hrd->setDpbOutputDelayDuLengthMinus1( 5 + 7 );                 // With sub-clock tick factor of 100, at least 7 bits to have the same value as AU dpb delay
-  }
-  else
-  {
-    hrd->setSubPicCpbParamsInPicTimingSEIFlag( false );
-  }
-
-  hrd->setBitRateScale( 4 );                                       // in units of 2~( 6 + 4 ) = 1,024 bps
-  hrd->setCpbSizeScale( 6 );                                       // in units of 2~( 4 + 4 ) = 1,024 bit
-  hrd->setDuCpbSizeScale( 6 );                                       // in units of 2~( 4 + 4 ) = 1,024 bit
-
-  hrd->setInitialCpbRemovalDelayLengthMinus1(15);                  // assuming 0.5 sec, log2( 90,000 * 0.5 ) = 16-bit
-  if( randomAccess )
-  {
-    hrd->setCpbRemovalDelayLengthMinus1(5);                        // 32 = 2^5 (plus 1)
-    hrd->setDpbOutputDelayLengthMinus1 (5);                        // 32 + 3 = 2^6
-  }
-  else
-  {
-    hrd->setCpbRemovalDelayLengthMinus1(9);                        // max. 2^10
-    hrd->setDpbOutputDelayLengthMinus1 (9);                        // max. 2^10
-  }
-
-/*
-   Note: only the case of "vps_max_temporal_layers_minus1 = 0" is supported.
-*/
-  Int i, j;
-  UInt bitrateValue, cpbSizeValue;
-  UInt duCpbSizeValue;
-  UInt duBitRateValue = 0;
-
-  for( i = 0; i < MAX_TLAYER; i ++ )
-  {
-    hrd->setFixedPicRateFlag( i, 1 );
-    hrd->setPicDurationInTcMinus1( i, 0 );
-    hrd->setLowDelayHrdFlag( i, 0 );
-    hrd->setCpbCntMinus1( i, 0 );
-
-    bitrateValue = bitRate;
-    cpbSizeValue = bitRate;                                     // 1 second
-    // DU CPB size could be smaller, but we don't know how 
-    // in how many DUs the slice segment settings will result 
-    // (used to be: bitRate/numDU)
-    duCpbSizeValue = bitRate;
-    duBitRateValue = bitRate;
-
-    for( j = 0; j < ( hrd->getCpbCntMinus1( i ) + 1 ); j ++ )
-    {
-      hrd->setBitRateValueMinus1( i, j, 0, ( bitrateValue - 1 ) );
-      hrd->setCpbSizeValueMinus1( i, j, 0, ( cpbSizeValue - 1 ) );
-      hrd->setDuCpbSizeValueMinus1( i, j, 0, ( duCpbSizeValue - 1 ) );
-      hrd->setCbrFlag( i, j, 0, ( j == 0 ) );
-
-      hrd->setBitRateValueMinus1( i, j, 1, ( bitrateValue - 1) );
-      hrd->setCpbSizeValueMinus1( i, j, 1, ( cpbSizeValue - 1 ) );
-      hrd->setDuCpbSizeValueMinus1( i, j, 1, ( duCpbSizeValue - 1 ) );
-      hrd->setDuBitRateValueMinus1( i, j, 1, ( duBitRateValue - 1 ) );
-      hrd->setCbrFlag( i, j, 1, ( j == 0 ) );
-    }
-  }
-}
 
 const Int TComSPS::m_winUnitX[]={1,2,2,1};
 const Int TComSPS::m_winUnitY[]={1,2,1,1};
+
+TComPPSRExt::TComPPSRExt()
+: m_log2MaxTransformSkipBlockSize      (2)
+, m_crossComponentPredictionEnabledFlag(false)
+, m_diffCuChromaQpOffsetDepth          (0)
+, m_chromaQpOffsetListLen              (0)
+// m_ChromaQpAdjTableIncludingNullEntry initialized below
+// m_log2SaoOffsetScale initialized below
+{
+  m_ChromaQpAdjTableIncludingNullEntry[0].u.comp.CbOffset = 0; // Array includes entry [0] for the null offset used when cu_chroma_qp_offset_flag=0. This is initialised here and never subsequently changed.
+  m_ChromaQpAdjTableIncludingNullEntry[0].u.comp.CrOffset = 0;
+  for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
+  {
+    m_log2SaoOffsetScale[ch] = 0;
+  }
+}
+
+TComPPSSCC::TComPPSSCC()
+: m_useColourTrans                   (false)
+, m_useSliceACTOffset                (false)
+, m_actYQpOffset                     (-5)
+, m_actCbQpOffset                    (-5)
+, m_actCrQpOffset                    (-3)
+, m_uiNumPLTPred                     (0) // Implies palette pred in PPS deactivated
+{
+  for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
+  {
+    m_palettePredictorBitDepth[ch] = 8;
+  }
+}
 
 TComPPS::TComPPS()
 : m_PPSId                            (0)
@@ -1844,20 +1727,12 @@ TComPPS::TComPPS()
 , m_bConstrainedIntraPred            (false)
 , m_bSliceChromaQpFlag               (false)
 , m_uiMaxCuDQPDepth                  (0)
-, m_MaxCuChromaQpAdjDepth            (0)
-, m_ChromaQpAdjTableSize             (0)
 , m_chromaCbQpOffset                 (0)
 , m_chromaCrQpOffset                 (0)
-, m_useSliceACTOffset                (false)
-, m_actYQpOffset                     (-5)
-, m_actCbQpOffset                    (-5)
-, m_actCrQpOffset                    (-3)
 , m_numRefIdxL0DefaultActive         (1)
 , m_numRefIdxL1DefaultActive         (1)
-, m_useCrossComponentPrediction      (false)
 , m_TransquantBypassEnableFlag       (false)
 , m_useTransformSkip                 (false)
-, m_transformSkipLog2MaxSize         (2)
 , m_dependentSliceSegmentsEnabledFlag(false)
 , m_tilesEnabledFlag                 (false)
 , m_entropyCodingSyncEnabledFlag     (false)
@@ -1871,19 +1746,7 @@ TComPPS::TComPPS()
 , m_loopFilterAcrossSlicesEnabledFlag(false)
 , m_listsModificationPresentFlag     (0)
 , m_numExtraSliceHeaderBits          (0)
-, m_useColourTrans                   (false)
-, m_uiNumPLTPred                     (0) // Implies palette pred in PPS deactivated
 {
-  for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
-  {
-    m_saoOffsetBitShift[ch] = 0;
-  }
-  m_ChromaQpAdjTableIncludingNullEntry[0].u.comp.CbOffset = 0; // Array includes entry [0] for the null offset used when cu_chroma_qp_offset_flag=0. This is initialised here and never subsequently changed.
-  m_ChromaQpAdjTableIncludingNullEntry[0].u.comp.CrOffset = 0;
-  for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
-  {
-    m_palettePredictorBitDepth[ch] = 8;
-  }
 }
 
 TComPPS::~TComPPS()
@@ -2360,11 +2223,9 @@ ParameterSetManager::ParameterSetManager()
 : m_vpsMap(MAX_NUM_VPS)
 , m_spsMap(MAX_NUM_SPS)
 , m_ppsMap(MAX_NUM_PPS)
-, m_activeVPS()
-, m_activeSPS()
+, m_activeVPSId(-1)
+, m_activeSPSId(-1)
 {
-  m_activeVPS.setVPSId(-1);
-  m_activeSPS.setSPSId(-1);
 }
 
 
@@ -2374,30 +2235,30 @@ ParameterSetManager::~ParameterSetManager()
 
 //! activate a SPS from a active parameter sets SEI message
 //! \returns true, if activation is successful
-Bool ParameterSetManager::activateSPSWithSEI(Int spsId)
-{
-  TComSPS *sps = m_spsMap.getPS(spsId);
-  if (sps)
-  {
-    Int vpsId = sps->getVPSId();
-    TComVPS *vps = m_vpsMap.getPS(vpsId);
-    if (vps)
-    {
-      m_activeVPS = *(vps);
-      m_activeSPS = *(sps);
-      return true;
-    }
-    else
-    {
-      printf("Warning: tried to activate SPS using an Active parameter sets SEI message. Referenced VPS does not exist.");
-    }
-  }
-  else
-  {
-    printf("Warning: tried to activate non-existing SPS using an Active parameter sets SEI message.");
-  }
-  return false;
-}
+//Bool ParameterSetManager::activateSPSWithSEI(Int spsId)
+//{
+//  TComSPS *sps = m_spsMap.getPS(spsId);
+//  if (sps)
+//  {
+//    Int vpsId = sps->getVPSId();
+//    TComVPS *vps = m_vpsMap.getPS(vpsId);
+//    if (vps)
+//    {
+//      m_activeVPS = *(vps);
+//      m_activeSPS = *(sps);
+//      return true;
+//    }
+//    else
+//    {
+//      printf("Warning: tried to activate SPS using an Active parameter sets SEI message. Referenced VPS does not exist.");
+//    }
+//  }
+//  else
+//  {
+//    printf("Warning: tried to activate non-existing SPS using an Active parameter sets SEI message.");
+//  }
+//  return false;
+//}
 
 //! activate a PPS and depending on isIDR parameter also SPS and VPS
 //! \returns true, if activation is successful
@@ -2407,41 +2268,49 @@ Bool ParameterSetManager::activatePPS(Int ppsId, Bool isIRAP)
   if (pps)
   {
     Int spsId = pps->getSPSId();
-    if (!isIRAP && (spsId != m_activeSPS.getSPSId() ))
+    if (!isIRAP && (spsId != m_activeSPSId ))
     {
       printf("Warning: tried to activate PPS referring to a inactive SPS at non-IDR.");
-      return false;
-    }
-    TComSPS *sps = m_spsMap.getPS(spsId);
-    if (sps)
-    {
-      Int vpsId = sps->getVPSId();
-      if (!isIRAP && (vpsId != m_activeVPS.getVPSId() ))
-      {
-        printf("Warning: tried to activate PPS referring to a inactive VPS at non-IDR.");
-        return false;
-      }
-      TComVPS *vps =m_vpsMap.getPS(vpsId);
-      if (vps)
-      {
-        m_activeVPS = *(vps);
-        m_activeSPS = *(sps);
-        return true;
-      }
-      else
-      {
-        printf("Warning: tried to activate PPS that refers to a non-existing VPS.");
-      }
     }
     else
     {
-      printf("Warning: tried to activate a PPS that refers to a non-existing SPS.");
+      TComSPS *sps = m_spsMap.getPS(spsId);
+      if (sps)
+      {
+        Int vpsId = sps->getVPSId();
+        if (!isIRAP && (vpsId != m_activeVPSId ))
+        {
+          printf("Warning: tried to activate PPS referring to a inactive VPS at non-IDR.");
+        }
+        else
+        {
+          TComVPS *vps =m_vpsMap.getPS(vpsId);
+          if (vps)
+          {
+            m_activeVPSId = vpsId;
+            m_activeSPSId = spsId;
+            return true;
+          }
+          else
+          {
+            printf("Warning: tried to activate PPS that refers to a non-existing VPS.");
+          }
+        }
+      }
+      else
+      {
+        printf("Warning: tried to activate a PPS that refers to a non-existing SPS.");
+      }
     }
   }
   else
   {
     printf("Warning: tried to activate non-existing PPS.");
   }
+
+  // Failed to activate if reach here.
+  m_activeSPSId=-1;
+  m_activeVPSId=-1;
   return false;
 }
 
@@ -2464,7 +2333,7 @@ TComPTL::TComPTL()
   ::memset(m_subLayerLevelPresentFlag,   0, sizeof(m_subLayerLevelPresentFlag  ));
 }
 
-Void calculateParameterSetChangedFlag(Bool &bChanged, const std::vector<UChar> *pOldData, const std::vector<UChar> *pNewData)
+Void calculateParameterSetChangedFlag(Bool &bChanged, const std::vector<UChar> *pOldData, const std::vector<UChar> &newData)
 {
   if (!bChanged)
   {
@@ -2481,7 +2350,7 @@ Void calculateParameterSetChangedFlag(Bool &bChanged, const std::vector<UChar> *
       }
       else
       {
-        const UChar *pNewDataArray=&(*pNewData)[0];
+        const UChar *pNewDataArray=&(newData)[0];
         const UChar *pOldDataArray=&(*pOldData)[0];
         if (memcmp(pOldDataArray, pNewDataArray, pOldData->size()))
         {

@@ -112,7 +112,7 @@ QpParam::QpParam(const TComDataCU &cu, const ComponentID compID)
       chromaQpOffset += cu.getSlice()->getPPS()->getQpOffset(compID);
       chromaQpOffset += cu.getSlice()->getSliceChromaQpDelta(compID);
 
-      chromaQpOffset += cu.getSlice()->getPPS()->getChromaQpAdjTableAt(cu.getChromaQpAdj(0)).u.offset[Int(compID)-1];
+      chromaQpOffset += cu.getSlice()->getPPS()->getPpsRangeExtension().getChromaQpOffsetListEntry(cu.getChromaQpAdj(0)).u.offset[Int(compID)-1];
     }
 
     *this = QpParam(cu.getQP( 0 ),
@@ -123,12 +123,12 @@ QpParam::QpParam(const TComDataCU &cu, const ComponentID compID)
   }
   else
   {
-    chromaQpOffset += cu.getSlice()->getPPS()->getActQpOffset(compID);
+    chromaQpOffset += cu.getSlice()->getPPS()->getPpsScreenExtension().getActQpOffset(compID);
     chromaQpOffset += cu.getSlice()->getSliceActQpDelta(compID);
 
     if (isChroma(compID))
     {
-      chromaQpOffset += cu.getSlice()->getPPS()->getChromaQpAdjTableAt(cu.getChromaQpAdj(0)).u.offset[Int(compID)-1];
+      chromaQpOffset += cu.getSlice()->getPPS()->getPpsRangeExtension().getChromaQpOffsetListEntry(cu.getChromaQpAdj(0)).u.offset[Int(compID)-1];
 
       *this = QpParam(cu.getQP( 0 ),
                       toChannelType(compID),
@@ -1017,7 +1017,7 @@ Void xITrMxN(Int bitDepth, TCoeff *coeff, TCoeff *block, Int iWidth, Int iHeight
 
 
 // To minimize the distortion only. No rate is considered.
-Void TComTrQuant::signBitHidingHDQ( const ComponentID compID, TCoeff* pQCoef, TCoeff* pCoef, TCoeff* deltaU, const TUEntropyCodingParameters &codingParameters, const Int maxLog2TrDynamicRange )
+Void TComTrQuant::signBitHidingHDQ( TCoeff* pQCoef, TCoeff* pCoef, TCoeff* deltaU, const TUEntropyCodingParameters &codingParameters, const Int maxLog2TrDynamicRange )
 {
   const UInt width     = codingParameters.widthInGroups  << MLS_CG_LOG2_WIDTH;
   const UInt height    = codingParameters.heightInGroups << MLS_CG_LOG2_HEIGHT;
@@ -1226,7 +1226,7 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
 
     // Represents scaling through forward transform
     Int iTransformShift = getTransformShift(channelBitDepth, uiLog2TrSize, maxLog2TrDynamicRange);
-    if (useTransformSkip && pcCU->getSlice()->getSPS()->getUseExtendedPrecision())
+    if (useTransformSkip && pcCU->getSlice()->getSPS()->getSpsRangeExtension().getExtendedPrecisionProcessingFlag())
     {
       iTransformShift = std::max<Int>(0, iTransformShift);
     }
@@ -1275,7 +1275,7 @@ Void TComTrQuant::xQuant(       TComTU       &rTu,
     {
       if(uiAbsSum >= 2) //this prevents TUs with only one coefficient of value 1 from being tested
       {
-        signBitHidingHDQ( compID, piQCoef, piCoef, deltaU, codingParameters, maxLog2TrDynamicRange ) ;
+        signBitHidingHDQ( piQCoef, piCoef, deltaU, codingParameters, maxLog2TrDynamicRange ) ;
       }
     }
   } //if RDOQ
@@ -1314,7 +1314,7 @@ Bool TComTrQuant::xNeedRDOQ( TComTU &rTu, TCoeff * pSrc, const ComponentID compI
 
   // Represents scaling through forward transform
   Int iTransformShift = getTransformShift(channelBitDepth, uiLog2TrSize, maxLog2TrDynamicRange);
-  if (useTransformSkip && pcCU->getSlice()->getSPS()->getUseExtendedPrecision())
+  if (useTransformSkip && pcCU->getSlice()->getSPS()->getSpsRangeExtension().getExtendedPrecisionProcessingFlag())
   {
     iTransformShift = std::max<Int>(0, iTransformShift);
   }
@@ -1372,7 +1372,7 @@ Void TComTrQuant::xDeQuant(       TComTU        &rTu,
   assert ( uiWidth <= m_uiMaxTrSize );
 
   // Represents scaling through forward transform
-  const Bool bClipTransformShiftTo0 = (pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0) && pcCU->getSlice()->getSPS()->getUseExtendedPrecision();
+  const Bool bClipTransformShiftTo0 = (pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0) && pcCU->getSlice()->getSPS()->getSpsRangeExtension().getExtendedPrecisionProcessingFlag();
   const Int  originalTransformShift = getTransformShift(channelBitDepth, uiLog2TrSize, maxLog2TrDynamicRange);
   const Int  iTransformShift        = bClipTransformShiftTo0 ? std::max<Int>(0, originalTransformShift) : originalTransformShift;
 
@@ -1532,7 +1532,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
     }
     else
     {
-#ifdef DEBUG_TRANSFORM_AND_QUANTISE
+#if DEBUG_TRANSFORM_AND_QUANTISE
       std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at input to transform\n";
       printBlock(pcResidual, uiWidth, uiHeight, uiStride);
 #endif
@@ -1549,7 +1549,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
         xT( channelBitDepth, rTu.useDST(compID), pcResidual, uiStride, m_plTempCoeff, uiWidth, uiHeight, pcCU->getSlice()->getSPS()->getMaxLog2TrDynamicRange(toChannelType(compID)) );
       }
 
-#ifdef DEBUG_TRANSFORM_AND_QUANTISE
+#if DEBUG_TRANSFORM_AND_QUANTISE
       std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU between transform and quantiser\n";
       printBlock(m_plTempCoeff, uiWidth, uiHeight, uiWidth);
 #endif
@@ -1561,7 +1561,7 @@ Void TComTrQuant::transformNxN(       TComTU        & rTu,
 #endif
               uiAbsSum, compID, cQP );
 
-#ifdef DEBUG_TRANSFORM_AND_QUANTISE
+#if DEBUG_TRANSFORM_AND_QUANTISE
       std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at output of quantiser\n";
       printBlock(rpcCoeff, uiWidth, uiHeight, uiWidth);
 #endif
@@ -1615,7 +1615,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
     return;
   }
 
-#if defined DEBUG_STRING
+#if DEBUG_STRING
   if (psDebug)
   {
     std::stringstream ss(stringstream::out);
@@ -1639,19 +1639,19 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
   }
   else
   {
-#ifdef DEBUG_TRANSFORM_AND_QUANTISE
+#if DEBUG_TRANSFORM_AND_QUANTISE
     std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at input to dequantiser\n";
     printBlock(pcCoeff, uiWidth, uiHeight, uiWidth);
 #endif
 
     xDeQuant(rTu, pcCoeff, m_plTempCoeff, compID, cQP);
 
-#ifdef DEBUG_TRANSFORM_AND_QUANTISE
+#if DEBUG_TRANSFORM_AND_QUANTISE
     std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU between dequantiser and inverse-transform\n";
     printBlock(m_plTempCoeff, uiWidth, uiHeight, uiWidth);
 #endif
 
-#if defined DEBUG_STRING
+#if DEBUG_STRING
     if (psDebug)
     {
       std::stringstream ss(stringstream::out);
@@ -1664,7 +1664,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
     {
       xITransformSkip( m_plTempCoeff, pcResidual, uiStride, rTu, compID );
 
-#if defined DEBUG_STRING
+#if DEBUG_STRING
       if (psDebug)
       {
         std::stringstream ss(stringstream::out);
@@ -1683,7 +1683,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
 #endif
       xIT( channelBitDepth, rTu.useDST(compID), m_plTempCoeff, pcResidual, uiStride, uiWidth, uiHeight, pcCU->getSlice()->getSPS()->getMaxLog2TrDynamicRange(toChannelType(compID)) );
 
-#if defined DEBUG_STRING
+#if DEBUG_STRING
       if (psDebug)
       {
         std::stringstream ss(stringstream::out);
@@ -1694,7 +1694,7 @@ Void TComTrQuant::invTransformNxN(      TComTU        &rTu,
 #endif
     }
 
-#ifdef DEBUG_TRANSFORM_AND_QUANTISE
+#if DEBUG_TRANSFORM_AND_QUANTISE
     std::cout << g_debugCounter << ": " << uiWidth << "x" << uiHeight << " channel " << compID << " TU at output of inverse-transform\n";
     printBlock(pcResidual, uiWidth, uiHeight, uiStride);
     g_debugCounter++;
@@ -1716,7 +1716,7 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
   TComDataCU* pcCU = rTu.getCU();
   UInt absPartIdxTU = rTu.GetAbsPartIdxTU();
   UInt uiTrMode=rTu.GetTransformDepthRel();
-  if( (pcCU->getCbf(absPartIdxTU, compID, uiTrMode) == 0) && (isLuma(compID) || !pcCU->getSlice()->getPPS()->getUseCrossComponentPrediction()) )
+  if( (pcCU->getCbf(absPartIdxTU, compID, uiTrMode) == 0) && (isLuma(compID) || !pcCU->getSlice()->getPPS()->getPpsRangeExtension().getCrossComponentPredictionEnabledFlag()) )
   {
     return;
   }
@@ -1735,13 +1735,13 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
     if(pcCU->getCbf(absPartIdxTU, compID, uiTrMode) != 0)
     {
       DEBUG_STRING_NEW(sTemp)
-#ifdef DEBUG_STRING
+#if DEBUG_STRING
       std::string *psDebug=((DebugOptionList::DebugString_InvTran.getInt()&(pcCU->isIntra(absPartIdxTU)?1:(pcCU->isInter(absPartIdxTU)?2:4)))!=0) ? &sTemp : 0;
 #endif
 
       invTransformNxN( rTu, compID, pResi, uiStride, pcCoeff, cQP DEBUG_STRING_PASS_INTO(psDebug) );
 
-#ifdef DEBUG_STRING
+#if DEBUG_STRING
       if (psDebug != 0)
       {
         std::cout << (*psDebug);
@@ -1781,7 +1781,7 @@ Void TComTrQuant::invRecurTransformACTNxN( TComYuv *pResidual, TComTU &rTu )
   UInt absPartIdxTU = rTu.GetAbsPartIdxTU();
   UInt uiTrMode     = rTu.GetTransformDepthRel();
   const TComRectangle& rect = rTu.getRect(COMPONENT_Y);
-  const Bool extendedPrecision = rTu.getCU()->getSlice()->getSPS()->getUseExtendedPrecision();
+  const Bool extendedPrecision = rTu.getCU()->getSlice()->getSPS()->getSpsRangeExtension().getExtendedPrecisionProcessingFlag();
 
   if( uiTrMode == pcCU->getTransformIdx( absPartIdxTU ) )
   {
@@ -2116,7 +2116,7 @@ Void TComTrQuant::xTransformSkip( Pel* piBlkResi, UInt uiStride, TCoeff* psCoeff
   const Int channelBitDepth = rTu.getCU()->getSlice()->getSPS()->getBitDepth(toChannelType(component));
 
   Int iTransformShift = getTransformShift(channelBitDepth, rTu.GetEquivalentLog2TrSize(component), maxLog2TrDynamicRange);
-  if (rTu.getCU()->getSlice()->getSPS()->getUseExtendedPrecision())
+  if (rTu.getCU()->getSlice()->getSPS()->getSpsRangeExtension().getExtendedPrecisionProcessingFlag())
   {
     iTransformShift = std::max<Int>(0, iTransformShift);
   }
@@ -2169,7 +2169,7 @@ Void TComTrQuant::xITransformSkip( TCoeff* plCoef, Pel* pResidual, UInt uiStride
 #endif
 
   Int iTransformShift = getTransformShift(channelBitDepth, rTu.GetEquivalentLog2TrSize(component), maxLog2TrDynamicRange);
-  if (rTu.getCU()->getSlice()->getSPS()->getUseExtendedPrecision())
+  if (rTu.getCU()->getSlice()->getSPS()->getSpsRangeExtension().getExtendedPrecisionProcessingFlag())
   {
     iTransformShift = std::max<Int>(0, iTransformShift);
   }
@@ -2233,7 +2233,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
   const ChannelType      channelType      = toChannelType(compID);
   const UInt             uiLog2TrSize     = rTu.GetEquivalentLog2TrSize(compID);
 
-  const Bool             extendedPrecision = pcCU->getSlice()->getSPS()->getUseExtendedPrecision();
+  const Bool             extendedPrecision = pcCU->getSlice()->getSPS()->getSpsRangeExtension().getExtendedPrecisionProcessingFlag();
   const Int              maxLog2TrDynamicRange = pcCU->getSlice()->getSPS()->getMaxLog2TrDynamicRange(toChannelType(compID));
   const Int              channelBitDepth = rTu.getCU()->getSlice()->getSPS()->getBitDepth(channelType);
 
@@ -2245,12 +2245,12 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
 
   // Represents scaling through forward transform
   Int iTransformShift = getTransformShift(channelBitDepth, uiLog2TrSize, maxLog2TrDynamicRange);
-  if ((pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0) && pcCU->getSlice()->getSPS()->getUseExtendedPrecision())
+  if ((pcCU->getTransformSkip(uiAbsPartIdx, compID) != 0) && extendedPrecision)
   {
     iTransformShift = std::max<Int>(0, iTransformShift);
   }
 
-  const Bool bUseGolombRiceParameterAdaptation = pcCU->getSlice()->getSPS()->getUseGolombRiceParameterAdaptation();
+  const Bool bUseGolombRiceParameterAdaptation = pcCU->getSlice()->getSPS()->getSpsRangeExtension().getPersistentRiceAdaptationEnabledFlag();
   const UInt initialGolombRiceParameter        = m_pcEstBitsSbac->golombRiceAdaptationStatistics[rTu.getGolombRiceStatisticsIndex(compID)] / RExt__GOLOMB_RICE_INCREMENT_DIVISOR;
         UInt uiGoRiceParam                     = initialGolombRiceParameter;
   Double     d64BlockUncodedCost               = 0;
@@ -2345,7 +2345,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
 
       const Int64  tmpLevel                = Int64(abs(plSrcCoeff[ uiBlkPos ])) * quantisationCoefficient;
 
-      const Intermediate_Int lLevelDouble  = (Intermediate_Int)min<Int64>(tmpLevel, MAX_INTERMEDIATE_INT - (Intermediate_Int(1) << (iQBits - 1)));
+      const Intermediate_Int lLevelDouble  = (Intermediate_Int)min<Int64>(tmpLevel, std::numeric_limits<Intermediate_Int>::max() - (Intermediate_Int(1) << (iQBits - 1)));
 
 #if ADAPTIVE_QP_SELECTION
       if( m_bUseAdaptQpSelect )
@@ -2677,7 +2677,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
         if( signbit!=(absSum&0x1) )  // hide but need tune
         {
           // calculate the cost
-          Int64 minCostInc = MAX_INT64, curCost = MAX_INT64;
+          Int64 minCostInc = std::numeric_limits<Int64>::max(), curCost = std::numeric_limits<Int64>::max();
           Int minPos = -1, finalChange = 0, curChange = 0;
 
           for( n = (lastCG==1?lastNZPosInCG:uiCGSize-1) ; n >= 0; --n )
@@ -2704,7 +2704,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
                 curChange = -1;
                 if(n==firstNZPosInCG && abs(piDstCoeff[uiBlkPos])==1)
                 {
-                  curCost = MAX_INT64;
+                  curCost = std::numeric_limits<Int64>::max();
                 }
                 else
                 {
@@ -2722,7 +2722,7 @@ Void TComTrQuant::xRateDistOptQuant                 (       TComTU       &rTu,
                 UInt thissignbit = (plSrcCoeff[uiBlkPos]>=0?0:1);
                 if(thissignbit != signbit )
                 {
-                  curCost = MAX_INT64;
+                  curCost = std::numeric_limits<Int64>::max();
                 }
               }
             }
@@ -3147,7 +3147,7 @@ UInt TComTrQuant::getSigCoeffGroupCtxInc  (const UInt*  uiSigCoeffGroupFlag,
  * \param maxLog2TrDynamicRange
  * \param bitDepths              reference to bit depth array for all channels
  */
-Void TComTrQuant::setScalingList(TComScalingList *scalingList, const ChromaFormat format, const Int maxLog2TrDynamicRange[MAX_NUM_CHANNEL_TYPE], const BitDepths &bitDepths)
+Void TComTrQuant::setScalingList(TComScalingList *scalingList, const Int maxLog2TrDynamicRange[MAX_NUM_CHANNEL_TYPE], const BitDepths &bitDepths)
 {
   const Int minimumQp = 0;
   const Int maximumQp = SCALING_LIST_REM_NUM;
@@ -3158,8 +3158,8 @@ Void TComTrQuant::setScalingList(TComScalingList *scalingList, const ChromaForma
     {
       for(Int qp = minimumQp; qp < maximumQp; qp++)
       {
-        xSetScalingListEnc(scalingList,list,size,qp,format);
-        xSetScalingListDec(*scalingList,list,size,qp,format);
+        xSetScalingListEnc(scalingList,list,size,qp);
+        xSetScalingListDec(*scalingList,list,size,qp);
         setErrScaleCoeff(list,size,qp,maxLog2TrDynamicRange, bitDepths);
       }
     }
@@ -3169,7 +3169,7 @@ Void TComTrQuant::setScalingList(TComScalingList *scalingList, const ChromaForma
  * \param scalingList quantized matrix address
  * \param format      chroma format
  */
-Void TComTrQuant::setScalingListDec(const TComScalingList &scalingList, const ChromaFormat format)
+Void TComTrQuant::setScalingListDec(const TComScalingList &scalingList)
 {
   const Int minimumQp = 0;
   const Int maximumQp = SCALING_LIST_REM_NUM;
@@ -3180,7 +3180,7 @@ Void TComTrQuant::setScalingListDec(const TComScalingList &scalingList, const Ch
     {
       for(Int qp = minimumQp; qp < maximumQp; qp++)
       {
-        xSetScalingListDec(scalingList,list,size,qp,format);
+        xSetScalingListDec(scalingList,list,size,qp);
       }
     }
   }
@@ -3224,7 +3224,7 @@ Void TComTrQuant::setErrScaleCoeff(UInt list, UInt size, Int qp, const Int maxLo
  * \param qp Quantization parameter
  * \param format chroma format
  */
-Void TComTrQuant::xSetScalingListEnc(TComScalingList *scalingList, UInt listId, UInt sizeId, Int qp, const ChromaFormat format)
+Void TComTrQuant::xSetScalingListEnc(TComScalingList *scalingList, UInt listId, UInt sizeId, Int qp)
 {
   UInt width  = g_scalingListSizeX[sizeId];
   UInt height = g_scalingListSizeX[sizeId];
@@ -3250,7 +3250,7 @@ Void TComTrQuant::xSetScalingListEnc(TComScalingList *scalingList, UInt listId, 
  * \param qp Quantization parameter
  * \param format chroma format
  */
-Void TComTrQuant::xSetScalingListDec(const TComScalingList &scalingList, UInt listId, UInt sizeId, Int qp, const ChromaFormat format)
+Void TComTrQuant::xSetScalingListDec(const TComScalingList &scalingList, UInt listId, UInt sizeId, Int qp)
 {
   UInt width  = g_scalingListSizeX[sizeId];
   UInt height = g_scalingListSizeX[sizeId];
@@ -3272,7 +3272,7 @@ Void TComTrQuant::xSetScalingListDec(const TComScalingList &scalingList, UInt li
 
 /** set flat matrix value to quantized coefficient
  */
-Void TComTrQuant::setFlatScalingList(const ChromaFormat format, const Int maxLog2TrDynamicRange[MAX_NUM_CHANNEL_TYPE], const BitDepths &bitDepths)
+Void TComTrQuant::setFlatScalingList(const Int maxLog2TrDynamicRange[MAX_NUM_CHANNEL_TYPE], const BitDepths &bitDepths)
 {
   const Int minimumQp = 0;
   const Int maximumQp = SCALING_LIST_REM_NUM;
@@ -3283,7 +3283,7 @@ Void TComTrQuant::setFlatScalingList(const ChromaFormat format, const Int maxLog
     {
       for(Int qp = minimumQp; qp < maximumQp; qp++)
       {
-        xsetFlatScalingList(list,size,qp,format);
+        xsetFlatScalingList(list,size,qp);
         setErrScaleCoeff(list,size,qp,maxLog2TrDynamicRange, bitDepths);
       }
     }
@@ -3296,7 +3296,7 @@ Void TComTrQuant::setFlatScalingList(const ChromaFormat format, const Int maxLog
  * \param qp Quantization parameter
  * \param format chroma format
  */
-Void TComTrQuant::xsetFlatScalingList(UInt list, UInt size, Int qp, const ChromaFormat format)
+Void TComTrQuant::xsetFlatScalingList(UInt list, UInt size, Int qp)
 {
   UInt i,num = g_scalingListSize[size];
   Int *quantcoeff;
