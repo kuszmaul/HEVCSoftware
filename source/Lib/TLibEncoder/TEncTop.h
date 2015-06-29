@@ -116,7 +116,8 @@ protected:
   Void  xInitVPS          ();                             ///< initialize VPS from encoder options
   Void  xInitSPS          ();                             ///< initialize SPS from encoder options
   Void  xInitPPS          ();                             ///< initialize PPS from encoder options
-  Void  xInitScalingLists();                              ///< initialize scaling lists
+  Void  xInitScalingLists ();                             ///< initialize scaling lists
+  Void  xInitHrdParameters();                             ///< initialize HRD parameters
 
   Void  xInitPPSforTiles  ();
   Void  xInitRPS          (Bool isFieldCoding);           ///< initialize PPS from encoder options
@@ -154,7 +155,7 @@ public:
   TEncRateCtrl*           getRateCtrl           () { return &m_cRateCtrl;             }
   TComPPS*                getPPS                () { return  &m_cPPS;                 }
   Void selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid );
-  Int getReferencePictureSetIdxForSOP(TComSlice* slice, Int POCCurr, Int GOPid );
+  Int getReferencePictureSetIdxForSOP(Int POCCurr, Int GOPid );
   // -------------------------------------------------------------------------------------------------------------------
   // encoder function
   // -------------------------------------------------------------------------------------------------------------------

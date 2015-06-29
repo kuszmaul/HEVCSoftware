@@ -68,13 +68,13 @@ Void TDecSlice::init(TDecEntropy* pcEntropyDecoder, TDecCu* pcCuDecoder)
 
 Void TDecSlice::xSetPredFromPPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT], const TComPPS *pcPPS, const TComSPS *pcSPS)
 {
-  UInt num = std::min(pcPPS->getNumPLTPred(), pcSPS->getPLTMaxPredSize());
+  UInt num = std::min(pcPPS->getPpsScreenExtension().getNumPLTPred(), pcSPS->getSpsScreenExtension().getPLTMaxPredSize());
   if( num )
   {
     for(int i=0; i<3; i++)
     {
       lastPLTSize[i] = num;
-      memcpy(lastPLT[i], pcPPS->getPLTPred(i), num*sizeof(Pel));
+      memcpy(lastPLT[i], pcPPS->getPpsScreenExtension().getPLTPred(i), num*sizeof(Pel));
     }
   }
 }
@@ -115,7 +115,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
   Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE];
   for(UChar comp=0; comp<MAX_NUM_COMPONENT; comp++)
   {
-    memset(lastPLT[comp], 0, sizeof(Pel) * pcSlice->getSPS()->getPLTMaxPredSize());
+    memset(lastPLT[comp], 0, sizeof(Pel) * pcSlice->getSPS()->getSpsScreenExtension().getPLTMaxPredSize());
   }
   xSetPredFromPPS(lastPLT, lastPLTSize, pcSlice->getPPS(), pcSlice->getSPS());
 
@@ -139,7 +139,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
         for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
         {
           lastPLTSize[comp] = m_lastSliceSegmentEndPaletteState.lastPLTSize[comp];
-          for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+          for ( UInt idx = 0; idx < pcSlice->getSPS()->getSpsScreenExtension().getPLTMaxPredSize(); idx++ )
           {
             lastPLT[comp][idx] = m_lastSliceSegmentEndPaletteState.lastPLT[comp][idx];
           }
@@ -192,7 +192,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
           for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
           {
             lastPLTSize[comp] = m_entropyCodingSyncPaletteState.lastPLTSize[comp];
-            for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+            for ( UInt idx = 0; idx < pcSlice->getSPS()->getSpsScreenExtension().getPLTMaxPredSize(); idx++ )
             {
               lastPLT[comp][idx] = m_entropyCodingSyncPaletteState.lastPLT[comp][idx];
             }
@@ -204,7 +204,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
     for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
     {
       pCtu->setLastPLTInLcuSizeFinal(comp, lastPLTSize[comp]);
-      for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+      for ( UInt idx = 0; idx < pcSlice->getSPS()->getSpsScreenExtension().getPLTMaxPredSize(); idx++ )
       {
         pCtu->setLastPLTInLcuFinal(comp, lastPLT[comp][idx], idx);
       }
@@ -260,7 +260,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
       {
         lastPLTSize[comp] = pCtu->getLastPLTInLcuSizeFinal(comp);
 
-        for (Int idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++)
+        for (Int idx = 0; idx < pcSlice->getSPS()->getSpsScreenExtension().getPLTMaxPredSize(); idx++)
         {
           lastPLT[comp][idx] = pCtu->getLastPLTInLcuFinal(comp, idx);
         }
@@ -278,7 +278,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
       for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
       {
         m_entropyCodingSyncPaletteState.lastPLTSize[comp] = lastPLTSize[comp];
-        for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+        for ( UInt idx = 0; idx < pcSlice->getSPS()->getSpsScreenExtension().getPLTMaxPredSize(); idx++ )
         {
           m_entropyCodingSyncPaletteState.lastPLT[comp][idx] = lastPLT[comp][idx];
         }
@@ -321,7 +321,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
     for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
     {
       m_lastSliceSegmentEndPaletteState.lastPLTSize[comp] = lastPLTSize[comp];
-      for ( UInt idx = 0; idx < pcSlice->getSPS()->getPLTMaxPredSize(); idx++ )
+      for ( UInt idx = 0; idx < pcSlice->getSPS()->getSpsScreenExtension().getPLTMaxPredSize(); idx++ )
       {
         m_lastSliceSegmentEndPaletteState.lastPLT[comp][idx] = lastPLT[comp][idx];
       }

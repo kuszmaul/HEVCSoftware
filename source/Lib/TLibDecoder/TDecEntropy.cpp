@@ -87,7 +87,7 @@ Void TDecEntropy::decodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
 #else
 Void TDecEntropy::decodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-  if ( pcCU->getSlice()->getSPS()->getUsePLTMode() )
+  if ( pcCU->getSlice()->getSPS()->getSpsScreenExtension().getUsePLTMode() )
   {
     // Note: the condition is log2CbSize < MaxTbLog2SizeY in 7.3.8.5 of JCTVC-T1005-v2
     if( pcCU->getSlice()->getSPS()->getMaxCUWidth()>>uiDepth == 64)

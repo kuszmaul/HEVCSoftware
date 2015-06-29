@@ -69,6 +69,8 @@ protected:
 
   Bool      m_isField;                                        ///< enable field coding
   Bool      m_isTopFieldFirst;
+  Bool      m_bEfficientFieldIRAPEnabled;                     ///< enable an efficient field IRAP structure.
+  Bool      m_bHarmonizeGopFirstFieldCoupleEnabled;
 
   Int       m_conformanceWindowMode;
   Int       m_confWinLeft;
@@ -87,6 +89,8 @@ protected:
   Bool      m_printSequenceMSE;
   Bool      m_printClippedPSNR;
   Bool      m_cabacZeroWordPaddingEnabled;
+  Bool      m_bClipInputVideoToRec709Range;
+  Bool      m_bClipOutputVideoToRec709Range;
 
   // profile/level
   Profile::Name m_profile;
@@ -95,6 +99,7 @@ protected:
   UInt          m_bitDepthConstraint;
   ChromaFormat  m_chromaFormatConstraint;
   Bool          m_intraConstraintFlag;
+  Bool          m_onePictureOnlyConstraintFlag;
   Bool          m_lowerBitRateConstraintFlag;
   Bool m_progressiveSourceFlag;
   Bool m_interlacedSourceFlag;
@@ -109,18 +114,18 @@ protected:
   GOPEntry  m_GOPList[MAX_GOP];                               ///< the coding structure entries from the config file
   Int       m_numReorderPics[MAX_TLAYER];                     ///< total number of reorder pictures
   Int       m_maxDecPicBuffering[MAX_TLAYER];                 ///< total number of pictures in the decoded picture buffer
-  Bool      m_useCrossComponentPrediction;                    ///< flag enabling the use of cross-component prediction
+  Bool      m_crossComponentPredictionEnabledFlag;            ///< flag enabling the use of cross-component prediction
   Bool      m_reconBasedCrossCPredictionEstimate;             ///< causes the alpha calculation in encoder search to be based on the decoded residual rather than the pre-transform encoder-side residual
-  UInt      m_saoOffsetBitShift[MAX_NUM_CHANNEL_TYPE];        ///< number of bits for the upward bit shift operation on the decoded SAO offsets
+  UInt      m_log2SaoOffsetScale[MAX_NUM_CHANNEL_TYPE];       ///< number of bits for the upward bit shift operation on the decoded SAO offsets
   Bool      m_useTransformSkip;                               ///< flag for enabling intra transform skipping
   Bool      m_useTransformSkipFast;                           ///< flag for enabling fast intra transform skipping
-  UInt      m_transformSkipLog2MaxSize;                       ///< transform-skip maximum size (minimum of 2)
-  Bool      m_useResidualRotation;                            ///< control flag for transform-skip/transquant-bypass residual rotation
-  Bool      m_useSingleSignificanceMapContext;                ///< control flag for transform-skip/transquant-bypass single significance map context
-  Bool      m_useResidualDPCM[NUMBER_OF_RDPCM_SIGNALLING_MODES];///< control flags for residual DPCM
+  UInt      m_log2MaxTransformSkipBlockSize;                  ///< transform-skip maximum size (minimum of 2)
+  Bool      m_transformSkipRotationEnabledFlag;               ///< control flag for transform-skip/transquant-bypass residual rotation
+  Bool      m_transformSkipContextEnabledFlag;                ///< control flag for transform-skip/transquant-bypass single significance map context
+  Bool      m_rdpcmEnabledFlag[NUMBER_OF_RDPCM_SIGNALLING_MODES];///< control flags for residual DPCM
   Bool      m_enableAMP;
-  Bool      m_useGolombRiceParameterAdaptation;               ///< control flag for Golomb-Rice parameter adaptation over each slice
-  Bool      m_alignCABACBeforeBypass;
+  Bool      m_persistentRiceAdaptationEnabledFlag;            ///< control flag for Golomb-Rice parameter adaptation over each slice
+  Bool      m_cabacBypassAlignmentEnabledFlag;
   Bool      m_bRGBformat;
   Bool      m_useColourTrans;
   Bool      m_useLL;
@@ -138,7 +143,7 @@ protected:
   Int       m_iMaxDeltaQP;                                    ///< max. |delta QP|
   UInt      m_uiDeltaQpRD;                                    ///< dQP range for multi-pass slice QP optimization
   Int       m_iMaxCuDQPDepth;                                 ///< Max. depth for a minimum CuDQPSize (0:default)
-  Int       m_maxCUChromaQpAdjustmentDepth;
+  Int       m_diffCuChromaQpOffsetDepth;                      ///< If negative, then do not apply chroma qp offsets.
 
   Int       m_cbQpOffset;                                     ///< Chroma Cb QP Offset (0:default)
   Int       m_crQpOffset;                                     ///< Chroma Cr QP Offset (0:default)
@@ -176,9 +181,9 @@ protected:
   Int       m_outputBitDepth  [MAX_NUM_CHANNEL_TYPE];         ///< bit-depth of output file
   Int       m_MSBExtendedBitDepth[MAX_NUM_CHANNEL_TYPE];      ///< bit-depth of input samples after MSB extension
   Int       m_internalBitDepth[MAX_NUM_CHANNEL_TYPE];         ///< bit-depth codec operates at (input/output files will be converted)
-  Bool      m_useExtendedPrecision;
+  Bool      m_extendedPrecisionProcessingFlag;
+  Bool      m_highPrecisionOffsetsEnabledFlag;
   Bool      m_useIntraBlockCopy;
-  Bool      m_useHighPrecisionPredictionWeighting;
 
   //coding tools (chroma format)
   ChromaFormat m_chromaFormatIDC;
@@ -188,6 +193,9 @@ protected:
 
   // coding tool (SAO)
   Bool      m_bUseSAO;
+  Bool      m_bTestSAODisableAtPictureLevel;
+  Double    m_saoEncodingRate;                                ///< When >0 SAO early picture termination is enabled for luma and chroma
+  Double    m_saoEncodingRateChroma;                          ///< The SAO early picture termination rate to use for chroma (when m_SaoEncodingRate is >0). If <=0, use results for luma.
   Int       m_maxNumOffsetsPerPic;                            ///< SAO maximun number of offset per picture
   Bool      m_saoCtuBoundary;                                 ///< SAO parameter estimation using non-deblocked pixels for CTU bottom and right boundary areas
   // coding tools (loop filter)
@@ -195,7 +203,6 @@ protected:
   Bool      m_loopFilterOffsetInPPS;                         ///< offset for deblocking filter in 0 = slice header, 1 = PPS
   Int       m_loopFilterBetaOffsetDiv2;                     ///< beta offset for deblocking filter
   Int       m_loopFilterTcOffsetDiv2;                       ///< tc offset for deblocking filter
-  Bool      m_DeblockingFilterControlPresent;                 ///< deblocking filter control present flag in PPS
   Bool      m_DeblockingFilterMetric;                         ///< blockiness metric in encoder
 
   // coding tools (PCM)
@@ -214,6 +221,7 @@ protected:
   Bool      m_useSelectiveRDOQ;                               ///< flag for using selective RDOQ
 #endif
   Int       m_rdPenalty;                                      ///< RD-penalty for 32x32 TU for intra in non-intra slices (0: no RD-penalty, 1: RD-penalty, 2: maximum RD-penalty)
+  Bool      m_bDisableIntraPUsInInterSlices;                  ///< Flag for disabling intra predicted PUs in inter slices.
   Int       m_iFastSearch;                                    ///< ME mode, 0 = Full search, 1 = TZ search, 2 = Selective search
   Bool      m_useHashBasedIntraBlockCopySearch;               ///< Enable the use of hash based search for intra block copying on 8x8 blocks
   Int       m_intraBlockCopySearchWidthInCTUs;                ///< Search range for IBC hash search method (-1: full frame search)
@@ -221,7 +229,9 @@ protected:
   Bool      m_useHashBasedME;                                 ///< flag for using hash based inter search
   Int       m_iSearchRange;                                   ///< ME search range
   Int       m_bipredSearchRange;                              ///< ME search range for bipred refinement
+  Bool      m_bClipForBiPredMeEnabled;                        ///< Enables clipping for Bi-Pred ME.
   Bool      m_intraBlockCopyFastSearch;                       ///< Use a restricted search range for intra block-copy motion vectors to reduce the encoding time
+  Bool      m_bFastMEAssumingSmootherMVEnabled;               ///< Enables fast ME assuming a smoother MV.
   Bool      m_bUseFastEnc;                                    ///< flag for using fast encoder setting
   Bool      m_bUseEarlyCU;                                    ///< flag for using Early CU setting
   Bool      m_useFastDecisionForMerge;                        ///< flag for using Fast Decision Merge RD-Cost
@@ -245,6 +255,9 @@ protected:
   Int       m_iWaveFrontFlush; //< enable(1)/disable(0) the CABAC flush at the end of each line of LCUs.
 
   Bool      m_bUseConstrainedIntraPred;                       ///< flag for using constrained intra prediction
+  Bool      m_bFastUDIUseMPMEnabled;
+  Bool      m_bFastMEForGenBLowDelayEnabled;
+  Bool      m_bUseBLambdaForNonKeyLowDelayPictures;
 
   Int       m_decodedPictureHashSEIEnabled;                    ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
   Int       m_recoveryPointSEIEnabled;
@@ -373,6 +386,10 @@ protected:
   Int       m_maxBitsPerMinCuDenom;                           ///< Indicates an upper bound for the number of bits of coding_unit() data
   Int       m_log2MaxMvLengthHorizontal;                      ///< Indicate the maximum absolute value of a decoded horizontal MV component in quarter-pel luma units
   Int       m_log2MaxMvLengthVertical;                        ///< Indicate the maximum absolute value of a decoded vertical MV component in quarter-pel luma units
+
+  std::string m_summaryOutFilename;                           ///< filename to use for producing summary output file.
+  std::string m_summaryPicFilenameBase;                       ///< Base filename to use for producing summary picture output files. The actual filenames used will have I.txt, P.txt and B.txt appended.
+  UInt        m_summaryVerboseness;                           ///< Specifies the level of the verboseness of the text output.
 
   // internal member functions
   Void  xCheckParameter ();                                   ///< check validity of configuration values

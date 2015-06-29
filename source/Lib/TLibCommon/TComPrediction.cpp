@@ -182,7 +182,7 @@ Void TComPrediction::initTempBuff(ChromaFormat chromaFormatIDC)
 
 // Function for calculating DC value of the reference samples used in Intra prediction
 //NOTE: Bit-Limit - 25-bit source
-Pel TComPrediction::predIntraGetPredValDC( const Pel* pSrc, Int iSrcStride, UInt iWidth, UInt iHeight, ChannelType channelType, ChromaFormat format, Bool bAbove, Bool bLeft )
+Pel TComPrediction::predIntraGetPredValDC( const Pel* pSrc, Int iSrcStride, UInt iWidth, UInt iHeight, Bool bAbove, Bool bLeft )
 {
   assert(iWidth > 0 && iHeight > 0);
   Int iInd, iSum = 0;
@@ -252,7 +252,7 @@ Pel TComPrediction::predIntraGetPredValDC( const Pel* pSrc, Int iSrcStride, UInt
 Void TComPrediction::xPredIntraAng(       Int bitDepth,
                                     const Pel* pSrc,     Int srcStride,
                                           Pel* pTrueDst, Int dstStrideTrue,
-                                          UInt uiWidth, UInt uiHeight, ChannelType channelType, ChromaFormat format,
+                                          UInt uiWidth, UInt uiHeight, ChannelType channelType,
                                           UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable
                                   , const Bool bEnableEdgeFilters
                                   )
@@ -267,7 +267,7 @@ Void TComPrediction::xPredIntraAng(       Int bitDepth,
   // Do the DC prediction
   if (modeDC)
   {
-    const Pel dcval = predIntraGetPredValDC(pSrc, srcStride, width, height, channelType, format, blkAboveAvailable, blkLeftAvailable);
+    const Pel dcval = predIntraGetPredValDC(pSrc, srcStride, width, height, blkAboveAvailable, blkLeftAvailable);
 
     for (Int y=height;y>0;y--, pTrueDst+=dstStrideTrue)
     {
@@ -413,7 +413,6 @@ Void TComPrediction::xPredIntraAng(       Int bitDepth,
 
 Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel* piOrg /* Will be null for decoding */, UInt uiOrgStride, Pel* piPred, UInt uiStride, TComTU &rTu, Bool bAbove, Bool bLeft, const Bool bUseFilteredPredSamples, const Bool bUseLosslessDPCM )
 {
-  const ChromaFormat   format      = rTu.GetChromaFormat();
   const ChannelType    channelType = toChannelType(compID);
   const TComRectangle &rect        = rTu.getRect(isLuma(compID) ? COMPONENT_Y : COMPONENT_Cb);
   const Int            iWidth      = rect.width;
@@ -473,20 +472,20 @@ Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel
 
     if ( uiDirMode == PLANAR_IDX )
     {
-      xPredIntraPlanar( ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, format );
+      xPredIntraPlanar( ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight );
     }
     else
     {
       // Create the prediction
             TComDataCU *const pcCU              = rTu.getCU();
       const UInt              uiAbsPartIdx      = rTu.GetAbsPartIdxTU();
-      const Bool              enableEdgeFilters = !(pcCU->isRDPCMEnabled(uiAbsPartIdx) && pcCU->getCUTransquantBypass(uiAbsPartIdx)) && !pcCU->getSlice()->getSPS()->getDisableIntraBoundaryFilter();
+      const Bool              enableEdgeFilters = !(pcCU->isRDPCMEnabled(uiAbsPartIdx) && pcCU->getCUTransquantBypass(uiAbsPartIdx)) && !pcCU->getSlice()->getSPS()->getSpsScreenExtension().getDisableIntraBoundaryFilter();
 #if O0043_BEST_EFFORT_DECODING
       const Int channelsBitDepthForPrediction = rTu.getCU()->getSlice()->getSPS()->getStreamBitDepth(channelType);
 #else
       const Int channelsBitDepthForPrediction = rTu.getCU()->getSlice()->getSPS()->getBitDepth(channelType);
 #endif
-      xPredIntraAng( channelsBitDepthForPrediction, ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, format, uiDirMode, bAbove, bLeft, enableEdgeFilters );
+      xPredIntraAng( channelsBitDepthForPrediction, ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, uiDirMode, bAbove, bLeft, enableEdgeFilters );
       
       if(( uiDirMode == DC_IDX ) && bAbove && bLeft && enableEdgeFilters)
       {
@@ -772,7 +771,7 @@ Void TComPrediction::getMvPredAMVP( TComDataCU* pcCU, UInt uiPartIdx, UInt uiPar
  * This function derives the prediction samples for planar mode (intra coding).
  */
 //NOTE: Bit-Limit - 24-bit source
-Void TComPrediction::xPredIntraPlanar( const Pel* pSrc, Int srcStride, Pel* rpDst, Int dstStride, UInt width, UInt height, ChannelType channelType, ChromaFormat format )
+Void TComPrediction::xPredIntraPlanar( const Pel* pSrc, Int srcStride, Pel* rpDst, Int dstStride, UInt width, UInt height )
 {
   assert(width <= height);
 
@@ -914,7 +913,7 @@ Void TComPrediction::preCalcPLTIndex(TComDataCU* pcCU, Pel *Palette[3], Pel* pSr
       m_cIndexBlock[uiPos] = uiBestIdx;
       if (uiMinError > iErrorLimit)
       {
-        m_cIndexBlock[uiPos] -= pcCU->getSlice()->getSPS()->getPLTMaxSize();
+        m_cIndexBlock[uiPos] -= pcCU->getSlice()->getSPS()->getSpsScreenExtension().getPLTMaxSize();
         useEscapeFlag=1;
       }
     }
@@ -929,8 +928,8 @@ Void  TComPrediction::reorderPLT(TComDataCU* pcCU, Pel *pPalette[3], UInt uiNumC
 {
   UInt uiPLTSizePrev, uiDictMaxSize;
   Pel * pPalettePrev[3];
-  UInt uiMaxPLTSize = pcCU->getSlice()->getSPS()->getPLTMaxSize();
-  UInt uiMaxPLTPredSize = pcCU->getSlice()->getSPS()->getPLTMaxPredSize();
+  UInt uiMaxPLTSize = pcCU->getSlice()->getSPS()->getSpsScreenExtension().getPLTMaxSize();
+  UInt uiMaxPLTPredSize = pcCU->getSlice()->getSPS()->getSpsScreenExtension().getPLTMaxPredSize();
   Pel* pPaletteTemp[3];
   for (UInt ch = 0; ch < 3; ch++)
   {
@@ -1043,7 +1042,7 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
   UInt uiTotalSize = uiHeight*uiWidth;
   SortingElement *psList = new SortingElement [uiTotalSize];
   SortingElement sElement;
-  UInt uiDictMaxSize = pcCU->getSlice()->getSPS()->getPLTMaxSize();
+  UInt uiDictMaxSize = pcCU->getSlice()->getSPS()->getSpsScreenExtension().getPLTMaxSize();
   SortingElement *pListSort = new SortingElement [uiDictMaxSize + 1];
   UInt uiIdx = 0;
   UInt uiPos;
@@ -1203,7 +1202,7 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
         if (psList[i].uiCnt > pListSort[j-1].uiCnt)
         {
           pListSort[j].copyAllFrom (pListSort[j-1]);
-          uiDictMaxSize = std::min(uiDictMaxSize + 1, pcCU->getSlice()->getSPS()->getPLTMaxSize());
+          uiDictMaxSize = std::min(uiDictMaxSize + 1, pcCU->getSlice()->getSPS()->getSpsScreenExtension().getPLTMaxSize());
         }
         else
         {
@@ -1218,7 +1217,7 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
   Pel *pPred[3]  = { pcCU->getLastPLTInLcuFinal(0), pcCU->getLastPLTInLcuFinal(1), pcCU->getLastPLTInLcuFinal(2) };
   Double bitCost = pcCost->getLambda() * 24;
   BitDepths bitDepths = pcCU->getSlice()->getSPS()->getBitDepths();
-  for (Int i = 0; i < pcCU->getSlice()->getSPS()->getPLTMaxSize(); i++)
+  for (Int i = 0; i < pcCU->getSlice()->getSPS()->getSpsScreenExtension().getPLTMaxSize(); i++)
   {
     if( pListSort[i].uiCnt )
     {
@@ -1299,7 +1298,7 @@ Void TComPrediction::derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* p
   Int uiIdx = 0;
   UInt uiPos;
 
-  const UInt maxPLTSizeSPS = pcCU->getSlice()->getSPS()->getPLTMaxSize();
+  const UInt maxPLTSizeSPS = pcCU->getSlice()->getSPS()->getSpsScreenExtension().getPLTMaxSize();
   uiPLTSize = 0;
 
   const Pel * const pPred[3] = { pcCU->getLastPLTInLcuFinal(0), pcCU->getLastPLTInLcuFinal(1), pcCU->getLastPLTInLcuFinal(2) };
@@ -1474,7 +1473,7 @@ Void TComPrediction::derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* p
         Palette[1][uiPLTSize] = psList[i].uiData[1];
         Palette[2][uiPLTSize] = psList[i].uiData[2];
         uiPLTSize++;
-        if (uiPLTSize == pcCU->getSlice()->getSPS()->getPLTMaxSize())
+        if (uiPLTSize == pcCU->getSlice()->getSPS()->getSpsScreenExtension().getPLTMaxSize())
         {
           break;
         }
@@ -1591,7 +1590,7 @@ Bool TComPrediction::calLeftRun(TComDataCU* pcCU, Pel* pValue, UChar* pSPoint, U
   while (uiIdx < uiTotal)
   {
     UInt uiTraIdx = m_puiScanOrder[uiIdx];  //unified position variable (raster scan)
-    pValue[uiTraIdx] = pcIndexBlock[uiTraIdx] < 0 ? pcIndexBlock[uiTraIdx] + pcCU->getSlice()->getSPS()->getPLTMaxSize() : pcIndexBlock[uiTraIdx];
+    pValue[uiTraIdx] = pcIndexBlock[uiTraIdx] < 0 ? pcIndexBlock[uiTraIdx] + pcCU->getSlice()->getSPS()->getSpsScreenExtension().getPLTMaxSize() : pcIndexBlock[uiTraIdx];
     Bool bMismatch = (pcIndexBlock[uiTraIdx] < 0);
 
     pSPoint[uiTraIdx] = PLT_RUN_LEFT;
@@ -1631,7 +1630,7 @@ Bool  TComPrediction::calAboveRun(TComDataCU* pcCU, Pel* pValue, UChar* pSPoint,
     UInt uiStride = uiWidth;
     uiTraIdx = m_puiScanOrder[uiIdx];  //unified position variable (raster scan)
 
-    pValue[uiTraIdx] = pcIndexBlock[uiTraIdx] < 0 ? pcIndexBlock[uiTraIdx] + pcCU->getSlice()->getSPS()->getPLTMaxSize() : pcIndexBlock[uiTraIdx];
+    pValue[uiTraIdx] = pcIndexBlock[uiTraIdx] < 0 ? pcIndexBlock[uiTraIdx] + pcCU->getSlice()->getSPS()->getSpsScreenExtension().getPLTMaxSize() : pcIndexBlock[uiTraIdx];
     Bool bMismatch = (pcIndexBlock[uiTraIdx] < 0);
 
     pSPoint[uiTraIdx] = PLT_RUN_ABOVE;
@@ -1675,7 +1674,7 @@ Void  TComPrediction::rotationScan( Pel* pLevel, UInt uiWidth, UInt uiHeight, Bo
 Void TComPrediction::derivePLTLossyForcePrediction(TComDataCU *pcCU, Pel *Palette[3], Pel *pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize, TComRdCost *pcCost)
 {
   const Int iErrorLimit = getPLTErrLimit();
-  const UInt maxPLTSizeSPS = pcCU->getSlice()->getSPS()->getPLTMaxSize();
+  const UInt maxPLTSizeSPS = pcCU->getSlice()->getSPS()->getSpsScreenExtension().getPLTMaxSize();
   const UInt uiTotalSize = uiHeight * uiWidth;
   SortingElement *psList = new SortingElement[uiTotalSize];
   SortingElement sElement;
