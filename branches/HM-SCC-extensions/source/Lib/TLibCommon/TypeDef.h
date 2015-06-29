@@ -288,7 +288,6 @@
 // Processing controls
 //------------------------------------------------
 
-#define SCM_IBC_CLEANUP_IDENTICAL_RDO                    1 ///< let the encoder to generate identical RDO results
 #define SCM_T0048_IBC_VALIDATE_SLICES                    1 ///< Print at decoder when IBC reaches outside of current slice
 #define SCM_T0056_IBC_VALIDATE_TILES                     1 ///< Print at decoder when IBC reaches outside of current tile
 #define SCM_GET_DERIVED_BV_BUGFIX                        1 ///< Bug fix in related to block vector derivation
