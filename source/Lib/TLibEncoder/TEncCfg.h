@@ -244,6 +244,7 @@ protected:
 
   Int*      m_aidQP;
   UInt      m_uiDeltaQpRD;
+  Bool      m_bFastDeltaQP;
 
   Bool      m_bUseConstrainedIntraPred;
   Bool      m_bFastUDIUseMPMEnabled;
@@ -610,6 +611,7 @@ public:
   Void      setPCMLog2MinSize               ( UInt u )     { m_uiPCMLog2MinSize = u;      }
   Void      setdQPs                         ( Int*  p )     { m_aidQP       = p; }
   Void      setDeltaQpRD                    ( UInt  u )     {m_uiDeltaQpRD  = u; }
+  Void      setFastDeltaQp                  ( Bool  b )     {m_bFastDeltaQP = b; }
   Bool      getUseASR                       ()      { return m_bUseASR;     }
   Bool      getUseHADME                     ()      { return m_bUseHADME;   }
   Bool      getUseRDOQ                      ()      { return m_useRDOQ;    }
@@ -676,8 +678,9 @@ public:
   Void setDisableIntraBoundaryFilter                   (Bool bValue) { m_disableIntraBoundaryFilter=bValue; }
   Bool getDisableIntraBoundaryFilter                   ()      const { return m_disableIntraBoundaryFilter; }
 
-  Int*      getdQPs                         ()      { return m_aidQP;       }
-  UInt      getDeltaQpRD                    ()      { return m_uiDeltaQpRD; }
+  Int*      getdQPs                         ()       { return m_aidQP;       }
+  UInt      getDeltaQpRD                    () const { return m_uiDeltaQpRD; }
+  Bool      getFastDeltaQp                  () const { return m_bFastDeltaQP; }
 
   //====== Slice ========
   Void  setSliceMode                   ( SliceConstraint  i )        { m_sliceMode = i;              }
