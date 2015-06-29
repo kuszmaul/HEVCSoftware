@@ -174,6 +174,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseIntraBlockCopyFastSearch                       ( m_intraBlockCopyFastSearch );
   //====== Tool list ========
   m_cTEncTop.setDeltaQpRD                                         ( m_uiDeltaQpRD  );
+  m_cTEncTop.setFastDeltaQp                                       ( m_bFastDeltaQP  );
   m_cTEncTop.setUseASR                                            ( m_bUseASR      );
   m_cTEncTop.setUseHADME                                          ( m_bUseHADME    );
   m_cTEncTop.setdQPs                                              ( m_aidQP        );

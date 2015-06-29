@@ -151,13 +151,15 @@ protected:
   UChar*          m_paBestSPoint;
   TCoeff*         m_paBestRun;
   UChar*          m_paBestEscapeFlag;
+
+  Bool            m_isInitialized;
 public:
   TEncSearch();
   virtual ~TEncSearch();
 
   TComYuv* getTmpYuvPred() {return &m_tmpYuvPred;}
 
-  Void init(  TEncCfg*      pcEncCfg,
+  Void init(TEncCfg*      pcEncCfg,
             TComTrQuant*  pcTrQuant,
             Int           iSearchRange,
             Int           bipredSearchRange,
@@ -169,6 +171,8 @@ public:
             TComRdCost*   pcRdCost,
             TEncSbac***   pppcRDSbacCoder,
             TEncSbac*     pcRDGoOnSbacCoder );
+
+  Void destroy();
 
 protected:
 

@@ -52,9 +52,9 @@ TComSlice::TComSlice()
 , m_iLastIDR                      ( 0 )
 , m_iAssociatedIRAP               ( 0 )
 , m_iAssociatedIRAPType           ( NAL_UNIT_INVALID )
-, m_pcRPS                         ( 0 )
-, m_LocalRPS                      ( )
-, m_iBDidx                        ( 0 )
+, m_pRPS                          ( 0 )
+, m_localRPS                      ( )
+, m_rpsIdx                        ( 0 )
 , m_RefPicListModification        ( )
 , m_eNalUnitType                  ( NAL_UNIT_CODED_SLICE_IDR_W_RADL )
 , m_eSliceType                    ( I_SLICE )
@@ -355,7 +355,7 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
       ::memset( m_apcRefPicList, 0, sizeof (m_apcRefPicList));
       ::memset( m_aiNumRefIdx,   0, sizeof ( m_aiNumRefIdx ));
 
-      if( m_pcRPS->getNumberOfPictures() == 0 )
+      if( m_pRPS->getNumberOfPictures() == 0 )
       {
         TComPic *pPrevPic = xGetRefPic(rcListPic, max(0, getPOC()-1));
         if ( pPrevPic->getSlice( 0 )->getPOC() != max( 0, getPOC()-1 ) )
@@ -367,7 +367,7 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
       return;
     }
 
-    if ( m_pcRPS->getNumberOfPictures() == 0 )
+    if ( m_pRPS->getNumberOfPictures() == 0 )
     {
       TComPic *pPrevPic = xGetRefPic( rcListPic, max( 0, getPOC()-1 ) );
       if ( pPrevPic->getSlice( 0 )->getPOC() != max( 0, getPOC()-1 ) )
@@ -391,11 +391,11 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
   UInt NumPicLtCurr = 0;
   Int i;
 
-  for(i=0; i < m_pcRPS->getNumberOfNegativePictures(); i++)
+  for(i=0; i < m_pRPS->getNumberOfNegativePictures(); i++)
   {
-    if(m_pcRPS->getUsed(i))
+    if(m_pRPS->getUsed(i))
     {
-      pcRefPic = xGetRefPic(rcListPic, getPOC()+m_pcRPS->getDeltaPOC(i));
+      pcRefPic = xGetRefPic(rcListPic, getPOC()+m_pRPS->getDeltaPOC(i));
       pcRefPic->setIsLongTerm(0);
       pcRefPic->getPicYuvRec()->extendPicBorder();
       RefPicSetStCurr0[NumPicStCurr0] = pcRefPic;
@@ -404,11 +404,11 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
     }
   }
 
-  for(; i < m_pcRPS->getNumberOfNegativePictures()+m_pcRPS->getNumberOfPositivePictures(); i++)
+  for(; i < m_pRPS->getNumberOfNegativePictures()+m_pRPS->getNumberOfPositivePictures(); i++)
   {
-    if(m_pcRPS->getUsed(i))
+    if(m_pRPS->getUsed(i))
     {
-      pcRefPic = xGetRefPic(rcListPic, getPOC()+m_pcRPS->getDeltaPOC(i));
+      pcRefPic = xGetRefPic(rcListPic, getPOC()+m_pRPS->getDeltaPOC(i));
       pcRefPic->setIsLongTerm(0);
       pcRefPic->getPicYuvRec()->extendPicBorder();
       RefPicSetStCurr1[NumPicStCurr1] = pcRefPic;
@@ -417,11 +417,11 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
     }
   }
 
-  for(i = m_pcRPS->getNumberOfNegativePictures()+m_pcRPS->getNumberOfPositivePictures()+m_pcRPS->getNumberOfLongtermPictures()-1; i > m_pcRPS->getNumberOfNegativePictures()+m_pcRPS->getNumberOfPositivePictures()-1 ; i--)
+  for(i = m_pRPS->getNumberOfNegativePictures()+m_pRPS->getNumberOfPositivePictures()+m_pRPS->getNumberOfLongtermPictures()-1; i > m_pRPS->getNumberOfNegativePictures()+m_pRPS->getNumberOfPositivePictures()-1 ; i--)
   {
-    if(m_pcRPS->getUsed(i))
+    if(m_pRPS->getUsed(i))
     {
-      pcRefPic = xGetLongTermRefPic(rcListPic, m_pcRPS->getPOC(i), m_pcRPS->getCheckLTMSBPresent(i));
+      pcRefPic = xGetLongTermRefPic(rcListPic, m_pRPS->getPOC(i), m_pRPS->getCheckLTMSBPresent(i));
       pcRefPic->setIsLongTerm(1);
       pcRefPic->getPicYuvRec()->extendPicBorder();
       RefPicSetLtCurr[NumPicLtCurr] = pcRefPic;
@@ -429,9 +429,9 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
     }
     if(pcRefPic==NULL)
     {
-      pcRefPic = xGetLongTermRefPic(rcListPic, m_pcRPS->getPOC(i), m_pcRPS->getCheckLTMSBPresent(i));
+      pcRefPic = xGetLongTermRefPic(rcListPic, m_pRPS->getPOC(i), m_pRPS->getCheckLTMSBPresent(i));
     }
-    pcRefPic->setCheckLTMSBPresent(m_pcRPS->getCheckLTMSBPresent(i));
+    pcRefPic->setCheckLTMSBPresent(m_pRPS->getCheckLTMSBPresent(i));
   }
 
   if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
@@ -571,9 +571,9 @@ Int TComSlice::getNumRpsCurrTempList() const
   {
     return 0;
   }
-  for(UInt i=0; i < m_pcRPS->getNumberOfNegativePictures()+ m_pcRPS->getNumberOfPositivePictures() + m_pcRPS->getNumberOfLongtermPictures(); i++)
+  for(UInt i=0; i < m_pRPS->getNumberOfNegativePictures()+ m_pRPS->getNumberOfPositivePictures() + m_pRPS->getNumberOfLongtermPictures(); i++)
   {
-    if(m_pcRPS->getUsed(i))
+    if(m_pRPS->getUsed(i))
     {
       numRpsCurrTempList++;
     }
@@ -819,7 +819,7 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   m_bRefenced            = pSrc->m_bRefenced;
 
   // access channel
-  m_pcRPS                = pSrc->m_pcRPS;
+  m_pRPS                = pSrc->m_pRPS;
   m_iLastIDR             = pSrc->m_iLastIDR;
 
   m_pcPic                = pSrc->m_pcPic;
@@ -1383,7 +1383,9 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
   Int k = 0;
   Int nrOfNegativePictures = 0;
   Int nrOfPositivePictures = 0;
-  TComReferencePictureSet* pcRPS = this->getLocalRPS();
+  TComReferencePictureSet* pLocalRPS = this->getLocalRPS();
+  (*pLocalRPS)=TComReferencePictureSet();
+
   Bool irapIsInRPS = false; // Used when bEfficientFieldIRAPEnabled==true
 
   // loop through all pictures in the Reference Picture Set
@@ -1401,14 +1403,14 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
       {
         // This picture exists as a reference picture
         // and should be added to the explicit Reference Picture Set
-        pcRPS->setDeltaPOC(k, pReferencePictureSet->getDeltaPOC(i));
-        pcRPS->setUsed(k, pReferencePictureSet->getUsed(i) && (!isRAP));
+        pLocalRPS->setDeltaPOC(k, pReferencePictureSet->getDeltaPOC(i));
+        pLocalRPS->setUsed(k, pReferencePictureSet->getUsed(i) && (!isRAP));
         if (bEfficientFieldIRAPEnabled)
         {
-          pcRPS->setUsed(k, pcRPS->getUsed(k) && !(bUseRecoveryPoint && this->getPOC() > pocRandomAccess && this->getPOC() + pReferencePictureSet->getDeltaPOC(i) < pocRandomAccess) );
+          pLocalRPS->setUsed(k, pLocalRPS->getUsed(k) && !(bUseRecoveryPoint && this->getPOC() > pocRandomAccess && this->getPOC() + pReferencePictureSet->getDeltaPOC(i) < pocRandomAccess) );
         }
 
-        if(pcRPS->getDeltaPOC(k) < 0)
+        if(pLocalRPS->getDeltaPOC(k) < 0)
         {
           nrOfNegativePictures++;
         }
@@ -1435,24 +1437,24 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
       rpcPic = *(iterPic++);
       if(rpcPic->getPicSym()->getSlice(0)->getPOC() == this->getAssociatedIRAPPOC() && this->getAssociatedIRAPPOC() == this->getPOC()+1)
       {
-        pcRPS->setDeltaPOC(k, 1);
-        pcRPS->setUsed(k, true);
+        pLocalRPS->setDeltaPOC(k, 1);
+        pLocalRPS->setUsed(k, true);
         nrOfPositivePictures++;
         k ++;
         useNewRPS = true;
       }
     }
   }
-  pcRPS->setNumberOfNegativePictures(nrOfNegativePictures);
-  pcRPS->setNumberOfPositivePictures(nrOfPositivePictures);
-  pcRPS->setNumberOfPictures(nrOfNegativePictures+nrOfPositivePictures);
+  pLocalRPS->setNumberOfNegativePictures(nrOfNegativePictures);
+  pLocalRPS->setNumberOfPositivePictures(nrOfPositivePictures);
+  pLocalRPS->setNumberOfPictures(nrOfNegativePictures+nrOfPositivePictures);
   // This is a simplistic inter rps example. A smarter encoder will look for a better reference RPS to do the
   // inter RPS prediction with.  Here we just use the reference used by pReferencePictureSet.
   // If pReferencePictureSet is not inter_RPS_predicted, then inter_RPS_prediction is for the current RPS also disabled.
   if (!pReferencePictureSet->getInterRPSPrediction() || useNewRPS )
   {
-    pcRPS->setInterRPSPrediction(false);
-    pcRPS->setNumRefIdc(0);
+    pLocalRPS->setInterRPSPrediction(false);
+    pLocalRPS->setNumRefIdc(0);
   }
   else
   {
@@ -1465,11 +1467,11 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
     {
       Int deltaPOC = ((i != iRefPics)? pcRefRPS->getDeltaPOC(i) : 0);  // check if the reference abs POC is >= 0
       Int iRefIdc = 0;
-      for (j=0; j < pcRPS->getNumberOfPictures(); j++) // loop through the  pictures in the new RPS
+      for (j=0; j < pLocalRPS->getNumberOfPictures(); j++) // loop through the  pictures in the new RPS
       {
-        if ( (deltaPOC + deltaRPS) == pcRPS->getDeltaPOC(j))
+        if ( (deltaPOC + deltaRPS) == pLocalRPS->getDeltaPOC(j))
         {
-          if (pcRPS->getUsed(j))
+          if (pLocalRPS->getUsed(j))
           {
             iRefIdc = 1;
           }
@@ -1479,16 +1481,16 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
           }
         }
       }
-      pcRPS->setRefIdc(i, iRefIdc);
+      pLocalRPS->setRefIdc(i, iRefIdc);
       iNewIdc++;
     }
-    pcRPS->setInterRPSPrediction(true);
-    pcRPS->setNumRefIdc(iNewIdc);
-    pcRPS->setDeltaRPS(deltaRPS);
-    pcRPS->setDeltaRIdxMinus1(pReferencePictureSet->getDeltaRIdxMinus1() + this->getSPS()->getRPSList()->getNumberOfReferencePictureSets() - this->getRPSidx());
+    pLocalRPS->setInterRPSPrediction(true);
+    pLocalRPS->setNumRefIdc(iNewIdc);
+    pLocalRPS->setDeltaRPS(deltaRPS);
+    pLocalRPS->setDeltaRIdxMinus1(pReferencePictureSet->getDeltaRIdxMinus1() + this->getSPS()->getRPSList()->getNumberOfReferencePictureSets() - this->getRPSidx());
   }
 
-  this->setRPS(pcRPS);
+  this->setRPS(pLocalRPS);
   this->setRPSidx(-1);
 }
 
