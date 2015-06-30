@@ -60,7 +60,7 @@ Void         destroyROM();
 // flexible conversion from relative to absolute index
 extern       UInt   g_auiZscanToRaster[ MAX_NUM_PART_IDXS_IN_CTU_WIDTH*MAX_NUM_PART_IDXS_IN_CTU_WIDTH ];
 extern       UInt   g_auiRasterToZscan[ MAX_NUM_PART_IDXS_IN_CTU_WIDTH*MAX_NUM_PART_IDXS_IN_CTU_WIDTH ];
-extern       UInt*  g_scanOrder[SCAN_NUMBER_OF_GROUP_TYPES][SCAN_NUMBER_OF_TYPES][ MAX_CU_DEPTH ][ MAX_CU_DEPTH ];
+extern       UInt*  g_scanOrder[SCAN_NUMBER_OF_GROUP_TYPES][SCAN_NUMBER_OF_TYPES][ MAX_CU_DEPTH + 1 ][ MAX_CU_DEPTH + 1 ];
 
 Void         initZscanToRaster ( Int iMaxDepth, Int iDepth, UInt uiStartVal, UInt*& rpuiCurrIdx );
 Void         initRasterToZscan ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth         );
@@ -115,6 +115,11 @@ extern const UChar  g_aucIntraModeNumFast_NotUseMPM[MAX_CU_DEPTH];
 extern const UChar  g_chroma422IntraAngleMappingTable[NUM_INTRA_MODE];
 
 // ====================================================================================================================
+
+extern        UChar g_uhPLTQuant[52];
+extern        UChar g_uhPLTTBC[257];
+
+
 // Mode-Dependent DST Matrices
 // ====================================================================================================================
 
@@ -169,6 +174,14 @@ extern const Int g_quantInterDefault8x8[8*8];
 
 extern const UInt g_scalingListSize [SCALING_LIST_SIZE_NUM];
 extern const UInt g_scalingListSizeX[SCALING_LIST_SIZE_NUM];
+
+#define SCM__S0269_PLT_RUN_MSB_IDX_CABAC_BYPASS_THRE              4       ///< CABAC bypass threshold
+#define SCM__S0269_PLT_RUN_MSB_IDX_CTX_T1                         1
+#define SCM__S0269_PLT_RUN_MSB_IDX_CTX_T2                         3
+extern UChar g_ucRunTopLut[5];
+extern UChar g_ucRunLeftLut[5];
+extern UChar g_ucMsbP1Idx[256];
+extern UChar g_getMsbP1Idx(UInt uiVal);
 //! \}
 
 #endif  //__TCOMROM__

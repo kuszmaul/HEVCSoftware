@@ -43,6 +43,7 @@
 #endif
 
 #include <vector>
+#include <cstdlib>
 
 //! \ingroup TLibCommon
 //! \{
@@ -154,7 +155,6 @@
   #define DEBUG_STRING_SWAP(srt1, str2)
   #define DEBUG_STRING_CHANNEL_CONDITION(compID)
 #endif
-
 // ====================================================================================================================
 // Error checks
 // ====================================================================================================================
@@ -162,6 +162,36 @@
 #if ((RExt__HIGH_PRECISION_FORWARD_TRANSFORM != 0) && (RExt__HIGH_BIT_DEPTH_SUPPORT == 0))
 #error ERROR: cannot enable RExt__HIGH_PRECISION_FORWARD_TRANSFORM without RExt__HIGH_BIT_DEPTH_SUPPORT
 #endif
+
+// ====================================================================================================================
+// SCC control settings
+// ====================================================================================================================
+
+
+//------------------------------------------------
+// Processing controls
+//------------------------------------------------
+
+#define SCM_T0048_IBC_VALIDATE_SLICES                    1 ///< Print at decoder when IBC reaches outside of current slice
+#define SCM_T0056_IBC_VALIDATE_TILES                     1 ///< Print at decoder when IBC reaches outside of current tile
+#define SCM_GET_DERIVED_BV_BUGFIX                        1 ///< Bug fix in related to block vector derivation
+#define SCM_IBC_MVP_ENC_ONLY_BUGFIX                      1 ///< Encoder only bug fix for IBC block vector predictor derivation
+#define SCM_S0043_PLT_DELTA_QP                           0 ///< JCTVC-S0043: delta qp signalling for palette mode
+
+//------------------------------------------------
+// Derived macros
+//------------------------------------------------
+
+#define SCM_S0067_NUM_CANDIDATES                         64 ///< Maximum number of candidates to store/test
+#define SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU               2 ///< Do full horizontal/vertical search for Nx2N
+#define SCM_S0067_MAX_CAND_SIZE                          32 ///< 32 or 64, 16 by default
+#define SCM_T0227_INTER_SEARCH_YUV                        1   // use 3 components for Inter in mixed CU decision(Intra BC and inter CU)
+#define SCM_T0048_PLT_PRED_IN_PPS_REFRESH                16 ///< Periodicity of the palette refresh
+
+
+//------------------------------------------------
+// Backwards-compatibility
+//------------------------------------------------
 
 // ====================================================================================================================
 // Basic type redefinition
@@ -326,7 +356,9 @@ enum RefPicList
 {
   REF_PIC_LIST_0               = 0,   ///< reference list 0
   REF_PIC_LIST_1               = 1,   ///< reference list 1
+  REF_PIC_LIST_INTRABC         = 0,
   NUM_REF_PIC_LIST_01          = 2,
+  NUM_REF_PIC_LIST_CU_MV_FIELD = 2,
   REF_PIC_LIST_X               = 100  ///< special mark
 };
 
@@ -428,7 +460,8 @@ enum COEFF_SCAN_TYPE
   SCAN_DIAG = 0,        ///< up-right diagonal scan
   SCAN_HOR  = 1,        ///< horizontal first scan
   SCAN_VER  = 2,        ///< vertical first scan
-  SCAN_NUMBER_OF_TYPES = 3
+  SCAN_TRAV = 3,
+  SCAN_NUMBER_OF_TYPES = 4
 };
 
 enum COEFF_SCAN_GROUP_TYPE
@@ -526,6 +559,7 @@ namespace Profile
     MAINSTILLPICTURE = 3,
     MAINREXT = 4,
     HIGHTHROUGHPUTREXT = 5
+   ,MAINSCC  = 31 // Placeholder profile for development
   };
 }
 
@@ -571,6 +605,7 @@ enum SPSExtensionFlagIndex
   SPS_EXT__REXT           = 0,
 //SPS_EXT__MVHEVC         = 1, //for use in future versions
 //SPS_EXT__SHVC           = 2, //for use in future versions
+  SPS_EXT__SCC            = 6, // place holder
   NUM_SPS_EXTENSION_FLAGS = 8
 };
 
@@ -579,6 +614,7 @@ enum PPSExtensionFlagIndex
   PPS_EXT__REXT           = 0,
 //PPS_EXT__MVHEVC         = 1, //for use in future versions
 //PPS_EXT__SHVC           = 2, //for use in future versions
+  PPS_EXT__SCC            = 6, // place holder
   NUM_PPS_EXTENSION_FLAGS = 8
 };
 
@@ -801,6 +837,113 @@ struct TComSEIMasteringDisplay
   UShort    primaries[3][2];
   UShort    whitePoint[2];
 };
+enum PLTRunMode
+{
+  PLT_RUN_LEFT  = 0,
+  PLT_RUN_ABOVE = 1,
+  NUM_PLT_RUN   = 2
+};
+
+enum PLTScanMode
+{
+  PLT_SCAN_HORTRAV = 0,
+  PLT_SCAN_VERTRAV = 1,
+  NUM_PLT_SCAN     = 2
+};
+
+class SortingElement
+{
+public:
+  UInt uiCnt;
+  Int uiData[3];
+  Int uiShift, uiLastCnt, uiSumData[3];
+
+  inline Bool operator<(const SortingElement &other) const
+  {
+    return uiCnt > other.uiCnt;
+  }
+
+  SortingElement() {
+    uiCnt = uiShift = uiLastCnt = 0;
+    uiData[0] = uiData[1] = uiData[2] = 0;
+    uiSumData[0] = uiSumData[1] = uiSumData[2] = 0;
+  }
+  Void setAll(UInt ui0, UInt ui1, UInt ui2) {
+    if( !ui0 && !ui1 && !ui2 )
+    {
+      uiShift = uiLastCnt = 0;
+      uiSumData[0] = uiSumData[1] = uiSumData[2] = 0;
+    }
+    uiData[0] = ui0; uiData[1] = ui1; uiData[2] = ui2;
+  }
+
+  Bool EqualData(SortingElement sElement)
+  {
+    return (uiData[0] == sElement.uiData[0]) && (uiData[1] == sElement.uiData[1]) && (uiData[2] == sElement.uiData[2]);
+  }
+
+  Void ResetElement()
+  {
+    uiCnt = uiShift = uiLastCnt = 0;
+    uiData[0] = uiData[1] = uiData[2] = 0;
+    uiSumData[0] = uiSumData[1] = uiSumData[2] = 0;
+  }
+
+  Bool almostEqualData(SortingElement sElement, Int iErrorLimit, const BitDepths& bitDepths)
+  {
+    return ( std::abs(uiData[0] - sElement.uiData[0]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_LUMA]  -8) ) <= iErrorLimit
+        && ( std::abs(uiData[1] - sElement.uiData[1]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA]-8) ) <= iErrorLimit
+        && ( std::abs(uiData[2] - sElement.uiData[2]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA]-8) ) <= iErrorLimit;
+  }
+  UInt getSAD(SortingElement sElement, const BitDepths& bitDepths)
+  {
+    return ( std::abs(uiData[0] - sElement.uiData[0]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_LUMA]  -8) )
+         + ( std::abs(uiData[1] - sElement.uiData[1]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA]-8) )
+         + ( std::abs(uiData[2] - sElement.uiData[2]) >> DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[CHANNEL_TYPE_CHROMA]-8) );
+  }
+
+  Void copyDataFrom(SortingElement sElement) {
+    uiData[0] = sElement.uiData[0];
+    uiData[1] = sElement.uiData[1];
+    uiData[2] = sElement.uiData[2];
+    uiShift = 0; uiLastCnt = 1; uiSumData[0] = uiData[0]; uiSumData[1] = uiData[1]; uiSumData[2] = uiData[2];
+  }
+  Void copyAllFrom(SortingElement sElement) {
+    copyDataFrom(sElement); uiCnt = sElement.uiCnt;
+    uiSumData[0] = sElement.uiSumData[0]; uiSumData[1] = sElement.uiSumData[1]; uiSumData[2] = sElement.uiSumData[2];
+    uiLastCnt = sElement.uiLastCnt; uiShift = sElement.uiShift;
+  }
+
+  Void addElement(const SortingElement& sElement)
+  {
+    uiCnt++;
+    for ( int i=0; i<3; i++ )
+    {
+      uiSumData[i] += sElement.uiData[i];
+    }
+    if( uiCnt>1 && uiCnt==2*uiLastCnt )
+    {
+      UInt uiRnd;
+      if( uiCnt == 2 )
+      {
+        uiShift = 0;
+        uiRnd   = 1;
+      }
+      else
+      {
+        uiRnd = 1<<uiShift;
+      }
+      uiShift++;
+      for ( int i=0; i<3; i++ )
+      {
+        uiData[i] = (uiSumData[i] + uiRnd) >> uiShift;
+      }
+      uiLastCnt = uiCnt;
+    }
+  }
+};
+
+
 //! \}
 
 #endif
