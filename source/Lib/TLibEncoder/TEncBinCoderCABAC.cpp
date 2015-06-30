@@ -195,7 +195,7 @@ Void TEncBinCABAC::encodeBin( UInt binValue, ContextModel &rcCtxModel )
   //  DTRACE_CABAC_T( "\n" )
   //}
 
-#if DEBUG_CABAC_BINS
+#ifdef DEBUG_CABAC_BINS
   const UInt startingRange = m_uiRange;
 #endif
 
@@ -227,7 +227,7 @@ Void TEncBinCABAC::encodeBin( UInt binValue, ContextModel &rcCtxModel )
     }
   }
 
-#if DEBUG_CABAC_BINS
+#ifdef DEBUG_CABAC_BINS
   if ((g_debugCounter + debugCabacBinWindow) >= debugCabacBinTargetLine)
   {
     std::cout << g_debugCounter << ": coding bin value " << binValue << ", range = [" << startingRange << "->" << m_uiRange << "]\n";

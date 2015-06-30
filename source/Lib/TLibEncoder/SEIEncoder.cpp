@@ -210,7 +210,7 @@ Void SEIEncoder::initSEISOPDescription(SEISOPDescription *sopDescriptionSEI, TCo
       sopCurrPOC += deltaPOC;
       sopDescriptionSEI->m_sopDescVclNaluType[i] = m_pcEncGOP->getNalUnitType(sopCurrPOC, lastIdr, slice->getPic()->isField());
       sopDescriptionSEI->m_sopDescTemporalId[i] = m_pcCfg->getGOPEntry(j).m_temporalId;
-      sopDescriptionSEI->m_sopDescStRpsIdx[i] = m_pcEncTop->getReferencePictureSetIdxForSOP(sopCurrPOC, j);
+      sopDescriptionSEI->m_sopDescStRpsIdx[i] = m_pcEncTop->getReferencePictureSetIdxForSOP(slice, sopCurrPOC, j);
       sopDescriptionSEI->m_sopDescPocDelta[i] = deltaPOC;
 
       prevEntryId = j;
@@ -397,7 +397,7 @@ Void SEIEncoder::initSEIKneeFunctionInfo(SEIKneeFunctionInfo *seiKneeFunctionInf
   }
 }
 
-Void SEIEncoder::initSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint *seiChromaSamplingFilterHint, Int iHorFilterIndex, Int iVerFilterIndex)
+Void SEIEncoder::initSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint *seiChromaSamplingFilterHint, Bool bChromaLocInfoPresent, Int iHorFilterIndex, Int iVerFilterIndex)
 {
   assert (m_isInitialized);
   assert (seiChromaSamplingFilterHint!=NULL);

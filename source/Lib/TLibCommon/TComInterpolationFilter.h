@@ -39,7 +39,7 @@
 #ifndef __TCOMINTERPOLATIONFILTER__
 #define __TCOMINTERPOLATIONFILTER__
 
-#include "CommonDef.h"
+#include "TypeDef.h"
 
 //! \ingroup TLibCommon
 //! \{

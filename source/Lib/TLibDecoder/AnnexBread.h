@@ -45,7 +45,7 @@
 #include <istream>
 #include <vector>
 
-#include "TLibCommon/CommonDef.h"
+#include "TLibCommon/TypeDef.h"
 
 //! \ingroup TLibDecoder
 //! \{

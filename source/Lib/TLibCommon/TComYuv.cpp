@@ -67,33 +67,33 @@ Void TComYuv::create( UInt iWidth, UInt iHeight, ChromaFormat chromaFormatIDC )
   m_iHeight  = iHeight;
   m_chromaFormatIDC = chromaFormatIDC;
 
-  for(Int comp=0; comp<MAX_NUM_COMPONENT; comp++)
+  for(Int ch=0; ch<MAX_NUM_COMPONENT; ch++)
   {
     // memory allocation
-    m_apiBuf[comp]  = (Pel*)xMalloc( Pel, getWidth(ComponentID(comp))*getHeight(ComponentID(comp)) );
+    m_apiBuf[ch]  = (Pel*)xMalloc( Pel, getWidth(ComponentID(ch))*getHeight(ComponentID(ch)) );
   }
 }
 
 Void TComYuv::destroy()
 {
   // memory free
-  for(Int comp=0; comp<MAX_NUM_COMPONENT; comp++)
+  for(Int ch=0; ch<MAX_NUM_COMPONENT; ch++)
   {
-    if (m_apiBuf[comp]!=NULL)
+    if (m_apiBuf[ch]!=NULL)
     {
-      xFree( m_apiBuf[comp] );
-      m_apiBuf[comp] = NULL;
+      xFree( m_apiBuf[ch] );
+      m_apiBuf[ch] = NULL;
     }
   }
 }
 
 Void TComYuv::clear()
 {
-  for(Int comp=0; comp<MAX_NUM_COMPONENT; comp++)
+  for(Int ch=0; ch<MAX_NUM_COMPONENT; ch++)
   {
-    if (m_apiBuf[comp]!=NULL)
+    if (m_apiBuf[ch]!=NULL)
     {
-      ::memset( m_apiBuf[comp], 0, ( getWidth(ComponentID(comp)) * getHeight(ComponentID(comp))  )*sizeof(Pel) );
+      ::memset( m_apiBuf[ch], 0, ( getWidth(ComponentID(ch)) * getHeight(ComponentID(ch))  )*sizeof(Pel) );
     }
   }
 }
@@ -103,22 +103,22 @@ Void TComYuv::clear()
 
 Void TComYuv::copyToPicYuv   ( TComPicYuv* pcPicYuvDst, const UInt ctuRsAddr, const UInt uiAbsZorderIdx, const UInt uiPartDepth, const UInt uiPartIdx ) const
 {
-  for(Int comp=0; comp<getNumberValidComponents(); comp++)
+  for(Int ch=0; ch<getNumberValidComponents(); ch++)
   {
-    copyToPicComponent  ( ComponentID(comp), pcPicYuvDst, ctuRsAddr, uiAbsZorderIdx, uiPartDepth, uiPartIdx );
+    copyToPicComponent  ( ComponentID(ch), pcPicYuvDst, ctuRsAddr, uiAbsZorderIdx, uiPartDepth, uiPartIdx );
   }
 }
 
-Void TComYuv::copyToPicComponent  ( const ComponentID compID, TComPicYuv* pcPicYuvDst, const UInt ctuRsAddr, const UInt uiAbsZorderIdx, const UInt uiPartDepth, const UInt uiPartIdx ) const
+Void TComYuv::copyToPicComponent  ( const ComponentID ch, TComPicYuv* pcPicYuvDst, const UInt ctuRsAddr, const UInt uiAbsZorderIdx, const UInt uiPartDepth, const UInt uiPartIdx ) const
 {
-  const Int iWidth  = getWidth(compID) >>uiPartDepth;
-  const Int iHeight = getHeight(compID)>>uiPartDepth;
+  const Int iWidth  = getWidth(ch) >>uiPartDepth;
+  const Int iHeight = getHeight(ch)>>uiPartDepth;
 
-  const Pel* pSrc     = getAddr(compID, uiPartIdx, iWidth);
-        Pel* pDst     = pcPicYuvDst->getAddr ( compID, ctuRsAddr, uiAbsZorderIdx );
+  const Pel* pSrc     = getAddr(ch, uiPartIdx, iWidth);
+        Pel* pDst     = pcPicYuvDst->getAddr ( ch, ctuRsAddr, uiAbsZorderIdx );
 
-  const UInt  iSrcStride  = getStride(compID);
-  const UInt  iDstStride  = pcPicYuvDst->getStride(compID);
+  const UInt  iSrcStride  = getStride(ch);
+  const UInt  iDstStride  = pcPicYuvDst->getStride(ch);
 
   for ( Int y = iHeight; y != 0; y-- )
   {
@@ -133,21 +133,21 @@ Void TComYuv::copyToPicComponent  ( const ComponentID compID, TComPicYuv* pcPicY
 
 Void TComYuv::copyFromPicYuv   ( const TComPicYuv* pcPicYuvSrc, const UInt ctuRsAddr, const UInt uiAbsZorderIdx )
 {
-  for(Int comp=0; comp<getNumberValidComponents(); comp++)
+  for(Int ch=0; ch<getNumberValidComponents(); ch++)
   {
-    copyFromPicComponent  ( ComponentID(comp), pcPicYuvSrc, ctuRsAddr, uiAbsZorderIdx );
+    copyFromPicComponent  ( ComponentID(ch), pcPicYuvSrc, ctuRsAddr, uiAbsZorderIdx );
   }
 }
 
-Void TComYuv::copyFromPicComponent  ( const ComponentID compID, const TComPicYuv* pcPicYuvSrc, const UInt ctuRsAddr, const UInt uiAbsZorderIdx )
+Void TComYuv::copyFromPicComponent  ( const ComponentID ch, const TComPicYuv* pcPicYuvSrc, const UInt ctuRsAddr, const UInt uiAbsZorderIdx )
 {
-        Pel* pDst     = getAddr(compID);
-  const Pel* pSrc     = pcPicYuvSrc->getAddr ( compID, ctuRsAddr, uiAbsZorderIdx );
+        Pel* pDst     = getAddr(ch);
+  const Pel* pSrc     = pcPicYuvSrc->getAddr ( ch, ctuRsAddr, uiAbsZorderIdx );
 
-  const UInt iDstStride  = getStride(compID);
-  const UInt iSrcStride  = pcPicYuvSrc->getStride(compID);
-  const Int  iWidth=getWidth(compID);
-  const Int  iHeight=getHeight(compID);
+  const UInt iDstStride  = getStride(ch);
+  const UInt iSrcStride  = pcPicYuvSrc->getStride(ch);
+  const Int  iWidth=getWidth(ch);
+  const Int  iHeight=getHeight(ch);
 
   for (Int y = iHeight; y != 0; y-- )
   {
@@ -162,21 +162,21 @@ Void TComYuv::copyFromPicComponent  ( const ComponentID compID, const TComPicYuv
 
 Void TComYuv::copyToPartYuv( TComYuv* pcYuvDst, const UInt uiDstPartIdx ) const
 {
-  for(Int comp=0; comp<getNumberValidComponents(); comp++)
+  for(Int ch=0; ch<getNumberValidComponents(); ch++)
   {
-    copyToPartComponent  ( ComponentID(comp), pcYuvDst, uiDstPartIdx );
+    copyToPartComponent  ( ComponentID(ch), pcYuvDst, uiDstPartIdx );
   }
 }
 
-Void TComYuv::copyToPartComponent( const ComponentID compID, TComYuv* pcYuvDst, const UInt uiDstPartIdx ) const
+Void TComYuv::copyToPartComponent( const ComponentID ch, TComYuv* pcYuvDst, const UInt uiDstPartIdx ) const
 {
-  const Pel* pSrc     = getAddr(compID);
-        Pel* pDst     = pcYuvDst->getAddr( compID, uiDstPartIdx );
+  const Pel* pSrc     = getAddr(ch);
+        Pel* pDst     = pcYuvDst->getAddr( ch, uiDstPartIdx );
 
-  const UInt iSrcStride  = getStride(compID);
-  const UInt iDstStride  = pcYuvDst->getStride(compID);
-  const Int  iWidth=getWidth(compID);
-  const Int  iHeight=getHeight(compID);
+  const UInt iSrcStride  = getStride(ch);
+  const UInt iDstStride  = pcYuvDst->getStride(ch);
+  const Int  iWidth=getWidth(ch);
+  const Int  iHeight=getHeight(ch);
 
   for (Int y = iHeight; y != 0; y-- )
   {
@@ -191,22 +191,22 @@ Void TComYuv::copyToPartComponent( const ComponentID compID, TComYuv* pcYuvDst, 
 
 Void TComYuv::copyPartToYuv( TComYuv* pcYuvDst, const UInt uiSrcPartIdx ) const
 {
-  for(Int comp=0; comp<getNumberValidComponents(); comp++)
+  for(Int ch=0; ch<getNumberValidComponents(); ch++)
   {
-    copyPartToComponent  ( ComponentID(comp), pcYuvDst, uiSrcPartIdx );
+    copyPartToComponent  ( ComponentID(ch), pcYuvDst, uiSrcPartIdx );
   }
 }
 
-Void TComYuv::copyPartToComponent( const ComponentID compID, TComYuv* pcYuvDst, const UInt uiSrcPartIdx ) const
+Void TComYuv::copyPartToComponent( const ComponentID ch, TComYuv* pcYuvDst, const UInt uiSrcPartIdx ) const
 {
-  const Pel* pSrc     = getAddr(compID, uiSrcPartIdx);
-        Pel* pDst     = pcYuvDst->getAddr(compID, 0 );
+  const Pel* pSrc     = getAddr(ch, uiSrcPartIdx);
+        Pel* pDst     = pcYuvDst->getAddr(ch, 0 );
 
-  const UInt  iSrcStride  = getStride(compID);
-  const UInt  iDstStride  = pcYuvDst->getStride(compID);
+  const UInt  iSrcStride  = getStride(ch);
+  const UInt  iDstStride  = pcYuvDst->getStride(ch);
 
-  const UInt uiHeight = pcYuvDst->getHeight(compID);
-  const UInt uiWidth = pcYuvDst->getWidth(compID);
+  const UInt uiHeight = pcYuvDst->getHeight(ch);
+  const UInt uiWidth = pcYuvDst->getWidth(ch);
 
   for ( UInt y = uiHeight; y != 0; y-- )
   {
@@ -221,16 +221,16 @@ Void TComYuv::copyPartToComponent( const ComponentID compID, TComYuv* pcYuvDst, 
 
 Void TComYuv::copyPartToPartYuv   ( TComYuv* pcYuvDst, const UInt uiPartIdx, const UInt iWidth, const UInt iHeight ) const
 {
-  for(Int comp=0; comp<getNumberValidComponents(); comp++)
+  for(Int ch=0; ch<getNumberValidComponents(); ch++)
   {
-    copyPartToPartComponent   (ComponentID(comp), pcYuvDst, uiPartIdx, iWidth>>getComponentScaleX(ComponentID(comp)), iHeight>>getComponentScaleY(ComponentID(comp)) );
+    copyPartToPartComponent   (ComponentID(ch), pcYuvDst, uiPartIdx, iWidth>>getComponentScaleX(ComponentID(ch)), iHeight>>getComponentScaleY(ComponentID(ch)) );
   }
 }
 
-Void TComYuv::copyPartToPartComponent  ( const ComponentID compID, TComYuv* pcYuvDst, const UInt uiPartIdx, const UInt iWidthComponent, const UInt iHeightComponent ) const
+Void TComYuv::copyPartToPartComponent  ( const ComponentID ch, TComYuv* pcYuvDst, const UInt uiPartIdx, const UInt iWidthComponent, const UInt iHeightComponent ) const
 {
-  const Pel* pSrc =           getAddr(compID, uiPartIdx);
-        Pel* pDst = pcYuvDst->getAddr(compID, uiPartIdx);
+  const Pel* pSrc =           getAddr(ch, uiPartIdx);
+        Pel* pDst = pcYuvDst->getAddr(ch, uiPartIdx);
   if( pSrc == pDst )
   {
     //th not a good idea
@@ -238,8 +238,8 @@ Void TComYuv::copyPartToPartComponent  ( const ComponentID compID, TComYuv* pcYu
     return ;
   }
 
-  const UInt  iSrcStride = getStride(compID);
-  const UInt  iDstStride = pcYuvDst->getStride(compID);
+  const UInt  iSrcStride = getStride(ch);
+  const UInt  iDstStride = pcYuvDst->getStride(ch);
   for ( UInt y = iHeightComponent; y != 0; y-- )
   {
     ::memcpy( pDst, pSrc, iWidthComponent * sizeof(Pel) );
@@ -251,10 +251,10 @@ Void TComYuv::copyPartToPartComponent  ( const ComponentID compID, TComYuv* pcYu
 
 
 
-Void TComYuv::copyPartToPartComponentMxN  ( const ComponentID compID, TComYuv* pcYuvDst, const TComRectangle &rect) const
+Void TComYuv::copyPartToPartComponentMxN  ( const ComponentID ch, TComYuv* pcYuvDst, const TComRectangle &rect) const
 {
-  const Pel* pSrc =           getAddrPix( compID, rect.x0, rect.y0 );
-        Pel* pDst = pcYuvDst->getAddrPix( compID, rect.x0, rect.y0 );
+  const Pel* pSrc =           getAddrPix( ch, rect.x0, rect.y0 );
+        Pel* pDst = pcYuvDst->getAddrPix( ch, rect.x0, rect.y0 );
   if( pSrc == pDst )
   {
     //th not a good idea
@@ -262,8 +262,8 @@ Void TComYuv::copyPartToPartComponentMxN  ( const ComponentID compID, TComYuv* p
     return ;
   }
 
-  const UInt  iSrcStride = getStride(compID);
-  const UInt  iDstStride = pcYuvDst->getStride(compID);
+  const UInt  iSrcStride = getStride(ch);
+  const UInt  iDstStride = pcYuvDst->getStride(ch);
   const UInt uiHeightComponent=rect.height;
   const UInt uiWidthComponent=rect.width;
   for ( UInt y = uiHeightComponent; y != 0; y-- )
@@ -279,22 +279,22 @@ Void TComYuv::copyPartToPartComponentMxN  ( const ComponentID compID, TComYuv* p
 
 Void TComYuv::addClip( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const UInt uiTrUnitIdx, const UInt uiPartSize, const BitDepths &clipBitDepths )
 {
-  for(Int comp=0; comp<getNumberValidComponents(); comp++)
+  for(Int chan=0; chan<getNumberValidComponents(); chan++)
   {
-    const ComponentID compID=ComponentID(comp);
-    const Int uiPartWidth =uiPartSize>>getComponentScaleX(compID);
-    const Int uiPartHeight=uiPartSize>>getComponentScaleY(compID);
+    const ComponentID ch=ComponentID(chan);
+    const Int uiPartWidth =uiPartSize>>getComponentScaleX(ch);
+    const Int uiPartHeight=uiPartSize>>getComponentScaleY(ch);
 
-    const Pel* pSrc0 = pcYuvSrc0->getAddr(compID, uiTrUnitIdx, uiPartWidth );
-    const Pel* pSrc1 = pcYuvSrc1->getAddr(compID, uiTrUnitIdx, uiPartWidth );
-          Pel* pDst  = getAddr(compID, uiTrUnitIdx, uiPartWidth );
+    const Pel* pSrc0 = pcYuvSrc0->getAddr(ch, uiTrUnitIdx, uiPartWidth );
+    const Pel* pSrc1 = pcYuvSrc1->getAddr(ch, uiTrUnitIdx, uiPartWidth );
+          Pel* pDst  = getAddr(ch, uiTrUnitIdx, uiPartWidth );
 
-    const UInt iSrc0Stride = pcYuvSrc0->getStride(compID);
-    const UInt iSrc1Stride = pcYuvSrc1->getStride(compID);
-    const UInt iDstStride  = getStride(compID);
-    const Int clipbd = clipBitDepths.recon[toChannelType(compID)];
+    const UInt iSrc0Stride = pcYuvSrc0->getStride(ch);
+    const UInt iSrc1Stride = pcYuvSrc1->getStride(ch);
+    const UInt iDstStride  = getStride(ch);
+    const Int clipbd = clipBitDepths.recon[toChannelType(ch)];
 #if O0043_BEST_EFFORT_DECODING
-    const Int bitDepthDelta = clipBitDepths.stream[toChannelType(compID)] - clipbd;
+    const Int bitDepthDelta = clipBitDepths.stream[toChannelType(ch)] - clipbd;
 #endif
 
     for ( Int y = uiPartHeight-1; y >= 0; y-- )
@@ -319,19 +319,19 @@ Void TComYuv::addClip( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const
 
 Void TComYuv::subtract( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const UInt uiTrUnitIdx, const UInt uiPartSize )
 {
-  for(Int comp=0; comp<getNumberValidComponents(); comp++)
+  for(Int chan=0; chan<getNumberValidComponents(); chan++)
   {
-    const ComponentID compID=ComponentID(comp);
-    const Int uiPartWidth =uiPartSize>>getComponentScaleX(compID);
-    const Int uiPartHeight=uiPartSize>>getComponentScaleY(compID);
+    const ComponentID ch=ComponentID(chan);
+    const Int uiPartWidth =uiPartSize>>getComponentScaleX(ch);
+    const Int uiPartHeight=uiPartSize>>getComponentScaleY(ch);
 
-    const Pel* pSrc0 = pcYuvSrc0->getAddr( compID, uiTrUnitIdx, uiPartWidth );
-    const Pel* pSrc1 = pcYuvSrc1->getAddr( compID, uiTrUnitIdx, uiPartWidth );
-          Pel* pDst  = getAddr( compID, uiTrUnitIdx, uiPartWidth );
+    const Pel* pSrc0 = pcYuvSrc0->getAddr( ch, uiTrUnitIdx, uiPartWidth );
+    const Pel* pSrc1 = pcYuvSrc1->getAddr( ch, uiTrUnitIdx, uiPartWidth );
+          Pel* pDst  = getAddr( ch, uiTrUnitIdx, uiPartWidth );
 
-    const Int  iSrc0Stride = pcYuvSrc0->getStride(compID);
-    const Int  iSrc1Stride = pcYuvSrc1->getStride(compID);
-    const Int  iDstStride  = getStride(compID);
+    const Int  iSrc0Stride = pcYuvSrc0->getStride(ch);
+    const Int  iSrc1Stride = pcYuvSrc1->getStride(ch);
+    const Int  iDstStride  = getStride(ch);
 
     for (Int y = uiPartHeight-1; y >= 0; y-- )
     {
@@ -351,22 +351,22 @@ Void TComYuv::subtract( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, cons
 
 Void TComYuv::addAvg( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const UInt iPartUnitIdx, const UInt uiWidth, const UInt uiHeight, const BitDepths &clipBitDepths )
 {
-  for(Int comp=0; comp<getNumberValidComponents(); comp++)
+  for(Int chan=0; chan<getNumberValidComponents(); chan++)
   {
-    const ComponentID compID=ComponentID(comp);
-    const Pel* pSrc0  = pcYuvSrc0->getAddr( compID, iPartUnitIdx );
-    const Pel* pSrc1  = pcYuvSrc1->getAddr( compID, iPartUnitIdx );
-    Pel* pDst   = getAddr( compID, iPartUnitIdx );
+    const ComponentID ch=ComponentID(chan);
+    const Pel* pSrc0  = pcYuvSrc0->getAddr( ch, iPartUnitIdx );
+    const Pel* pSrc1  = pcYuvSrc1->getAddr( ch, iPartUnitIdx );
+    Pel* pDst   = getAddr( ch, iPartUnitIdx );
 
-    const UInt  iSrc0Stride = pcYuvSrc0->getStride(compID);
-    const UInt  iSrc1Stride = pcYuvSrc1->getStride(compID);
-    const UInt  iDstStride  = getStride(compID);
-    const Int   clipbd      = clipBitDepths.recon[toChannelType(compID)];
+    const UInt  iSrc0Stride = pcYuvSrc0->getStride(ch);
+    const UInt  iSrc1Stride = pcYuvSrc1->getStride(ch);
+    const UInt  iDstStride  = getStride(ch);
+    const Int   clipbd      = clipBitDepths.recon[toChannelType(ch)];
     const Int   shiftNum    = std::max<Int>(2, (IF_INTERNAL_PREC - clipbd)) + 1;
     const Int   offset      = ( 1 << ( shiftNum - 1 ) ) + 2 * IF_INTERNAL_OFFS;
 
-    const Int   iWidth      = uiWidth  >> getComponentScaleX(compID);
-    const Int   iHeight     = uiHeight >> getComponentScaleY(compID);
+    const Int   iWidth      = uiWidth  >> getComponentScaleX(ch);
+    const Int   iHeight     = uiHeight >> getComponentScaleY(ch);
 
     if (iWidth&1)
     {
@@ -406,49 +406,217 @@ Void TComYuv::addAvg( const TComYuv* pcYuvSrc0, const TComYuv* pcYuvSrc1, const 
   }
 }
 
-Void TComYuv::removeHighFreq( const TComYuv* pcYuvSrc,
-                              const UInt uiPartIdx,
-                              const UInt uiWidth,
-                              const UInt uiHeight,
-                              const Int bitDepths[MAX_NUM_CHANNEL_TYPE],
-                              const Bool bClipToBitDepths
-                              )
+Void TComYuv::removeHighFreq( const TComYuv* pcYuvSrc, const UInt uiPartIdx, const UInt uiWidth, UInt const uiHeight )
 {
-  for(Int comp=0; comp<getNumberValidComponents(); comp++)
+  for(Int chan=0; chan<getNumberValidComponents(); chan++)
   {
-    const ComponentID compID=ComponentID(comp);
-    const Pel* pSrc  = pcYuvSrc->getAddr(compID, uiPartIdx);
-    Pel* pDst  = getAddr(compID, uiPartIdx);
+    const ComponentID ch=ComponentID(chan);
+#if !DISABLING_CLIP_FOR_BIPREDME
+    const ChannelType chType=toChannelType(ch);
+#endif
 
-    const Int iSrcStride = pcYuvSrc->getStride(compID);
-    const Int iDstStride = getStride(compID);
-    const Int iWidth  = uiWidth >>getComponentScaleX(compID);
-    const Int iHeight = uiHeight>>getComponentScaleY(compID);
-    if (bClipToBitDepths)
+    const Pel* pSrc  = pcYuvSrc->getAddr(ch, uiPartIdx);
+    Pel* pDst  = getAddr(ch, uiPartIdx);
+
+    const Int iSrcStride = pcYuvSrc->getStride(ch);
+    const Int iDstStride = getStride(ch);
+    const Int iWidth  = uiWidth >>getComponentScaleX(ch);
+    const Int iHeight = uiHeight>>getComponentScaleY(ch);
+
+    for ( Int y = iHeight-1; y >= 0; y-- )
     {
-      const Int clipBd=bitDepths[toChannelType(compID)];
-      for ( Int y = iHeight-1; y >= 0; y-- )
+      for ( Int x = iWidth-1; x >= 0; x-- )
       {
-        for ( Int x = iWidth-1; x >= 0; x-- )
+#if DISABLING_CLIP_FOR_BIPREDME
+        pDst[x ] = (2 * pDst[x]) - pSrc[x];
+#else
+        pDst[x ] = Clip((2 * pDst[x]) - pSrc[x], chType);
+#endif
+      }
+      pSrc += iSrcStride;
+      pDst += iDstStride;
+    }
+  }
+}
+
+Void TComYuv::convert(const Bool extendedPrecision, const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, Bool bForwardConversion, const BitDepths& bitDepths, Bool bLossless, TComYuv* pcYuvNoCorrResi)
+{
+  const Int lumaBitDepth   = bitDepths.recon[CHANNEL_TYPE_LUMA];
+  const Int chromaBitDepth = bitDepths.recon[CHANNEL_TYPE_CHROMA];
+
+  Int CoeffMinY = -(1<<(extendedPrecision? std::max(15, lumaBitDepth+6):15));
+  Int CoeffMinC = -(1<<(extendedPrecision? std::max(15, chromaBitDepth+6):15));
+  Int CoeffMaxY =  (1<<(extendedPrecision? std::max(15, lumaBitDepth+6):15)) - 1;
+  Int CoeffMaxC =  (1<<(extendedPrecision? std::max(15, chromaBitDepth+6):15)) - 1;
+  assert(getChromaFormat() == CHROMA_444);
+  UInt uiPartSize = uiWidth;
+
+  Pel* pOrg0  = getAddrPix( (ComponentID)0, uiPixX, uiPixY );
+  Pel* pOrg1  = getAddrPix( (ComponentID)1, uiPixX, uiPixY );
+  Pel* pOrg2  = getAddrPix( (ComponentID)2, uiPixX, uiPixY );
+
+  Pel* pDst0  = getAddrPix( (ComponentID)0, uiPixX, uiPixY );
+  Pel* pDst1  = getAddrPix( (ComponentID)1, uiPixX, uiPixY );
+  Pel* pDst2  = getAddrPix( (ComponentID)2, uiPixX, uiPixY );
+
+  if(pcYuvNoCorrResi)
+  {
+    pDst0  = pcYuvNoCorrResi->getAddrPix( (ComponentID)0, uiPixX, uiPixY );
+    pDst1  = pcYuvNoCorrResi->getAddrPix( (ComponentID)1, uiPixX, uiPixY );
+    pDst2  = pcYuvNoCorrResi->getAddrPix( (ComponentID)2, uiPixX, uiPixY );
+  }
+  const Int  iStride0 = getStride((ComponentID)0);
+  const Int  iStride1 = getStride((ComponentID)1);
+  const Int  iStride2 = getStride((ComponentID)2);
+
+  if(bForwardConversion)
+  {
+    if(!bLossless)
+    {
+      Int maxBitDepth  = std::max(bitDepths.recon[CHANNEL_TYPE_LUMA], bitDepths.recon[CHANNEL_TYPE_CHROMA]);
+      Int iShiftLuma   = maxBitDepth - bitDepths.recon[CHANNEL_TYPE_LUMA];
+      Int iShiftChroma = maxBitDepth - bitDepths.recon[CHANNEL_TYPE_CHROMA];
+      Int iRoundLuma   = 1<<(1+iShiftLuma);
+      Int iRoundChroma = 1<<(1+iShiftChroma);
+      for(Int y=0; y<uiPartSize; y++) 
+      { 
+        for(Int x=0; x<uiPartSize; x++) 
         {
-          pDst[x ] = ClipBD((2 * pDst[x]) - pSrc[x], clipBd);
+          Int r, g, b;
+          r = pOrg2[x]<<iShiftChroma;
+          g = pOrg0[x]<<iShiftLuma;
+          b = pOrg1[x]<<iShiftChroma;
+
+          pDst0[x] = (g<<1) +r+b  ;
+          pDst1[x] = (g<<1) -r-b  ;
+          pDst2[x] = ((r-b) << 1) ;
+          pDst0[x] = (pDst0[x] + iRoundLuma)   >> (2+iShiftLuma);
+          pDst1[x] = (pDst1[x] + iRoundChroma) >> (2+iShiftChroma);
+          pDst2[x] = (pDst2[x] + iRoundChroma) >> (2+iShiftChroma);
         }
-        pSrc += iSrcStride;
-        pDst += iDstStride;
+        pOrg0 += iStride0;
+        pOrg1 += iStride1;
+        pOrg2 += iStride2;
+        pDst0 += iStride0;
+        pDst1 += iStride1;
+        pDst2 += iStride2;
       }
     }
     else
     {
-      for ( Int y = iHeight-1; y >= 0; y-- )
+      for(Int y=0; y<uiPartSize; y++)
       {
-        for ( Int x = iWidth-1; x >= 0; x-- )
+        for(Int x=0; x<uiPartSize; x++)
         {
-          pDst[x ] = (2 * pDst[x]) - pSrc[x];
+          Int r, g, b;
+          r = pOrg2[x];
+          g = pOrg0[x];
+          b = pOrg1[x];
+
+          Int Co = r-b;
+          Int t = b + (Co>>1);
+          Int Cg = g - t;
+          pDst0[x] = t + (Cg>>1);
+          pDst1[x] = Cg;
+          pDst2[x] = Co;
         }
-        pSrc += iSrcStride;
-        pDst += iDstStride;
+        pOrg0 += iStride0;
+        pOrg1 += iStride1;
+        pOrg2 += iStride2;
+        pDst0 += iStride0;
+        pDst1 += iStride1;
+        pDst2 += iStride2;
       }
     }
+  }
+  else
+  {
+    Int maxBitDepth  = std::max(bitDepths.recon[CHANNEL_TYPE_LUMA], bitDepths.recon[CHANNEL_TYPE_CHROMA]);
+    Int iShiftLuma   = maxBitDepth - bitDepths.recon[CHANNEL_TYPE_LUMA];
+    Int iShiftChroma = maxBitDepth - bitDepths.recon[CHANNEL_TYPE_CHROMA];
+    Int iRoundLuma   = iShiftLuma? (1<<(iShiftLuma-1)): 0;
+    Int iRoundChroma = iShiftChroma? (1<<(iShiftChroma-1)): 0;
+    for(Int y=0; y<uiPartSize; y++)
+    {
+      for(Int x=0; x<uiPartSize; x++)
+      {
+        Int y0, cg, co;
+        y0 = Clip3<Int>(CoeffMinY,CoeffMaxY, pOrg0[x]);
+        cg = Clip3<Int>(CoeffMinC,CoeffMaxC, pOrg1[x]);
+        co = Clip3<Int>(CoeffMinC,CoeffMaxC, pOrg2[x]);
+
+        if(!bLossless)
+        {
+          y0 <<= iShiftLuma;
+          cg <<= (iShiftChroma + 1);
+          co <<= (iShiftChroma + 1);
+        }
+        Int t = y0 - (cg>>1);
+        pDst0[x] = cg + t;
+        pDst1[x] = t - (co>>1);
+        pDst2[x] = co + pDst1[x];
+        if(!bLossless)
+        {
+          pDst0[x] = (pDst0[x] + iRoundLuma)   >> iShiftLuma;
+          pDst1[x] = (pDst1[x] + iRoundChroma) >> iShiftChroma;
+          pDst2[x] = (pDst2[x] + iRoundChroma) >> iShiftChroma;
+        }
+      }
+      pOrg0 += iStride0;
+      pOrg1 += iStride1;
+      pOrg2 += iStride2;
+      pDst0 += iStride0;
+      pDst1 += iStride1;
+      pDst2 += iStride2;
+    }
+  }
+}
+
+
+Void TComYuv::DefaultConvertPix(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, const BitDepths& bitDepths )
+{
+  assert(getChromaFormat() == CHROMA_444);
+  UInt uiPartSize = uiWidth;
+  Int  iMaxLuma   = (1<<bitDepths.recon[CHANNEL_TYPE_LUMA])   - 1;
+  Int  iMaxChroma = (1<<bitDepths.recon[CHANNEL_TYPE_CHROMA]) - 1;
+  Int  iChromaOffset = (1<<(bitDepths.recon[CHANNEL_TYPE_CHROMA]-1));
+  Int maxBitDepth  = std::max(bitDepths.recon[CHANNEL_TYPE_LUMA], bitDepths.recon[CHANNEL_TYPE_CHROMA]);
+  Int iShiftLuma   = maxBitDepth - bitDepths.recon[CHANNEL_TYPE_LUMA];
+  Int iShiftChroma = maxBitDepth - bitDepths.recon[CHANNEL_TYPE_CHROMA];
+  Int iRoundLuma   = 1<<(1+iShiftLuma);
+  Int iRoundChroma = 1<<(1+iShiftChroma);
+
+  Pel* pDst0  = getAddrPix( (ComponentID)0, uiPixX, uiPixY );
+  Pel* pDst1  = getAddrPix( (ComponentID)1, uiPixX, uiPixY );
+  Pel* pDst2  = getAddrPix( (ComponentID)2, uiPixX, uiPixY );
+
+  const Int  iStride0 = getStride((ComponentID)0);
+  const Int  iStride1 = getStride((ComponentID)1);
+  const Int  iStride2 = getStride((ComponentID)2);
+
+  for(Int y=0; y<uiPartSize; y++) 
+  {
+    for(Int x=0; x<uiPartSize; x++) 
+    {
+      Int r, g, b;
+      r = pDst2[x]<<iShiftChroma;
+      g = pDst0[x]<<iShiftLuma;
+      b = pDst1[x]<<iShiftChroma;
+
+      pDst0[x] = ((g<<1)+r+b + iRoundLuma)>>(2+iShiftLuma);
+      pDst1[x] = ((g<<1)-r-b + iRoundChroma)>>(2+iShiftChroma);
+      pDst2[x] = (((r-b)<<1)  + iRoundChroma)>>(2+iShiftChroma);
+
+      pDst1[x] += iChromaOffset;
+      pDst2[x] += iChromaOffset;
+      pDst0[x] = Clip3( 0, iMaxLuma,   Int(pDst0[x]) );
+      pDst1[x] = Clip3( 0, iMaxChroma, Int(pDst1[x]) );
+      pDst2[x] = Clip3( 0, iMaxChroma, Int(pDst2[x]) );
+    }
+
+    pDst0 += iStride0;
+    pDst1 += iStride1;
+    pDst2 += iStride2; 
   }
 }
 

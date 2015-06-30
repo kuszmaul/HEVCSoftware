@@ -225,7 +225,7 @@ Void TComWeightPrediction::getWpScaling(       TComDataCU *const pcCU,
   }
 
   const UInt numValidComponent                    = pcCU->getPic()->getNumberValidComponents();
-  const Bool bUseHighPrecisionPredictionWeighting = pcSlice->getSPS()->getSpsRangeExtension().getHighPrecisionOffsetsEnabledFlag();
+  const Bool bUseHighPrecisionPredictionWeighting = pcSlice->getSPS()->getUseHighPrecisionPredictionWeighting();
 
   if ( bBiDir )
   { // Bi-Dir case

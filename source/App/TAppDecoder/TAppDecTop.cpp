@@ -137,12 +137,13 @@ Void TAppDecTop::decode()
 #endif
     AnnexBStats stats = AnnexBStats();
 
+    vector<uint8_t> nalUnit;
     InputNALUnit nalu;
-    byteStreamNALUnit(bytestream, nalu.getBitstream().getFifo(), stats);
+    byteStreamNALUnit(bytestream, nalUnit, stats);
 
     // call actual decoding function
     Bool bNewPicture = false;
-    if (nalu.getBitstream().getFifo().empty())
+    if (nalUnit.empty())
     {
       /* this can happen if the following occur:
        *  - empty input file
@@ -153,7 +154,7 @@ Void TAppDecTop::decode()
     }
     else
     {
-      read(nalu);
+      read(nalu, nalUnit);
       if( (m_iMaxTemporalLayer >= 0 && nalu.m_temporalId > m_iMaxTemporalLayer) || !isNaluWithinTargetDecLayerIdSet(&nalu)  )
       {
         bNewPicture = false;
@@ -293,6 +294,7 @@ Void TAppDecTop::xInitDecLib()
 
 /** \param pcListPic list of pictures to be written to file
     \param tId       temporal sub-layer ID
+    \todo            DYN_REF_FREE should be revised
  */
 Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
 {
@@ -395,17 +397,33 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
         // erase non-referenced picture in the reference picture list after display
         if ( !pcPicTop->getSlice(0)->isReferenced() && pcPicTop->getReconMark() == true )
         {
+#if !DYN_REF_FREE
           pcPicTop->setReconMark(false);
 
           // mark it should be extended later
           pcPicTop->getPicYuvRec()->setBorderExtension( false );
+
+#else
+          pcPicTop->destroy();
+          pcListPic->erase( iterPic );
+          iterPic = pcListPic->begin(); // to the beginning, non-efficient way, have to be revised!
+          continue;
+#endif
         }
         if ( !pcPicBottom->getSlice(0)->isReferenced() && pcPicBottom->getReconMark() == true )
         {
+#if !DYN_REF_FREE
           pcPicBottom->setReconMark(false);
 
           // mark it should be extended later
           pcPicBottom->getPicYuvRec()->setBorderExtension( false );
+
+#else
+          pcPicBottom->destroy();
+          pcListPic->erase( iterPic );
+          iterPic = pcListPic->begin(); // to the beginning, non-efficient way, have to be revised!
+          continue;
+#endif
         }
         pcPicTop->setOutputMark(false);
         pcPicBottom->setOutputMark(false);
@@ -440,8 +458,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
                                          conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
                                          conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
                                          conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
-                                         conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset(),
-                                         NUM_CHROMA_FORMAT, m_bClipOutputVideoToRec709Range  );
+                                         conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset() );
         }
 
         // update POC of display order
@@ -450,10 +467,18 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
         // erase non-referenced picture in the reference picture list after display
         if ( !pcPic->getSlice(0)->isReferenced() && pcPic->getReconMark() == true )
         {
+#if !DYN_REF_FREE
           pcPic->setReconMark(false);
 
           // mark it should be extended later
           pcPic->getPicYuvRec()->setBorderExtension( false );
+
+#else
+          pcPic->destroy();
+          pcListPic->erase( iterPic );
+          iterPic = pcListPic->begin(); // to the beginning, non-efficient way, have to be revised!
+          continue;
+#endif
         }
         pcPic->setOutputMark(false);
       }
@@ -464,6 +489,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
 }
 
 /** \param pcListPic list of pictures to be written to file
+    \todo            DYN_REF_FREE should be revised
  */
 Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
 {
@@ -509,27 +535,45 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
         // erase non-referenced picture in the reference picture list after display
         if ( !pcPicTop->getSlice(0)->isReferenced() && pcPicTop->getReconMark() == true )
         {
+#if !DYN_REF_FREE
           pcPicTop->setReconMark(false);
 
           // mark it should be extended later
           pcPicTop->getPicYuvRec()->setBorderExtension( false );
+
+#else
+          pcPicTop->destroy();
+          pcListPic->erase( iterPic );
+          iterPic = pcListPic->begin(); // to the beginning, non-efficient way, have to be revised!
+          continue;
+#endif
         }
         if ( !pcPicBottom->getSlice(0)->isReferenced() && pcPicBottom->getReconMark() == true )
         {
+#if !DYN_REF_FREE
           pcPicBottom->setReconMark(false);
 
           // mark it should be extended later
           pcPicBottom->getPicYuvRec()->setBorderExtension( false );
+
+#else
+          pcPicBottom->destroy();
+          pcListPic->erase( iterPic );
+          iterPic = pcListPic->begin(); // to the beginning, non-efficient way, have to be revised!
+          continue;
+#endif
         }
         pcPicTop->setOutputMark(false);
         pcPicBottom->setOutputMark(false);
 
+#if !DYN_REF_FREE
         if(pcPicTop)
         {
           pcPicTop->destroy();
           delete pcPicTop;
           pcPicTop = NULL;
         }
+#endif
       }
     }
     if(pcPicBottom)
@@ -558,8 +602,7 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
                                          conf.getWindowLeftOffset() + defDisp.getWindowLeftOffset(),
                                          conf.getWindowRightOffset() + defDisp.getWindowRightOffset(),
                                          conf.getWindowTopOffset() + defDisp.getWindowTopOffset(),
-                                         conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset(),
-                                         NUM_CHROMA_FORMAT, m_bClipOutputVideoToRec709Range );
+                                         conf.getWindowBottomOffset() + defDisp.getWindowBottomOffset() );
         }
 
         // update POC of display order
@@ -568,19 +611,29 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
         // erase non-referenced picture in the reference picture list after display
         if ( !pcPic->getSlice(0)->isReferenced() && pcPic->getReconMark() == true )
         {
+  #if !DYN_REF_FREE
           pcPic->setReconMark(false);
 
           // mark it should be extended later
           pcPic->getPicYuvRec()->setBorderExtension( false );
+
+  #else
+          pcPic->destroy();
+          pcListPic->erase( iterPic );
+          iterPic = pcListPic->begin(); // to the beginning, non-efficient way, have to be revised!
+          continue;
+  #endif
         }
         pcPic->setOutputMark(false);
       }
+  #if !DYN_REF_FREE
       if(pcPic != NULL)
       {
         pcPic->destroy();
         delete pcPic;
         pcPic = NULL;
       }
+  #endif
       iterPic++;
     }
   }

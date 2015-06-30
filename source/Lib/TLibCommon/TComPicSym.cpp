@@ -64,13 +64,13 @@ TComPicSym::TComPicSym()
 ,m_puiTileIdxMap(NULL)
 ,m_ctuRsToTsAddrMap(NULL)
 ,m_saoBlkParams(NULL)
-#if ADAPTIVE_QP_SELECTION
 ,m_pParentARLBuffer(NULL)
-#endif
 {}
 
 
-Void TComPicSym::create  ( const TComSPS &sps, const TComPPS &pps, UInt uiMaxDepth )
+Void TComPicSym::create  ( const TComSPS &sps, const TComPPS &pps, UInt uiMaxDepth
+  , UInt uiPLTMaxSize, UInt uiPLTMaxPredSize
+  )
 {
   UInt i;
   m_sps = sps;
@@ -111,6 +111,7 @@ Void TComPicSym::create  ( const TComSPS &sps, const TComPPS &pps, UInt uiMaxDep
   {
     m_pictureCtuArray[i] = new TComDataCU;
     m_pictureCtuArray[i]->create( chromaFormatIDC, m_numPartitionsInCtu, uiMaxCuWidth, uiMaxCuHeight, false, uiMaxCuWidth >> m_uhTotalDepth
+      , uiPLTMaxSize, uiPLTMaxPredSize
 #if ADAPTIVE_QP_SELECTION
       , m_pParentARLBuffer
 #endif
@@ -162,10 +163,8 @@ Void TComPicSym::destroy()
     delete[] m_saoBlkParams; m_saoBlkParams = NULL;
   }
 
-#if ADAPTIVE_QP_SELECTION
   delete [] m_pParentARLBuffer;
   m_pParentARLBuffer = NULL;
-#endif
 }
 
 Void TComPicSym::allocateNewSlice()
@@ -254,7 +253,7 @@ Void TComPicSym::xInitTiles()
     }
   }
 
-  // Tile size check
+#if TILE_SIZE_CHECK
   Int minWidth  = 1;
   Int minHeight = 1;
   const Int profileIdc = m_sps.getPTL()->getGeneralPTL()->getProfileIdc();
@@ -275,6 +274,7 @@ Void TComPicSym::xInitTiles()
       assert (m_tileParameters[tileIdx].getTileHeightInCtus() >= minHeight);
     }
   }
+#endif
 
   //initialize each tile of the current picture
   for( Int row=0; row < numRows; row++ )

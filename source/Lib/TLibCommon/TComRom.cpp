@@ -50,39 +50,6 @@
 //! \ingroup TLibCommon
 //! \{
 
-const Char* nalUnitTypeToString(NalUnitType type)
-{
-  switch (type)
-  {
-  case NAL_UNIT_CODED_SLICE_TRAIL_R:    return "TRAIL_R";
-  case NAL_UNIT_CODED_SLICE_TRAIL_N:    return "TRAIL_N";
-  case NAL_UNIT_CODED_SLICE_TSA_R:      return "TSA_R";
-  case NAL_UNIT_CODED_SLICE_TSA_N:      return "TSA_N";
-  case NAL_UNIT_CODED_SLICE_STSA_R:     return "STSA_R";
-  case NAL_UNIT_CODED_SLICE_STSA_N:     return "STSA_N";
-  case NAL_UNIT_CODED_SLICE_BLA_W_LP:   return "BLA_W_LP";
-  case NAL_UNIT_CODED_SLICE_BLA_W_RADL: return "BLA_W_RADL";
-  case NAL_UNIT_CODED_SLICE_BLA_N_LP:   return "BLA_N_LP";
-  case NAL_UNIT_CODED_SLICE_IDR_W_RADL: return "IDR_W_RADL";
-  case NAL_UNIT_CODED_SLICE_IDR_N_LP:   return "IDR_N_LP";
-  case NAL_UNIT_CODED_SLICE_CRA:        return "CRA";
-  case NAL_UNIT_CODED_SLICE_RADL_R:     return "RADL_R";
-  case NAL_UNIT_CODED_SLICE_RADL_N:     return "RADL_N";
-  case NAL_UNIT_CODED_SLICE_RASL_R:     return "RASL_R";
-  case NAL_UNIT_CODED_SLICE_RASL_N:     return "RASL_N";
-  case NAL_UNIT_VPS:                    return "VPS";
-  case NAL_UNIT_SPS:                    return "SPS";
-  case NAL_UNIT_PPS:                    return "PPS";
-  case NAL_UNIT_ACCESS_UNIT_DELIMITER:  return "AUD";
-  case NAL_UNIT_EOS:                    return "EOS";
-  case NAL_UNIT_EOB:                    return "EOB";
-  case NAL_UNIT_FILLER_DATA:            return "FILLER";
-  case NAL_UNIT_PREFIX_SEI:             return "Prefix SEI";
-  case NAL_UNIT_SUFFIX_SEI:             return "Suffix SEI";
-  default:                              return "UNK";
-  }
-}
-
 class ScanGenerator
 {
 private:
@@ -162,6 +129,31 @@ public:
         break;
 
       //------------------------------------------------
+      case SCAN_TRAV:
+        {
+          if (m_line%2==0)
+          {
+            if (m_column == (m_blockWidth - 1))
+            {
+              m_line++;
+              m_column = m_blockWidth - 1;
+            }
+            else m_column++;
+          }
+          else
+          {
+            if (m_column == 0)
+            {
+              m_line++;
+              m_column = 0;
+            }
+            else m_column--;
+          }
+        }
+        break;
+
+      //------------------------------------------------
+
 
       default:
         {
@@ -174,6 +166,31 @@ public:
     return rtn;
   }
 };
+
+UChar g_ucMsbP1Idx[256];
+static Void g_initMsbP1IdxLut()
+{
+  g_ucMsbP1Idx[0] = 0; g_ucMsbP1Idx[1] = 1;
+  UInt val = 2;
+  for (UInt idx = 2; idx <= 8; idx++)
+  {
+    for (Int i = val - 1; i >= 0; i--)
+    {
+      g_ucMsbP1Idx[val++] = idx;
+    }
+  }
+}
+
+UChar g_getMsbP1Idx(UInt uiVal)
+{
+  UChar idx = 0; 
+  while(uiVal > 255)
+  {
+    uiVal >>= 8;
+    idx += 8;
+  }
+  return idx+g_ucMsbP1Idx[uiVal];
+}
 
 // initialize ROM variables
 Void initROM()
@@ -190,9 +207,9 @@ Void initROM()
   }
 
   // initialise scan orders
-  for(UInt log2BlockHeight = 0; log2BlockHeight < MAX_CU_DEPTH; log2BlockHeight++)
+  for(UInt log2BlockHeight = 0; log2BlockHeight < MAX_CU_DEPTH + 1; log2BlockHeight++)
   {
-    for(UInt log2BlockWidth = 0; log2BlockWidth < MAX_CU_DEPTH; log2BlockWidth++)
+    for(UInt log2BlockWidth = 0; log2BlockWidth < MAX_CU_DEPTH + 1; log2BlockWidth++)
     {
       const UInt blockWidth  = 1 << log2BlockWidth;
       const UInt blockHeight = 1 << log2BlockHeight;
@@ -258,6 +275,7 @@ Void initROM()
       //--------------------------------------------------------------------------------------------------
     }
   }
+  g_initMsbP1IdxLut();
 }
 
 Void destroyROM()
@@ -266,9 +284,9 @@ Void destroyROM()
   {
     for (UInt scanOrderIndex = 0; scanOrderIndex < SCAN_NUMBER_OF_TYPES; scanOrderIndex++)
     {
-      for (UInt log2BlockWidth = 0; log2BlockWidth < MAX_CU_DEPTH; log2BlockWidth++)
+      for (UInt log2BlockWidth = 0; log2BlockWidth < MAX_CU_DEPTH + 1; log2BlockWidth++)
       {
-        for (UInt log2BlockHeight = 0; log2BlockHeight < MAX_CU_DEPTH; log2BlockHeight++)
+        for (UInt log2BlockHeight = 0; log2BlockHeight < MAX_CU_DEPTH + 1; log2BlockHeight++)
         {
           delete [] g_scanOrder[groupTypeIndex][scanOrderIndex][log2BlockWidth][log2BlockHeight];
         }
@@ -281,10 +299,10 @@ Void destroyROM()
 // Data structure related table & variable
 // ====================================================================================================================
 
-UInt g_auiZscanToRaster [ MAX_NUM_PART_IDXS_IN_CTU_WIDTH*MAX_NUM_PART_IDXS_IN_CTU_WIDTH ] = { 0, };
-UInt g_auiRasterToZscan [ MAX_NUM_PART_IDXS_IN_CTU_WIDTH*MAX_NUM_PART_IDXS_IN_CTU_WIDTH ] = { 0, };
-UInt g_auiRasterToPelX  [ MAX_NUM_PART_IDXS_IN_CTU_WIDTH*MAX_NUM_PART_IDXS_IN_CTU_WIDTH ] = { 0, };
-UInt g_auiRasterToPelY  [ MAX_NUM_PART_IDXS_IN_CTU_WIDTH*MAX_NUM_PART_IDXS_IN_CTU_WIDTH ] = { 0, };
+UInt g_auiZscanToRaster [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
+UInt g_auiRasterToZscan [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
+UInt g_auiRasterToPelX  [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
+UInt g_auiRasterToPelY  [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
 
 const UInt g_auiPUOffset[NUMBER_OF_PART_SIZES] = { 0, 8, 4, 4, 2, 10, 1, 5};
 
@@ -539,10 +557,11 @@ const UChar g_aucChromaScale[NUM_CHROMA_FORMAT][chromaQPMappingTableSize]=
 };
 
 // ====================================================================================================================
-// Intra prediction
+// ADI
 // ====================================================================================================================
 
-const UChar g_aucIntraModeNumFast_UseMPM[MAX_CU_DEPTH] =
+#if FAST_UDI_USE_MPM
+const UChar g_aucIntraModeNumFast[MAX_CU_DEPTH] =
 {
   3,  //   2x2
   8,  //   4x4
@@ -551,7 +570,8 @@ const UChar g_aucIntraModeNumFast_UseMPM[MAX_CU_DEPTH] =
   3,  //  32x32
   3   //  64x64
 };
-const UChar g_aucIntraModeNumFast_NotUseMPM[MAX_CU_DEPTH] =
+#else // FAST_UDI_USE_MPM
+const UChar g_aucIntraModeNumFast[MAX_CU_DEPTH] =
 {
   3,  //   2x2
   9,  //   4x4
@@ -560,12 +580,25 @@ const UChar g_aucIntraModeNumFast_NotUseMPM[MAX_CU_DEPTH] =
   4,  //  32x32   33
   5   //  64x64   33
 };
+#endif // FAST_UDI_USE_MPM
 
 const UChar g_chroma422IntraAngleMappingTable[NUM_INTRA_MODE] =
   //0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, DM
   { 0, 1, 2, 2, 2, 2, 3, 5, 7, 8, 10, 12, 13, 15, 17, 18, 19, 20, 21, 22, 23, 23, 24, 24, 25, 25, 26, 27, 27, 28, 28, 29, 29, 30, 31, DM_CHROMA_IDX};
 
 // ====================================================================================================================
+UChar g_uhPLTQuant[52] = { 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 7, 7, 8, 9, 9,10,11, 12, 13, 14, 15, 16, 17, 19, 21, 22, 24, 23, 25, 26, 28, 29, 31, 32, 34, 36, 37, 39, 41, 42, 45 };
+UChar g_uhPLTTBC[257] = { 0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+                          4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+                          5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+                          6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+                          6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 7,
+                          7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                          7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                          7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                          7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                          7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 8};
+
 // Misc.
 // ====================================================================================================================
 
@@ -584,7 +617,7 @@ UInt64 g_nSymbolCounter = 0;
 // ====================================================================================================================
 
 // scanning order table
-UInt* g_scanOrder[SCAN_NUMBER_OF_GROUP_TYPES][SCAN_NUMBER_OF_TYPES][ MAX_CU_DEPTH ][ MAX_CU_DEPTH ];
+UInt* g_scanOrder[SCAN_NUMBER_OF_GROUP_TYPES][SCAN_NUMBER_OF_TYPES][ MAX_CU_DEPTH + 1 ][ MAX_CU_DEPTH + 1 ];
 
 const UInt ctxIndMap4x4[4*4] =
 {
@@ -692,4 +725,6 @@ const Int g_quantInterDefault8x8[8*8] =
 const UInt g_scalingListSize   [SCALING_LIST_SIZE_NUM] = {16,64,256,1024};
 const UInt g_scalingListSizeX  [SCALING_LIST_SIZE_NUM] = { 4, 8, 16,  32};
 
+UChar g_ucRunTopLut[5] =  {0, 1, 1, 2, 2};
+UChar g_ucRunLeftLut[5] = {0, 3, 3, 4, 4};
 //! \}
