@@ -160,7 +160,7 @@ Void TDecTop::xGetNewPicBuffer ( const TComSPS &sps, const TComPPS &pps, TComPic
   {
     rpcPic = new TComPic();
 
-    rpcPic->create ( sps, pps, true);
+    rpcPic->create ( sps, pps, sps.getSpsScreenExtension().getPLTMaxSize(), sps.getSpsScreenExtension().getPLTMaxPredSize(), true);
 
     m_cListPic.pushBack( rpcPic );
 
@@ -197,7 +197,7 @@ Void TDecTop::xGetNewPicBuffer ( const TComSPS &sps, const TComPPS &pps, TComPic
     m_cListPic.pushBack( rpcPic );
   }
   rpcPic->destroy();
-  rpcPic->create ( sps, pps, true);
+  rpcPic->create ( sps, pps, sps.getSpsScreenExtension().getPLTMaxSize(), sps.getSpsScreenExtension().getPLTMaxPredSize(), true);
 }
 
 Void TDecTop::executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic)
@@ -366,7 +366,7 @@ Void TDecTop::xActivateParameterSets()
     m_SEIs.clear();
 
     // Recursive structure
-    m_cCuDecoder.create ( sps->getMaxTotalCUDepth(), sps->getMaxCUWidth(), sps->getMaxCUHeight(), sps->getChromaFormatIdc() );
+    m_cCuDecoder.create ( sps->getMaxTotalCUDepth(), sps->getMaxCUWidth(), sps->getMaxCUHeight(), sps->getChromaFormatIdc(), sps->getSpsScreenExtension().getPLTMaxSize(), sps->getSpsScreenExtension().getPLTMaxPredSize() );
     m_cCuDecoder.init   ( &m_cEntropyDecoder, &m_cTrQuant, &m_cPrediction );
     m_cTrQuant.init     ( sps->getMaxTrSize() );
 
@@ -612,6 +612,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   if (!pcSlice->getDependentSliceSegmentFlag())
   {
     pcSlice->checkCRA(pcSlice->getRPS(), m_pocCRA, m_associatedIRAPType, m_cListPic );
+    pcSlice->setPic( m_pcPic );
     // Set reference list
     pcSlice->setRefPicList( m_cListPic, true );
 
@@ -693,6 +694,11 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 
   m_bFirstSliceInPicture = false;
   m_uiSliceIdx++;
+
+  if ( pcSlice->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
+  {
+    pcSlice->getPic()->setIsLongTerm( false );
+  }
 
   return false;
 }

@@ -774,6 +774,47 @@ public:
   Void setCabacBypassAlignmentEnabledFlag(const Bool value)                            { m_cabacBypassAlignmentEnabledFlag = value;     }
 };
 
+/// SPS SCC class
+class TComSPSSCC
+{
+private:
+  Bool             m_useIntraBlockCopy;
+  Bool             m_usePaletteMode;
+  UInt             m_uiPLTMaxSize;
+  UInt             m_uiPLTMaxPredSize;
+  Int              m_motionVectorResolutionControlIdc;
+  Bool             m_disableIntraBoundaryFilter;
+
+public:
+  TComSPSSCC();
+  Bool settingsDifferFromDefaults() const
+  {
+    return getUseIntraBlockCopy()
+        || getUsePLTMode()
+        || getMotionVectorResolutionControlIdc() != 0
+        || getDisableIntraBoundaryFilter();
+  }
+
+  Bool getUseIntraBlockCopy()  const                  { return m_useIntraBlockCopy;  }
+  Void setUseIntraBlockCopy(Bool value)               { m_useIntraBlockCopy = value; }
+
+  Bool getUsePLTMode() const                          { return m_usePaletteMode;                   }
+  Void setUsePLTMode(const Bool value)                { m_usePaletteMode = value;                  }
+
+  UInt getPLTMaxSize() const                          { return m_uiPLTMaxSize;                     }
+  Void setPLTMaxSize(const UInt value)                { m_uiPLTMaxSize = value;                    }
+
+  UInt getPLTMaxPredSize() const                      { return m_uiPLTMaxPredSize;                 }
+  Void setPLTMaxPredSize(const UInt value)            { m_uiPLTMaxPredSize = value;                }
+
+  Int  getMotionVectorResolutionControlIdc() const    { return m_motionVectorResolutionControlIdc; }
+  Void setMotionVectorResolutionControlIdc( Int idc ) { m_motionVectorResolutionControlIdc = idc;  }
+
+  Void setDisableIntraBoundaryFilter( Bool b)         { m_disableIntraBoundaryFilter = b;          }
+  Bool getDisableIntraBoundaryFilter() const          { return m_disableIntraBoundaryFilter;       }
+
+};
+
 /// SPS class
 class TComSPS
 {
@@ -840,6 +881,7 @@ private:
   TComVUI          m_vuiParameters;
 
   TComSPSRExt      m_spsRangeExtension;
+  TComSPSSCC       m_spsScreenExtension;
 
   static const Int m_winUnitX[NUM_CHROMA_FORMAT];
   static const Int m_winUnitY[NUM_CHROMA_FORMAT];
@@ -980,6 +1022,9 @@ public:
   const TComSPSRExt&     getSpsRangeExtension() const                                                    { return m_spsRangeExtension;                                          }
   TComSPSRExt&           getSpsRangeExtension()                                                          { return m_spsRangeExtension;                                          }
 
+  const TComSPSSCC&      getSpsScreenExtension() const                                                   { return m_spsScreenExtension;                                         }
+  TComSPSSCC&            getSpsScreenExtension()                                                         { return m_spsScreenExtension;                                         }
+
   // Sequence parameter set range extension syntax
   // WAS: getUseResidualRotation and setUseResidualRotation
   // Now getSpsRangeExtension().getTransformSkipRotationEnabledFlag and getSpsRangeExtension().setTransformSkipRotationEnabledFlag
@@ -1096,6 +1141,41 @@ public:
 
 };
 
+class TComPPSSCC
+{
+private:
+  Bool             m_useColourTrans;
+  Bool             m_useSliceACTOffset;
+  Int              m_actYQpOffset;
+  Int              m_actCbQpOffset;
+  Int              m_actCrQpOffset;
+  UInt             m_uiNumPLTPred;
+  Pel              m_aiPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE];
+  Int              m_palettePredictorBitDepth[MAX_NUM_CHANNEL_TYPE];
+
+public:
+  TComPPSSCC();
+
+  Bool settingsDifferFromDefaults() const
+  {
+    return getUseColourTrans()
+        || getNumPLTPred() > 0;
+  }
+
+  Bool     getUseColourTrans()                 const { return m_useColourTrans;}
+  Void     setUseColourTrans(const Bool value)       { m_useColourTrans= value;}
+  
+  Bool     getUseSliceACTOffset()                 const { return m_useSliceACTOffset;}
+  Void     setUseSliceACTOffset(const Bool value)       { m_useSliceACTOffset= value;}
+  Void     setActQpOffset(ComponentID compID, Int i ) { if (compID==COMPONENT_Y) m_actYQpOffset = i; else if (compID==COMPONENT_Cb) m_actCbQpOffset = i; else if (compID==COMPONENT_Cr) m_actCrQpOffset= i; else assert(0); }
+  Int      getActQpOffset(ComponentID compID) const { return (compID==COMPONENT_Y) ? m_actYQpOffset : (compID==COMPONENT_Cb ? m_actCbQpOffset : m_actCrQpOffset ); }
+
+  UInt     getNumPLTPred()                     const { return m_uiNumPLTPred; }
+  Void     setNumPLTPred(UInt num)                   { m_uiNumPLTPred = num; }
+  Pel*     getPLTPred(UInt ch)                 const { return const_cast<Pel*>(m_aiPLT[ch]); }
+  Int      getPalettePredictorBitDepth(ChannelType type) const   { return m_palettePredictorBitDepth[type]; }
+  Void     setPalettePredictorBitDepth(ChannelType type, Int u ) { m_palettePredictorBitDepth[type] = u;    }
+};
 
 /// PPS class
 class TComPPS
@@ -1149,8 +1229,9 @@ private:
   Bool             m_listsModificationPresentFlag;
   UInt             m_log2ParallelMergeLevelMinus2;
   Int              m_numExtraSliceHeaderBits;
-
+ 
   TComPPSRExt      m_ppsRangeExtension;
+  TComPPSSCC       m_ppsScreenExtension;
 
 public:
                          TComPPS();
@@ -1264,6 +1345,10 @@ public:
   const TComPPSRExt&     getPpsRangeExtension() const                                     { return m_ppsRangeExtension;                   }
   TComPPSRExt&           getPpsRangeExtension()                                           { return m_ppsRangeExtension;                   }
 
+  const TComPPSSCC&      getPpsScreenExtension() const                                    { return m_ppsScreenExtension;                  }
+  TComPPSSCC&            getPpsScreenExtension()                                          { return m_ppsScreenExtension;                  }
+
+
   // WAS: getTransformSkipLog2MaxSize and setTransformSkipLog2MaxSize
   // Now: getPpsRangeExtension().getLog2MaxTransformSkipBlockSize and getPpsRangeExtension().setLog2MaxTransformSkipBlockSize
 
@@ -1323,9 +1408,9 @@ private:
   Int                        m_iLastIDR;
   Int                        m_iAssociatedIRAP;
   NalUnitType                m_iAssociatedIRAPType;
-  const TComReferencePictureSet* m_pRPS;             //< pointer to RPS, either in the SPS or the local RPS in the same slice header
-  TComReferencePictureSet    m_localRPS;             //< RPS when present in slice header
-  Int                        m_rpsIdx;               //< index of used RPS in the SPS or -1 for local RPS in the slice header
+  TComReferencePictureSet*   m_pcRPS;
+  TComReferencePictureSet    m_LocalRPS;
+  Int                        m_iBDidx;
   TComRefPicListModification m_RefPicListModification;
   NalUnitType                m_eNalUnitType;         ///< Nal unit type for the slice
   SliceType                  m_eSliceType;
@@ -1347,6 +1432,7 @@ private:
   //  Data
   Int                        m_iSliceQpDelta;
   Int                        m_iSliceChromaQpDelta[MAX_NUM_COMPONENT];
+  Int                        m_iSliceACTQpDelta[MAX_NUM_COMPONENT];
   TComPic*                   m_apcRefPicList [NUM_REF_PIC_LIST_01][MAX_NUM_REF+1];
   Int                        m_aiRefPOCList  [NUM_REF_PIC_LIST_01][MAX_NUM_REF+1];
   Bool                       m_bIsUsedAsLongTerm[NUM_REF_PIC_LIST_01][MAX_NUM_REF+1];
@@ -1404,6 +1490,9 @@ private:
   Bool                       m_LFCrossSliceBoundaryFlag;
 
   Bool                       m_enableTMVPFlag;
+  Bool                       m_useIntegerMv;
+
+  TComPic*                   m_pcLastEncPic;
 
   SliceType                  m_encCABACTableIdx;           // Used to transmit table selection across slices.
 
@@ -1426,12 +1515,12 @@ public:
   Bool                        getPicOutputFlag() const                               { return m_PicOutputFlag;                                       }
   Void                        setSaoEnabledFlag(ChannelType chType, Bool s)          {m_saoEnabledFlag[chType] =s;                                   }
   Bool                        getSaoEnabledFlag(ChannelType chType) const            { return m_saoEnabledFlag[chType];                              }
-  Void                        setRPS( const TComReferencePictureSet *pcRPS )         { m_pRPS = pcRPS;                                               }
-  const TComReferencePictureSet* getRPS()                                            { return m_pRPS;                                                }
-  TComReferencePictureSet*    getLocalRPS()                                          { return &m_localRPS;                                           }
+  Void                        setRPS( TComReferencePictureSet *pcRPS )               { m_pcRPS = pcRPS;                                              }
+  TComReferencePictureSet*    getRPS()                                               { return m_pcRPS;                                               }
+  TComReferencePictureSet*    getLocalRPS()                                          { return &m_LocalRPS;                                           }
 
-  Void                        setRPSidx( Int rpsIdx )                                { m_rpsIdx = rpsIdx;                                            }
-  Int                         getRPSidx() const                                      { return m_rpsIdx;                                              }
+  Void                        setRPSidx( Int iBDidx )                                { m_iBDidx = iBDidx;                                            }
+  Int                         getRPSidx() const                                      { return m_iBDidx;                                              }
   TComRefPicListModification* getRefPicListModification()                            { return &m_RefPicListModification;                             }
   Void                        setLastIDR(Int iIDRPOC)                                { m_iLastIDR = iIDRPOC;                                         }
   Int                         getLastIDR() const                                     { return m_iLastIDR;                                            }
@@ -1449,6 +1538,7 @@ public:
 #endif
   Int                         getSliceQpDelta() const                                { return m_iSliceQpDelta;                                       }
   Int                         getSliceChromaQpDelta(ComponentID compID) const        { return isLuma(compID) ? 0 : m_iSliceChromaQpDelta[compID];    }
+  Int                         getSliceActQpDelta(ComponentID compID)    const        { return  m_iSliceACTQpDelta[compID];                           }
   Bool                        getUseChromaQpAdj() const                              { return m_ChromaQpAdjEnabled;                                  }
   Bool                        getDeblockingFilterDisable() const                     { return m_deblockingFilterDisable;                             }
   Bool                        getDeblockingFilterOverrideFlag() const                { return m_deblockingFilterOverrideFlag;                        }
@@ -1486,6 +1576,7 @@ public:
   Void                        setSliceQpBase( Int i )                                { m_iSliceQpBase      = i;                                      }
 #endif
   Void                        setSliceQpDelta( Int i )                               { m_iSliceQpDelta     = i;                                      }
+  Void                        setSliceActQpDelta( ComponentID compID, Int i )        { m_iSliceACTQpDelta[compID] = i;                               }
   Void                        setSliceChromaQpDelta( ComponentID compID, Int i )     { m_iSliceChromaQpDelta[compID] = isLuma(compID) ? 0 : i;       }
   Void                        setUseChromaQpAdj( Bool b )                            { m_ChromaQpAdjEnabled = b;                                     }
   Void                        setDeblockingFilterDisable( Bool b )                   { m_deblockingFilterDisable= b;                                 }
@@ -1621,8 +1712,16 @@ public:
   Void                        setEnableTMVPFlag( Bool   b )                          { m_enableTMVPFlag = b;                                         }
   Bool                        getEnableTMVPFlag()                                    { return m_enableTMVPFlag;                                      }
 
+  Void setUseIntegerMv           ( Bool b    )    { m_useIntegerMv = b; }
+  Bool getUseIntegerMv           ()               { return m_useIntegerMv; }
+
+  TComPic*                    getLastEncPic()                                        { return m_pcLastEncPic;                                        }
+  Void                        setLastEncPic(TComPic *pcPic)                          { m_pcLastEncPic=pcPic;                                         }
+
   Void                        setEncCABACTableIdx( SliceType idx )                   { m_encCABACTableIdx = idx;                                     }
   SliceType                   getEncCABACTableIdx() const                            { return m_encCABACTableIdx;                                    }
+
+  Bool                        isOnlyCurrentPictureAsReference();
 
 protected:
   TComPic*                    xGetRefPic        (TComList<TComPic*>& rcListPic, Int poc);

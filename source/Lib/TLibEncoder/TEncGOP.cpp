@@ -87,7 +87,7 @@ TEncGOP::TEncGOP()
   m_pcSbacCoder         = NULL;
   m_pcBinCABAC          = NULL;
 
-  m_bSeqFirst           = true;
+  m_uiSeqOrder          = 0;
 
   m_bRefreshPending     = 0;
   m_pocCRA            = 0;
@@ -136,6 +136,11 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
   m_lastBPSEI          = 0;
   m_totalCoded         = 0;
 
+  for ( Int i=0; i < ( m_pcCfg->getChromaFormatIdc() == CHROMA_400 ? 1 : MAX_NUM_COMPONENT ); i++ )
+  {
+    m_hasLosslessPSNR[i] = false;
+    m_losslessPSNR[i] = 999.99;
+  }
 }
 
 Int TEncGOP::xWriteVPS (AccessUnit &accessUnit, const TComVPS *vps)
@@ -770,6 +775,145 @@ Void TEncGOP::xUpdateDuInfoSEI(SEIMessages &duInfoSeiMessages, SEIPictureTiming 
   }
 }
 
+list<Double> g_CSMRate;
+list<Double> g_MRate;
+
+Bool TEncGOP::xGetUseIntegerMv( TComSlice* pcSlice )
+{
+  if ( !m_pcCfg->getUseHashBasedME() )
+  {
+    return false;
+  }
+
+  const Int blockSize = 8;
+  const Double thresholdCurrent = 0.8;
+  const Double thresholdAverage = 0.95;
+  const Int maxHistorySize = 32;
+  Int T = 0;  // total block
+  Int C = 0;  // match with collocated block
+  Int S = 0;  // smooth region but not match with collocated block
+  Int M = 0;  // match with other block
+  TComPic* pcPic = pcSlice->getPic();
+  const Int picWidth = pcPic->getPicYuvOrg()->getWidth( COMPONENT_Y );
+  const Int picHeight = pcPic->getPicYuvOrg()->getHeight( COMPONENT_Y );
+  for ( Int i=0; i+blockSize <= picHeight; i+=blockSize )
+  {
+    for ( Int j=0; j+blockSize <= picWidth; j+=blockSize )
+    {
+      T++;
+      Int xPos = j;
+      Int yPos = i;
+      UInt hashValue1;
+      UInt hashValue2;
+
+      // check whether collocated block match with current
+      Pel* pCur = pcPic->getPicYuvOrg()->getAddr( COMPONENT_Y );
+      Pel* pRef = pcSlice->getRefPic( REF_PIC_LIST_0, 0 )->getPicYuvOrg()->getAddr( COMPONENT_Y );
+      Int strideCur = pcPic->getPicYuvOrg()->getStride( COMPONENT_Y );
+      Int strideRef = pcSlice->getRefPic( REF_PIC_LIST_0, 0 )->getPicYuvOrg()->getStride( COMPONENT_Y );
+      pCur += ( yPos*strideCur + xPos );
+      pRef += ( yPos*strideRef + xPos );
+
+      Bool match = true;
+      for ( Int tmpY = 0; tmpY < blockSize && match; tmpY++ )
+      {
+        for ( Int tmpX = 0; tmpX < blockSize && match; tmpX++ )
+        {
+          if ( pCur[tmpX] != pRef[tmpX] )
+          {
+            match = false;
+          }
+        }
+        pCur += strideCur;
+        pRef += strideRef;
+      }
+
+      if ( match )
+      {
+        C++;
+        continue;
+      }
+
+      if ( TComHash::isHorizontalPerfect( pcPic->getPicYuvOrg(), blockSize, blockSize, xPos, yPos ) ||
+           TComHash::isVerticalPerfect( pcPic->getPicYuvOrg(), blockSize, blockSize, xPos, yPos ) )
+      {
+        S++;
+        continue;
+      }
+
+      TComHash::getBlockHashValue( pcPic->getPicYuvOrg(), blockSize, blockSize, xPos, yPos, pcSlice->getSPS()->getBitDepths(), hashValue1, hashValue2 );
+      if ( pcSlice->getRefPic( REF_PIC_LIST_0, 0 )->getHashMap()->hasExactMatch( hashValue1, hashValue2 ) )
+      {
+        M++;
+      }
+    }
+  }
+
+  assert( T > 0 );
+  Double csmRate = static_cast<Double>(C+S+M) / static_cast<Double>(T);
+  Double mRate   = static_cast<Double>(M)     / static_cast<Double>(T);
+
+  if ( g_CSMRate.size() >= maxHistorySize )
+  {
+    g_CSMRate.pop_front();
+  }
+  g_CSMRate.push_back( csmRate );
+
+  if ( g_MRate.size() >= maxHistorySize )
+  {
+    g_MRate.pop_front();
+  }
+  g_MRate.push_back( mRate );
+  
+  if ( csmRate < thresholdCurrent )
+  {
+    return false;
+  }
+
+  if ( C == T )
+  {
+    return true;
+  }
+
+  Double CSMAverage = 0.0;
+  Double MAverage = 0.0;
+  list<Double>::iterator it;
+  for ( it = g_CSMRate.begin(); it != g_CSMRate.end(); it++ )
+  {
+    CSMAverage += (*it);
+  }
+  CSMAverage /= g_CSMRate.size();
+
+  for ( it = g_MRate.begin(); it != g_MRate.end(); it++ )
+  {
+    MAverage += (*it);
+  }
+  MAverage /= g_MRate.size();
+
+  if ( CSMAverage < thresholdAverage )
+  {
+    return false;
+  }
+  
+  if ( M > (T-C-S)/3 )
+  {
+    return true;
+  }
+
+  if ( csmRate > 0.99 && mRate > 0.01 )
+  {
+    return true;
+  }
+
+
+  if ( CSMAverage + MAverage > 1.01 )
+  {
+    return true;
+  }
+
+  return false;
+}
+
 static Void
 cabac_zero_word_padding(TComSlice *const pcSlice, TComPic *const pcPic, const std::size_t binCountsInNalUnits, const std::size_t numBytesInVclNalUnits, std::ostringstream &nalUnitData, const Bool cabacZeroWordPaddingEnabled)
 {
@@ -1100,13 +1244,18 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     {
       pcSlice->setSliceType(I_SLICE);
     }
-    
+
+    if ( pcSlice->getSliceType() == I_SLICE && pcSlice->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
+    {
+      pcSlice->setSliceType( P_SLICE );
+    }
+
     // Set the nal unit type
     pcSlice->setNalUnitType(getNalUnitType(pocCurr, m_iLastIDR, isField));
     if(pcSlice->getTemporalLayerNonReferenceFlag())
     {
       if (pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_TRAIL_R &&
-          !(m_iGopSize == 1 && pcSlice->getSliceType() == I_SLICE))
+          !( m_iGopSize == 1 && ( pcSlice->getSliceType() == I_SLICE || pcSlice->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() ) ) )
         // Add this condition to avoid POC issues with encoder_intra_main.cfg configuration (see #1127 in bug tracker)
       {
         pcSlice->setNalUnitType(NAL_UNIT_CODED_SLICE_TRAIL_N);
@@ -1139,6 +1288,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     // Do decoding refresh marking if any
     pcSlice->decodingRefreshMarking(m_pocCRA, m_bRefreshPending, rcListPic, m_pcCfg->getEfficientFieldIRAPEnabled());
     m_pcEncTop->selectReferencePictureSet(pcSlice, pocCurr, iGOPid);
+    pcSlice->getRPS()->setNumberOfLongtermPictures(0);
     if (!m_pcCfg->getEfficientFieldIRAPEnabled())
     {
       if ( pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
@@ -1234,6 +1384,17 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice->setNumRefIdx(REF_PIC_LIST_0,min(m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive,pcSlice->getRPS()->getNumberOfPictures()));
     pcSlice->setNumRefIdx(REF_PIC_LIST_1,min(m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive,pcSlice->getRPS()->getNumberOfPictures()));
 
+    if ( pcSlice->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
+    {
+      if ( m_pcCfg->getIntraPeriod() > 0 && pcSlice->getPOC() % m_pcCfg->getIntraPeriod() == 0 )
+      {
+        pcSlice->setNumRefIdx( REF_PIC_LIST_0, 0 );
+        pcSlice->setNumRefIdx( REF_PIC_LIST_1, 0 );
+      }
+
+      pcSlice->setNumRefIdx( REF_PIC_LIST_0, pcSlice->getNumRefIdx( REF_PIC_LIST_0 ) + 1 );
+    }
+
     //  Set reference list
     pcSlice->setRefPicList ( rcListPic );
 
@@ -1241,6 +1402,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     if ( (pcSlice->getSliceType() == B_SLICE) && (pcSlice->getNumRefIdx(REF_PIC_LIST_1) == 0) )
     {
       pcSlice->setSliceType ( P_SLICE );
+    }
+    if ( pcSlice->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && pcSlice->getNumRefIdx( REF_PIC_LIST_0 ) == 1 )
+    {
+      m_pcSliceEncoder->setEncCABACTableIdx(P_SLICE);
     }
     pcSlice->setEncCABACTableIdx(m_pcSliceEncoder->getEncCABACTableIdx());
 
@@ -1310,7 +1475,22 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     Bool bGPBcheck=false;
     if ( pcSlice->getSliceType() == B_SLICE)
     {
-      if ( pcSlice->getNumRefIdx(RefPicList( 0 ) ) == pcSlice->getNumRefIdx(RefPicList( 1 ) ) )
+      if ( pcSlice->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
+      {
+        if ( pcSlice->getNumRefIdx( RefPicList( 0 ) ) - 1 == pcSlice->getNumRefIdx( RefPicList( 1 ) ) )
+        {
+          bGPBcheck=true;
+          for ( Int i=0; i < pcSlice->getNumRefIdx( RefPicList( 1 ) ); i++ )
+          {
+            if ( pcSlice->getRefPOC( RefPicList( 1 ), i ) != pcSlice->getRefPOC( RefPicList( 0 ), i ) )
+            {
+              bGPBcheck=false;
+              break;
+            }
+          }
+        }
+      }
+      else if ( pcSlice->getNumRefIdx(RefPicList( 0 ) ) == pcSlice->getNumRefIdx(RefPicList( 1 ) ) )
       {
         bGPBcheck=true;
         Int i;
@@ -1334,6 +1514,30 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     }
     pcPic->getSlice(pcSlice->getSliceIdx())->setMvdL1ZeroFlag(pcSlice->getMvdL1ZeroFlag());
 
+    pcSlice->setUseIntegerMv( false );
+    if ( ( !pcSlice->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && !pcSlice->isIntra() ) ||
+          ( pcSlice->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && !pcSlice->isOnlyCurrentPictureAsReference() ) )
+    {
+      if ( m_pcCfg->getMotionVectorResolutionControlIdc() == 2 )
+      {
+        pcSlice->setUseIntegerMv( xGetUseIntegerMv( pcSlice ) );
+      }
+      else
+      {
+        pcSlice->setUseIntegerMv( m_pcCfg->getMotionVectorResolutionControlIdc() == 0 ? false : true );
+      }
+    }
+
+    if ( !pcSlice->isIntra() && pcSlice->getEnableTMVPFlag() )
+    {
+      TComPic *pColPic = pcSlice->getRefPic( RefPicList( pcSlice->isInterB() ? 1-pcSlice->getColFromL0Flag() : 0 ), pcSlice->getColRefIdx() );
+      if ( pColPic->getPOC() == pcSlice->getPOC() )
+      {
+        // 7.4.7.1
+        // It is a requirement of bitstream conformance that the picture referred to by collocated_ref_idx ...... shall not be the current picture itself.
+        pcSlice->setEnableTMVPFlag( false );
+      }
+    }
 
     Double lambda            = 0.0;
     Int actualHeadBits       = 0;
@@ -1408,10 +1612,15 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       pcSlice->setSliceCurStartCtuTsAddr( 0 );
       pcSlice->setSliceSegmentCurStartCtuTsAddr( 0 );
 
+      if( pcSlice->getPPS()->getPpsScreenExtension().getUseColourTrans () && m_pcCfg->getRGBFormatFlag() ) 
+      {
+        pcPic->getPicYuvResi()->DefaultConvertPix( pcPic->getPicYuvOrg(), pcSlice->getSPS()->getBitDepths() );
+      }
+
       for(UInt nextCtuTsAddr = 0; nextCtuTsAddr < numberOfCtusInFrame; )
       {
         m_pcSliceEncoder->precompressSlice( pcPic );
-        m_pcSliceEncoder->compressSlice   ( pcPic, false, false );
+        m_pcSliceEncoder->compressSlice   ( pcPic, false );
 
         const UInt curSliceSegmentEnd = pcSlice->getSliceSegmentCurEndCtuTsAddr();
         if (curSliceSegmentEnd < numberOfCtusInFrame)
@@ -1467,7 +1676,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     // Set entropy coder
     m_pcEntropyCoder->setEntropyCoder   ( m_pcCavlcCoder );
 
-    if ( m_bSeqFirst )
+    if ( m_uiSeqOrder == 0 )
     {
       // write various parameter sets
       actualTotalBits += xWriteParameterSets(accessUnit, pcSlice);
@@ -1476,7 +1685,17 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       assert(leadingSeiMessages.empty());
       xCreateIRAPLeadingSEIMessages(leadingSeiMessages, pcSlice->getSPS(), pcSlice->getPPS());
 
-      m_bSeqFirst = false;
+      m_uiSeqOrder = 1;
+    }
+    else if( m_uiSeqOrder < pcSlice->getPPS()->getPPSId()+1 )
+    {
+      OutputNALUnit nalu(NAL_UNIT_PPS);
+      printf("  => sending PPS %u with %u elements\n", pcSlice->getPPS()->getPPSId(), pcSlice->getPPS()->getPpsScreenExtension().getNumPLTPred());
+      m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
+      m_pcEntropyCoder->encodePPS(pcSlice->getPPS());
+      accessUnit.push_back(new NALUnitEBSP(nalu));
+      actualTotalBits += UInt(accessUnit.back()->m_nalUnitData.str().size()) * 8;
+      m_uiSeqOrder = pcSlice->getPPS()->getPPSId()+1;
     }
 
     // reset presence of BP SEI indication
@@ -1625,7 +1844,21 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     // cabac_zero_words processing
     cabac_zero_word_padding(pcSlice, pcPic, binCountsInNalUnits, numBytesInVclNalUnits, accessUnit.back()->m_nalUnitData, m_pcCfg->getCabacZeroWordPaddingEnabled());
 
-    pcPic->compressMotion();
+    if(m_pcCfg->getIntraPeriod() != 1)
+    {
+      pcPic->compressMotion();
+    }
+    if ( m_pcCfg->getUseHashBasedME() )
+    {
+      if ( m_pcCfg->getGOPEntry(iGOPid).m_refPic )
+      {
+        pcPic->addPictureToHashMapForInter();
+      }
+      else
+      {
+        pcPic->getHashMap()->clearAll();
+      }
+    }
 
     //-- For time output for each slice
     Double dEncTime = (Double)(clock()-iBeforeTime) / CLOCKS_PER_SEC;
@@ -1693,6 +1926,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcPic->getPicYuvRec()->copyToPic(pcPicYuvRecOut);
 
     pcPic->setReconMark   ( true );
+    pcPic->setIsLongTerm( false );
     m_bFirst = false;
     m_iNumPicCoded++;
     m_totalCoded ++;
@@ -1715,6 +1949,16 @@ Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, Bool isField, const Bool pr
 {
   assert (uiNumAllPicCoded == m_gcAnalyzeAll.getNumPic());
 
+  if ( m_pcCfg->getPrintClippedPSNR() )
+  {
+    for ( Int i=0; i< (m_pcCfg->getChromaFormatIdc() == CHROMA_400 ? 1 : MAX_NUM_COMPONENT); i++ )
+    {
+      if ( m_hasLosslessPSNR[i] )
+      {
+        printf( "\nComponent %d of some picture(s) are coded as lossless, PSNR shown as %8.4lf.", i, m_losslessPSNR[i] );
+      }
+    }
+  }
 
   //--CFG_KDY
   const Int rateMultiplier=(isField?2:1);
@@ -1990,7 +2234,31 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
     }
     const Int maxval = 255 << (pcPic->getPicSym()->getSPS().getBitDepth(toChannelType(ch)) - 8);
     const Double fRefValue = (Double) maxval * maxval * iSize;
-    dPSNR[ch]         = ( uiSSDtemp ? 10.0 * log10( fRefValue / (Double)uiSSDtemp ) : 999.99 );
+
+    if ( m_pcCfg->getPrintClippedPSNR() )
+    {
+      if ( uiSSDtemp == 0 )
+      {
+        if ( m_losslessPSNR[chan] < 999.0 )
+        {
+          dPSNR[ch] = m_losslessPSNR[chan];
+        }
+        else
+        {
+          m_losslessPSNR[chan] = 10.0 * log10( fRefValue * 2 );
+          dPSNR[ch] = m_losslessPSNR[chan];
+          m_hasLosslessPSNR[chan] = true;
+        }
+      }
+      else
+      {
+        dPSNR[ch] = 10.0 * log10( fRefValue / (Double)uiSSDtemp );
+      }
+    }
+    else
+    {
+      dPSNR[ch] = ( uiSSDtemp ? 10.0 * log10( fRefValue / (Double)uiSSDtemp ) : 999.99 );
+    }
     MSEyuvframe[ch]   = (Double)uiSSDtemp/(iSize);
   }
 
@@ -2142,7 +2410,31 @@ Void TEncGOP::xCalculateInterlacedAddPSNR( TComPic* pcPicOrgFirstField, TComPic*
     }
     const Int maxval = 255 << (sps.getBitDepth(toChannelType(ch)) - 8);
     const Double fRefValue = (Double) maxval * maxval * iSize*2;
-    dPSNR[ch]         = ( uiSSDtemp ? 10.0 * log10( fRefValue / (Double)uiSSDtemp ) : 999.99 );
+
+    if ( m_pcCfg->getPrintClippedPSNR() )
+    {
+      if ( uiSSDtemp == 0 )
+      {
+        if ( m_losslessPSNR[chan] < 999.0 )
+        {
+          dPSNR[ch] = m_losslessPSNR[chan];
+        }
+        else
+        {
+          m_losslessPSNR[chan] = 10.0 * log10( fRefValue * 2 );
+          dPSNR[ch] = m_losslessPSNR[chan];
+          m_hasLosslessPSNR[chan] = true;
+        }
+      }
+      else
+      {
+        dPSNR[ch] = 10.0 * log10( fRefValue / (Double)uiSSDtemp );
+      }
+    }
+    else
+    {
+      dPSNR[ch] = ( uiSSDtemp ? 10.0 * log10( fRefValue / (Double)uiSSDtemp ) : 999.99 );
+    }
     MSEyuvframe[ch]   = (Double)uiSSDtemp/(iSize*2);
   }
 
@@ -2288,13 +2580,11 @@ Void TEncGOP::xAttachSliceDataToNalUnit (OutputNALUnit& rNalu, TComOutputBitstre
 // and among the pictures with the same lsb, it arranges them in increasing delta_poc_msb_cycle_lt value
 Void TEncGOP::arrangeLongtermPicturesInRPS(TComSlice *pcSlice, TComList<TComPic*>& rcListPic)
 {
-  if(pcSlice->getRPS()->getNumberOfLongtermPictures() == 0)
+  TComReferencePictureSet *rps = pcSlice->getRPS();
+  if(!rps->getNumberOfLongtermPictures())
   {
     return;
   }
-  // we can only modify the local RPS!
-  assert (pcSlice->getRPSidx()==-1);
-  TComReferencePictureSet *rps = pcSlice->getLocalRPS();
 
   // Arrange long-term reference pictures in the correct order of LSB and MSB,
   // and assign values for pocLSBLT and MSB present flag
@@ -2514,6 +2804,11 @@ Void TEncGOP::applyDeblockingFilterMetric( TComPic* pcPic, UInt uiNumSlices )
 
   free(colSAD);
   free(rowSAD);
+}
+
+TComPPS* TEncGOP::getPPS()
+{
+  return m_pcEncTop->getPPS();
 }
 
 //! \}

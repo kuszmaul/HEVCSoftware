@@ -203,7 +203,8 @@ public:
   UInt         getNumberValidComponents   ()                     const { return ::getNumberValidComponents(m_chromaFormatIDC); }
   UInt         getComponentScaleX         (const ComponentID id) const { return ::getComponentScaleX(id, m_chromaFormatIDC); }
   UInt         getComponentScaleY         (const ComponentID id) const { return ::getComponentScaleY(id, m_chromaFormatIDC); }
-
+  Void         convert          (const Bool extendedPrecision, const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, Bool bForwardConversion, const BitDepths& bitDepths, Bool bLossless = false, TComYuv* pcYuvNoCorrResi= NULL);
+  Void         DefaultConvertPix(const UInt uiPixX, const UInt uiPixY, const UInt uiWidth, const BitDepths& bitDepths);
 };// END CLASS DEFINITION TComYuv
 
 //! \}
