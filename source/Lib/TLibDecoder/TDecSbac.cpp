@@ -100,7 +100,9 @@ TDecSbac::TDecSbac()
 , m_SPointSCModel                            ( 1,             1,                      NUM_SPOINT_CTX                       , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCopyTopRunSCModel                       ( 1,             1,                      NUM_TOP_RUN_CTX                      , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cRunSCModel                              ( 1,             1,                      NUM_LEFT_RUN_CTX                     , m_contextModels + m_numContextModels, m_numContextModels)
+#if !SCM_U0090_REMOVE_LAST_RUN_TYPE_CTX
 , m_PLTLastRunTypeSCModel                    ( 1,             1,                      NUM_PLT_LAST_RUN_TYPE_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 , m_PLTScanRotationModeFlagSCModel           ( 1,             1,                      NUM_SCAN_ROTATION_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
@@ -171,7 +173,9 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_SPointSCModel.initBuffer                      ( sliceType, qp, (UChar*)INIT_SPOINT );
   m_cCopyTopRunSCModel.initBuffer                 ( sliceType, qp, (UChar*)INIT_TOP_RUN);
   m_cRunSCModel.initBuffer                        ( sliceType, qp, (UChar*)INIT_RUN);
+#if !SCM_U0090_REMOVE_LAST_RUN_TYPE_CTX
   m_PLTLastRunTypeSCModel.initBuffer              (sliceType, qp, (UChar*)INIT_PLT_LAST_RUN_TYPE);
+#endif
   m_PLTScanRotationModeFlagSCModel.initBuffer     ( sliceType, qp, (UChar*)INIT_SCAN_ROTATION_FLAG );
   for (UInt statisticIndex = 0; statisticIndex < RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS ; statisticIndex++)
   {
@@ -840,8 +844,13 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
       uiAdjust = 1;
       lParsedIdxList.push_back(uiSymbol);
     }
+#if SCM_U0090_REMOVE_LAST_RUN_TYPE_CTX
+    m_pcTDecBinIf->decodeBin(lastRunType, m_SPointSCModel.get(0, 0, 0)
+                             RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+#else
     m_pcTDecBinIf->decodeBin(lastRunType, m_PLTLastRunTypeSCModel.get(0, 0, 0)
                              RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+#endif
     uiAdjust = 0;
   }
   uiIdx = 0;
