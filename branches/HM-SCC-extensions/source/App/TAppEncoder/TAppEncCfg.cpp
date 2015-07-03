@@ -2435,7 +2435,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("Sequence PSNR output                   : %s\n", (m_printMSEBasedSequencePSNR ? "Linear average, MSE-based" : "Linear average only") );
   printf("Sequence MSE output                    : %s\n", (m_printSequenceMSE ? "Enabled" : "Disabled") );
   printf("Frame MSE output                       : %s\n", (m_printFrameMSE    ? "Enabled" : "Disabled") );
-  printf("Print Clipped PSNR                : %s\n", (m_printClippedPSNR ? "Enabled" : "Disabled") );
+  printf("Print Clipped PSNR                     : %s\n", (m_printClippedPSNR ? "Enabled" : "Disabled") );
   printf("Cabac-zero-word-padding                : %s\n", (m_cabacZeroWordPaddingEnabled? "Enabled" : "Disabled") );
   if (m_isField)
   {
@@ -2530,27 +2530,27 @@ Void TAppEncCfg::xPrintParameter()
 
   switch ( m_iFastSearch )
   {
-    case 0:  printf( "Motion Estimation                 : Full search\n" ); break;
-    case 1:  printf( "Motion Estimation                 : TZ search\n" ); break;
-    case 2:  printf( "Motion Estimation                 : Selective search\n" ); break;
-    default: printf( "Motion Estimation                 : Unknown\n" ); break;
+    case 0:  printf( "Motion Estimation                      : Full search\n" ); break;
+    case 1:  printf( "Motion Estimation                      : TZ search\n" ); break;
+    case 2:  printf( "Motion Estimation                      : Selective search\n" ); break;
+    default: printf( "Motion Estimation                      : Unknown\n" ); break;
   }
 
   if( m_useIntraBlockCopy )
   {
-    printf("Hash based IntraBC search         : %s\n", (m_useHashBasedIntraBlockCopySearch ? "Enabled" : "Disabled") );
+    printf("Hash based IntraBC search              : %s\n", (m_useHashBasedIntraBlockCopySearch ? "Enabled" : "Disabled") );
     if( m_intraBlockCopySearchWidthInCTUs == -1 )
     {
-      printf("IntraBC search range              : full frame\n");
+      printf("IntraBC search range                   : full frame\n");
     }
     else
     {
-      printf("IntraBC search range              : 1x%d CTU%s\n", m_intraBlockCopySearchWidthInCTUs+1, m_intraBlockCopySearchWidthInCTUs ? "s" : "" );
+      printf("IntraBC search range                   : 1x%d CTU%s\n", m_intraBlockCopySearchWidthInCTUs+1, m_intraBlockCopySearchWidthInCTUs ? "s" : "" );
     }
-    printf("IntraBC non-hash search range     : 1x%d CTU%s\n", m_intraBlockCopyNonHashSearchWidthInCTUs+1, m_intraBlockCopyNonHashSearchWidthInCTUs ? "s" : "" );
+    printf("IntraBC non-hash search range          : 1x%d CTU%s\n", m_intraBlockCopyNonHashSearchWidthInCTUs+1, m_intraBlockCopyNonHashSearchWidthInCTUs ? "s" : "" );
   }
 
-  printf("HashME                            : %d\n", m_useHashBasedME ? 1 : 0 );
+  printf("HashME                                 : %d\n", m_useHashBasedME ? 1 : 0 );
 
   printf("RateControl                            : %d\n", m_RCEnableRateControl );
 
