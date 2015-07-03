@@ -434,17 +434,26 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
     pcRefPic->setCheckLTMSBPresent(m_pRPS->getCheckLTMSBPresent(i));
   }
 
+#if !SCM_U0104_CURR_PIC_IN_LIST1
   if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
   {
     RefPicSetLtCurr[NumPicLtCurr] = getPic();
     getPic()->setIsLongTerm( true );
     NumPicLtCurr++;
   }
+#endif
 
   // ref_pic_list_init
   TComPic*  rpsCurrList0[MAX_NUM_REF+1];
   TComPic*  rpsCurrList1[MAX_NUM_REF+1];
   Int numPicTotalCurr = NumPicStCurr0 + NumPicStCurr1 + NumPicLtCurr;
+
+#if SCM_U0104_CURR_PIC_IN_LIST1
+  if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
+  {
+    numPicTotalCurr++;
+  }
+#endif
 
   if (checkNumPocTotalCurr)
   {
@@ -492,6 +501,13 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
   {
     rpsCurrList0[cIdx] = RefPicSetLtCurr[i];
   }
+#if SCM_U0104_CURR_PIC_IN_LIST1
+  if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
+  {
+    rpsCurrList0[cIdx++] = getPic();
+    getPic()->setIsLongTerm( true );
+  }
+#endif
   assert(cIdx == numPicTotalCurr);
 
   if (m_eSliceType==B_SLICE)
@@ -509,6 +525,13 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
     {
       rpsCurrList1[cIdx] = RefPicSetLtCurr[i];
     }
+#if SCM_U0104_CURR_PIC_IN_LIST1
+    if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
+    {
+      rpsCurrList1[cIdx++] = getPic();
+      getPic()->setIsLongTerm( true );
+    }
+#endif
     assert(cIdx == numPicTotalCurr);
   }
 
@@ -537,6 +560,27 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
     {
       m_RefPicListModification.setRefPicListModificationFlagL0( false );
     }
+
+#if SCM_U0104_CURR_PIC_IN_LIST1
+    // make sure the current picture is not in the list1
+    needRPLM = false;
+    if ( m_aiNumRefIdx[REF_PIC_LIST_1] >= numPicTotalCurr )
+    {
+      needRPLM = true;
+    }
+    if ( needRPLM )
+    {
+      m_RefPicListModification.setRefPicListModificationFlagL1( true );
+      for ( Int rIdx = 0; rIdx < m_aiNumRefIdx[REF_PIC_LIST_1]; rIdx++ )
+      {
+        m_RefPicListModification.setRefPicSetIdxL1( rIdx, rIdx % (numPicTotalCurr-1) );
+      }
+    }
+    else
+    {
+      m_RefPicListModification.setRefPicListModificationFlagL1( false );
+    }
+#endif
   }
 
   for (Int rIdx = 0; rIdx < m_aiNumRefIdx[REF_PIC_LIST_0]; rIdx ++)
