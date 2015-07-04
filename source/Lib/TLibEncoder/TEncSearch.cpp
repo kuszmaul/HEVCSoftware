@@ -5023,7 +5023,18 @@ Bool TEncSearch::isBlockVectorValid( Int xPos, Int yPos, Int width, Int height, 
     }
     else
     {
+#if SCM_FIX_TICKET_1401
+      if(!pcCU->getSlice()->getPPS()->getConstrainedIntraPred() || xCIPIBCSearchPruning(pcCU, xPos + xBv, yPos + yBv, width, height))
+      {
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+#else
       return true;
+#endif
     }
   }
 
@@ -5035,7 +5046,18 @@ Bool TEncSearch::isBlockVectorValid( Int xPos, Int yPos, Int width, Int height, 
   // in the same CTU line
   if ( refRightX>>ctuSizeLog2 < xPos>>ctuSizeLog2 )
   {
+#if SCM_FIX_TICKET_1401
+    if(!pcCU->getSlice()->getPPS()->getConstrainedIntraPred() || xCIPIBCSearchPruning(pcCU, xPos + xBv, yPos + yBv, width, height))
+    {
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+#else
     return true;
+#endif
   }
   if ( refRightX>>ctuSizeLog2 > xPos>>ctuSizeLog2 )
   {
@@ -5053,7 +5075,18 @@ Bool TEncSearch::isBlockVectorValid( Int xPos, Int yPos, Int width, Int height, 
     return false;
   }
 
+#if SCM_FIX_TICKET_1401
+  if(!pcCU->getSlice()->getPPS()->getConstrainedIntraPred() || xCIPIBCSearchPruning(pcCU, xPos + xBv, yPos + yBv, width, height))
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+#else
   return true;
+#endif
 }
 
 // based on predInterSearch()
@@ -6298,8 +6331,60 @@ Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, UInt 
   pcCU->clipMv        ( rcMvSrchRngRB );
 }
 
+#if SCM_FIX_TICKET_1401
+Bool TEncSearch::xCIPIBCSearchPruning( TComDataCU* pcCU, Int refPixlX, Int refPixlY, Int roiWidth, Int roiHeight )
+{
+  const Int iMaxCuWidth   = pcCU->getSlice()->getSPS()->getMaxCUWidth();
+  const Int iMaxCuHeight  = pcCU->getSlice()->getSPS()->getMaxCUHeight();
+
+  UInt partNumX = roiWidth/pcCU->getPic()->getMinCUWidth() + (((refPixlX%pcCU->getPic()->getMinCUWidth()) == 0) ? 0:1);
+  UInt partNumY = roiHeight/pcCU->getPic()->getMinCUHeight() + (((refPixlY%pcCU->getPic()->getMinCUHeight()) == 0) ? 0:1);
 
 
+  for(Int partY = 0; partY < partNumY; partY++)
+  {
+    for(Int partX = 0; partX < partNumX; partX++)
+    {
+      Int currRefX = refPixlX + partX * pcCU->getPic()->getMinCUWidth();
+      Int currRefY = refPixlY + partY * pcCU->getPic()->getMinCUHeight();
+
+      Int currRefCtuX = currRefX/iMaxCuWidth;
+      Int currRefCtuY = currRefY/iMaxCuHeight;
+      Int currRefCtuRs = currRefCtuY * pcCU->getPic()->getFrameWidthInCtus() + currRefCtuX;
+
+      Int currRefRelX = currRefX%iMaxCuWidth;
+      Int currRefRelY = currRefY%iMaxCuHeight;
+
+      TComDataCU* pcCurrRefCU = pcCU->getPic()->getCtu( currRefCtuRs );
+      UInt uiAbsPartIdx = g_auiRasterToZscan[currRefRelX/pcCU->getPic()->getMinCUWidth() + (currRefRelY/pcCU->getPic()->getMinCUHeight())*pcCU->getPic()->getNumPartInCtuWidth()];
+
+      if(pcCurrRefCU->isInter(uiAbsPartIdx))
+      {
+        Int iRefL0 = pcCurrRefCU->getCUMvField(REF_PIC_LIST_0)->getRefIdx(uiAbsPartIdx);
+        Int iRefL1 = pcCurrRefCU->getCUMvField(REF_PIC_LIST_1)->getRefIdx(uiAbsPartIdx);
+
+        if( iRefL0 >= 0 )
+        {
+          if( pcCU->getSlice()->getRefPic( REF_PIC_LIST_0, iRefL0 )->getPOC() != pcCU->getSlice()->getPOC() )
+          {
+            return false;
+          }
+        }
+        
+        if( iRefL1 >= 0 )
+        {
+          if( pcCU->getSlice()->getRefPic( REF_PIC_LIST_1, iRefL1 )->getPOC() != pcCU->getSlice()->getPOC() )
+          {
+            return false;
+          }
+        }        
+      }
+    }
+  }
+
+  return true;
+}
+#else
 Bool TEncSearch::xCIPIntraSearchPruning( TComDataCU* pcCU, Int relX, Int relY, Int roiWidth, Int roiHeight )
 {
   UInt uiAbsPartIdx;
@@ -6338,6 +6423,7 @@ Bool TEncSearch::xCIPIntraSearchPruning( TComDataCU* pcCU, Int relX, Int relY, I
 
   return true;
 }
+#endif
 
 Void TEncSearch::xIntraBCSearchMVCandUpdate(Distortion  uiSad, Int x, Int y, Distortion* uiSadBestCand, TComMv* cMVCand)
 {
@@ -6526,13 +6612,18 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
 
   const Int        iRelCUPelX    = cuPelX % lcuWidth;
   const Int        iRelCUPelY    = cuPelY % lcuHeight;
-  
+
+#if SCM_FIX_TICKET_1401
+  const Int chromaROIWidthInPixels  = iRoiWidth;
+  const Int chromaROIHeightInPixels = iRoiHeight;
+#else  
   const ChromaFormat format = pcCU->getPic()->getChromaFormat();
     
   const Int chromaROIWidthInPixels  = (((format == CHROMA_420) || (format == CHROMA_422)) && (iRoiWidth  == 4) && ((iRelCUPelX & 0x4) != 0)) ? (iRoiWidth  * 2) : iRoiWidth;
   const Int chromaROIHeightInPixels = (((format == CHROMA_420)                          ) && (iRoiHeight == 4) && ((iRelCUPelY & 0x4) != 0)) ? (iRoiHeight * 2) : iRoiHeight;
   const Int chromaROIStartXInPixels = iRelCUPelX + iRoiWidth  - chromaROIWidthInPixels;
   const Int chromaROIStartYInPixels = iRelCUPelY + iRoiHeight - chromaROIHeightInPixels;
+#endif
 
 #if SCM_T0056_IBC_VALIDATE_TILES
   const UInt curTileIdx = pcCU->getPic()->getPicSym()->getTileIdxMap( pcCU->getCtuRsAddr() );
@@ -6623,7 +6714,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
       {
         Int iTempY = yPred + iRelCUPelY + iRoiHeight - 1;
         Int iTempX = xPred + iRelCUPelX + iRoiWidth  - 1;
+#if SCM_FIX_TICKET_1401
+        Bool validCand = isValidIntraBCSearchArea(pcCU, xPred, yPred, chromaROIWidthInPixels, chromaROIHeightInPixels, uiPartOffset);
+#else
         Bool validCand = isValidIntraBCSearchArea(pcCU, iPartIdx, xPred, chromaROIStartXInPixels, yPred, chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset);
+#endif
 
         if((iTempX >= (Int)lcuWidth) && (iTempY >= 0) && m_pcEncCfg->getUseIntraBCFullFrameSearch())
         {
@@ -6678,7 +6773,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
              ? -cuPelY : max(iSrchRngVerTop, 0 - cuPelY);
     for(Int y = boundY ; y >= lowY ; y-- )
     {
+#if SCM_FIX_TICKET_1401
+      if ( !isValidIntraBCSearchArea( pcCU, 0, y, chromaROIWidthInPixels, chromaROIHeightInPixels, uiPartOffset ) )
+#else
       if ( !isValidIntraBCSearchArea( pcCU, iPartIdx, 0, chromaROIStartXInPixels, y, chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels, uiPartOffset ) )
+#endif
       {
         continue;
       }
@@ -6716,7 +6815,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
                      ? -cuPelX : max(iSrchRngHorLeft, - cuPelX);
     for(Int x = 0 - iRoiWidth - puPelOffsetX ; x >= boundX ; --x )
     {
+#if SCM_FIX_TICKET_1401
+      if (!isValidIntraBCSearchArea(pcCU, x, 0, chromaROIWidthInPixels, chromaROIHeightInPixels, uiPartOffset))
+#else
       if (!isValidIntraBCSearchArea(pcCU, iPartIdx, x, chromaROIStartXInPixels, 0, chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset))
+#endif
       {
         continue;
       }
@@ -6789,7 +6892,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
               continue;
           }
 
+#if SCM_FIX_TICKET_1401
+          if (!isValidIntraBCSearchArea(pcCU, x, y, chromaROIWidthInPixels, chromaROIHeightInPixels, uiPartOffset))
+#else
           if (!isValidIntraBCSearchArea(pcCU, iPartIdx, x, chromaROIStartXInPixels, y,  chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset))
+#endif
           {
             continue;
           }
@@ -6850,7 +6957,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
               continue;
           }
 
+#if SCM_FIX_TICKET_1401
+          if (!isValidIntraBCSearchArea(pcCU, x, y, chromaROIWidthInPixels, chromaROIHeightInPixels, uiPartOffset))
+#else
           if (!isValidIntraBCSearchArea(pcCU, iPartIdx, x, chromaROIStartXInPixels, y, chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset))
+#endif
           {
             continue;
           }
@@ -6926,7 +7037,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
               continue;
           }
 
+#if SCM_FIX_TICKET_1401
+          if (!isValidIntraBCSearchArea(pcCU, x, y, chromaROIWidthInPixels, chromaROIHeightInPixels, uiPartOffset))
+#else
           if (!isValidIntraBCSearchArea(pcCU, iPartIdx, x, chromaROIStartXInPixels, y, chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset))
+#endif
           {
             continue;
           }
@@ -6993,7 +7108,12 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
           if(iTempZscanIdx >= pcCU->getZorderIdxInCtu())
             continue;
         }
+
+#if SCM_FIX_TICKET_1401
+        if (!isValidIntraBCSearchArea(pcCU, x, y, chromaROIWidthInPixels, chromaROIHeightInPixels, uiPartOffset))
+#else
         if (!isValidIntraBCSearchArea(pcCU, iPartIdx, x, chromaROIStartXInPixels, y, chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartOffset))
+#endif
         {
           continue;
         }
@@ -7278,7 +7398,11 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
     Int xPred = iTempX - cuPelX;
     Int yPred = iTempY - cuPelY;
 
+#if SCM_FIX_TICKET_1401
+    Bool validCand = isValidIntraBCSearchArea(pcCU, xPred, yPred, chromaROIWidthInPixels, chromaROIHeightInPixels, uiPartAddr);
+#else
     Bool validCand = isValidIntraBCSearchArea(pcCU, iPartIdx, xPred, chromaROIStartXInPixels, yPred, chromaROIStartYInPixels, chromaROIWidthInPixels, chromaROIHeightInPixels,uiPartAddr);
+#endif
     if( !validCand )
     {
       HashLinklist = HashLinklist->next;
