@@ -346,12 +346,28 @@ public:
                                   TComMv&       rcMvSrchRngLT,
                                   TComMv&       rcMvSrchRngRB );
 
+#if SCM_FIX_TICKET_1401
+  Bool xCIPIBCSearchPruning(    TComDataCU*   pcCU,
+                                Int           refPixlX,
+                                Int           refPixlY,
+                                Int           roiWidth,
+                                Int           roiHeight);
+#else
   Bool xCIPIntraSearchPruning(    TComDataCU*   pcCU,
                                   Int           relX,
                                   Int           relY,
                                   Int           roiWidth,
                                   Int           roiHeight);
+#endif
 
+#if SCM_FIX_TICKET_1401
+  Bool isValidIntraBCSearchArea(  TComDataCU*   pcCU,
+                                  Int           predX,
+                                  Int           predY,
+                                  Int           roiWidth,
+                                  Int           roiHeight,
+                                  Int           uiPartOffset)
+#else
   Bool isValidIntraBCSearchArea(  TComDataCU*   pcCU,
                                   Int           iPartIdx,
                                   Int           predX,
@@ -361,6 +377,7 @@ public:
                                   Int           roiWidth,
                                   Int           roiHeight,
                                   Int           uiPartOffset)
+#endif
   {
     const Int uiMaxCuWidth   = pcCU->getSlice()->getSPS()->getMaxCUWidth();
     const Int uiMaxCuHeight  = pcCU->getSlice()->getSPS()->getMaxCUHeight();
@@ -404,6 +421,10 @@ public:
       if (refCtu < startCtu) return false;
     }
 
+#if SCM_FIX_TICKET_1401
+    return (!pcCU->getSlice()->getPPS()->getConstrainedIntraPred()) ||
+            xCIPIBCSearchPruning(pcCU, cuPelX + predX, cuPelY + predY, roiWidth, roiHeight);
+#else
     // check boundary
     if ( pcCU->getWidth( 0 ) == 8 && pcCU->getPartitionSize( 0 ) != SIZE_2Nx2N && pcCU->getSlice()->getPic()->getPicYuvOrg()->getChromaFormat() != CHROMA_444 )
     {
@@ -480,6 +501,7 @@ public:
     return (!pcCU->getSlice()->getPPS()->getConstrainedIntraPred())        ||
            (pcCU->getSlice()->getSliceType() == I_SLICE)                   ||
            xCIPIntraSearchPruning(pcCU, predX + ROIStartX, predY + ROIStartY, roiWidth, roiHeight);
+#endif
   }
 
   Void xIntraBCSearchMVCandUpdate(Distortion uiSad, Int x, Int y, Distortion* uiSadBestCand, TComMv* cMVCand);
