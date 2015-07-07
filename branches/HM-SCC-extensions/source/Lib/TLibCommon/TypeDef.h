@@ -181,6 +181,7 @@
 #define SCM_U0104_CURR_PIC_IN_LIST1                      1 ///< JCTVC-U0104: put current picture in both L0 and L1 when IBC is enabled
 #define SCM_FIX_TICKET_1401                              1 ///< Fix for Ticket #1401 related to CIP process
 #define SCM_U0104_DIS_WP_IBC                             1 ///< JCTVC-U0104, disable weighted prediction for IBC
+#define SCM_U0106_ACT_TU_SIG                             1 ///< JCTVC-U0106, control ACT at the TU level
 
 //------------------------------------------------
 // Derived macros
@@ -703,6 +704,15 @@ enum NalUnitType
   NAL_UNIT_INVALID,
 };
 
+#if SCM_U0106_ACT_TU_SIG
+enum ACTRDTestTypes
+{
+  ACT_TWO_CLR            = 0,  //two color space
+  ACT_TRAN_CLR           = 1,  //transformed color space
+  ACT_ORG_CLR            = 2   //original color space
+};
+#endif
+
 // ====================================================================================================================
 // Type definition
 // ====================================================================================================================
@@ -841,6 +851,16 @@ struct TComSEIMasteringDisplay
   UShort    primaries[3][2];
   UShort    whitePoint[2];
 };
+
+#if SCM_U0106_ACT_TU_SIG
+struct TComACTTURDCost
+{
+  Double tmpRDCostCSCEnabled;
+  Double tmpRDCostCSCDisabled;
+  UInt   uiIsCSCEnabled;        //0 - original; 1 - transform; 2 - neutral
+};
+#endif
+
 enum PLTRunMode
 {
   PLT_RUN_LEFT  = 0,

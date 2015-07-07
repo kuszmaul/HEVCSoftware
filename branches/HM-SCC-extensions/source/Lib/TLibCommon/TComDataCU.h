@@ -521,7 +521,11 @@ public:
   Bool          isSkipped          ( UInt uiPartIdx );                                                     ///< returns true, if the partiton is skipped
   Bool          isBipredRestriction( UInt puIdx );
 
+#if SCM_U0106_ACT_TU_SIG
+  Bool          hasAssociatedACTFlag ( UInt uiAbsPartIdx );
+#else
   Bool          hasAssociatedACTFlag ( UInt uiAbsPartIdx, UInt uiDepth );
+#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for symbol prediction (most probable / mode conversion)

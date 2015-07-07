@@ -3311,7 +3311,11 @@ Bool TComDataCU::isBipredRestriction(UInt puIdx)
   return false;
 }
 
+#if SCM_U0106_ACT_TU_SIG
+Bool TComDataCU::hasAssociatedACTFlag( UInt uiAbsPartIdx )
+#else
 Bool TComDataCU::hasAssociatedACTFlag( UInt uiAbsPartIdx, UInt uiDepth )
+#endif
 {
   if ( !getSlice()->getPPS()->getPpsScreenExtension().getUseColourTrans() )
   {
@@ -3328,11 +3332,22 @@ Bool TComDataCU::hasAssociatedACTFlag( UInt uiAbsPartIdx, UInt uiDepth )
 
   if ( getPartitionSize( uiAbsPartIdx )==SIZE_NxN )
   {
+#if SCM_U0106_ACT_TU_SIG
+    UInt uiCUDepth = getDepth(uiAbsPartIdx);
+    UInt uiNumPartitionsInCU = getPic()->getNumPartitionsInCtu() >> ( uiCUDepth << 1 );
+    UInt uiCUAbsPartIdx = (uiAbsPartIdx/uiNumPartitionsInCU)*uiNumPartitionsInCU;
+    UInt uiPartOffset = ( getPic()->getNumPartitionsInCtu() >> ( uiCUDepth << 1 ) ) >> 2;
+    if ( getIntraDir( CHANNEL_TYPE_CHROMA, uiCUAbsPartIdx + uiPartOffset*0 ) == DM_CHROMA_IDX &&
+         getIntraDir( CHANNEL_TYPE_CHROMA, uiCUAbsPartIdx + uiPartOffset*1 ) == DM_CHROMA_IDX &&
+         getIntraDir( CHANNEL_TYPE_CHROMA, uiCUAbsPartIdx + uiPartOffset*2 ) == DM_CHROMA_IDX &&
+         getIntraDir( CHANNEL_TYPE_CHROMA, uiCUAbsPartIdx + uiPartOffset*3 ) == DM_CHROMA_IDX )
+#else
     UInt uiPartOffset = ( getPic()->getNumPartitionsInCtu() >> ( uiDepth << 1 ) ) >> 2;
     if ( getIntraDir( CHANNEL_TYPE_CHROMA, uiAbsPartIdx + uiPartOffset*0 ) == DM_CHROMA_IDX &&
          getIntraDir( CHANNEL_TYPE_CHROMA, uiAbsPartIdx + uiPartOffset*1 ) == DM_CHROMA_IDX &&
          getIntraDir( CHANNEL_TYPE_CHROMA, uiAbsPartIdx + uiPartOffset*2 ) == DM_CHROMA_IDX &&
          getIntraDir( CHANNEL_TYPE_CHROMA, uiAbsPartIdx + uiPartOffset*3 ) == DM_CHROMA_IDX )
+#endif
     {
       return true;
     }
