@@ -585,6 +585,9 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   }
 
   UInt uiPLTSizePrev;
+#if SCM_U0052_ESCAPE_PIXEL_CODING
+  Bool isLossless = pcCU->getCUTransquantBypass( uiAbsPartIdx );
+#else
   //the bit depth depends on QP
   //calculate the bitLen needed to represent the quantized escape values
   UInt uiMaxVal[3];
@@ -594,6 +597,7 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   {
     uiMaxVal[comp] = pcCU->xCalcMaxVals(pcCU, ComponentID(comp));
   }
+#endif
 #endif
 
   {
@@ -805,17 +809,51 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
         {
           if ( comp == compBegin )
           {
+
+#if SCM_U0052_ESCAPE_PIXEL_CODING
+            if ( isLossless )
+            {
+              m_pcBinIf->encodeBinsEP( (UInt)pPixelValue[comp][uiTraIdx], pcCU->getSlice()->getSPS()->getBitDepth( comp > 0 ? CHANNEL_TYPE_CHROMA : CHANNEL_TYPE_LUMA ) );
+            }
+            else
+            {
+              xWriteEpExGolomb( (UInt)pPixelValue[comp][uiTraIdx], 3 );
+            }
+#else
             xWriteTruncBinCode( (UInt)pPixelValue[comp][uiTraIdx], uiMaxVal[comp] + 1 );
+#endif
           }
           else
           {
+#if SCM_U0052_ESCAPE_PIXEL_CODING
+            if ( isLossless )
+            {
+              m_pcBinIf->encodeBinsEP( (UInt)pPixelValue[comp][uiTraIdxC], pcCU->getSlice()->getSPS()->getBitDepth( comp > 0 ? CHANNEL_TYPE_CHROMA : CHANNEL_TYPE_LUMA ) );
+            }
+            else
+            {
+              xWriteEpExGolomb( (UInt)pPixelValue[comp][uiTraIdxC], 3 );
+            }
+#else
             xWriteTruncBinCode( (UInt)pPixelValue[comp][uiTraIdxC], uiMaxVal[comp] + 1 );
+#endif
           }
         }
       }
       else
       {
+#if SCM_U0052_ESCAPE_PIXEL_CODING
+        if ( isLossless )
+        {
+          m_pcBinIf->encodeBinsEP( (UInt)pPixelValue[compBegin][uiTraIdx], pcCU->getSlice()->getSPS()->getBitDepth( compBegin > 0 ? CHANNEL_TYPE_CHROMA : CHANNEL_TYPE_LUMA ) );
+        }
+        else
+        {
+          xWriteEpExGolomb( (UInt)pPixelValue[compBegin][uiTraIdx], 3 );
+        }
+#else
         xWriteTruncBinCode( (UInt)pPixelValue[compBegin][uiTraIdx], uiMaxVal[compBegin] + 1 );
+#endif
       }
     }
   }

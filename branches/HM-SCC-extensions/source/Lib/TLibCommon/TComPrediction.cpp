@@ -1511,11 +1511,13 @@ Void TComPrediction::calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalett
     uiScanIdxC = uiYC * (uiStrideOrg>>uiScaleY) + uiXC;
     uiYIdxRasterC = uiXC * (uiStrideOrg>>uiScaleX) + uiYC;
   }
+#if !SCM_U0052_ESCAPE_PIXEL_CODING
   UInt uiMaxVal[3];
   for (UInt ch = 0; ch < MAX_NUM_COMPONENT; ch++)
   {
     uiMaxVal[ch] = pcCU->xCalcMaxVals(pcCU, ComponentID(ch));
   }
+#endif
 
   if (bLossless)
   {
@@ -1546,7 +1548,11 @@ Void TComPrediction::calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalett
     {
       if( ch == 0 )
       {
+#if SCM_U0052_ESCAPE_PIXEL_CODING
+        paPixelValue[ch][uiScanIdx] = Pel(max<Int>( 0, ((pOrg[ch][uiYIdxRaster] * quantiserScale[ch] + rightShiftOffset[ch]) >> quantiserRightShift[ch]) ));
+#else
         paPixelValue[ch][uiScanIdx] = Pel(Clip3<Int>( 0, uiMaxVal[ch], ((pOrg[ch][uiYIdxRaster] * quantiserScale[ch] + rightShiftOffset[ch]) >> quantiserRightShift[ch]) ));
+#endif
         paRecoValue[ch][uiYIdxRaster] = (((paPixelValue[ch][uiScanIdx]*g_invQuantScales[iQPrem[ch]])<<iQPper[ch]) + iAdd[ch])>>InvquantiserRightShift[ch];
         paRecoValue[ch][uiYIdxRaster] = Pel(ClipBD<Int>(paRecoValue[ch][uiYIdxRaster], bitDepths.recon[ch? 1:0]));
       }
@@ -1557,7 +1563,12 @@ Void TComPrediction::calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalett
             ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(0) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(0) && ((uiY&1) == 0))) )
           )
         {
+
+#if SCM_U0052_ESCAPE_PIXEL_CODING
+          paPixelValue[ch][uiScanIdxC] = Pel(max<Int>( 0, ((pOrg[ch][uiYIdxRasterC] * quantiserScale[ch] + rightShiftOffset[ch]) >> quantiserRightShift[ch]) ));
+#else
           paPixelValue[ch][uiScanIdxC] = Pel(Clip3<Int>( 0, uiMaxVal[ch], ((pOrg[ch][uiYIdxRasterC] * quantiserScale[ch] + rightShiftOffset[ch]) >> quantiserRightShift[ch]) ));
+#endif
           paRecoValue[ch][uiYIdxRasterC] = (((paPixelValue[ch][uiScanIdxC]*g_invQuantScales[iQPrem[ch]])<<iQPper[ch]) + iAdd[ch])>>InvquantiserRightShift[ch];
           paRecoValue[ch][uiYIdxRasterC] = Pel(ClipBD<Int>(paRecoValue[ch][uiYIdxRasterC], bitDepths.recon[ch? 1:0]));
         }
