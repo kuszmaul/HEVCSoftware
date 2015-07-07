@@ -607,6 +607,152 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
   }
 }
 
+#if SCM_U0104_DIS_WP_IBC
+Void TComSlice::setRefPOCListSliceHeader()
+{
+  assert(m_eSliceType != I_SLICE);
+
+  static const UInt MAX_NUM_NEGATIVE_PICTURES = 16;
+  Int  RefPicPOCSetStCurr0[MAX_NUM_NEGATIVE_PICTURES];
+  Int  RefPicPOCSetStCurr1[MAX_NUM_NEGATIVE_PICTURES];
+  Int  RefPicPOCSetLtCurr[MAX_NUM_NEGATIVE_PICTURES];
+  UInt NumPicStCurr0 = 0;
+  UInt NumPicStCurr1 = 0;
+  UInt NumPicLtCurr = 0;
+  Int  i;
+
+  for(i=0; i < m_pRPS->getNumberOfNegativePictures(); i++)
+  {
+    if(m_pRPS->getUsed(i))
+    { 
+      RefPicPOCSetStCurr0[NumPicStCurr0] = getPOC() + m_pRPS->getDeltaPOC(i);
+      NumPicStCurr0++;
+    }
+  }
+
+  for(; i < m_pRPS->getNumberOfNegativePictures() + m_pRPS->getNumberOfPositivePictures(); i++)
+  {
+    if(m_pRPS->getUsed(i))
+    {
+      RefPicPOCSetStCurr1[NumPicStCurr1] = getPOC() + m_pRPS->getDeltaPOC(i);
+      NumPicStCurr1++;
+    }
+  }
+
+  for(i = m_pRPS->getNumberOfNegativePictures() + m_pRPS->getNumberOfPositivePictures() + m_pRPS->getNumberOfLongtermPictures()-1; i > m_pRPS->getNumberOfNegativePictures() + m_pRPS->getNumberOfPositivePictures() - 1; i--)
+  {
+    if(m_pRPS->getUsed(i))
+    {
+      RefPicPOCSetLtCurr[NumPicLtCurr] = m_pRPS->getPOC(i);
+      NumPicLtCurr++;
+    }
+  }
+
+#if !SCM_U0104_CURR_PIC_IN_LIST1
+  if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
+  {
+    RefPicPOCSetLtCurr[NumPicLtCurr] = getPOC();
+    NumPicLtCurr++;
+  }
+#endif
+
+  // ref_pic_list_init
+  Int  rpsPOCCurrList0[MAX_NUM_REF+1];
+  Int  rpsPOCCurrList1[MAX_NUM_REF+1];
+  Int  numPicTotalCurr = NumPicStCurr0 + NumPicStCurr1 + NumPicLtCurr;
+
+#if SCM_U0104_CURR_PIC_IN_LIST1
+  if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
+  {
+    numPicTotalCurr++;
+  }
+#endif
+
+  if (getRapPicFlag())
+  {
+    if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
+    {
+      assert( numPicTotalCurr == 1 );
+    }
+    else
+    {
+      assert( numPicTotalCurr == 0 ); 
+    }
+  }
+
+  assert(numPicTotalCurr > 0);
+  assert(numPicTotalCurr <= 8);
+
+  m_aiNumRefIdx[0] = getNumRefIdx(REF_PIC_LIST_0);
+  m_aiNumRefIdx[1] = getNumRefIdx(REF_PIC_LIST_1);
+
+  Int cIdx = 0;
+  for ( i = 0; i < NumPicStCurr0; i++, cIdx++)
+  {
+    rpsPOCCurrList0[cIdx] = RefPicPOCSetStCurr0[i];
+  }
+  for ( i = 0; i < NumPicStCurr1; i++, cIdx++)
+  {
+    rpsPOCCurrList0[cIdx] = RefPicPOCSetStCurr1[i];
+  }
+  for ( i=0; i < NumPicLtCurr;  i++, cIdx++)
+  {
+    rpsPOCCurrList0[cIdx] = RefPicPOCSetLtCurr[i];
+  }
+#if SCM_U0104_CURR_PIC_IN_LIST1
+  if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
+  {
+    rpsPOCCurrList0[cIdx++] = getPOC();
+  }
+#endif
+  assert(cIdx == numPicTotalCurr);
+
+  if (m_eSliceType==B_SLICE)
+  {
+    cIdx = 0;
+    for ( i = 0; i < NumPicStCurr1; i++, cIdx++)
+    {
+      rpsPOCCurrList1[cIdx] = RefPicPOCSetStCurr1[i];
+    }
+    for ( i = 0; i < NumPicStCurr0; i++, cIdx++)
+    {
+      rpsPOCCurrList1[cIdx] = RefPicPOCSetStCurr0[i];
+    }
+    for ( i = 0; i < NumPicLtCurr;  i++, cIdx++)
+    {
+      rpsPOCCurrList1[cIdx] = RefPicPOCSetLtCurr[i];
+    }
+#if SCM_U0104_CURR_PIC_IN_LIST1
+    if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
+    {
+      rpsPOCCurrList1[cIdx++] = getPOC();
+    }
+#endif
+    assert(cIdx == numPicTotalCurr);
+  }
+
+  for (Int rIdx = 0; rIdx < m_aiNumRefIdx[REF_PIC_LIST_0]; rIdx ++)
+  {
+    cIdx = m_RefPicListModification.getRefPicListModificationFlagL0() ? m_RefPicListModification.getRefPicSetIdxL0(rIdx) : rIdx % numPicTotalCurr;
+    assert(cIdx >= 0 && cIdx < numPicTotalCurr);
+    m_aiRefPOCList[REF_PIC_LIST_0][rIdx] = rpsPOCCurrList0[cIdx];
+  }
+  if ( m_eSliceType != B_SLICE )
+  {
+    m_aiNumRefIdx[REF_PIC_LIST_1] = 0;
+  }
+  else
+  {
+    for (Int rIdx = 0; rIdx < m_aiNumRefIdx[REF_PIC_LIST_1]; rIdx ++)
+    {
+      cIdx = m_RefPicListModification.getRefPicListModificationFlagL1() ? m_RefPicListModification.getRefPicSetIdxL1(rIdx) : rIdx % numPicTotalCurr;
+      assert(cIdx >= 0 && cIdx < numPicTotalCurr);
+      m_aiRefPOCList[REF_PIC_LIST_1][rIdx] = rpsPOCCurrList1[cIdx];
+    }
+  }
+}
+#endif
+
 Int TComSlice::getNumRpsCurrTempList() const
 {
   Int numRpsCurrTempList = 0;

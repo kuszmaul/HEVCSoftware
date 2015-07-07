@@ -179,7 +179,8 @@
 #define SCM_S0043_PLT_DELTA_QP                           0 ///< JCTVC-S0043: delta qp signalling for palette mode
 #define SCM_U0090_REMOVE_LAST_RUN_TYPE_CTX               1 ///< JCTVC-U0090, last_palette_run_type_flag use the same CABAC context that is used for palette_run_type_flag
 #define SCM_U0104_CURR_PIC_IN_LIST1                      1 ///< JCTVC-U0104: put current picture in both L0 and L1 when IBC is enabled
-#define SCM_FIX_TICKET_1401                                      1 ///< Fix for Ticket #1401 related to CIP process
+#define SCM_FIX_TICKET_1401                              1 ///< Fix for Ticket #1401 related to CIP process
+#define SCM_U0104_DIS_WP_IBC                             1 ///< JCTVC-U0104, disable weighted prediction for IBC
 
 //------------------------------------------------
 // Derived macros
