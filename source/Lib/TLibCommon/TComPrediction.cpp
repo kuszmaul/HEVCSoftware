@@ -1473,7 +1473,12 @@ Void TComPrediction::calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalett
   Int iAdd[3];
   for (UInt ch = 0; ch < MAX_NUM_COMPONENT; ch++)
   {
+#if SCM_U0106_ACT_TU_SIG
+    assert(!pcCU->getColourTransform(0));
+    QpParam cQP(*pcCU, ComponentID(ch), 0);
+#else
     QpParam cQP(*pcCU, ComponentID(ch));
+#endif
     iQP[ch] = cQP.Qp;
     iQPrem[ch] = iQP[ch] % 6;
     iQPper[ch] = iQP[ch] / 6;

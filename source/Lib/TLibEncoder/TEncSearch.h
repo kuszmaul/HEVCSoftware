@@ -106,6 +106,17 @@ private:
 #endif
 
   IntraBCHashNode***      m_pcIntraBCHashTable;                 ///< The hash table used for Intra BC search
+#if SCM_U0106_ACT_TU_SIG
+  Bool*           m_puhQTTempACTFlag;
+  TCoeff*         m_pcACTTempTUCoeff[MAX_NUM_COMPONENT];
+  TComYuv         m_pcACTTempTransformSkipTComYuv;
+  TComYuv*        m_pcQTTempTComYuvCS;
+  TComYuv*        m_pcNoCorrYuvTmp;
+#if ADAPTIVE_QP_SELECTION
+  TCoeff*         m_ppcACTTempTUArlCoeff[MAX_NUM_COMPONENT];
+#endif
+  TComACTTURDCost m_sACTRDCostTU[5];
+#endif
 
 protected:
   // interface to option
@@ -219,6 +230,17 @@ public:
                                   Pel         resiLuma[NUMBER_OF_STORED_RESIDUAL_TYPES][MAX_CU_SIZE * MAX_CU_SIZE]
                                   DEBUG_STRING_FN_DECLARE(sDebug));
 
+#if SCM_U0106_ACT_TU_SIG
+  Void  estIntraPredQTCT        ( TComDataCU*    pcCU,
+                                  TComYuv*       pcOrgYuv,
+                                  TComYuv*       pcPredYuv,
+                                  TComYuv*       pcResiYuv,
+                                  TComYuv*       pcRecoYuv,
+                                  ACTRDTestTypes eACTRDTestType,
+                                  Bool           bReuseIntraMode
+                                  DEBUG_STRING_FN_DECLARE(sDebug)
+                                 );
+#else
   Void  estIntraPredQTCT        ( TComDataCU* pcCU,
                                    TComYuv*    pcOrgYuv,
                                    TComYuv*    pcPredYuv,
@@ -226,6 +248,7 @@ public:
                                    TComYuv*    pcRecoYuv
                                    DEBUG_STRING_FN_DECLARE(sDebug)
                                  );
+#endif
 
   Void  estIntraPredLumaQTWithModeReuse ( TComDataCU* pcCU,
                                           TComYuv*    pcOrgYuv,
@@ -533,6 +556,18 @@ public:
                                 );
 
   /// encode residual and compute rd-cost for inter mode
+#if SCM_U0106_ACT_TU_SIG
+  Void encodeResAndCalcRdInterCU( TComDataCU* pcCU,
+                                  TComYuv*    pcYuvOrg,
+                                  TComYuv*    pcYuvPred,
+                                  TComYuv*    pcYuvResi,
+                                  TComYuv*    pcYuvResiBest,
+                                  TComYuv*    pcYuvRec,
+                                  Bool        bSkipResidual,
+                                  TComYuv*    pcYuvNoCorrResi,
+                                  ACTRDTestTypes eACTRDTestType
+                                  DEBUG_STRING_FN_DECLARE(sDebug) );
+#else
   Void encodeResAndCalcRdInterCU( TComDataCU* pcCU,
                                   TComYuv*    pcYuvOrg,
                                   TComYuv*    pcYuvPred,
@@ -542,6 +577,7 @@ public:
                                   Bool        bSkipResidual,
                                   TComYuv*    pcYuvNoCorrResi
                                   DEBUG_STRING_FN_DECLARE(sDebug) );
+#endif
 
   /// set ME search range
   Void setAdaptiveSearchRange   ( Int iDir, Int iRefIdx, Int iSearchRange) { assert(iDir < MAX_NUM_REF_LIST_ADAPT_SR && iRefIdx<Int(MAX_IDX_ADAPT_SR)); m_aaiAdaptSR[iDir][iRefIdx] = iSearchRange; }
@@ -594,6 +630,10 @@ protected:
   Void  xEncCoeffQT               ( TComTU &rTu,
                                     ComponentID  component,
                                     Bool         bRealCoeff );
+#if SCM_U0106_ACT_TU_SIG
+  Void  xEncColorTransformFlagQT  ( TComTU &rTu );
+#endif
+
   Void  xEncIntraHeader           ( TComDataCU*  pcCU,
                                     UInt         uiTrDepth,
                                     UInt         uiAbsPartIdx,
@@ -669,6 +709,20 @@ protected:
                                     TComTU      &rTu
                                     DEBUG_STRING_FN_DECLARE(sDebug));
 
+#if SCM_U0106_ACT_TU_SIG
+  Void  xRecurIntraCodingQTTUCSC  ( TComYuv*       pcOrgYuv,
+                                    TComYuv*       pcPredYuv,
+                                    TComYuv*       pcResiYuv,
+                                    Distortion&    uiPUDistY,
+                                    Distortion&    uiPUDistC,
+                                    Double&        dPUCost,
+                                    TComTU&        rTu,
+                                    Bool           bTestMaxTUSize,
+                                    ACTRDTestTypes eACTRDTestType
+                                    DEBUG_STRING_FN_DECLARE(sDebug)
+                                   );
+#endif
+
   Void  xRecurIntraCodingQTCSC    ( TComYuv*     pcOrgYuv,
                                     TComYuv*     pcPredYuv,
                                     TComYuv*     pcResiYuv,
@@ -682,8 +736,13 @@ protected:
 
   Void  xSetIntraResultChromaQT   ( TComYuv*    pcRecoYuv, TComTU &rTu);
 
+#if SCM_U0106_ACT_TU_SIG
+  Void  xStoreIntraResultQT       ( const ComponentID compID, TComTU &rTu, Bool bACTCache = false);
+  Void  xLoadIntraResultQT        ( const ComponentID compID, TComTU &rTu, Bool bACTCache = false);
+#else
   Void  xStoreIntraResultQT       ( const ComponentID compID, TComTU &rTu);
   Void  xLoadIntraResultQT        ( const ComponentID compID, TComTU &rTu);
+#endif
 
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -829,6 +888,9 @@ protected:
 
 
   Void xEncodeInterResidualQT( const ComponentID compID, TComTU &rTu );
+#if SCM_U0106_ACT_TU_SIG
+  Void xEstimateInterResidualQTTUCSC( TComYuv* pcResi, Double &rdCost, UInt &ruiBits, Distortion &ruiDist, TComTU &rTu, TComYuv* pcOrgResi, ACTRDTestTypes eACTRDtype DEBUG_STRING_FN_DECLARE(sDebug) );
+#endif
   Void xEstimateInterResidualQT( TComYuv* pcResi, Double &rdCost, UInt &ruiBits, Distortion &ruiDist, Distortion *puiZeroDist, TComTU &rTu DEBUG_STRING_FN_DECLARE(sDebug), TComYuv* pcOrgResi = NULL );
   Void xSetInterResidualQTData( TComYuv* pcResi, Bool bSpatial, TComTU &rTu  );
 

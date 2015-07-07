@@ -590,8 +590,12 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   Pel*      piResi            = pcResiYuv->getAddr( compID, uiAbsPartIdx );
   TCoeff*   pcCoeff           = pcCU->getCoeff(compID) + rTu.getCoefficientOffset(compID);//( uiNumCoeffInc * uiAbsPartIdx );
 
+#if SCM_U0106_ACT_TU_SIG
+  assert(!pcCU->getColourTransform(uiAbsPartIdx));
+  const QpParam cQP(*pcCU, compID, uiAbsPartIdx);
+#else
   const QpParam cQP(*pcCU, compID);
-
+#endif
 
   DEBUG_STRING_NEW(sDebug);
 #if DEBUG_STRING
@@ -757,7 +761,11 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
 #endif
 
     //===== inverse transform =====
+#if SCM_U0106_ACT_TU_SIG
+    QpParam cQP(*pcCU, compID, uiAbsPartIdx);
+#else
     QpParam cQP(*pcCU, compID);
+#endif
 
     DEBUG_STRING_NEW( sDebug );
 #if DEBUG_STRING
@@ -794,8 +802,12 @@ TDecCu::xIntraRecBlk( TComYuv*    pcRecoYuv,
     }
   }
 
-
+#if SCM_U0106_ACT_TU_SIG
+  UInt uiTrMode = rTu.GetTransformDepthRel();
+  if( pcCU->getColourTransform(uiAbsPartIdx) && (pcCU->getCbf(uiAbsPartIdx, COMPONENT_Y, uiTrMode) || pcCU->getCbf(uiAbsPartIdx, COMPONENT_Cb, uiTrMode) || pcCU->getCbf(uiAbsPartIdx, COMPONENT_Cr, uiTrMode)) )
+#else
   if( pcCU->getColourTransform(uiAbsPartIdx) && (pcCU->getCbf(uiAbsPartIdx,COMPONENT_Y)||pcCU->getCbf(uiAbsPartIdx,COMPONENT_Cb)|| pcCU->getCbf(uiAbsPartIdx,COMPONENT_Cr)))
+#endif
   {
     pcResiYuv->convert(extendedPrecision, rTu.getRect(COMPONENT_Y).x0, rTu.getRect(COMPONENT_Y).y0, rTu.getRect(COMPONENT_Y).width, false, pcCU->getSlice()->getSPS()->getBitDepths(), pcCU->isLosslessCoded(uiAbsPartIdx));
   }
@@ -966,7 +978,11 @@ Void TDecCu::xDecodeInterTexture ( TComDataCU* pcCU, UInt uiDepth )
 {
 
   TComTURecurse tuRecur(pcCU, 0, uiDepth);
+#if SCM_U0106_ACT_TU_SIG
+  if ( pcCU->getSlice()->getPPS()->getPpsScreenExtension().getUseColourTrans() )
+#else
   if ( pcCU->getSlice()->getPPS()->getPpsScreenExtension().getUseColourTrans() && pcCU->getColourTransform( 0 ) )
+#endif
   {
     m_pcTrQuant->invRecurTransformACTNxN( m_ppcYuvResi[uiDepth], tuRecur );
   }
@@ -1009,7 +1025,12 @@ Void TDecCu::xDecodePLTTexture( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPa
           }
           else
           {
+#if SCM_U0106_ACT_TU_SIG
+            assert(!pcCU->getColourTransform(uiPartIdx));
+            QpParam cQP(*pcCU, compID, uiPartIdx);
+#else
             QpParam cQP(*pcCU, compID);
+#endif
             Int iQP = cQP.Qp;
             Int iQPrem = iQP % 6;
             Int iQPper = iQP / 6;
@@ -1044,7 +1065,12 @@ Void TDecCu::xDecodePLTTexture( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPa
           }
           else
           {
+#if SCM_U0106_ACT_TU_SIG
+            assert(!pcCU->getColourTransform(uiPartIdx));
+            QpParam cQP(*pcCU, compID, uiPartIdx);
+#else
             QpParam cQP(*pcCU, compID);
+#endif
             Int iQP = cQP.Qp;
             Int iQPrem = iQP % 6;
             Int iQPper = iQP / 6;

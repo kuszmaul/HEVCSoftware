@@ -98,6 +98,11 @@ private:
   TEncSbac***             m_pppcRDSbacCoder;
   TEncSbac*               m_pcRDGoOnSbacCoder;
   TEncRateCtrl*           m_pcRateCtrl;
+#if SCM_U0106_ACT_TU_SIG
+  Bool                    m_bEnableIntraTUACTRD;
+  Bool                    m_bEnableIBCTUACTRD;
+  Bool                    m_bEnableInterTUACTRD;
+#endif
 
 public:
   /// copy parameters from encoder class
@@ -150,12 +155,23 @@ protected:
                               ,Bool         bRGBIntraModeReuse = false
                              );
 
+#if SCM_U0106_ACT_TU_SIG
+  Void  xCheckRDCostIntraCSC ( TComDataCU    *&rpcBestCU,
+                               TComDataCU    *&rpcTempCU,
+                               Double         &cost,
+                               PartSize       ePartSize,
+                               ACTRDTestTypes eACTRDTestType,
+                               Bool           bReuseIntraMode
+                               DEBUG_STRING_FN_DECLARE(sDebug)
+                             );
+#else
   Void  xCheckRDCostIntraCSC ( TComDataCU *&rpcBestCU,
                                TComDataCU *&rpcTempCU,
                                Double      &cost,
                                PartSize    ePartSize
                                DEBUG_STRING_FN_DECLARE(sDebug)
                               );
+#endif
 
   Void  xCheckRDCostIntraBC ( TComDataCU*& rpcBestCU,
                               TComDataCU*& rpcTempCU,
@@ -206,6 +222,15 @@ protected:
 #endif
 
   Void  xFillPCMBuffer     ( TComDataCU* pCU, TComYuv* pOrgYuv );
+#if SCM_U0106_ACT_TU_SIG
+  Void setEnableIntraTUACT(UInt uiDepth, TComSlice* pcSlice);
+  Void setEnableIBCTUACT(UInt uiDepth, TComSlice* pcSlice);
+  Void setEnableInterTUACT(UInt uiDepth, TComSlice* pcSlice);
+
+  Bool getEnableIntraTUACT()           { return m_bEnableIntraTUACTRD; }
+  Bool getEnableIBCTUACT()             { return m_bEnableIBCTUACTRD; }
+  Bool getEnableInterTUACT()           { return m_bEnableInterTUACTRD; }
+#endif
 };
 
 //! \}

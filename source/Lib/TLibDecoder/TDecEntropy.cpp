@@ -581,6 +581,22 @@ Void TDecEntropy::xDecodeTransform        ( Bool& bCodeDQP, Bool& isChromaQpAdjC
 
     if ( validCbf )
     {
+#if SCM_U0106_ACT_TU_SIG
+      if ( pcCU->getSlice()->getPPS()->getPpsScreenExtension().getUseColourTrans() && pcCU->hasAssociatedACTFlag(uiAbsPartIdx) )
+      {
+        Bool uiFlag = 0;
+        m_pcEntropyDecoderIf->parseColourTransformFlag(uiAbsPartIdx, uiFlag );
+        pcCU->setColourTransformSubParts(uiFlag, uiAbsPartIdx, uiDepth);
+      }
+      else
+      {
+        pcCU->setColourTransformSubParts(false, uiAbsPartIdx, uiDepth);
+      }
+      if ( pcCU->getCUTransquantBypass( uiAbsPartIdx ) && (pcCU->getSlice()->getSPS()->getBitDepths().recon[CHANNEL_TYPE_LUMA] != pcCU->getSlice()->getSPS()->getBitDepths().recon[CHANNEL_TYPE_CHROMA]) )
+      {
+        assert( !pcCU->getColourTransform( uiAbsPartIdx ) );
+      }
+#endif
 
       // dQP: only for CTU
       if ( pcCU->getSlice()->getPPS()->getUseDQP() )
@@ -697,6 +713,7 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     }
   }
 
+#if !SCM_U0106_ACT_TU_SIG
   if ( pcCU->hasAssociatedACTFlag( uiAbsPartIdx, uiDepth ) )
   {
     Bool uiFlag = 0;
@@ -707,6 +724,7 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   {
     assert( pcCU->getColourTransform( uiAbsPartIdx ) == 0 );
   }
+#endif
 
   TComTURecurse tuRecurse(pcCU, uiAbsPartIdx, uiDepth);
 
