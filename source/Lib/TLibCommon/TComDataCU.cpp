@@ -3502,6 +3502,7 @@ UInt TComDataCU::getCtxEscapeFlag(UInt uiAbsPartIdx, UInt uiIdx, Pel *pEscapeFla
   return uiTop;
 }
 
+#if !SCM_U0052_ESCAPE_PIXEL_CODING
 Int TComDataCU::xCalcMaxVals(TComDataCU *pcCU, ComponentID compID)
 {
   Bool bLossless = pcCU->getCUTransquantBypass(0);
@@ -3554,6 +3555,7 @@ Int TComDataCU::xCalcMaxVals(TComDataCU *pcCU, ComponentID compID)
     return Pel((( (1 << pcCU->getSlice()->getSPS()->getBitDepth( compID > 0 ? CHANNEL_TYPE_CHROMA : CHANNEL_TYPE_LUMA ) ) - 1) * quantiserScale + rightShiftOffset) >> quantiserRightShift);
   }
 }
+#endif
 
 /** Test whether the block at uiPartIdx is skipped.
  * \param uiPartIdx Partition index
