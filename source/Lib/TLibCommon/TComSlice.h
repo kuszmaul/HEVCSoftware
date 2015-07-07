@@ -1592,6 +1592,9 @@ public:
 
   Void                        setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTotalCurr = false );
   Void                        setRefPOCList();
+#if SCM_U0104_DIS_WP_IBC
+  Void                        setRefPOCListSliceHeader();
+#endif
   Void                        setColFromL0Flag( Bool colFromL0 )                     { m_colFromL0Flag = colFromL0;                                  }
   Void                        setColRefIdx( UInt refIdx)                             { m_colRefIdx = refIdx;                                         }
   Void                        setCheckLDC( Bool b )                                  { m_bCheckLDC = b;                                              }
