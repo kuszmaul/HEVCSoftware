@@ -822,7 +822,11 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
   std::list<Int> lParsedIdxList;
   if (uiIndexMaxSize > 1)
   {
+#if SCM_U0176_RICE_PARAM_DERIVATION_CLEAN_UP
+    UInt uiCurrParam = 3 + ((uiIndexMaxSize) >> 3);
+#else
     UInt uiCurrParam = 2 + uiIndexMaxSize / 6;
+#endif
     xReadCoefRemainExGolomb(uiNumIndices, uiCurrParam, false, MAX_NUM_CHANNEL_TYPE
       RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
 #if SCM_U0086_SIM_NUM_INDEX_MAPPING 
