@@ -500,6 +500,70 @@ Void TEncSbac::encodeRun ( UInt uiRun, Bool bCopyTopMode, const UInt uiPltIdx, c
   xWriteTruncMsbP1RefinementBits( uiRun, pcModel, uiMaxRun, SCM__S0269_PLT_RUN_MSB_IDX_CABAC_BYPASS_THRE, ucCtxLut );
 }
 
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+Void TEncSbac::encodeSPointRD(UInt uiIdx, UInt uiWidth, UChar *pSPoint, UInt mode, UInt *uiRefScanOrder)
+{
+  if( uiRefScanOrder )
+  {
+    m_puiScanOrder = uiRefScanOrder;
+  }
+  UInt uiTraIdx = m_puiScanOrder[uiIdx];
+  if( uiTraIdx >= uiWidth && pSPoint[m_puiScanOrder[uiIdx - 1]] != PLT_RUN_ABOVE )
+  {
+    m_pcBinIf->encodeBin( mode, m_SPointSCModel.get( 0, 0, 0 ) );
+  }
+}
+#endif
+
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+Void TEncSbac::saveRestorePltCtx(UInt saveState)
+{
+  Int ctxNo, numCtx = NUM_LEFT_RUN_CTX;
+  ContextModel *pcModel;
+
+  if (saveState)
+  {
+    storeNumPartialBits ();
+
+    pcModel = m_cRunSCModel.get(0);
+    for (ctxNo = 0; ctxNo < numCtx; ctxNo++)
+    {
+      pcModel[ctxNo].saveState();
+    }
+
+    numCtx = NUM_TOP_RUN_CTX;
+    pcModel = m_cCopyTopRunSCModel.get(0);
+    for (ctxNo = 0; ctxNo < numCtx; ctxNo++)
+    {
+      pcModel[ctxNo].saveState();
+    }
+
+    pcModel = m_SPointSCModel.get(0);
+    pcModel->saveState();
+  }
+  else
+  {
+    restoreNumPartialBits (); 
+
+    pcModel = m_cRunSCModel.get(0);
+    for (ctxNo = 0; ctxNo < numCtx; ctxNo++)
+    {
+      pcModel[ctxNo].returnState();
+    }
+
+    numCtx = NUM_TOP_RUN_CTX;
+    pcModel = m_cCopyTopRunSCModel.get(0);
+    for (ctxNo = 0; ctxNo < numCtx; ctxNo++)
+    {
+      pcModel[ctxNo].returnState();
+    }
+
+    pcModel = m_SPointSCModel.get(0);
+    pcModel->returnState();
+  }
+}
+#endif
+
 Void TEncSbac::encodeSPoint( TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiIdx, UInt uiWidth, UChar *pSPoint, UInt *uiRefScanOrder )
 {
   if( uiRefScanOrder )
@@ -694,7 +758,9 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
     UInt uiCurrParam = 2 + uiIndexMaxSize / 6;
     UInt uiMappedValue;
     Bool bUsePLTSharingMode = false;
+
     assert(uiNumIndices);
+
     UInt uiInterval = bUsePLTSharingMode ? 8 : 32;
     UInt uiZeroPosition = bUsePLTSharingMode ? 3 : uiIndexMaxSize;
 
@@ -710,6 +776,7 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
       UInt uiValue = uiZeroPosition - uiNumIndices;
       uiMappedValue = uiValue * uiInterval - 1;
     }
+
     xWriteCoefRemainExGolomb(uiMappedValue, uiCurrParam, false, MAX_NUM_CHANNEL_TYPE);
 
     while (!lIdxPosList.empty())

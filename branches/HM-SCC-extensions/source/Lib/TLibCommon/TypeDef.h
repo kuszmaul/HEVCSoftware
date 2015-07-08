@@ -183,6 +183,7 @@
 #define SCM_U0104_DIS_WP_IBC                             1 ///< JCTVC-U0104, disable weighted prediction for IBC
 #define SCM_U0106_ACT_TU_SIG                             1 ///< JCTVC-U0106, control ACT at the TU level
 #define SCM_U0052_ESCAPE_PIXEL_CODING                    1 ///< JCTVC-U0052, avoid QP dependence for coding the value of escape pixels
+#define SCM_U0096_PLT_ENCODER_IMPROVEMENT                1 ///< JCTVC-U0096, palette encoder improvement: using square error to derive and assign palette index, pruning indices and merge consecutive runs
 
 //------------------------------------------------
 // Derived macros
@@ -191,8 +192,9 @@
 #define SCM_S0067_NUM_CANDIDATES                         64 ///< Maximum number of candidates to store/test
 #define SCM_S0067_IBC_FULL_1D_SEARCH_FOR_PU               2 ///< Do full horizontal/vertical search for Nx2N
 #define SCM_S0067_MAX_CAND_SIZE                          32 ///< 32 or 64, 16 by default
-#define SCM_T0227_INTER_SEARCH_YUV                        1   // use 3 components for Inter in mixed CU decision(Intra BC and inter CU)
+#define SCM_T0227_INTER_SEARCH_YUV                        1 ///< use 3 components for Inter in mixed CU decision(Intra BC and inter CU)
 #define SCM_T0048_PLT_PRED_IN_PPS_REFRESH                16 ///< Periodicity of the palette refresh
+
 
 
 //------------------------------------------------

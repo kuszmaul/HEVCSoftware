@@ -82,6 +82,17 @@ public:
   Void  store                  ( TEncSbac* pDest ) const;
   Void  loadContexts           ( const TEncSbac* pSrc  );
   Void  resetBits              ()                { m_pcBinIf->resetBits(); m_pcBitIf->resetBits(); }
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  UInt64  getNumPartialBits ()                   { return m_pcBinIf->getNumPartialBits(); }
+  Void storeNumPartialBits ()
+  {
+    m_pcBinIf->storeNumPartialBits();
+  };
+  Void restoreNumPartialBits ()
+  {
+    m_pcBinIf->restoreNumPartialBits();
+  };
+#endif
   UInt  getNumberOfWrittenBits ()                { return m_pcBinIf->getNumWrittenBits(); }
   //--SBAC RD
 
@@ -138,7 +149,12 @@ public:
 #else
   Void codePLTModeSyntax      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp);
 #endif
-  Void encodeSPoint          ( TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiIdx, UInt uiWidth, UChar *pSPoint, UInt *uiRefScanOrder );
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  Void encodeSPointRD(UInt uiIdx, UInt uiWidth, UChar *pSPoint, UInt mode, UInt *uiRefScanOrder);
+  Void saveRestorePltCtx(UInt saveState);
+#endif
+
+  Void encodeSPoint      ( TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiIdx, UInt uiWidth, UChar *pSPoint, UInt *uiRefScanOrder );
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
