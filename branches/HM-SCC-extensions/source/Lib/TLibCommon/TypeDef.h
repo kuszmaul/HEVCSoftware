@@ -184,6 +184,7 @@
 #define SCM_U0106_ACT_TU_SIG                             1 ///< JCTVC-U0106, control ACT at the TU level
 #define SCM_U0052_ESCAPE_PIXEL_CODING                    1 ///< JCTVC-U0052, avoid QP dependence for coding the value of escape pixels
 #define SCM_U0096_PLT_ENCODER_IMPROVEMENT                1 ///< JCTVC-U0096, palette encoder improvement: using square error to derive and assign palette index, pruning indices and merge consecutive runs
+#define SCM_U0086_SIM_NUM_INDEX_MAPPING                  1 ///< JCTVC-U0086, simplification of mapping of numPLTIndices
 
 //------------------------------------------------
 // Derived macros

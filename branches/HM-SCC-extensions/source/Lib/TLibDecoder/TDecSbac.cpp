@@ -825,7 +825,9 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     UInt uiCurrParam = 2 + uiIndexMaxSize / 6;
     xReadCoefRemainExGolomb(uiNumIndices, uiCurrParam, false, MAX_NUM_CHANNEL_TYPE
       RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-
+#if SCM_U0086_SIM_NUM_INDEX_MAPPING 
+    uiNumIndices++;
+#else
     Bool bUsePLTSharingMode = false;
     UInt uiInterval = bUsePLTSharingMode ? 8 : 32;
     UInt uiZeroPosition = bUsePLTSharingMode ? 3 : uiIndexMaxSize;
@@ -842,7 +844,7 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     {
       uiNumIndices = uiNumIndices / uiInterval * (uiInterval - 1) + uiNumIndices % uiInterval + uiZeroPosition;
     }
-
+#endif
     iNumCopyIndexRuns = uiNumIndices;
     while (uiNumIndices--)
     {
