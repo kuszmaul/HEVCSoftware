@@ -166,6 +166,37 @@ TEncSearch::TEncSearch()
 #endif
 
   m_paOriginalLevel  = (Pel*)xMalloc(Pel , MAX_CU_SIZE * MAX_CU_SIZE);
+
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  UInt group=0, k=0, j, uiTotal=32*32;
+
+  while (k<uiTotal)
+  {
+    if (group<2)
+    {
+      m_runGolombGroups[k]=group+1;
+      k++; group++;
+      if (k>=uiTotal)
+      {
+        break;
+      }
+    }
+    else
+    {
+      for (j=0; j<(1<<(group-1)); j++)
+      {
+        m_runGolombGroups[k+j]=2*group;
+      }
+      k+=(1<<(group-1));
+      group++;
+    }
+    if (k>=uiTotal)
+    {
+      break;
+    }
+  }
+#endif
+
   for(Int i=0; i<MAX_NUM_COMPONENT; i++)
   {
     m_paBestLevel[i]  = (Pel*)xMalloc(Pel , MAX_CU_SIZE * MAX_CU_SIZE);
@@ -174,6 +205,15 @@ TEncSearch::TEncSearch()
   m_paBestRun    = (TCoeff*)xMalloc(TCoeff , MAX_CU_SIZE * MAX_CU_SIZE);
   m_paBestEscapeFlag = (UChar*)xMalloc(UChar , MAX_CU_SIZE * MAX_CU_SIZE);
 
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  for(Int i=0; i<MAX_NUM_COMPONENT; i++)
+  {
+    m_paLevelStoreRD[i]  = (Pel*)xMalloc(Pel , MAX_CU_SIZE * MAX_CU_SIZE);
+  }
+  m_paSPointStoreRD = (UChar*)xMalloc(UChar , MAX_CU_SIZE * MAX_CU_SIZE);
+  m_paRunStoreRD    = (TCoeff*)xMalloc(TCoeff , MAX_CU_SIZE * MAX_CU_SIZE);
+  m_paEscapeFlagStoreRD = (UChar*)xMalloc(UChar , MAX_CU_SIZE * MAX_CU_SIZE);
+#endif
   for (Int i=0; i<MAX_NUM_REF_LIST_ADAPT_SR; i++)
   {
     memset (m_aaiAdaptSR[i], 0, MAX_IDX_ADAPT_SR * sizeof (Int));
@@ -281,7 +321,21 @@ Void TEncSearch::destroy()
   if (m_paBestSPoint)     { xFree(m_paBestSPoint); m_paBestSPoint=NULL; }
   if (m_paBestRun)        { xFree(m_paBestRun);    m_paBestRun=NULL;    }
   if (m_paBestEscapeFlag) { xFree(m_paBestEscapeFlag);    m_paBestEscapeFlag=NULL;    }
+  
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  for(Int i=0; i<MAX_NUM_COMPONENT; i++)
+  {
+    if (m_paLevelStoreRD[i])      { xFree(m_paLevelStoreRD[i]);  m_paLevelStoreRD[i]=NULL;  }
+  }
+  if (m_paSPointStoreRD)     { xFree(m_paSPointStoreRD); m_paSPointStoreRD=NULL; }
+  if (m_paRunStoreRD)        { xFree(m_paRunStoreRD);    m_paRunStoreRD=NULL;    }
+  if (m_paEscapeFlagStoreRD) { xFree(m_paEscapeFlagStoreRD);    m_paEscapeFlagStoreRD=NULL;    }
+#endif
+  
   m_isInitialized = false;
+  
+
+  
 }
 
 TEncSearch::~TEncSearch()
@@ -351,7 +405,9 @@ Void TEncSearch::init(TEncCfg*      pcEncCfg,
 
   const ChromaFormat cform=pcEncCfg->getChromaFormatIdc();
   initTempBuff(cform);
-
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  initTBCTable(pcEncCfg->getBitDepth(ChannelType(0)));
+#endif
   m_pTempPel = new Pel[maxCUWidth*maxCUHeight];
 
   const UInt uiNumLayersToAllocate = pcEncCfg->getQuadtreeTULog2MaxSize()-pcEncCfg->getQuadtreeTULog2MinSize()+1;
@@ -4608,7 +4664,12 @@ Void TEncSearch::xEncPCM (TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* pOrg, Pel* p
   }
 }
 
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+UInt TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv *& rpcResiBestYuv, TComYuv*& rpcRecoYuv, Bool forcePLTPrediction,
+  UInt uiIterNumber, UInt *pltSizeCurrIter)
+#else
 Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv *& rpcResiBestYuv, TComYuv*& rpcRecoYuv, Bool forcePLTPrediction)
+#endif
 {
   UInt  uiDepth      = pcCU->getDepth(0);
   Distortion  uiDistortion = 0;
@@ -4618,6 +4679,10 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
   Pel *pPixelValue[3];
   UInt uiScaleX = pcCU->getPic()->getComponentScaleX(COMPONENT_Cb);
   UInt uiScaleY = pcCU->getPic()->getComponentScaleY(COMPONENT_Cb);
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  UInt testMode=0;
+  UInt uiPLTIdx = 0;
+#endif
   for (UInt ch = 0; ch < 3; ch++)
   {
     paOrig[ch] = pcOrgYuv->getAddr((ComponentID)ch, 0);
@@ -4627,11 +4692,13 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
   pRun = pcCU->getRun(COMPONENT_Y);
   paSPoint[0] = pcCU->getSPoint(COMPONENT_Y);
   UChar* pEscapeFlag = pcCU->getEscapeFlag(COMPONENT_Y);
+#if !SCM_U0096_PLT_ENCODER_IMPROVEMENT
   Int iPLTErrLimit = g_uhPLTQuant[Int(pcCU->getQP(0))];
   setPLTErrLimit(iPLTErrLimit);
-
+#endif
+ 
   UInt uiPLTSize = 1;
-
+#if !SCM_U0096_PLT_ENCODER_IMPROVEMENT
   if( pcCU->getCUTransquantBypass(0) )
   {
     derivePLTLossless(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), pcCU->getHeight(0), uiPLTSize, forcePLTPrediction);
@@ -4644,15 +4711,91 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
   {
     derivePLTLossy(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), pcCU->getHeight(0), uiPLTSize, m_pcRdCost);
   }
+#else
+  if (uiIterNumber < MAX_PLT_ITER)
+  {
+    if( pcCU->getCUTransquantBypass(0) )
+    {
+      derivePLTLossless(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), pcCU->getHeight(0), uiPLTSize, forcePLTPrediction);
+    }
+    else if( forcePLTPrediction )
+    {
+      derivePLTLossyForcePrediction(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), pcCU->getHeight(0), uiPLTSize, m_pcRdCost);
+    }
+    else
+    {
+      derivePLTLossy(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), pcCU->getHeight(0), uiPLTSize, m_pcRdCost);
+    }
+  }
+  else
+  {
+    uiPLTSize = m_prevPltSize[uiIterNumber - MAX_PLT_ITER];
+    for (UInt ch = 0; ch < 3; ch++)
+    {
+      for ( uiPLTIdx = 0; uiPLTIdx < uiPLTSize; uiPLTIdx++)
+      {
+        paPalette[ch][uiPLTIdx] = m_prevPlt[uiIterNumber - MAX_PLT_ITER][ch][uiPLTIdx];
+      }
+    }
+    derivePLTLossyIterative(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), pcCU->getHeight(0), uiPLTSize, m_pcRdCost);
+  }
+  *pltSizeCurrIter=uiPLTSize;
+#endif
 
   pcCU->setPLTSizeSubParts(0, uiPLTSize, 0, pcCU->getDepth(0));
   pcCU->setPLTSizeSubParts(1, uiPLTSize, 0, pcCU->getDepth(0));
   pcCU->setPLTSizeSubParts(2, uiPLTSize, 0, pcCU->getDepth(0));
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   reorderPLT(pcCU, paPalette, 3);
 
-  preCalcPLTIndex(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), uiPLTSize);
+  if (uiIterNumber==0)
+  {
+    m_forcePltSize=uiPLTSize;
+    for (UInt ch = 0; ch < 3; ch++)
+    {
+      for ( uiPLTIdx = 0; uiPLTIdx < uiPLTSize; uiPLTIdx++)
+      {
+        m_forcePlt[ch][uiPLTIdx]=paPalette[ch][uiPLTIdx];
+      }
+    }
+  }
+  else if (uiIterNumber==1)
+  {
+    UInt samePLT=0;
+    if (uiPLTSize==m_forcePltSize)
+    {
+      samePLT=1;
+      for (UInt ch = 0; ch < 3; ch++)
+      {
+        for ( uiPLTIdx = 0; uiPLTIdx < uiPLTSize; uiPLTIdx++)
+        {
+          if (paPalette[ch][uiPLTIdx]!=m_forcePlt[ch][uiPLTIdx])
+          {
+            samePLT=0;
+          }
+        }
+      }
+    }
+    if (samePLT)
+    {
+      pcCU->getTotalCost()=MAX_DOUBLE;
+      return(0);
+    }
+  }
+#else
+  reorderPLT(pcCU, paPalette, 3);
+#endif
 
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  UInt calcErroBits = uiIterNumber < MAX_PLT_ITER ? 1 : 0;
+  preCalcPLTIndexRD(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), uiPLTSize, m_pcRdCost, calcErroBits);
+#else
+  preCalcPLTIndex(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), uiPLTSize);
+#endif
+
+#if !SCM_U0096_PLT_ENCODER_IMPROVEMENT
   UInt uiPLTIdx = 0;
+#endif
   for (UInt ch = 0; ch < 3; ch++)
   {
     for ( uiPLTIdx = 0; uiPLTIdx < pcCU->getSlice()->getSPS()->getSpsScreenExtension().getPLTMaxSize(); uiPLTIdx++)
@@ -4677,6 +4820,40 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
     deriveRunAndCalcBits( pcCU, pcOrgYuv, rpcRecoYuv, uiBits, false, PLT_SCAN_VERTRAV );
   }
 
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  UInt errorOrig, errorNew;
+  if (uiPLTSize > 2)
+  {
+    UInt uiTotalPixel = uiWidth * uiHeight, uiTotalPixelC = (uiWidth>>uiScaleX) * (uiHeight>>uiScaleY);
+
+    for (UInt ch = 0; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
+    {
+      if ( ch == 0 )
+      {
+        memcpy(m_paLevelStoreRD[ch], m_paBestLevel[ch], sizeof(Pel) * uiTotalPixel);
+      }
+      else
+      {
+        memcpy(m_paLevelStoreRD[ch], m_paBestLevel[ch], sizeof(Pel) * uiTotalPixelC);
+      }
+    }
+    memcpy(m_paSPointStoreRD, m_paBestSPoint, sizeof(UChar) * uiTotalPixel);
+    memcpy(m_paRunStoreRD, m_paBestRun, sizeof(TCoeff) * uiTotalPixel);
+    memcpy(m_paEscapeFlagStoreRD, m_paBestEscapeFlag, sizeof(UChar) * uiTotalPixel );
+
+    memcpy(m_pltInfoStoreRD, m_pltInfoBest, sizeof(m_pltInfo));
+
+    m_SPointRD     = m_paBestSPoint;
+    m_EscapeFlagRD = m_paBestEscapeFlag;
+    m_RunRD        = m_paBestRun;
+    m_LevelRD[0]   = m_paBestLevel[0];
+    m_LevelRD[1]   = m_paBestLevel[1];
+    m_LevelRD[2]   = m_paBestLevel[2];
+
+    preCalcRDMerge(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), uiPLTSize, m_pcRdCost, &errorOrig, &errorNew, calcErroBits);
+  }
+#endif
+
   pcCU->setPLTScanRotationModeFlagSubParts( m_bBestScanRotationMode, 0, uiDepth );
   for (UInt ch = 0; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
   {
@@ -4692,6 +4869,53 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
   memcpy(paSPoint[0], m_paBestSPoint, sizeof(UChar) * uiWidth * uiHeight);
   memcpy(pRun,        m_paBestRun,    sizeof(TCoeff) * uiWidth * uiHeight);
   memcpy(pEscapeFlag, m_paBestEscapeFlag,  sizeof(UChar) * uiWidth * uiHeight);
+
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  if (uiPLTSize > 2 )
+  {
+      UInt uiBitsRD;
+
+      m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST]);
+      m_pcEntropyCoder->resetBits();
+      xEncIntraHeader(pcCU, uiDepth, 0, true, false);
+      uiBitsRD = m_pcEntropyCoder->getNumberOfWrittenBits();
+
+      Double rdOrig, rdNew;
+
+      rdOrig = errorOrig + m_pcRdCost->getLambda()*(Double)uiBits;
+      rdNew = errorNew + m_pcRdCost->getLambda()*(Double)uiBitsRD;
+
+      if (rdNew <= rdOrig)
+      {
+        uiBits = uiBitsRD;
+        m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[uiDepth][CI_TEMP_BEST]);
+      }
+      else
+      {
+        for (UInt ch = 0; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
+        {
+          if (ch == 0)
+          {
+            memcpy(pPixelValue[ch], m_paLevelStoreRD[ch], sizeof(Pel)* uiWidth * uiHeight);
+          }
+          else
+          {
+            memcpy(pPixelValue[ch], m_paLevelStoreRD[ch], sizeof(Pel)* (uiWidth >> uiScaleX) * (uiHeight >> uiScaleY));
+          }
+        }
+        memcpy(paSPoint[0], m_paSPointStoreRD, sizeof(UChar)* uiWidth * uiHeight);
+        memcpy(pRun, m_paRunStoreRD, sizeof(TCoeff)* uiWidth * uiHeight);
+        memcpy(pEscapeFlag, m_paEscapeFlagStoreRD, sizeof(UChar)* uiWidth * uiHeight);
+        memcpy(m_pltInfoBest, m_pltInfoStoreRD, sizeof(m_pltInfo));
+      }
+
+
+    if (uiIterNumber<MAX_PLT_ITER) //after cabac loading fix
+    {
+      testMode = preCalcRD(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), uiPLTSize, m_pcRdCost, uiIterNumber);
+    }
+  }
+#endif
 
   for (UInt ch = 0; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
   {
@@ -4774,6 +4998,10 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
   pcCU->getTotalCost()       = dCost;
   pcCU->getTotalDistortion() = uiDistortion;
   pcCU->copyToPic(uiDepth);
+
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  return(testMode);
+#endif
 }
 
 Void TEncSearch::deriveRunAndCalcBits(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* pcRecoYuv, UInt& uiMinBits, Bool bReset, PLTScanMode pltScanMode)
@@ -4808,7 +5036,10 @@ Void TEncSearch::deriveRunAndCalcBits(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComY
   pcCU->setPLTScanRotationModeFlagSubParts(pltScanMode, 0, uiDepth );
   if (pltScanMode == PLT_SCAN_VERTRAV)
   {    
-    rotationScan(m_cIndexBlock, uiWidth, uiHeight, false);
+    rotationScan(m_cIndexBlock, uiWidth, uiHeight, false);  
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+    rotationScan(m_cPosBlock, uiWidth, uiHeight, false);
+#endif 
   }
 
   m_puiScanOrder = g_scanOrder[SCAN_UNGROUPED][SCAN_TRAV][g_aucConvertToBit[uiWidth]+2][g_aucConvertToBit[uiHeight]+2];
@@ -4823,7 +5054,13 @@ Void TEncSearch::deriveRunAndCalcBits(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComY
   {
     m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[uiDepth][CI_TEMP_BEST]);
     m_bBestScanRotationMode = pltScanMode;
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+     memcpy(m_pltInfoBest, m_pltInfo, sizeof(m_pltInfo));
+     m_pltNoElementsBest = m_pltNoElements;
 
+     memcpy(m_cPosBlockRD, m_cPosBlock, sizeof(m_cPosBlock));
+     memcpy(m_cIndexBlockRD, m_cIndexBlock, sizeof(m_cIndexBlock));
+#endif
     for (UInt ch = 0; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
     {
       if ( ch == 0 )
@@ -4848,6 +5085,926 @@ Void TEncSearch::deriveRunAndCalcBits(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComY
   }
 }
 
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+UInt TEncSearch::preCalcRD(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiPLTSize, TComRdCost *pcCost, UInt uiIterNumber)
+{
+  UInt uiTotal = uiHeight * uiWidth;
+  Bool bEscape = 0;
+  UInt uiPLTSizeTemp=uiPLTSize, uiPLTSizeBest=uiPLTSize;
+  UInt pltIdxRemove1=0, pltIdxRemove2=0, pltIdxReplacement1 = MAX_PLT_SIZE-1, 
+       pltIdxMapping1[MAX_PLT_SIZE], pltIdxMapping2[MAX_PLT_SIZE], removedIndices[MAX_PLT_SIZE], removedIndicesBest[MAX_PLT_SIZE];
+  
+  UInt64 error = 0;
+  Double rdCostNew, rdCostOrig, rdCostDiff = MAX_DOUBLE;
+  Int64  iBits=0, runBits=0;
+
+  // Initial RD cost
+  memset(removedIndices, 0, sizeof(removedIndices));
+
+  for (UInt uiPLTIdx = 0; uiPLTIdx < MAX_PLT_SIZE; uiPLTIdx++)
+  {
+    pltIdxMapping1[uiPLTIdx] = uiPLTIdx;
+    pltIdxMapping2[uiPLTIdx] = uiPLTIdx;
+  }
+
+  error = 0;
+  for (UInt uiIdx=0; uiIdx < uiTotal; uiIdx++)
+  {
+    if (m_cIndexBlockRD[uiIdx] < 0)
+    {
+      m_cIndexBlockRD[uiIdx] = (MAX_PLT_SIZE-1);
+    }
+    UInt uiCurPltIdx = pltIdxMapping1[m_cIndexBlockRD[uiIdx]];
+    error += m_indError[m_cPosBlockRD[uiIdx]][uiCurPltIdx];
+  }
+
+
+  for (UInt noElement = 0; noElement < m_pltNoElementsBest; noElement++)
+  {
+    if (m_pltInfoBest[noElement].pltMode == PLT_RUN_LEFT && m_pltInfoBest[noElement].index < (MAX_PLT_SIZE-1))
+    {
+      iBits += m_pltInfoBest[noElement].bitsInd;
+    }
+  }
+
+  rdCostOrig = pcCost->getLambda()*(Double)(iBits>>15) + error;
+
+  // Initial error calculation
+  Int64 errorDiffPltIndArray[MAX_PLT_SIZE][MAX_PLT_SIZE];
+  Int64 bestIndToRemoveArray[MAX_PLT_SIZE][2];
+
+  for (UInt uiPLTIdx = 0; uiPLTIdx < uiPLTSize; uiPLTIdx++)
+  {
+    memset(errorDiffPltIndArray[uiPLTIdx], 0, MAX_PLT_SIZE*sizeof(UInt64));
+  }
+
+  //Calculate all the SSE if index A is mapped to index B
+  for (UInt uiIdx=0; uiIdx < uiTotal; uiIdx++)
+  {
+    UInt uiOrgIdx = m_cIndexBlockRD[uiIdx]; //Escape already converted
+    UInt* indError = m_indError[m_cPosBlockRD[uiIdx]];
+    Int64* errDiffArray = errorDiffPltIndArray[uiOrgIdx];
+    
+    for (UInt uiPLTIdx = 0; uiPLTIdx < uiPLTSize; uiPLTIdx++)
+    {
+      errDiffArray[uiPLTIdx] += indError[uiPLTIdx];
+    }
+    errDiffArray[MAX_PLT_SIZE - 1] += indError[MAX_PLT_SIZE - 1];
+  }
+
+  //select the best mapped index for each index
+  for (UInt uiPLTIdx = 0; uiPLTIdx < uiPLTSize; uiPLTIdx++)
+  {
+    Int64* bestIdxRemove = bestIndToRemoveArray[uiPLTIdx];
+    Int64* errDiffArray = errorDiffPltIndArray[uiPLTIdx];
+
+    bestIdxRemove[0] = MAX_PLT_SIZE-1;
+    bestIdxRemove[1] = errDiffArray[MAX_PLT_SIZE-1] - errDiffArray[uiPLTIdx];
+
+    for (UInt uiTmpIdx = 0; uiTmpIdx < uiPLTSize; uiTmpIdx++)
+    {
+      Int64 curError = errDiffArray[uiTmpIdx] - errDiffArray[uiPLTIdx];
+
+      if (uiPLTIdx != uiTmpIdx && (curError < bestIdxRemove[1] ||
+        (curError == bestIdxRemove[1] && uiTmpIdx < bestIdxRemove[0])))
+      {
+        bestIdxRemove[1] = curError;
+        bestIdxRemove[0] = uiTmpIdx;
+      }
+    }
+  }
+
+  m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_CURR_BEST]);
+  m_pcRDGoOnSbacCoder->saveRestorePltCtx(1);
+
+  //Remove the unused index after the mapping
+  while (uiPLTSizeTemp > 2)
+  {
+    Int64 minError = MAX_INT64;
+    UInt uiPLTCnt = 0;
+    while (uiPLTCnt < uiPLTSize)
+    {
+      if (removedIndices[uiPLTCnt] == 0)
+      {
+        if (bestIndToRemoveArray[uiPLTCnt][1] < minError)
+        {
+          minError           = bestIndToRemoveArray[uiPLTCnt][1];
+          pltIdxRemove1      = uiPLTCnt;
+          pltIdxReplacement1 = UInt(bestIndToRemoveArray[uiPLTCnt][0]);
+        }
+      }
+      uiPLTCnt++;
+    }
+      
+    // Merge removed index pltIdxRemove1 with pltIdxReplacement1
+    if (pltIdxReplacement1 != (MAX_PLT_SIZE-1))
+    {
+      for (UInt uiPLTIdx = 0; uiPLTIdx < uiPLTSize; uiPLTIdx++)
+      {
+        if (removedIndices[uiPLTIdx] == 0)
+        {
+          errorDiffPltIndArray[pltIdxReplacement1][uiPLTIdx] += errorDiffPltIndArray[pltIdxRemove1][uiPLTIdx];
+        }
+      }
+      errorDiffPltIndArray[pltIdxReplacement1][MAX_PLT_SIZE-1] += errorDiffPltIndArray[pltIdxRemove1][MAX_PLT_SIZE-1];
+    }
+    removedIndices[pltIdxRemove1]=1;
+
+    // Find another min index for pltIdxReplacement1 and indices for which pltIdxRemove1 was chosen
+    for (UInt uiPLTIdxOrg = 0; uiPLTIdxOrg < uiPLTSize; uiPLTIdxOrg++)
+    {
+      if ((removedIndices[uiPLTIdxOrg] == 0 && bestIndToRemoveArray[uiPLTIdxOrg][0] == pltIdxRemove1) || uiPLTIdxOrg == pltIdxReplacement1)
+      {
+        Int64* bestIdxRemove = bestIndToRemoveArray[uiPLTIdxOrg];
+        Int64* errDiffArray = errorDiffPltIndArray[uiPLTIdxOrg];
+
+        bestIdxRemove[0] = MAX_PLT_SIZE-1;
+        bestIdxRemove[1] = errDiffArray[MAX_PLT_SIZE - 1] - errDiffArray[uiPLTIdxOrg];
+
+        for (UInt uiPLTIdxTmp = 0; uiPLTIdxTmp < uiPLTSize; uiPLTIdxTmp++)
+        {
+          if (removedIndices[uiPLTIdxTmp] == 0)
+          {
+            Int64 curError = errDiffArray[uiPLTIdxTmp] - errDiffArray[uiPLTIdxOrg];
+
+            if (uiPLTIdxTmp != uiPLTIdxOrg && (curError < bestIdxRemove[1] ||
+              (curError == bestIdxRemove[1] && uiPLTIdxTmp<bestIdxRemove[0])))
+            {
+              bestIndToRemoveArray[uiPLTIdxOrg][1] = curError;
+              bestIndToRemoveArray[uiPLTIdxOrg][0] = uiPLTIdxTmp;
+            }
+          }
+        }
+
+      }
+
+    }
+
+    uiPLTSizeTemp--;
+
+    // Remapping
+    for (UInt uiPLTIdx = 0; uiPLTIdx<uiPLTSize; uiPLTIdx++)
+    {
+      if (uiPLTIdx == pltIdxRemove1)
+      {
+        removedIndices[uiPLTIdx] = 1;
+      }
+      if (pltIdxMapping1[uiPLTIdx] == pltIdxRemove1)
+      {
+        pltIdxMapping1[uiPLTIdx] = pltIdxReplacement1;
+      }
+    }
+
+    pltIdxRemove2 = pltIdxMapping2[pltIdxRemove1];
+    UInt pltIdxReplacement2 = pltIdxMapping2[pltIdxReplacement1];
+
+    for (UInt uiPLTIdx = 0; uiPLTIdx < uiPLTSize; uiPLTIdx++)
+    {
+      if (pltIdxMapping2[uiPLTIdx] == pltIdxRemove2)
+      {
+        pltIdxMapping2[uiPLTIdx] = pltIdxReplacement2;
+      }
+      if (pltIdxMapping2[uiPLTIdx] > pltIdxRemove2 && pltIdxMapping2[uiPLTIdx] < (MAX_PLT_SIZE - 1))
+      {
+        pltIdxMapping2[uiPLTIdx]--;
+      }
+    }
+
+    // 
+    
+    if (pltIdxReplacement1 == (MAX_PLT_SIZE-1))
+    {
+      bEscape = 1;
+    }
+    UInt uiIndexMaxSize = uiPLTSizeTemp;
+    if (pcCU->getPLTEscape(COMPONENT_Y, 0) || bEscape == 1)
+    {
+      uiIndexMaxSize++;
+    }
+
+    // New RD cost
+    error=0;
+    for (UInt uiIdx = 0; uiIdx < uiTotal; uiIdx++)
+    {
+      UInt uiCurPLTIdx = pltIdxMapping1[m_cIndexBlockRD[uiIdx]];
+      error += m_indError[m_cPosBlockRD[uiIdx]][uiCurPLTIdx];
+    }
+
+    UInt currIndex, nextIndex, noSameIndices, predIndex, run=0;
+
+    iBits = 0; 
+    UInt noElement = 0;
+    while (noElement < m_pltNoElementsBest)
+    {
+      noSameIndices = 0;
+
+      currIndex = pltIdxMapping2[m_pltInfoBest[noElement].index];
+      run = m_pltInfoBest[noElement].run;
+      runBits = m_pltInfoBest[noElement].bitsRun;
+
+      if (m_pltInfoBest[noElement].pltMode == PLT_RUN_LEFT && currIndex < (MAX_PLT_SIZE-1))
+      {
+        UInt uiIdx=1; 
+        while((noElement + uiIdx) < m_pltNoElementsBest)
+        {
+          nextIndex = pltIdxMapping2[m_pltInfoBest[noElement+1].index];
+          if (m_pltInfoBest[noElement+uiIdx].pltMode == PLT_RUN_LEFT && nextIndex < (MAX_PLT_SIZE-1) && nextIndex == currIndex)
+          {
+            run     += (m_pltInfoBest[noElement+uiIdx].run+1);
+            runBits += m_pltInfoBest[noElement+uiIdx].bitsRun;
+            uiIdx++;
+          }
+          else
+          {
+            break;
+          }
+        }
+        noSameIndices = uiIdx-1;
+
+        if (noElement > 0)
+        {
+          predIndex = pltIdxMapping2[m_pltInfoBest[noElement].indexPred];
+          if (currIndex >= predIndex && currIndex > 0)
+          {
+            currIndex--;
+          }
+          iBits+=m_truncBinBits[currIndex][uiIndexMaxSize-1]<<15;
+        }
+        else
+        {
+          iBits+=m_truncBinBits[currIndex][uiIndexMaxSize]<<15;
+        }
+        
+
+        if (noSameIndices>0)
+        {
+          m_pcRDGoOnSbacCoder->saveRestorePltCtx(0);
+          m_pcRDGoOnSbacCoder->resetBits();
+          UInt64 initialBits = m_pcRDGoOnSbacCoder->getNumPartialBits();
+          m_pcRDGoOnSbacCoder->encodeRun(run, PLT_RUN_LEFT, currIndex, uiTotal - m_pltInfoBest[noElement].position - 1);
+          iBits += (m_pcRDGoOnSbacCoder->getNumPartialBits() - runBits - initialBits);
+        }
+
+      }
+      noElement += (1 + noSameIndices);
+    }
+
+    rdCostNew = pcCost->getLambda()*(Double)(iBits>>15)+error;
+    
+    if ((rdCostNew - rdCostOrig) < rdCostDiff)
+    {
+      rdCostDiff = (rdCostNew-rdCostOrig);
+      uiPLTSizeBest = uiPLTSizeTemp;
+      memcpy(removedIndicesBest, removedIndices, sizeof(removedIndices));
+    }
+  }
+
+  UInt testReducedInd=1;
+
+
+  m_prevPltSize[uiIterNumber]=uiPLTSizeBest;
+ 
+  UInt uiPLTCnt=0;
+  for (UInt uiPLTIdx = 0; uiPLTIdx < uiPLTSize; uiPLTIdx++)
+  {
+    if (removedIndicesBest[uiPLTIdx] == 0)
+    {
+      for (UInt ch = 0; ch < 3; ch++)
+      {
+        m_prevPlt[uiIterNumber][ch][uiPLTCnt] = Palette[ch][uiPLTIdx];
+      }
+      uiPLTCnt++;
+    }
+  }
+
+  return(testReducedInd);
+}
+
+UInt TEncSearch::calcPltIndexPredAndBits(Int iMaxSymbol, UInt uiIdxStart, UInt uiWidth, UInt *predIndex, UInt *currIndex)
+{
+  UInt uiTraIdx, indexBits;
+
+  *predIndex=iMaxSymbol - 1;
+  if(uiIdxStart)
+  {
+    uiTraIdx=m_puiScanOrder[uiIdxStart];
+    UInt uiTraIdxLeft = m_puiScanOrder[uiIdxStart - 1];
+    if (m_SPointRD[uiTraIdxLeft] == PLT_RUN_LEFT)  ///< copy left
+    {
+      *predIndex = m_cIndexBlockRD[uiTraIdxLeft];
+      if(m_cIndexBlockRD[uiTraIdxLeft]==(MAX_PLT_SIZE-1))
+      {
+        *predIndex = iMaxSymbol - 1;
+      }
+    }
+    else
+    {
+      *predIndex = m_cIndexBlockRD[uiTraIdx - uiWidth];
+      if(m_cIndexBlockRD[uiTraIdx - uiWidth]==(MAX_PLT_SIZE-1))
+      {
+        *predIndex = iMaxSymbol - 1;
+      }
+    }
+    iMaxSymbol--;
+  }
+
+  if ((*currIndex)>(*predIndex))
+  {
+    (*currIndex)--;
+  }
+  indexBits=m_truncBinBits[*currIndex][iMaxSymbol];
+
+  return(indexBits);
+}
+
+UInt TEncSearch::calcPLTStartCopy(UInt positionInit, UInt positionCurrSegment, UInt uiWidth)
+{
+  UInt positionStart;
+
+  positionStart=positionInit;
+  while (positionStart>(positionCurrSegment+1) && positionStart>uiWidth)
+  {
+
+    UInt uiTraIdx = m_puiScanOrder[positionStart-1]; 
+    if (m_cIndexBlockRD[uiTraIdx]==m_cIndexBlockRD[uiTraIdx - uiWidth])
+    {
+      positionStart--;
+    }
+    else
+    {
+      break;
+    }
+  }
+
+  return(positionStart);
+}
+
+UInt TEncSearch::calcPltErrorCopy(UInt uiIdxStart, UInt run, UInt uiWidth, UInt *merge)
+{
+  UInt error=0;
+  UInt uiIdx, uiTraIdx, uiPLTIdx;
+  *merge=1;
+
+  for (uiIdx=uiIdxStart; uiIdx<=(uiIdxStart+run); uiIdx++)
+  {
+    uiTraIdx = m_puiScanOrder[uiIdx]; 
+
+    uiPLTIdx=m_cIndexBlockRD[uiTraIdx - uiWidth];
+    if (uiPLTIdx==(MAX_PLT_SIZE-1))
+    {
+      *merge=0;
+      break;
+    }
+    error+=m_indError[m_cPosBlockRD[uiTraIdx]][uiPLTIdx];
+  }
+
+  return(error);
+}
+
+UInt64 TEncSearch::calcPltErrorLevel(Int idxStart, UInt run, UInt uiPLTIdx)
+{
+  UInt64 error = 0;
+
+  for (Int idx = idxStart + run; idx >= idxStart; idx--)
+  {
+    error += m_indError[m_cPosBlockRD[m_puiScanOrder[idx]]][uiPLTIdx];
+  }
+
+  return(error);
+}
+
+Void TEncSearch::modifyPltSegment(UInt uiWidth, UInt uiIdxStart, UInt pltMode, UInt pltIdx, UInt run)
+{
+  for (UInt uiIdx=uiIdxStart; uiIdx<=(uiIdxStart+run); uiIdx++){
+    UInt uiTraIdx = m_puiScanOrder[uiIdx]; 
+
+    m_SPointRD[uiTraIdx]=pltMode;
+
+    if (pltMode==PLT_RUN_LEFT)
+    {
+      m_cIndexBlockRD[uiTraIdx]=pltIdx;
+    }
+    else
+    {
+      m_cIndexBlockRD[uiTraIdx]=m_cIndexBlockRD[uiTraIdx - uiWidth];
+    }
+  }
+}
+
+UInt TEncSearch::findPltSegment(pltInfoStruct *pltElement, TComDataCU* pcCU, UInt uiIdxStart, UInt uiIndexMaxSize, UInt uiWidth, UInt uiTotal, UInt copyPixels[],
+  Int restrictLevelRun, UInt calcErrBits)
+{
+  UInt uiTraIdxStart=m_puiScanOrder[uiIdxStart], uiIdx, uiTraIdx, pltMode, predIndex=0, run, currIndex=0;
+  UInt64 indexBits=0, runBits, sPointBits;
+  Int iMaxSymbol; 
+  if (m_SPointRD[uiTraIdxStart]==PLT_RUN_LEFT)
+  {
+    pltMode=PLT_RUN_LEFT;
+    iMaxSymbol=uiIndexMaxSize;
+
+    currIndex=m_cIndexBlockRD[uiTraIdxStart];
+
+    UInt startIndex = currIndex;
+
+    if(m_cIndexBlockRD[uiTraIdxStart]==(MAX_PLT_SIZE-1))
+    {
+      currIndex = iMaxSymbol - 1;
+      pltElement->index=(MAX_PLT_SIZE-1);
+    }
+    else
+    {
+      pltElement->index=currIndex;
+    }
+
+    if (restrictLevelRun==-1)
+    {
+      run=0;
+      uiIdx=uiIdxStart;
+      while (uiIdx<(uiTotal-1))
+      {
+        uiIdx++;
+        uiTraIdx=m_puiScanOrder[uiIdx];
+
+        if (m_cIndexBlockRD[uiTraIdx] == startIndex)
+        {
+          run++;
+        }
+        else
+        {
+          break;
+        }
+      }
+    }
+    else if (restrictLevelRun==-2)
+    {
+      run=0;
+      uiIdx=uiIdxStart;
+      while (uiIdx<(uiTotal-1))
+      {
+        uiIdx++;
+        uiTraIdx=m_puiScanOrder[uiIdx];
+
+        if (m_cIndexBlockRD[uiTraIdx] == startIndex && m_SPointRD[uiTraIdx] == PLT_RUN_LEFT)
+        {
+          run++;
+        }
+        else
+        {
+          break;
+        }
+      }
+    }
+    else
+    {
+      run=restrictLevelRun;
+    }
+    if (calcErrBits)
+    {
+      indexBits=calcPltIndexPredAndBits(iMaxSymbol, uiIdxStart, uiWidth, &predIndex, &currIndex);
+    }
+  }
+  else
+  {
+
+    pltMode = PLT_RUN_ABOVE;
+    pltElement->index = 0;
+
+    run = 0;
+    uiIdx = uiIdxStart;
+    uiTraIdx = m_puiScanOrder[uiIdx];
+    copyPixels[uiTraIdx - uiWidth] = 1;
+
+    m_cIndexBlockRD[uiTraIdx] = m_cIndexBlockRD[uiTraIdx - uiWidth];
+    while (uiIdx < (uiTotal-1))
+    {
+      uiIdx++;
+      uiTraIdx=m_puiScanOrder[uiIdx];
+      if (m_cIndexBlockRD[uiTraIdx]==m_cIndexBlockRD[uiTraIdx - uiWidth])
+      {
+        copyPixels[uiTraIdx - uiWidth]=1;
+        run++;
+      }
+      else
+      {
+        break;
+      }
+    }
+  }
+
+
+  pltElement->position = uiIdxStart;
+  pltElement->pltMode = pltMode;
+  pltElement->run = run;
+
+  for (uiIdx = uiIdxStart; uiIdx <= (uiIdxStart + run); uiIdx++)
+  {
+    uiTraIdx = m_puiScanOrder[uiIdx];
+
+    m_SPointRD[uiTraIdx] = pltMode;
+    m_RunRD[uiTraIdx] = run;
+
+    if (m_EscapeFlagRD[uiTraIdx] == 0)
+    {
+      m_LevelRD[0][uiTraIdx] = m_cIndexBlockRD[uiTraIdx];
+    }
+  }
+
+  if (calcErrBits)
+  {
+
+    UInt escape = 0, usedForCopy = 0;
+    UInt64 error = 0;
+
+    for (uiIdx=uiIdxStart; uiIdx<=(uiIdxStart+run); uiIdx++)
+    {
+      uiTraIdx = m_puiScanOrder[uiIdx]; 
+      Pel index = m_cIndexBlockRD[uiTraIdx];
+      error += m_indError[m_cPosBlockRD[uiTraIdx]][index];
+      if (copyPixels[uiTraIdx])
+      {
+        usedForCopy = 1;
+      }
+
+      UInt escFlagOrig=m_EscapeFlagRD[uiTraIdx];
+      UInt escFlagNew = index == (MAX_PLT_SIZE - 1) ? 1 : 0;
+      assert(escFlagOrig == escFlagNew);
+
+      if (escFlagNew == 1)
+      {
+        escape = 1;
+      }
+    }
+
+    m_pcRDGoOnSbacCoder->saveRestorePltCtx(0);
+    m_pcRDGoOnSbacCoder->resetBits();
+    UInt64 initialBits = m_pcRDGoOnSbacCoder->getNumPartialBits();
+    m_pcRDGoOnSbacCoder->encodeSPointRD(uiIdxStart, uiWidth, m_SPointRD, pltMode, m_puiScanOrder);
+    sPointBits=m_pcRDGoOnSbacCoder->getNumPartialBits()-initialBits;
+    m_pcRDGoOnSbacCoder->encodeRun(run, pltMode, currIndex, uiTotal - uiIdxStart - 1);
+
+
+    runBits=m_pcRDGoOnSbacCoder->getNumPartialBits()-sPointBits-initialBits;
+
+
+    pltElement->position = uiIdxStart;
+    pltElement->pltMode = pltMode;
+    pltElement->run=run;
+    pltElement->indexPred = predIndex;
+    pltElement->bitsInd=indexBits<<15;
+    pltElement->bitsRun = runBits;
+    pltElement->bitsAll=runBits+sPointBits+(indexBits<<15);
+    pltElement->error = Double(error);
+    pltElement->escape = escape;
+    pltElement->usedForCopy = usedForCopy;
+  }
+
+  return(run);
+}
+
+Void TEncSearch::preCalcRDMerge(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiPLTSize, TComRdCost *pcCost, 
+  UInt *errorOrig, UInt *errorNew, UInt calcErrBits)
+{
+  UInt uiIdx, uiIdxStart, uiTraIdx, noElement, run, uiTotal = uiHeight * uiWidth,
+     merge, forceMerge;
+
+  UInt predIndex = 0;
+  Double error = 0;
+
+  Double rdCostOrig, rdCostBestMode;
+  UInt copyPixels[32*32];
+  Int modMode;
+
+  UInt modRunMode, modRunCurrentBest=0, uiModPositionNextBest=0, modRunNextBest=0;
+  Double rdCostModRun, rdCostModRunMin;
+  UInt pltMode=PLT_RUN_LEFT, pltModeMerge=PLT_RUN_LEFT, uiIdxStartMerge, mergeCurrIndex=0, currIndex, mergePLTIdx=0;
+  UInt64 indexBits;
+  Double rdCostMerge=MAX_DOUBLE, errorMin = MAX_DOUBLE;
+  Int iMaxSymbol;
+
+  UInt uiPLTIdx = 0;
+
+  UInt uiPLTIdxStart, uiPLTIdxEnd; 
+
+
+  pltInfoStruct* currentPLTElement = &m_currentPLTElement;
+  pltInfoStruct* nextPLTElement = &m_nextPLTElement;
+  pltInfoStruct *tempPLTElement;
+
+  m_puiScanOrder = g_scanOrder[SCAN_UNGROUPED][SCAN_TRAV][g_aucConvertToBit[uiWidth]+2][g_aucConvertToBit[uiHeight]+2];
+
+  UInt64 errOrig = 0;
+
+
+  for (uiIdx=0; uiIdx<uiTotal; uiIdx++)
+  {
+    uiTraIdx = m_puiScanOrder[uiIdx]; 
+    if (m_EscapeFlagRD[uiTraIdx])
+    {
+      errOrig += m_indError[m_cPosBlockRD[uiTraIdx]][MAX_PLT_SIZE];
+    }
+    else
+    {
+      uiPLTIdx = m_cIndexBlockRD[uiTraIdx];
+      errOrig += m_indError[m_cPosBlockRD[uiTraIdx]][uiPLTIdx];
+    }
+  }
+
+  *errorOrig = UInt(errOrig);
+
+  UInt uiIndexMaxSize = uiPLTSize;
+  if( pcCU->getPLTEscape(COMPONENT_Y, 0) )
+  {
+    uiIndexMaxSize++;
+  }
+
+  memset(copyPixels, 0, sizeof(copyPixels));
+
+  for (noElement=0; noElement<m_pltNoElementsBest; noElement++)
+  {
+    if (m_pltInfoBest[noElement].pltMode==PLT_RUN_ABOVE)
+    {
+      UInt end = m_pltInfoBest[noElement].position + m_pltInfoBest[noElement].run;
+      for (uiIdx = m_pltInfoBest[noElement].position; uiIdx <= end; uiIdx++)
+      {
+        uiTraIdx = m_puiScanOrder[uiIdx]; 
+        copyPixels[uiTraIdx - uiWidth]=1;
+
+      }
+    }
+  }
+
+  for (uiIdx=0; uiIdx<uiTotal; uiIdx++)
+  {
+    if (m_cIndexBlockRD[uiIdx]<0)
+    {
+      m_cIndexBlockRD[uiIdx]=(MAX_PLT_SIZE-1);
+    }
+  }
+
+  m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_CURR_BEST]);
+  m_pcRDGoOnSbacCoder->saveRestorePltCtx(1);
+
+  uiIdxStart=0; 
+  findPltSegment(currentPLTElement, pcCU, uiIdxStart, uiIndexMaxSize, uiWidth, uiTotal, copyPixels, -1, 1);
+  uiIdxStart=currentPLTElement->position+(currentPLTElement->run+1);
+
+  while (uiIdxStart < uiTotal)
+  {
+    findPltSegment(nextPLTElement, pcCU, uiIdxStart, uiIndexMaxSize, uiWidth, uiTotal, copyPixels, -1, 1);
+    modMode = 0; merge = 0; forceMerge = 0;  
+    if (currentPLTElement->escape == 0 && nextPLTElement->escape == 0)
+    {
+      run=currentPLTElement->run + nextPLTElement->run + 1;
+      
+      rdCostOrig=pcCost->getLambda()*(Double)((currentPLTElement->bitsAll+nextPLTElement->bitsAll)>>15)+
+        currentPLTElement->error+nextPLTElement->error;
+      rdCostBestMode = rdCostOrig;
+
+      if (currentPLTElement->pltMode == nextPLTElement->pltMode && (currentPLTElement->pltMode == PLT_RUN_ABOVE || currentPLTElement->index == nextPLTElement->index))
+      {
+        forceMerge = 1;
+      }
+     
+
+      modRunMode=0;
+      if (currentPLTElement->pltMode==PLT_RUN_LEFT && nextPLTElement->pltMode==PLT_RUN_ABOVE && forceMerge==0)
+      {
+        UInt uiModPositionNext, runCurrent, runNext, tempIndex, groupInit, groupNew;
+        UInt64 modRunBits;
+
+        rdCostModRunMin=MAX_DOUBLE;
+        Int startCopy=calcPLTStartCopy(nextPLTElement->position, currentPLTElement->position, uiWidth);
+        runCurrent=startCopy-currentPLTElement->position-1;
+        runNext=run-runCurrent-1;
+
+        groupInit=m_runGolombGroups[runNext];
+
+        for (uiModPositionNext=startCopy; uiModPositionNext<nextPLTElement->position; uiModPositionNext++)
+        {
+          runCurrent=uiModPositionNext-currentPLTElement->position-1;
+          runNext=run-runCurrent-1;
+
+          groupNew=m_runGolombGroups[runNext];
+
+          if (uiModPositionNext==startCopy || groupNew<groupInit)
+          {
+            groupInit=(groupNew<groupInit)? groupNew : groupInit;
+            modRunMode=1;
+
+            m_pcRDGoOnSbacCoder->saveRestorePltCtx(0);
+            m_pcRDGoOnSbacCoder->resetBits();
+            UInt64 initialBits=m_pcRDGoOnSbacCoder->getNumPartialBits();
+            m_pcRDGoOnSbacCoder->encodeSPointRD(currentPLTElement->position, uiWidth, m_SPointRD, PLT_RUN_LEFT, m_puiScanOrder);
+            tempIndex=currentPLTElement->index > currentPLTElement->indexPred ? currentPLTElement->index-1 : currentPLTElement->index ;
+            m_pcRDGoOnSbacCoder->encodeRun(runCurrent, PLT_RUN_LEFT, tempIndex, uiTotal - currentPLTElement->position - 1);
+
+            // Next plt segment
+            m_pcRDGoOnSbacCoder->encodeSPointRD(uiModPositionNext, uiWidth, m_SPointRD, PLT_RUN_ABOVE, m_puiScanOrder);
+
+            m_pcRDGoOnSbacCoder->encodeRun(runNext, PLT_RUN_ABOVE, tempIndex, uiTotal - uiModPositionNext - 1);
+
+            modRunBits=m_pcRDGoOnSbacCoder->getNumPartialBits()+currentPLTElement->bitsInd-initialBits;
+            rdCostModRun=pcCost->getLambda()*(Double)(modRunBits>>15)+currentPLTElement->error+nextPLTElement->error;
+
+
+            if (rdCostModRun<rdCostModRunMin)
+            {
+              rdCostModRunMin=rdCostModRun;
+              uiModPositionNextBest=uiModPositionNext;
+              modRunCurrentBest=runCurrent;
+              modRunNextBest=runNext;
+            }
+          }
+        }
+      }
+
+      if (modRunMode==1 && rdCostModRunMin<=rdCostBestMode)
+      {
+        rdCostBestMode=rdCostModRunMin;
+        modMode=1;
+      }
+
+
+      if (!pcCU->getCUTransquantBypass(0))
+      {
+        uiIdxStartMerge = currentPLTElement->position;
+        predIndex = currentPLTElement->indexPred;
+
+        UInt testLevel=0;
+        if (currentPLTElement->pltMode==PLT_RUN_LEFT)
+        {
+          if (currentPLTElement->pltMode==PLT_RUN_LEFT && nextPLTElement->pltMode==PLT_RUN_LEFT && (currentPLTElement->usedForCopy==0 || nextPLTElement->usedForCopy==0))
+          { 
+            testLevel=1;
+          }
+          if (nextPLTElement->pltMode==PLT_RUN_ABOVE && nextPLTElement->usedForCopy==0)
+          { 
+            testLevel=1;
+          }
+          if (forceMerge==1)
+          {
+            testLevel=1;
+          }
+        }
+
+        UInt testCopy=(currentPLTElement->position>=uiWidth) ? 1 : 0;
+        if (currentPLTElement->pltMode==PLT_RUN_LEFT && currentPLTElement->usedForCopy==1)
+        {
+          testCopy=0;
+        }
+        if (nextPLTElement->pltMode==PLT_RUN_LEFT && nextPLTElement->usedForCopy==1)
+        {
+          testCopy=0;
+        }
+ 
+        if (testLevel)
+        { 
+          pltMode = PLT_RUN_LEFT;
+          iMaxSymbol = (uiIdxStartMerge > 0) ? uiIndexMaxSize - 1 : uiIndexMaxSize;
+          uiPLTIdxStart = 0, uiPLTIdxEnd = uiPLTSize - 1;
+
+          if (currentPLTElement->usedForCopy == 1)
+          {
+            uiPLTIdxStart = currentPLTElement->index;
+            uiPLTIdxEnd = currentPLTElement->index;
+          }
+          else if (nextPLTElement->usedForCopy == 1)
+          {
+            uiPLTIdxStart = nextPLTElement->index;
+            uiPLTIdxEnd = nextPLTElement->index;
+          }
+
+          errorMin = MAX_DOUBLE;
+          for (uiPLTIdx = uiPLTIdxStart; uiPLTIdx <= uiPLTIdxEnd; uiPLTIdx++)
+          {
+            if (uiPLTIdx != predIndex)
+            { // do not allow copy mode
+              merge = 1;
+              currIndex = uiPLTIdx > predIndex ? uiPLTIdx - 1 : uiPLTIdx;
+
+              indexBits = m_truncBinBits[currIndex][iMaxSymbol];
+              error = pcCost->getLambda()*indexBits; // error includes index
+              error += calcPltErrorLevel(uiIdxStartMerge, run, uiPLTIdx);
+
+              if (error<errorMin)
+              {
+                errorMin = error;
+                mergePLTIdx = uiPLTIdx;
+                mergeCurrIndex = currIndex;
+              }
+            }
+          }
+
+          if (merge==1)
+          {
+            m_pcRDGoOnSbacCoder->saveRestorePltCtx(0);
+            m_pcRDGoOnSbacCoder->resetBits();
+            UInt64 initialBits=m_pcRDGoOnSbacCoder->getNumPartialBits();
+            m_pcRDGoOnSbacCoder->encodeSPointRD(uiIdxStartMerge, uiWidth, m_SPointRD, pltMode, m_puiScanOrder);
+            m_pcRDGoOnSbacCoder->encodeRun(run, pltMode, mergeCurrIndex, uiTotal - uiIdxStartMerge - 1);
+
+            rdCostMerge=pcCost->getLambda()*(Double)((m_pcRDGoOnSbacCoder->getNumPartialBits()-initialBits)>>15)+errorMin;
+          }
+
+          if ((merge==1 && rdCostMerge<=rdCostBestMode) || forceMerge==1)
+          {
+            rdCostBestMode=rdCostMerge;
+            modMode=2;
+            pltModeMerge=PLT_RUN_LEFT;
+          }
+        }
+
+
+        if (testCopy) 
+        { 
+          pltMode=PLT_RUN_ABOVE;
+          errorMin=calcPltErrorCopy(uiIdxStartMerge, run, uiWidth, &merge);
+
+          if (currentPLTElement->pltMode==PLT_RUN_ABOVE && nextPLTElement->pltMode==PLT_RUN_ABOVE)
+          {
+            merge=1;
+          }
+
+
+        if (merge == 1)
+        {
+          m_pcRDGoOnSbacCoder->saveRestorePltCtx(0);
+          m_pcRDGoOnSbacCoder->resetBits();
+          UInt64 initialBits = m_pcRDGoOnSbacCoder->getNumPartialBits();
+          m_pcRDGoOnSbacCoder->encodeSPointRD(uiIdxStartMerge, uiWidth, m_SPointRD, pltMode, m_puiScanOrder);
+          m_pcRDGoOnSbacCoder->encodeRun(run, pltMode, mergeCurrIndex, uiTotal - uiIdxStartMerge - 1);
+          rdCostMerge = pcCost->getLambda()*(Double)((m_pcRDGoOnSbacCoder->getNumPartialBits() - initialBits) >> 15) + errorMin;
+        }
+
+          if (merge==1 && rdCostMerge<=rdCostBestMode)
+          {
+            rdCostBestMode=rdCostMerge;
+            modMode=2;
+            pltModeMerge=PLT_RUN_ABOVE;
+          }
+        }
+
+
+      }
+
+    }
+
+    if (modMode==0)
+    {
+      tempPLTElement=currentPLTElement;
+      currentPLTElement=nextPLTElement;
+      nextPLTElement=tempPLTElement;
+    }
+    else
+    {
+      if (modMode==1) 
+      {
+        modifyPltSegment(uiWidth, uiModPositionNextBest, nextPLTElement->pltMode, nextPLTElement->index, modRunNextBest);
+        findPltSegment(currentPLTElement, pcCU, currentPLTElement->position, uiIndexMaxSize, uiWidth, uiTotal, copyPixels, modRunCurrentBest, 1);
+        findPltSegment(currentPLTElement, pcCU, uiModPositionNextBest, uiIndexMaxSize, uiWidth, uiTotal, copyPixels, -1, 1);
+      }
+      if (modMode==2)
+      {
+        modifyPltSegment(uiWidth, currentPLTElement->position, pltModeMerge, mergePLTIdx, currentPLTElement->run);
+        modifyPltSegment(uiWidth, nextPLTElement->position, pltModeMerge, mergePLTIdx, nextPLTElement->run);
+        findPltSegment(currentPLTElement, pcCU, currentPLTElement->position, uiIndexMaxSize, uiWidth, uiTotal, copyPixels, -1, 1);
+      }
+    }
+
+    uiIdxStart=currentPLTElement->position+(currentPLTElement->run+1);
+  }
+
+  uiIdxStart=0; noElement=0;
+  while (uiIdxStart<uiTotal)
+  {
+    findPltSegment(m_pltInfoBest + noElement, pcCU, uiIdxStart, uiIndexMaxSize, uiWidth, uiTotal, copyPixels, -2, calcErrBits);
+    uiIdxStart=m_pltInfoBest[noElement].position+(m_pltInfoBest[noElement].run+1);
+    noElement++;
+  }
+
+  m_pltNoElementsBest=noElement;
+
+
+  UInt64 errNew = 0;
+
+  for (uiIdx=0; uiIdx<uiTotal; uiIdx++)
+  {
+    uiTraIdx = m_puiScanOrder[uiIdx]; 
+    if (m_EscapeFlagRD[uiTraIdx])
+    {
+      errNew += m_indError[m_cPosBlockRD[uiTraIdx]][MAX_PLT_SIZE];
+    }
+    else
+    {
+      uiPLTIdx=m_cIndexBlockRD[uiTraIdx];
+      errNew += m_indError[m_cPosBlockRD[uiTraIdx]][uiPLTIdx];
+    }
+  }
+
+  *errorNew = UInt(errNew);
+}   
+#endif
+
 Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  Pel* pValue, UChar* pSPoint,
   Pel** paPixelValue, Pel ** paRecoValue, TCoeff* pRun,
   UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiPLTSize)
@@ -4859,6 +6016,19 @@ Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  
   Pel *pcIndexBlock = m_cIndexBlock;
 
   UChar *pEscapeFlag  = pcCU->getEscapeFlag(COMPONENT_Y);
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  UInt noElements=0;
+  UInt64 allBitsCopy, allBitsIndex, indexBits, runBitsIndex, runBitsCopy;
+
+  UInt uiIndexMaxSize = pcCU->getPLTSize(COMPONENT_Y, 0);
+  if( pcCU->getPLTEscape(COMPONENT_Y, 0) )
+  {
+    uiIndexMaxSize++;
+  }
+
+  m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_CURR_BEST]);
+  m_pcRDGoOnSbacCoder->saveRestorePltCtx(1);
+#endif
 
   //Test Run
   while (uiIdx < uiTotal)
@@ -4871,7 +6041,11 @@ Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  
 
     if(RunValid)
     {
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+      dAveBitsPerPix[PLT_RUN_LEFT] = xGetRunBits(pcCU, pValue, uiStartPos, (uiRun + 1), PLT_RUN_LEFT, &allBitsIndex, &indexBits, &runBitsIndex);
+#else
       dAveBitsPerPix[PLT_RUN_LEFT] = xGetRunBits(pcCU, pValue, uiStartPos, (uiRun + 1), PLT_RUN_LEFT);
+#endif
     }
     else
     {
@@ -4883,7 +6057,11 @@ Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  
 
     if(CopyValid)
     {
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+      dAveBitsPerPix[PLT_RUN_ABOVE] = xGetRunBits(pcCU, pValue, uiStartPos, uiCopyRun, PLT_RUN_ABOVE, &allBitsCopy, &indexBits, &runBitsCopy);
+#else
       dAveBitsPerPix[PLT_RUN_ABOVE] = xGetRunBits(pcCU, pValue, uiStartPos, uiCopyRun, PLT_RUN_ABOVE);
+#endif
     }
     else
     {
@@ -4901,6 +6079,17 @@ Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  
         pRun[uiTraIdx]  = uiCopyRun-1;
 
         pEscapeFlag[uiTraIdx] = ( pcIndexBlock[uiTraIdx] < 0 );
+
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+        Double error=0;
+        m_pltInfo[noElements].index    = 0;
+        m_pltInfo[noElements].position = uiIdx;
+        m_pltInfo[noElements].pltMode  = pSPoint[uiTraIdx];
+        m_pltInfo[noElements].run      = pRun[uiTraIdx];
+        m_pltInfo[noElements].bitsRun  = runBitsCopy;
+        m_pltInfo[noElements].bitsInd  = 0;
+        m_pltInfo[noElements].bitsAll  = allBitsCopy;
+#endif
 
         if( pEscapeFlag[uiTraIdx] )
         {
@@ -4925,6 +6114,10 @@ Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  
 
           iTemp--;
         }
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+        m_pltInfo[noElements].error = error;
+        noElements++;
+#endif
       }
       else
       {
@@ -4932,6 +6125,40 @@ Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  
         pRun[uiTraIdx] = uiRun;
 
         pEscapeFlag[uiTraIdx] = ( pcIndexBlock[uiTraIdx] < 0 );
+
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+        Double error=0;
+        m_pltInfo[noElements].position = uiIdx;
+        m_pltInfo[noElements].pltMode  = pSPoint[uiTraIdx];
+        m_pltInfo[noElements].run      = pRun[uiTraIdx];
+        m_pltInfo[noElements].bitsInd  = indexBits;
+        m_pltInfo[noElements].bitsRun  = runBitsIndex;
+        m_pltInfo[noElements].bitsAll  = allBitsIndex;
+        
+        m_pltInfo[noElements].index    = pEscapeFlag[uiTraIdx] ? (MAX_PLT_SIZE - 1) : pValue[uiTraIdx];
+       
+
+        if (uiIdx>0)
+        {
+          UInt uiTraIdxLeft = m_puiScanOrder[uiIdx - 1];
+          if (pSPoint[uiTraIdxLeft] == PLT_RUN_LEFT)  ///< copy left
+          {
+            m_pltInfo[noElements].indexPred = pValue[uiTraIdxLeft];
+            if( pEscapeFlag[uiTraIdxLeft] )
+            {
+              m_pltInfo[noElements].indexPred = uiIndexMaxSize - 1;
+            }
+          }
+          else
+          {
+            m_pltInfo[noElements].indexPred = pValue[uiTraIdx - uiWidth];
+            if( pEscapeFlag[uiTraIdx - uiWidth] )
+            {
+              m_pltInfo[noElements].indexPred = uiIndexMaxSize - 1;
+            }
+          }
+        }
+#endif
 
         if( pEscapeFlag[uiTraIdx] )
         {
@@ -4956,15 +6183,29 @@ Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  
           uiIdx++;
           iTemp--;
         }
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+        m_pltInfo[noElements].error=error;
+        noElements++;
+#endif
       }
     }
   }
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  m_pltNoElements = noElements;
+#endif
+
   assert (uiIdx == uiTotal);
 }
 
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+Double TEncSearch::xGetRunBits(TComDataCU* pcCU, Pel *pValue, UInt uiStartPos, UInt uiRun, PLTRunMode cPltRunMode, UInt64 *allBits, UInt64 *indexBits, UInt64 *runBits)
+#else
 Double TEncSearch::xGetRunBits(TComDataCU* pcCU, Pel *pValue, UInt uiStartPos, UInt uiRun, PLTRunMode cPltRunMode)
+#endif
 {
+#if!SCM_U0096_PLT_ENCODER_IMPROVEMENT
   UInt uiDepth      = pcCU->getDepth(0);
+#endif
   UInt uiWidth      = pcCU->getWidth(0);
   UInt uiHeight = pcCU->getHeight(0);
   UInt uiTotal = uiWidth * uiHeight;
@@ -4980,11 +6221,19 @@ Double TEncSearch::xGetRunBits(TComDataCU* pcCU, Pel *pValue, UInt uiStartPos, U
   UInt   uiTraIdx    = m_puiScanOrder[uiStartPos];
   UInt   uiRealLevel = pValue[uiTraIdx];
   UChar* pEscapeFlag = pcCU->getEscapeFlag(COMPONENT_Y);
-
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  m_pcRDGoOnSbacCoder->saveRestorePltCtx(0);
+#else
   m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST]);
+#endif
   m_pcEntropyCoder->resetBits();
 
   m_pcRDGoOnSbacCoder->encodeSPoint(pcCU, 0, uiStartPos, uiWidth, pSPoint, m_puiScanOrder);
+
+
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  UInt64 sPointBits=m_pcRDGoOnSbacCoder->getNumPartialBits();
+#endif
 
   assert(uiRun >= 1);
   switch(cPltRunMode)
@@ -4997,20 +6246,34 @@ Double TEncSearch::xGetRunBits(TComDataCU* pcCU, Pel *pValue, UInt uiStartPos, U
 
     siCurLevel = m_pcRDGoOnSbacCoder->writePLTIndex(uiStartPos, pValue, uiIndexMaxSize, pSPoint, uiWidth, pEscapeFlag);
 
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+    *indexBits = m_pcRDGoOnSbacCoder->getNumPartialBits() - sPointBits;
+#endif
     if( pEscapeFlag[uiTraIdx] )
     {
       pValue[uiTraIdx] = uiRealLevel;
     }
     m_pcRDGoOnSbacCoder->encodeRun((uiRun - 1), PLT_RUN_LEFT, siCurLevel, uiTotal - uiStartPos - 1);
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+    * runBits = m_pcRDGoOnSbacCoder->getNumPartialBits() - sPointBits - (*indexBits);
+#endif
+
     break;
   case PLT_RUN_ABOVE:
     m_pcRDGoOnSbacCoder->encodeRun((uiRun - 1), PLT_RUN_ABOVE, siCurLevel, uiTotal - uiStartPos - 1);
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+    * runBits = m_pcRDGoOnSbacCoder->getNumPartialBits() - sPointBits;
+#endif
+
     break;
   default:
     assert(0);
   }
 
   UInt uiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  *allBits=m_pcRDGoOnSbacCoder->getNumPartialBits();
+#endif
   Double dCostPerPixel = uiBits * 1.0 / uiRun;  
   return dCostPerPixel;
 }

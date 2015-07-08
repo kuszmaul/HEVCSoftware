@@ -423,7 +423,7 @@ public:
   Pel           getLastPLTInLcuFinal         (UChar ucCh, UInt uiPLTIdx)              { return m_piLastPLTInLcuFinal[ucCh][uiPLTIdx];    }
   Void          setLastPLTInLcuFinal         (UChar ucCh, Pel uiValue, UInt uiPLTIdx) { m_piLastPLTInLcuFinal[ucCh][uiPLTIdx] = uiValue; }
   Void          saveLastPLTInLcuFinal( TComDataCU *pcSrc, UInt uiAbsPartIdx, UInt numValidComp );
-#if !SCM_U0052_ESCAPE_PIXEL_CODING
+#if !SCM_U0052_ESCAPE_PIXEL_CODING || SCM_U0096_PLT_ENCODER_IMPROVEMENT
   Int           xCalcMaxVals(TComDataCU *pcCU, ComponentID compID);
 #endif
   Bool          getPLTScanRotationModeFlag (UInt uiIdx )             { return m_pbPLTScanRotationModeFlag[uiIdx]; }

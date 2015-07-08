@@ -1089,6 +1089,55 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
           }
           if ( rpcBestCU->getSlice()->getSPS()->getSpsScreenExtension().getUsePLTMode() )
           {
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT //Change PLT QP dependent error limit
+            Int iQP_PLT=Int(rpcBestCU->getQP(0));
+            Int iQPrem = iQP_PLT % 6;
+            Int iQPper = iQP_PLT / 6;
+            Double quantiserScale = g_quantScales[iQPrem];
+            Int quantiserRightShift = QUANT_SHIFT + iQPper;
+
+            Double dQP=((Double)(1<<quantiserRightShift))/quantiserScale;
+
+            UInt pltQP;
+            pltQP=(UInt)(2.0*dQP/3.0+0.5);
+            m_pcPredSearch->setPLTErrLimit(pltQP);
+
+            Bool forcePLTPrediction = false;
+            for( UChar ch = 0; ch < numValidComp; ch++ )
+            {
+              forcePLTPrediction = forcePLTPrediction || ( rpcTempCU->getLastPLTInLcuSizeFinal( ch ) > 0 );
+            }
+
+            UInt uiIterNumber=0, pltSize[2] = {MAX_PLT_SIZE, MAX_PLT_SIZE}, testedModes[4];
+
+            if( rpcTempCU->getWidth(0) != 64)
+            {
+              uiIterNumber = 0;
+              testedModes[uiIterNumber]=xCheckPLTMode( rpcBestCU, rpcTempCU, false, uiIterNumber, pltSize);
+              rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+
+              if (pltSize[0]>2 && testedModes[0]>0)
+              {
+                uiIterNumber = 2;
+                testedModes[uiIterNumber]=xCheckPLTMode( rpcBestCU, rpcTempCU, false, uiIterNumber, pltSize);
+                rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+              }
+
+              if( forcePLTPrediction)
+              {
+                uiIterNumber = 1;
+                testedModes[uiIterNumber]=xCheckPLTMode( rpcBestCU, rpcTempCU, true, uiIterNumber, pltSize+1);
+                rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+              }
+
+              if (forcePLTPrediction && pltSize[1]>2 && testedModes[1]>0)
+              {
+                uiIterNumber = 3;
+                testedModes[uiIterNumber]=xCheckPLTMode( rpcBestCU, rpcTempCU, true, uiIterNumber, pltSize+1);
+                rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+              }
+            }
+#else
             xCheckPLTMode( rpcBestCU, rpcTempCU, false );
             rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
 
@@ -1102,7 +1151,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
               xCheckPLTMode( rpcBestCU, rpcTempCU, true );
               rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
             }
-          }
+#endif
+
+          } 
         }
       }
     }
@@ -1341,6 +1392,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
       m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[uhNextDepth][CI_NEXT_BEST]);
       if( !bBoundary )
       {
+
         m_pcEntropyCoder->resetBits();
         m_pcEntropyCoder->encodeSplitFlag( rpcTempCU, 0, uiDepth, true );
 
@@ -3123,13 +3175,19 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
   xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(a) DEBUG_STRING_PASS_INTO(b));
 }
 
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+UInt TEncCu::xCheckPLTMode(TComDataCU *&rpcBestCU, TComDataCU *&rpcTempCU, Bool forcePLTPrediction, UInt uiIterNumber, UInt *pltSize)
+#else
 Void TEncCu::xCheckPLTMode(TComDataCU *&rpcBestCU, TComDataCU *&rpcTempCU, Bool forcePLTPrediction)
+#endif
 {
   // Note: the condition is log2CbSize < MaxTbLog2SizeY in 7.3.8.5 of JCTVC-T1005-v2
+#if !SCM_U0096_PLT_ENCODER_IMPROVEMENT
   if( rpcTempCU->getWidth(0) == 64)
   {
     return;
   }
+#endif
   UInt uiDepth = rpcTempCU->getDepth( 0 );
 
   rpcTempCU->setSkipFlagSubParts( false, 0, uiDepth );
@@ -3140,13 +3198,22 @@ Void TEncCu::xCheckPLTMode(TComDataCU *&rpcBestCU, TComDataCU *&rpcTempCU, Bool 
   rpcTempCU->setTrIdxSubParts ( 0, 0, uiDepth );
   rpcTempCU->setPLTModeFlagSubParts(true, 0, rpcTempCU->getDepth(0));
 
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  UInt testedModes=m_pcPredSearch->PLTSearch(rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth],
+    m_ppcResiYuvBest[uiDepth], m_ppcRecoYuvTemp[uiDepth], forcePLTPrediction, uiIterNumber, pltSize);
+#else
   m_pcPredSearch->PLTSearch(rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth],
-                            m_ppcResiYuvBest[uiDepth], m_ppcRecoYuvTemp[uiDepth], forcePLTPrediction);
+    m_ppcResiYuvBest[uiDepth], m_ppcRecoYuvTemp[uiDepth], forcePLTPrediction);
+#endif
 
   xCheckDQP( rpcTempCU );
   DEBUG_STRING_NEW(a)
   DEBUG_STRING_NEW(b)
   xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(a) DEBUG_STRING_PASS_INTO(b));
+
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  return(testedModes);
+#endif
 }
 
 

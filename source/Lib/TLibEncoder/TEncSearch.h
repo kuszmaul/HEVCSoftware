@@ -162,8 +162,23 @@ protected:
   UChar*          m_paBestSPoint;
   TCoeff*         m_paBestRun;
   UChar*          m_paBestEscapeFlag;
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  UInt            m_prevPltSize[MAX_PLT_ITER];
+  Pel             m_prevPlt[MAX_PLT_ITER][3][MAX_PLT_SIZE];
+  UInt            m_forcePltSize;
+  Pel             m_forcePlt[3][MAX_PLT_SIZE];
 
-  Bool            m_isInitialized;
+  Pel*            m_paLevelStoreRD[MAX_NUM_COMPONENT];
+  UChar*          m_paSPointStoreRD;
+  TCoeff*         m_paRunStoreRD;
+  UChar*          m_paEscapeFlagStoreRD;
+
+  UInt m_runGolombGroups[32*32];
+
+  pltInfoStruct m_currentPLTElement;
+  pltInfoStruct m_nextPLTElement;
+#endif
+  Bool          m_isInitialized;
 public:
   TEncSearch();
   virtual ~TEncSearch();
@@ -584,7 +599,13 @@ public:
 
   Void xEncPCM    (TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piOrg, Pel* piPCM, Pel* piPred, Pel* piResi, Pel* piReco, UInt uiStride, UInt uiWidth, UInt uiHeight, const ComponentID compID );
   Void IPCMSearch (TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* rpcPredYuv, TComYuv* rpcResiYuv, TComYuv* rpcRecoYuv );
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  UInt PLTSearch  (TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv,TComYuv *& rpcResiBestYuv, TComYuv*& rpcRecoYuv, Bool forcePLTPrediction,
+     UInt uiIterNumber, UInt *pltSize);
+#else
   Void PLTSearch  (TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv,TComYuv *& rpcResiBestYuv, TComYuv*& rpcRecoYuv, Bool forcePLTPrediction);
+#endif
+
   Void deriveRunAndCalcBits( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* pcRecoYuv, UInt& uiMinBits, Bool bReset, PLTScanMode pltScanMode);
 
   Int xIntraBCHashTableIndex  ( TComDataCU* pcCU,
@@ -908,7 +929,22 @@ protected:
   inline  Void  setDistParamComp( ComponentID compIdx )  { m_cDistParam.compIdx = compIdx; }
 
   Void   xDeriveRun (TComDataCU* pcCU, Pel* pOrg [3],  Pel *pPalette [3],  Pel* pValue, UChar* pSPoint, Pel *pRecoValue[], Pel *pPixelRec[], TCoeff* pRun, UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiPLTSize);
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  Double xGetRunBits(TComDataCU* pcCU, Pel *pValue, UInt uiStartPos, UInt uiRun, PLTRunMode cPltRunMode, UInt64 *allBits, UInt64 *indexBits, UInt64 *runBits);
+  UInt preCalcRD(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiPLTSize, TComRdCost *pcCost, UInt uiIterNumber);
+  Void preCalcRDMerge(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiPLTSize, TComRdCost *pcCost,
+    UInt *errorOrig, UInt *errorNew, UInt calcErrBits);
+  UInt calcPltIndexPredAndBits(Int iMaxSymbol, UInt uiIdxStart, UInt uiWidth, UInt *predIndex, UInt *currIndex);
+  UInt calcPLTEndPosition(UInt copyPixels[], UInt positionInit, UInt run);
+  UInt calcPLTStartCopy(UInt positionInit, UInt positionCurrSegment, UInt uiWidth);
+  UInt findPltSegment(pltInfoStruct *pltElement, TComDataCU* pcCU, UInt uiIdxStart, UInt uiIndexMaxSize, UInt uiWidth, UInt uiTotal,
+    UInt copyPixels[], Int restrictLevelRun, UInt calcErrBits);
+  UInt calcPltErrorCopy(UInt uiIdxStart, UInt run, UInt uiWidth, UInt *mode);
+  UInt64 calcPltErrorLevel(Int idxStart, UInt run, UInt uiPLTIdx);
+  Void modifyPltSegment(UInt uiWidth, UInt uiIdxStart, UInt pltMode, UInt pltIdx, UInt run);
+#else
   Double xGetRunBits(TComDataCU* pcCU, Pel *pValue, UInt uiStartPos, UInt uiRun, PLTRunMode cPltRunMode);
+#endif
 };// END CLASS DEFINITION TEncSearch
 
 //! \}

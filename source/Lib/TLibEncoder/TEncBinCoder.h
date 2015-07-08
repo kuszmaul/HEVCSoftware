@@ -63,6 +63,11 @@ public:
 
   virtual Void  resetBits         ()                                          = 0;
   virtual UInt  getNumWrittenBits ()                                          = 0;
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  virtual UInt64  getNumPartialBits ()                                        = 0;
+  virtual Void storeNumPartialBits ()                                       = 0;
+  virtual Void restoreNumPartialBits ()                                     = 0;
+#endif
 
   virtual Void  encodeBin         ( UInt  uiBin,  ContextModel& rcCtxModel )  = 0;
   virtual Void  encodeBinEP       ( UInt  uiBin                            )  = 0;
