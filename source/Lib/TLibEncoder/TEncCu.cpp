@@ -1807,6 +1807,9 @@ Void TEncCu::xCheckRDCostIntraBCMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*&
   UChar uhDepth = rpcTempCU->getDepth( 0 );
   rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uhDepth );
   rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand );
+#if SCM_U0078_BIPRED_RESTRICTION
+  rpcTempCU->xRestrictBipredMergeCand( 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
+#endif
 
   Int mergeCandBuffer[MRG_MAX_NUM_CANDS];
   for( UInt ui = 0; ui < numValidMergeCand; ++ui )
@@ -2026,6 +2029,10 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
   UChar uhDepth = rpcTempCU->getDepth( 0 );
   rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uhDepth ); // interprets depth relative to CTU level
   rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand );
+
+#if SCM_U0078_BIPRED_RESTRICTION
+  rpcTempCU->xRestrictBipredMergeCand(0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
+#endif 
 
   Int mergeCandBuffer[MRG_MAX_NUM_CANDS];
   for( UInt ui = 0; ui < numValidMergeCand; ++ui )

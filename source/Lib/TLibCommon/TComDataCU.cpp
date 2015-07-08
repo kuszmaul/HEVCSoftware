@@ -3297,6 +3297,23 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
 }
 
 
+#if SCM_U0078_BIPRED_RESTRICTION
+Void TComDataCU::xRestrictBipredMergeCand( UInt puIdx, TComMvField* mvFieldNeighbours, UChar* interDirNeighbours, Int numValidMergeCand )
+{
+  if (isBipredRestriction(puIdx) )
+  {
+    for( UInt mergeCand = 0; mergeCand < numValidMergeCand; ++mergeCand )
+    {
+      if ( interDirNeighbours[mergeCand] == 3 )
+      {
+        interDirNeighbours[mergeCand] = 1;
+        mvFieldNeighbours[(mergeCand << 1) + 1].setMvField(TComMv(0,0), -1);
+      }
+    }
+  }
+}
+#endif 
+
 Bool TComDataCU::isBipredRestriction(UInt puIdx)
 {
   Int width = 0;
@@ -3304,10 +3321,25 @@ Bool TComDataCU::isBipredRestriction(UInt puIdx)
   UInt partAddr;
 
   getPartIndexAndSize( puIdx, partAddr, width, height );
-  if ( getWidth(0) == 8 && (width < 8 || height < 8) )
-  {
-    return true;
+#if SCM_U0078_BIPRED_RESTRICTION
+  if(getSlice()->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && !getSlice()->getUseIntegerMv())
+  {    
+    if(getWidth(0) <= 8 && getHeight(0) <= 8)
+    {
+      return true;
+    }
   }
+  else
+  {
+#endif 
+     if ( getWidth(0) == 8 && (width < 8 || height < 8) )
+     {
+      return true;
+     }
+#if SCM_U0078_BIPRED_RESTRICTION
+  }
+#endif     
+
   return false;
 }
 

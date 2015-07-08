@@ -186,6 +186,7 @@
 #define SCM_U0096_PLT_ENCODER_IMPROVEMENT                1 ///< JCTVC-U0096, palette encoder improvement: using square error to derive and assign palette index, pruning indices and merge consecutive runs
 #define SCM_U0086_SIM_NUM_INDEX_MAPPING                  1 ///< JCTVC-U0086, simplification of mapping of numPLTIndices
 #define SCM_U0176_RICE_PARAM_DERIVATION_CLEAN_UP         1 ///< JCTVC-U0176, using shift operation to derive the riceParam for numPLTIndices
+#define SCM_U0078_BIPRED_RESTRICTION                     1 ///< JCTVC-U0078, restrict 8x8 Bi-pred when IBC is enabled and AMVR is disabled
 
 //------------------------------------------------
 // Derived macros
