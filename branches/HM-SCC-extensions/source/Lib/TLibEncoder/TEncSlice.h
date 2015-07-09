@@ -137,6 +137,10 @@ public:
 private:
   Double  xGetQPValueAccordingToLambda ( Double lambda );
   Void    xSetPredFromPPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT], TComSlice *pcSlice);
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+  Void    xSetPredFromSPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT], TComSlice *pcSlice);
+  Void    xSetPredDefault(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT], TComSlice *pcSlice);
+#endif
 
 };
 

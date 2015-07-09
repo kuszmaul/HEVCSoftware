@@ -785,12 +785,20 @@ private:
   Int              m_motionVectorResolutionControlIdc;
   Bool             m_disableIntraBoundaryFilter;
 
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+  Bool             m_usePalettePredictor;
+  UInt             m_uiNumPLTPred;
+  Pel              m_aiPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE];
+#endif
 public:
   TComSPSSCC();
   Bool settingsDifferFromDefaults() const
   {
     return getUseIntraBlockCopy()
         || getUsePLTMode()
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+        || getNumPLTPred() > 0
+#endif
         || getMotionVectorResolutionControlIdc() != 0
         || getDisableIntraBoundaryFilter();
   }
@@ -813,6 +821,13 @@ public:
   Void setDisableIntraBoundaryFilter( Bool b)         { m_disableIntraBoundaryFilter = b;          }
   Bool getDisableIntraBoundaryFilter() const          { return m_disableIntraBoundaryFilter;       }
 
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+  Bool     getUsePalettePredictor()              const { return m_usePalettePredictor; }
+  Void     setUsePalettePredictor(Bool num)            { m_usePalettePredictor = num; }
+  UInt     getNumPLTPred()                     const { return m_uiNumPLTPred; }
+  Void     setNumPLTPred(UInt num)                   { m_uiNumPLTPred = num; }
+  Pel*     getPLTPred(UInt ch)                 const { return const_cast<Pel*>(m_aiPLT[ch]); }
+#endif
 };
 
 /// SPS class
@@ -1152,6 +1167,9 @@ private:
   UInt             m_uiNumPLTPred;
   Pel              m_aiPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE];
   Int              m_palettePredictorBitDepth[MAX_NUM_CHANNEL_TYPE];
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+  Bool             m_usePalettePredictor;
+#endif
 
 public:
   TComPPSSCC();
@@ -1175,6 +1193,10 @@ public:
   Pel*     getPLTPred(UInt ch)                 const { return const_cast<Pel*>(m_aiPLT[ch]); }
   Int      getPalettePredictorBitDepth(ChannelType type) const   { return m_palettePredictorBitDepth[type]; }
   Void     setPalettePredictorBitDepth(ChannelType type, Int u ) { m_palettePredictorBitDepth[type] = u;    }
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+  Bool     getUsePalettePredictor()              const { return m_usePalettePredictor; }
+  Void     setUsePalettePredictor(Bool num)            { m_usePalettePredictor = num; }
+#endif
 };
 
 /// PPS class

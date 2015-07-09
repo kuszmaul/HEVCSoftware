@@ -79,6 +79,30 @@ Void TDecSlice::xSetPredFromPPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE
   }
 }
 
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+Void TDecSlice::xSetPredFromSPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT], const TComPPS *pcPPS, const TComSPS *pcSPS)
+{
+  UInt num = std::min(pcSPS->getSpsScreenExtension().getNumPLTPred(), pcSPS->getSpsScreenExtension().getPLTMaxPredSize());
+  if( num )
+  {
+    for(int i=0; i<3; i++)
+    {
+      lastPLTSize[i] = num;
+      memcpy(lastPLT[i], pcSPS->getSpsScreenExtension().getPLTPred(i), num*sizeof(Pel));
+     }
+  }
+}
+
+Void TDecSlice::xSetPredDefault(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT], const TComSPS *pcSPS)
+{
+  for(int i=0; i<3; i++)
+  {
+    lastPLTSize[i] = 0;
+    memset(lastPLT[i],0, pcSPS->getSpsScreenExtension().getPLTMaxSize()*sizeof(Pel));
+  }
+}
+#endif
+
 Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcPic, TDecSbac* pcSbacDecoder)
 {
   TComSlice* pcSlice                 = pcPic->getSlice(pcPic->getCurrSliceIdx());
@@ -117,7 +141,22 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
   {
     memset(lastPLT[comp], 0, sizeof(Pel) * pcSlice->getSPS()->getSpsScreenExtension().getPLTMaxPredSize());
   }
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+  if (pcSlice->getPPS()->getPpsScreenExtension().getUsePalettePredictor())
+  {
+    xSetPredFromPPS(lastPLT, lastPLTSize, pcSlice->getPPS(), pcSlice->getSPS());
+  }
+  else if (pcSlice->getSPS()->getSpsScreenExtension().getUsePalettePredictor())
+  {
+    xSetPredFromSPS(lastPLT, lastPLTSize, pcSlice->getPPS(), pcSlice->getSPS());
+  }
+  else
+  {
+    xSetPredDefault(lastPLT, lastPLTSize, pcSlice->getSPS());
+  }
+#else
   xSetPredFromPPS(lastPLT, lastPLTSize, pcSlice->getPPS(), pcSlice->getSPS());
+#endif
 
   // The first CTU of the slice is the first coded substream, but the global substream number, as calculated by getSubstreamForCtuAddr may be higher.
   // This calculates the common offset for all substreams in this slice.

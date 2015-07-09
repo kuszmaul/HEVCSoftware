@@ -133,6 +133,9 @@ protected:
   UInt      m_uiPLTMaxSize;
   UInt      m_uiPLTMaxPredSize;
   Int       m_motionVectorResolutionControlIdc;
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+  Bool      m_palettePredInSPSEnabled;
+#endif
   Bool      m_palettePredInPPSEnabled;
 
   // coding quality

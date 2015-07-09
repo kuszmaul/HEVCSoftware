@@ -154,6 +154,9 @@ public:
   TEncSbac*               getRDGoOnSbacCoder    () { return  &m_cRDGoOnSbacCoder;     }
   TEncRateCtrl*           getRateCtrl           () { return &m_cRateCtrl;             }
   TComPPS*                getPPS                () { return  &m_cPPS;                 }
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+  TComSPS*                getSPS                () { return &m_cSPS; }
+#endif
   Void selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid );
   Int getReferencePictureSetIdxForSOP(Int POCCurr, Int GOPid );
   // -------------------------------------------------------------------------------------------------------------------

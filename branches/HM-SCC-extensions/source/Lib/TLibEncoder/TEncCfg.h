@@ -242,6 +242,9 @@ protected:
   Int       m_motionVectorResolutionControlIdc;
   Bool      m_palettePredInPPSEnabled;
 
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+  Bool      m_palettePredInSPSEnabled;
+#endif
   Int*      m_aidQP;
   UInt      m_uiDeltaQpRD;
   Bool      m_bFastDeltaQP;
@@ -675,6 +678,10 @@ public:
   Int  getMotionVectorResolutionControlIdc             ()            const { return m_motionVectorResolutionControlIdc; }
   Void setPalettePredInPPSEnabled                      ( Bool b )          { m_palettePredInPPSEnabled = b; }
   Bool getPalettePredInPPSEnabled                      ()            const { return m_palettePredInPPSEnabled; }
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+  Void setPalettePredInSPSEnabled                      ( Bool b )          { m_palettePredInSPSEnabled = b; }
+  Bool getPalettePredInSPSEnabled                      ()            const { return m_palettePredInSPSEnabled; }
+#endif
   Bool getUseTransformSkipFast                         ()      { return m_useTransformSkipFast;    }
   Void setUseTransformSkipFast                         ( Bool b ) { m_useTransformSkipFast  = b;   }
   UInt getLog2MaxTransformSkipBlockSize                () const      { return m_log2MaxTransformSkipBlockSize;     }

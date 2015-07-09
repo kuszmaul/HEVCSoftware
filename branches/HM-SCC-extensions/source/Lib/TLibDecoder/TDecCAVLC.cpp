@@ -420,6 +420,9 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
                 ppsScreenExtension.setActQpOffset( COMPONENT_Cr, -3 );
               }
               READ_FLAG( uiCode, "palette_predictor_initializer_flag" );
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+              ppsScreenExtension.setUsePalettePredictor(uiCode);
+#endif
               if ( uiCode )
               {
                 READ_UVLC( uiCode, "luma_bit_depth_entry_minus8" );
@@ -876,6 +879,32 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
               {
                 READ_UVLC( uiCode, "palette_max_size" );                      screenExtension.setPLTMaxSize( uiCode );
                 READ_UVLC( uiCode, "delta_palette_max_predictor_size" );      screenExtension.setPLTMaxPredSize( uiCode+screenExtension.getPLTMaxSize() );
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+                READ_FLAG( uiCode, "sps_palette_predictor_initializer_flag" );
+                screenExtension.setUsePalettePredictor(uiCode);
+                if( uiCode )
+                {
+                  READ_UVLC( uiCode, "sps_num_palette_entries_minus1" ); uiCode++;
+                  //printf("PPS %u: receiving %u entries\n", pcPPS->getPPSId(), uiCode);
+                  screenExtension.setNumPLTPred(uiCode);
+                  for ( int j=0; j< screenExtension.getNumPLTPred(); j++ )
+                  {
+                    for ( int k=0; k<pcSPS->getChromaFormatIdc() == CHROMA_400 ? 1 : 3; k++ )
+                    {
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+                      xReadCode(  pcSPS->getBitDepth( toChannelType( ComponentID( k ) ) ), uiCode, "palette_predictor_initializers" );
+#else
+                      xReadCode(  pcSPS->getBitDepth( toChannelType( ComponentID( k ) ) ), uiCode );
+#endif
+                      screenExtension.getPLTPred( k )[j] = uiCode;
+                    }
+                  }
+                }
+                else
+                {
+                  screenExtension.setNumPLTPred(0);
+                }
+#endif
               }
               READ_CODE( 2, uiCode, "motion_vector_resolution_control_idc" ); screenExtension.setMotionVectorResolutionControlIdc( uiCode );
               READ_FLAG( uiCode, "intra_boundary_filter_disabled_flag" );     screenExtension.setDisableIntraBoundaryFilter( uiCode != 0 );

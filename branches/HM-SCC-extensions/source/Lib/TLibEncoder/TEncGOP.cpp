@@ -2816,4 +2816,11 @@ TComPPS* TEncGOP::getPPS()
   return m_pcEncTop->getPPS();
 }
 
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+TComSPS* TEncGOP::getSPS()
+{
+  return m_pcEncTop->getSPS();
+}
+#endif
+
 //! \}
