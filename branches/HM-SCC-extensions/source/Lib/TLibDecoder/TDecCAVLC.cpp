@@ -889,7 +889,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
                   screenExtension.setNumPLTPred(uiCode);
                   for ( int j=0; j< screenExtension.getNumPLTPred(); j++ )
                   {
-                    for ( int k=0; k<pcSPS->getChromaFormatIdc() == CHROMA_400 ? 1 : 3; k++ )
+                    for ( int k=0; k<(pcSPS->getChromaFormatIdc() == CHROMA_400 ? 1 : 3); k++ )
                     {
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
                       xReadCode(  pcSPS->getBitDepth( toChannelType( ComponentID( k ) ) ), uiCode, "palette_predictor_initializers" );

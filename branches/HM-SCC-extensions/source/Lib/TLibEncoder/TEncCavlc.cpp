@@ -669,7 +669,7 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
                   WRITE_UVLC( spsScreenExtension.getNumPLTPred()-1,                                      "sps_num_palette_entries_minus1" );
                   for ( int j=0; j<spsScreenExtension.getNumPLTPred(); j++ )
                   {
-                    for ( int k=0; k<pcSPS->getChromaFormatIdc() == CHROMA_400 ? 1 : 3; k++ )
+                    for ( int k=0; k<(pcSPS->getChromaFormatIdc() == CHROMA_400 ? 1 : 3); k++ )
                     {
                       xWriteCode( spsScreenExtension.getPLTPred( k )[j], pcSPS->getBitDepth( toChannelType( ComponentID( k ) ) ));
                     }
