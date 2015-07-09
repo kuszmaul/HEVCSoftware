@@ -793,7 +793,11 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
               (m_numIDRs && m_numFrames > SCM_T0048_PLT_PRED_IN_PPS_REFRESH) ||
               m_numFrames > 5*m_pcCfg->getFrameRate();
   }
+#if SCM_U0114_LOWDELAY_PALETTE_INITIALIZER_GENERATE
+  if( pcSlice->getSPS()->getSpsScreenExtension().getUsePLTMode() && m_pcCfg->getPalettePredInPPSEnabled() && refresh && !pcSlice->getSliceIdx() && !pcPic->getPOC())
+#else
   if( pcSlice->getSPS()->getSpsScreenExtension().getUsePLTMode() && m_pcCfg->getPalettePredInPPSEnabled() && refresh )
+#endif 
   {
     // for every CTU in image
     Int  srcCtu = -1;
@@ -971,6 +975,52 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
     m_dPicRdCost     = 0;
     m_uiPicDist      = 0;
   }
+#if SCM_U0114_LOWDELAY_PALETTE_INITIALIZER_GENERATE
+  if ( pcSlice->getSPS()->getSpsScreenExtension().getUsePLTMode() && m_pcCfg->getPalettePredInPPSEnabled() && (pcPic->getPOC()||pcSlice->getSliceIdx()) && refresh )
+  {
+    UInt numPredsPOC=0;
+    Int srcCtu=-1;
+    numPredsPOC=m_pcGOPEncoder->getNumPLTPred();
+    if (numPredsPOC) srcCtu=1;
+    if(m_pcCfg->getPalettePredInPPSEnabled())
+    {
+      for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+      {
+        lastPLTSize[comp]=m_pcGOPEncoder->getNumPLTPred();
+        memcpy( lastPLT[comp],m_pcGOPEncoder->getPLTPred(comp), sizeof( Pel )*numPredsPOC );
+      }
+    }
+    if( srcCtu == -1 || numPredsPOC < 4 )
+    {
+      // refresh failed, wait a bit longer before retrying
+      if( srcCtu != -1 )
+      {
+        //printf("Too few entries after %u/%u frames: %u vs %u\n", m_numIDRs, m_numFrames, numPreds, pcPPS->getNumPLTPred() );
+      }
+      m_numIDRs   = m_numIDRs>>1;
+      m_numFrames = m_numFrames>>1;
+    }
+    else if( srcCtu != -1 )
+    {
+      if( pcSlice->getPOC() )
+      {
+        UInt ppsid = pcPPS->getPPSId()+1;
+        pcPPS->setPPSId(ppsid);
+        pcSlice->setPPSId(ppsid);
+      }
+      numPredsPOC = std::min(lastPLTSize[0], (UChar)pcSlice->getSPS()->getSpsScreenExtension().getPLTMaxPredSize());
+      pcPPS->getPpsScreenExtension().setNumPLTPred(numPredsPOC);
+      //printf("PPS %u: %u palette entries from CTU %u/%u (%u analysed)\n", pcPPS->getPPSId(), numPreds, srcCtu, numCtus, count );
+      for ( int i=0; i<3; i++ )
+      {
+        memcpy( pcPPS->getPpsScreenExtension().getPLTPred( i ), lastPLT[i], sizeof( Pel )*numPredsPOC );
+      }
+      m_numIDRs   = 0;
+      m_numFrames = 0;
+    }
+    xSetPredFromPPS(lastPLT,lastPLTSize,pcSlice);
+  }
+#endif
 
   // for every CTU in the slice segment (may terminate sooner if there is a byte limit on the slice-segment)
 
@@ -1215,6 +1265,16 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
     }
   }
 
+#if SCM_U0114_LOWDELAY_PALETTE_INITIALIZER_GENERATE
+  if(m_pcCfg->getPalettePredInPPSEnabled() && pcSlice->getSPS()->getSpsScreenExtension().getUsePLTMode())
+  {
+    m_pcGOPEncoder->setNumPLTPred( lastPLTSize[COMPONENT_Y] );
+    for ( UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++ )
+    {
+      memcpy( m_pcGOPEncoder->getPLTPred(comp),lastPLT[ comp ],  sizeof( Pel )*m_pcGOPEncoder->getNumPLTPred() );
+    }
+  }
+#endif
 
   // stop use of temporary bit counter object.
   m_pppcRDSbacCoder[0][CI_CURR_BEST]->setBitstream(NULL);
