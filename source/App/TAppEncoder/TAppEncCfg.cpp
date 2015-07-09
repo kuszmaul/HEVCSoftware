@@ -954,6 +954,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("TransquantBypassEnableFlag",                      m_TransquantBypassEnableFlag,                     false, "transquant_bypass_enable_flag indicator in PPS")
   ("CUTransquantBypassFlagForce",                     m_CUTransquantBypassFlagForce,                    false, "Force transquant bypass mode, when transquant_bypass_enable_flag is enabled")
   ("TransquantBypassInferTUSplit",                    m_bTransquantBypassInferTUSplit,                  false, "Infer TU splitting for transquant bypass CUs, when transquant_bypass_enable_flag is enabled")
+#if SCM_U0095_FAST_INTRA_ACT
+  ("CUNoSplitIntraACT",                               m_bNoTUSplitIntraACTEnabled,                      false, "Encoder no TU splitting for large CUs in intra mode, when adaptive color transform is enabled")
+#endif
   ("CostMode",                                        m_costMode,                         COST_STANDARD_LOSSY, "Use alternative cost functions: choose between 'lossy', 'sequence_level_lossless', 'lossless' (which forces QP to " MACRO_TO_STRING(LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP) ") and 'mixed_lossless_lossy' (which used QP'=" MACRO_TO_STRING(LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME) " for pre-estimates of transquant-bypass blocks).")
   ("RecalculateQPAccordingToLambda",                  m_recalculateQPAccordingToLambda,                 false, "Recalculate QP values according to lambda values. Do not suggest to be enabled in all intra case")
   ("StrongIntraSmoothing,-sis",                       m_useStrongIntraSmoothing,                         true, "Enable strong intra smoothing for 32x32 blocks")
@@ -1785,6 +1788,17 @@ Void TAppEncCfg::xCheckParameter()
     m_bTransquantBypassInferTUSplit = false;
   }
 
+#if SCM_U0095_FAST_INTRA_ACT
+  if ( !m_useColourTrans && m_bNoTUSplitIntraACTEnabled )
+  {
+    fprintf(stderr, "****************************************************************************\n");
+    fprintf(stderr, "** WARNING: --CUNoSplitIntraACT has been disabled                         **\n");
+    fprintf(stderr, "**  due to the disabling of --ColourTransform                             **\n");
+    fprintf(stderr, "****************************************************************************\n");
+
+    m_bNoTUSplitIntraACTEnabled = false;
+  }
+#endif
 
   if (m_log2MaxTransformSkipBlockSize!=2 && m_useTransformSkipFast)
   {
@@ -2608,6 +2622,9 @@ Void TAppEncCfg::xPrintParameter()
   }
 
   printf("TransQuantBypassInferTUSplit:%d ", m_bTransquantBypassInferTUSplit);
+#if SCM_U0095_FAST_INTRA_ACT
+  printf("CUNoSplitIntraACT:%d ", m_bNoTUSplitIntraACTEnabled);
+#endif
 
   printf("WPP:%d ", (Int)m_useWeightedPred);
   printf("WPB:%d ", (Int)m_useWeightedBiPred);

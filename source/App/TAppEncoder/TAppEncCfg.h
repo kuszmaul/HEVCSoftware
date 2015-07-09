@@ -347,6 +347,9 @@ protected:
   Bool      m_TransquantBypassEnableFlag;                     ///< transquant_bypass_enable_flag setting in PPS.
   Bool      m_CUTransquantBypassFlagForce;                    ///< if transquant_bypass_enable_flag, then, if true, all CU transquant bypass flags will be set to true.
   Bool      m_bTransquantBypassInferTUSplit;                  ///< Infer TU splitting for transquant bypass CUs
+#if SCM_U0095_FAST_INTRA_ACT
+  Bool      m_bNoTUSplitIntraACTEnabled;
+#endif
   CostMode  m_costMode;                                       ///< Cost mode to use
 
   Bool      m_recalculateQPAccordingToLambda;                 ///< recalculate QP value according to the lambda value

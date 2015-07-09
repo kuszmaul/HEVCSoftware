@@ -357,6 +357,9 @@ protected:
   Bool      m_TransquantBypassEnableFlag;                     ///< transquant_bypass_enable_flag setting in PPS.
   Bool      m_CUTransquantBypassFlagForce;                    ///< if transquant_bypass_enable_flag, then, if true, all CU transquant bypass flags will be set to true.
   Bool      m_bTransquantBypassInferTUSplit;
+#if SCM_U0095_FAST_INTRA_ACT
+  Bool      m_bNoTUSplitIntraACTEnabled;
+#endif
 
   CostMode  m_costMode;                                       ///< The cost function to use, primarily when considering lossless coding.
 
@@ -889,6 +892,10 @@ public:
   Void         setCUTransquantBypassFlagForceValue(Bool flag)        { m_CUTransquantBypassFlagForce = flag; }
   Bool         getTransquantBypassInferTUSplit()                     { return m_bTransquantBypassInferTUSplit; }
   Void         setTransquantBypassInferTUSplit(Bool flag)            { m_bTransquantBypassInferTUSplit = flag; }
+#if SCM_U0095_FAST_INTRA_ACT
+  Bool         getNoTUSplitIntraACTEnabled()                         { return m_bNoTUSplitIntraACTEnabled; }
+  Void         setNoTUSplitIntraACTEnabled(Bool flag)                { m_bNoTUSplitIntraACTEnabled = flag; } 
+#endif
   CostMode     getCostMode( )                                        { return m_costMode; }
   Void         setCostMode(CostMode m )                              { m_costMode = m; }
 
