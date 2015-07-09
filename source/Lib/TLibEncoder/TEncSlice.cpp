@@ -652,7 +652,12 @@ Void TEncSlice::calCostSliceI(TComPic* pcPic) // TODO: this only analyses the fi
 
 Void TEncSlice::xSetPredFromPPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT], TComSlice *pcSlice)
 {
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS  
+  TComSPS *pcSPS = m_pcGOPEncoder->getSPS();
+  pcSlice->setSPS(pcSPS);
+#else
   const TComSPS *pcSPS = pcSlice->getSPS();
+#endif
   TComPPS *pcPPS = m_pcGOPEncoder->getPPS();
   pcSlice->setPPS(pcPPS);
   UInt num = std::min(pcPPS->getPpsScreenExtension().getNumPLTPred(), pcSPS->getSpsScreenExtension().getPLTMaxPredSize());
@@ -673,6 +678,35 @@ Void TEncSlice::xSetPredFromPPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE
   }
 }
 
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+Void TEncSlice::xSetPredFromSPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT], TComSlice *pcSlice)
+{
+  TComSPS *pcSPS = m_pcGOPEncoder->getSPS();
+  UInt num = std::min(pcSPS->getSpsScreenExtension().getNumPLTPred(), pcSPS->getSpsScreenExtension().getPLTMaxPredSize());
+  if( !num )
+  {
+    memset(lastPLTSize, 0, MAX_NUM_COMPONENT*sizeof(UChar));
+    return;
+  }
+  for(int i=0; i<3; i++)
+  {
+    lastPLTSize[i] = num;
+    memcpy(lastPLT[i], pcSPS->getSpsScreenExtension().getPLTPred(i), num*sizeof(Pel));
+  }
+  pcSlice->setSPS(pcSPS);
+}
+
+Void TEncSlice::xSetPredDefault(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT], TComSlice *pcSlice)
+{
+  const TComSPS *pcSPS = pcSlice->getSPS();
+  pcSlice->setSPS(pcSPS);
+  for(int i=0; i<3; i++)
+  {
+    lastPLTSize[i] = 0;
+    memset(lastPLT[i],0 , pcSPS->getSpsScreenExtension().getPLTMaxSize()*sizeof(Pel));
+  }
+}
+#endif
 /** \param pcPic   picture class
  */
 Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, const Bool bFastDeltaQP )
@@ -756,7 +790,22 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
   {
     memset(lastPLT[comp], 0, sizeof(Pel) * pcSlice->getSPS()->getSpsScreenExtension().getPLTMaxPredSize());
   }
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+  if ( m_pcCfg->getPalettePredInPPSEnabled() )
+  {
+    xSetPredFromPPS(lastPLT, lastPLTSize, pcSlice);
+  }
+  else if (m_pcCfg->getPalettePredInSPSEnabled())
+  {
+    xSetPredFromSPS(lastPLT, lastPLTSize, pcSlice);
+  }
+  else
+  {
+    xSetPredDefault(lastPLT, lastPLTSize, pcSlice);
+  }
+#else
   xSetPredFromPPS(lastPLT, lastPLTSize, pcSlice);
+#endif
 
   // Adjust initial state if this is the start of a dependent slice.
   {
@@ -783,6 +832,9 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
   }
 
   TComPPS *pcPPS = m_pcGOPEncoder->getPPS();
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+  TComSPS *pcSPS = m_pcGOPEncoder->getSPS();
+#endif
 
   Bool refresh = false;
   if( !pcSlice->getSliceIdx() )
@@ -794,9 +846,17 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
               m_numFrames > 5*m_pcCfg->getFrameRate();
   }
 #if SCM_U0114_LOWDELAY_PALETTE_INITIALIZER_GENERATE
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+  if( pcSlice->getSPS()->getSpsScreenExtension().getUsePLTMode() && (m_pcCfg->getPalettePredInPPSEnabled()||m_pcCfg->getPalettePredInSPSEnabled()) && refresh && !pcSlice->getSliceIdx() && !pcPic->getPOC() )
+#else
   if( pcSlice->getSPS()->getSpsScreenExtension().getUsePLTMode() && m_pcCfg->getPalettePredInPPSEnabled() && refresh && !pcSlice->getSliceIdx() && !pcPic->getPOC())
+#endif
+#else
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+  if( pcSlice->getSPS()->getSpsScreenExtension().getUsePLTMode() && (m_pcCfg->getPalettePredInPPSEnabled()||m_pcCfg->getPalettePredInSPSEnabled()) && refresh )
 #else
   if( pcSlice->getSPS()->getSpsScreenExtension().getUsePLTMode() && m_pcCfg->getPalettePredInPPSEnabled() && refresh )
+#endif
 #endif 
   {
     // for every CTU in image
@@ -938,19 +998,52 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
         pcPPS->setPPSId(ppsid);
         pcSlice->setPPSId(ppsid);
       }
-      numPreds = std::min(lastPLTSize[0], (UChar)pcSlice->getSPS()->getSpsScreenExtension().getPLTMaxPredSize());
-      pcPPS->getPpsScreenExtension().setNumPLTPred(numPreds);
-      //printf("PPS %u: %u palette entries from CTU %u/%u (%u analysed)\n", pcPPS->getPPSId(), numPreds, srcCtu, numCtus, count );
-      for ( int i=0; i<3; i++ )
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+      if( !pcSlice->getSliceIdx() && !pcSPS->getSpsScreenExtension().getNumPLTPred() && !pcPic->getPOC()&&m_pcCfg->getPalettePredInSPSEnabled() )
       {
-        memcpy( pcPPS->getPpsScreenExtension().getPLTPred( i ), lastPLT[i], sizeof( Pel )*numPreds );
+        numPreds = std::min(lastPLTSize[0], (UChar)pcSlice->getSPS()->getSpsScreenExtension().getPLTMaxPredSize());
+        pcSPS->getSpsScreenExtension().setNumPLTPred(numPreds);
+        for ( int i=0; i<3; i++ )
+        {
+          memcpy( pcSPS->getSpsScreenExtension().getPLTPred( i ), lastPLT[i], sizeof( Pel )*numPreds );
+        }
       }
+#endif
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+      if ( m_pcCfg->getPalettePredInPPSEnabled() )
+      {
+#endif
+        numPreds = std::min(lastPLTSize[0], (UChar)pcSlice->getSPS()->getSpsScreenExtension().getPLTMaxPredSize());
+        pcPPS->getPpsScreenExtension().setNumPLTPred(numPreds);
+        //printf("PPS %u: %u palette entries from CTU %u/%u (%u analysed)\n", pcPPS->getPPSId(), numPreds, srcCtu, numCtus, count );
+        for ( int i=0; i<3; i++ )
+        {
+          memcpy( pcPPS->getPpsScreenExtension().getPLTPred( i ), lastPLT[i], sizeof( Pel )*numPreds );
+        }
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS 
+      }
+#endif
       m_numIDRs   = 0;
       m_numFrames = 0;
     }
 
     // restore predictor in any case
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+    if ( m_pcCfg->getPalettePredInPPSEnabled() )
+    {
+      xSetPredFromPPS(lastPLT, lastPLTSize, pcSlice);
+    }
+    else if ( m_pcCfg->getPalettePredInSPSEnabled() )
+    {
+      xSetPredFromSPS(lastPLT, lastPLTSize, pcSlice);
+    }
+    else
+    {
+      xSetPredDefault(lastPLT, lastPLTSize, pcSlice);
+    }
+#else
     xSetPredFromPPS(lastPLT, lastPLTSize, pcSlice);
+#endif
 
     // reset entropy
     TEncBinCABAC *pcCABAC = (TEncBinCABAC *) m_pppcRDSbacCoder[0][CI_CURR_BEST]->getEncBinIf();
@@ -1330,7 +1423,22 @@ Void TEncSlice::encodeSlice   ( TComPic* pcPic, TComOutputBitstream* pcSubstream
 
   UChar lastPLTSize[3] = { 0, 0, 0 };
   Pel lastPLT[3][MAX_PLT_PRED_SIZE];
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+  if ( m_pcCfg->getPalettePredInPPSEnabled() )
+  {
+    xSetPredFromPPS(lastPLT, lastPLTSize, pcSlice);
+  }
+  else if (m_pcCfg->getPalettePredInSPSEnabled())
+  {
+    xSetPredFromSPS(lastPLT, lastPLTSize, pcSlice);
+  }
+  else
+  {
+    xSetPredDefault(lastPLT, lastPLTSize, pcSlice);
+  }
+#else
   xSetPredFromPPS(lastPLT, lastPLTSize, pcSlice);
+#endif
 
   if (depSliceSegmentsEnabled)
   {

@@ -175,6 +175,9 @@ public:
 #endif
   TComPPS* getPPS();
 
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+  TComSPS* getSPS();
+#endif
 protected:
   TEncRateCtrl* getRateCtrl()       { return m_pcRateCtrl;  }
 

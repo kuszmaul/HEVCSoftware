@@ -662,6 +662,20 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
               {
                 WRITE_UVLC( spsScreenExtension.getPLTMaxSize(),                                          "palette_max_size" );
                 WRITE_UVLC( spsScreenExtension.getPLTMaxPredSize() - spsScreenExtension.getPLTMaxSize(), "delta_palette_max_predictor_size" );
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+                WRITE_FLAG( (spsScreenExtension.getNumPLTPred() ? 1 : 0),                                "sps_palette_predictor_initializer_flag" );
+                if( spsScreenExtension.getNumPLTPred() )
+                {
+                  WRITE_UVLC( spsScreenExtension.getNumPLTPred()-1,                                      "sps_num_palette_entries_minus1" );
+                  for ( int j=0; j<spsScreenExtension.getNumPLTPred(); j++ )
+                  {
+                    for ( int k=0; k<pcSPS->getChromaFormatIdc() == CHROMA_400 ? 1 : 3; k++ )
+                    {
+                      xWriteCode( spsScreenExtension.getPLTPred( k )[j], pcSPS->getBitDepth( toChannelType( ComponentID( k ) ) ));
+                    }
+                  }
+                }
+#endif
               }
               WRITE_CODE( spsScreenExtension.getMotionVectorResolutionControlIdc(), 2,                   "motion_vector_resolution_control_idc" );
               WRITE_FLAG( (spsScreenExtension.getDisableIntraBoundaryFilter() ? 1 : 0),                  "intra_boundary_filter_disabled_flag" );

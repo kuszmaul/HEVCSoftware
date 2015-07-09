@@ -1810,6 +1810,9 @@ TComSPSSCC::TComSPSSCC()
 , m_uiPLTMaxPredSize          ( 64)
 , m_motionVectorResolutionControlIdc(0)
 , m_disableIntraBoundaryFilter(false)
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+, m_uiNumPLTPred               (0) 
+#endif
 {}
 
 TComSPS::TComSPS()
