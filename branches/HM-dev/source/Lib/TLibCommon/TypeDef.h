@@ -105,6 +105,8 @@
 
 #define O0043_BEST_EFFORT_DECODING                        0 ///< 0 (default) = disable code related to best effort decoding, 1 = enable code relating to best effort decoding [ decode-side only ].
 
+#define ME_ENABLE_ROUNDING_OF_MVS                         1 ///< 0 (default) = disables rounding of motion vectors when right shifted,  1 = enables rounding
+
 #define RDOQ_CHROMA_LAMBDA                                1 ///< F386: weighting of chroma for RDOQ
 
 // This can be enabled by the makefile
