@@ -188,6 +188,7 @@
 #define SCM_U0176_RICE_PARAM_DERIVATION_CLEAN_UP         1 ///< JCTVC-U0176, using shift operation to derive the riceParam for numPLTIndices
 #define SCM_U0078_BIPRED_RESTRICTION                     1 ///< JCTVC-U0078, restrict 8x8 Bi-pred when IBC is enabled and AMVR is disabled
 #define SCM_U0095_FAST_INTRA_ACT                         0 ///< JCTVC-U0095, fast intra ACT search
+#define SCM_U0114_LOWDELAY_PALETTE_INITIALIZER_GENERATE  1 ///< JCTVC-U0114, generate the palette predictor initializer with low delay
 
 //------------------------------------------------
 // Derived macros

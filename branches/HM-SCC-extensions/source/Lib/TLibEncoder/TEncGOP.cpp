@@ -98,6 +98,10 @@ TEncGOP::TEncGOP()
   m_bufferingPeriodSEIPresentInAU = false;
   m_associatedIRAPType = NAL_UNIT_CODED_SLICE_IDR_N_LP;
   m_associatedIRAPPOC  = 0;
+#if SCM_U0114_LOWDELAY_PALETTE_INITIALIZER_GENERATE
+  m_uiNumPLTPred = 0;
+  m_encodePPSPLT = false;
+#endif
   return;
 }
 
