@@ -580,7 +580,7 @@ Void TEncSlice::precompressSlice( TComPic* pcPic )
     // m_pcGOPEncoder->preLoopFilterPicAll( pcPic, uiPicDist );
 
     // compute RD cost and choose the best
-    Double dPicRdCost = m_pcRdCost->calcRdCost64( m_uiPicTotalBits, uiPicDist, true, DF_SSE_FRAME); // NOTE: Is the 'true' parameter really necessary?
+    Double dPicRdCost = m_pcRdCost->calcRdCost( (Double)m_uiPicTotalBits, (Double)uiPicDist, DF_SSE_FRAME);
 
     if ( dPicRdCost < dPicRdCostBest )
     {

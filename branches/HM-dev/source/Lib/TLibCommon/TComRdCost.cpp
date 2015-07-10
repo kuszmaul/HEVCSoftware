@@ -54,10 +54,9 @@ TComRdCost::~TComRdCost()
 }
 
 // Calculate RD functions
-Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag, DFunc eDFunc )
+Double TComRdCost::calcRdCost( Double numBits, Double distortion, DFunc eDFunc )
 {
-  Double dRdCost = 0.0;
-  Double dLambda = 0.0;
+  Double lambda = 1.0;
 
   switch ( eDFunc )
   {
@@ -65,138 +64,47 @@ Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag,
       assert(0);
       break;
     case DF_SAD:
-#if RExt__HIGH_BIT_DEPTH_SUPPORT
-      dLambda = m_dLambdaMotionSAD[0]; // 0 is valid, because for lossless blocks, the cost equation is modified to compensate.
-#else
-      dLambda = (Double)m_uiLambdaMotionSAD[0]; // 0 is valid, because for lossless blocks, the cost equation is modified to compensate.
-#endif
+      lambda = m_dLambdaMotionSAD[0]; // 0 is valid, because for lossless blocks, the cost equation is modified to compensate.
       break;
     case DF_DEFAULT:
-      dLambda =         m_dLambda;
+      lambda = m_dLambda;
       break;
     case DF_SSE_FRAME:
-      dLambda =         m_dFrameLambda;
+      lambda = m_dFrameLambda;
       break;
     default:
       assert (0);
       break;
   }
 
-  if (bFlag) //NOTE: this "bFlag" is never true
+  if (eDFunc == DF_SAD)
   {
-    // Intra8x8, Intra4x4 Block only...
     if (m_costMode != COST_STANDARD_LOSSY)
     {
-      dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
+      return ((distortion * 65536.0) / lambda) + numBits; // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
     }
     else
     {
-      dRdCost = (((Double)uiDistortion) + ((Double)uiBits * dLambda));
+      return distortion + (((numBits * lambda) ) / 65536.0);
     }
   }
   else
   {
-    if (eDFunc == DF_SAD)
-    {
-      if (m_costMode != COST_STANDARD_LOSSY)
-      {
-        dRdCost = ((Double(uiDistortion) * 65536) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
-      }
-      else
-      {
-        dRdCost = Double(uiDistortion) + ((Double(uiBits) * dLambda) / 65536.0);
-      }
-    }
-    else
-    {
-      if (m_costMode != COST_STANDARD_LOSSY)
-      {
-        dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
-      }
-      else
-      {
-        dRdCost = Double(uiDistortion) + (Double(uiBits) * dLambda);
-      }
-    }
-  }
-
-  return dRdCost;
-}
-
-Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag, DFunc eDFunc )
-{
-  Double dRdCost = 0.0;
-  Double dLambda = 0.0;
-
-  switch ( eDFunc )
-  {
-    case DF_SSE:
-      assert(0);
-      break;
-    case DF_SAD:
-#if RExt__HIGH_BIT_DEPTH_SUPPORT
-      dLambda = m_dLambdaMotionSAD[0]; // 0 is valid, because for lossless blocks, the cost equation is modified to compensate.
-#else
-      dLambda = (Double)m_uiLambdaMotionSAD[0]; // 0 is valid, because for lossless blocks, the cost equation is modified to compensate.
-#endif
-      break;
-    case DF_DEFAULT:
-      dLambda =         m_dLambda;
-      break;
-    case DF_SSE_FRAME:
-      dLambda =         m_dFrameLambda;
-      break;
-    default:
-      assert (0);
-      break;
-  }
-
-  if (bFlag) //NOTE: this "bFlag" is never true
-  {
-    // Intra8x8, Intra4x4 Block only...
     if (m_costMode != COST_STANDARD_LOSSY)
     {
-      dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
+      return (distortion / lambda) + numBits; // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
     }
     else
     {
-      dRdCost = (((Double)(Int64)uiDistortion) + ((Double)(Int64)uiBits * dLambda));
+      return distortion + (numBits * lambda);
     }
   }
-  else
-  {
-    if (eDFunc == DF_SAD)
-    {
-      if (m_costMode != COST_STANDARD_LOSSY)
-      {
-        dRdCost = ((Double(uiDistortion) * 65536) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
-      }
-      else
-      {        
-        dRdCost = Double(uiDistortion) + ((Double(uiBits) * dLambda) / 65536.0);
-      }
-    }
-    else
-    {
-      if (m_costMode != COST_STANDARD_LOSSY)
-      {
-        dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
-      }
-      else
-      {
-        dRdCost = Double(uiDistortion) + (Double(uiBits) * dLambda);
-      }
-    }
-  }
-
-  return dRdCost;
 }
 
 Void TComRdCost::setLambda( Double dLambda, const BitDepths &bitDepths )
 {
   m_dLambda           = dLambda;
   m_sqrtLambda        = sqrt(m_dLambda);
-#if RExt__HIGH_BIT_DEPTH_SUPPORT
   m_dLambdaMotionSAD[0] = 65536.0 * m_sqrtLambda;
   m_dLambdaMotionSSE[0] = 65536.0 * m_dLambda;
 #if FULL_NBIT
@@ -206,17 +114,6 @@ Void TComRdCost::setLambda( Double dLambda, const BitDepths &bitDepths )
 #endif
   m_dLambdaMotionSAD[1] = 65536.0 * sqrt(dLambda);
   m_dLambdaMotionSSE[1] = 65536.0 * dLambda;
-#else
-  m_uiLambdaMotionSAD[0] = (UInt)floor(65536.0 * m_sqrtLambda);
-  m_uiLambdaMotionSSE[0] = (UInt)floor(65536.0 * m_dLambda   );
-#if FULL_NBIT
-  dLambda = 0.57 * pow(2.0, ((LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME - 12) / 3.0));
-#else
-  dLambda = 0.57 * pow(2.0, ((LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME - 12 - 6 * (bitDepths.recon[CHANNEL_TYPE_LUMA] - 8)) / 3.0));
-#endif
-  m_uiLambdaMotionSAD[1] = (UInt)floor(65536.0 * sqrt(dLambda));
-  m_uiLambdaMotionSSE[1] = (UInt)floor(65536.0 * dLambda   );
-#endif
 }
 
 
@@ -267,11 +164,7 @@ Void TComRdCost::init()
 
   m_costMode                   = COST_STANDARD_LOSSY;
 
-#if RExt__HIGH_BIT_DEPTH_SUPPORT
   m_dCost                      = 0;
-#else
-  m_uiCost                     = 0;
-#endif
   m_iCostScale                 = 0;
 }
 
