@@ -104,7 +104,7 @@ Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag,
       }
       else
       {
-        dRdCost = floor(Double(uiDistortion) + (floor((Double(uiBits) * dLambda) + 0.5) / 65536.0));
+        dRdCost = Double(uiDistortion) + ((Double(uiBits) * dLambda) / 65536.0);
       }
     }
     else
@@ -115,7 +115,7 @@ Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag,
       }
       else
       {
-        dRdCost = floor(Double(uiDistortion) + (Double(uiBits) * dLambda) + 0.5);
+        dRdCost = Double(uiDistortion) + (Double(uiBits) * dLambda);
       }
     }
   }
@@ -172,8 +172,8 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
         dRdCost = ((Double(uiDistortion) * 65536) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
       }
       else
-      {
-        dRdCost = floor(Double(uiDistortion) + (floor((Double(uiBits) * dLambda) + 0.5) / 65536.0));
+      {        
+        dRdCost = Double(uiDistortion) + ((Double(uiBits) * dLambda) / 65536.0);
       }
     }
     else
@@ -184,7 +184,7 @@ Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag,
       }
       else
       {
-        dRdCost = floor(Double(uiDistortion) + (Double(uiBits) * dLambda) + 0.5);
+        dRdCost = Double(uiDistortion) + (Double(uiBits) * dLambda);
       }
     }
   }
