@@ -111,30 +111,20 @@ private:
   Double                  m_distortionWeight[MAX_NUM_COMPONENT]; // only chroma values are used.
   Double                  m_dLambda;
   Double                  m_sqrtLambda;
-#if RExt__HIGH_BIT_DEPTH_SUPPORT
   Double                  m_dLambdaMotionSAD[2 /* 0=standard, 1=for transquant bypass when mixed-lossless cost evaluation enabled*/];
   Double                  m_dLambdaMotionSSE[2 /* 0=standard, 1=for transquant bypass when mixed-lossless cost evaluation enabled*/];
-#else
-  UInt                    m_uiLambdaMotionSAD[2 /* 0=standard, 1=for transquant bypass when mixed-lossless cost evaluation enabled*/];
-  UInt                    m_uiLambdaMotionSSE[2 /* 0=standard, 1=for transquant bypass when mixed-lossless cost evaluation enabled*/];
-#endif
   Double                  m_dFrameLambda;
 
   // for motion cost
   TComMv                  m_mvPredictor;
-#if RExt__HIGH_BIT_DEPTH_SUPPORT
   Double                  m_dCost;
-#else
-  UInt                    m_uiCost;
-#endif
   Int                     m_iCostScale;
 
 public:
   TComRdCost();
   virtual ~TComRdCost();
 
-  Double  calcRdCost  ( UInt   uiBits, Distortion uiDistortion, Bool bFlag = false, DFunc eDFunc = DF_DEFAULT );
-  Double  calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag = false, DFunc eDFunc = DF_DEFAULT );
+  Double calcRdCost( Double numBits, Double distortion, DFunc eDFunc = DF_DEFAULT );
 
   Void    setDistortionWeight  ( const ComponentID compID, const Double distortionWeight ) { m_distortionWeight[compID] = distortionWeight; }
   Void    setLambda      ( Double dLambda, const BitDepths &bitDepths );
@@ -159,11 +149,7 @@ public:
 
   // for motion cost
   static UInt    xGetExpGolombNumberOfBits( Int iVal );
-#if RExt__HIGH_BIT_DEPTH_SUPPORT
   Void    getMotionCost( Bool bSad, Int iAdd, Bool bIsTransquantBypass ) { m_dCost = (bSad ? m_dLambdaMotionSAD[(bIsTransquantBypass && m_costMode==COST_MIXED_LOSSLESS_LOSSY_CODING) ?1:0] + iAdd : m_dLambdaMotionSSE[(bIsTransquantBypass && m_costMode==COST_MIXED_LOSSLESS_LOSSY_CODING)?1:0] + iAdd); }
-#else
-  Void    getMotionCost( Bool bSad, Int iAdd, Bool bIsTransquantBypass ) { m_uiCost = (bSad ? m_uiLambdaMotionSAD[(bIsTransquantBypass && m_costMode==COST_MIXED_LOSSLESS_LOSSY_CODING) ?1:0] + iAdd : m_uiLambdaMotionSSE[(bIsTransquantBypass && m_costMode==COST_MIXED_LOSSLESS_LOSSY_CODING)?1:0] + iAdd); }
-#endif
   Void    setPredictor( TComMv& rcMv )
   {
     m_mvPredictor = rcMv;
@@ -171,17 +157,9 @@ public:
   Void    setCostScale( Int iCostScale )    { m_iCostScale = iCostScale; }
   __inline Distortion getCost( Int x, Int y )
   {
-#if RExt__HIGH_BIT_DEPTH_SUPPORT
     return Distortion((m_dCost * getBits(x, y)) / 65536.0);
-#else
-    return m_uiCost * getBits(x, y) >> 16;
-#endif
   }
-#if RExt__HIGH_BIT_DEPTH_SUPPORT
   Distortion getCost( UInt b )                 { return Distortion(( m_dCost * b ) / 65536.0); }
-#else
-  Distortion getCost( UInt b )                 { return ( m_uiCost * b ) >> 16; }
-#endif
   UInt    getBits( Int x, Int y )
   {
     return xGetExpGolombNumberOfBits((x << m_iCostScale) - m_mvPredictor.getHor())

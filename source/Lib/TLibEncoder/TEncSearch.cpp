@@ -2776,9 +2776,9 @@ Void TEncSearch::xEncPCM (TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* pOrg, Pel* p
 //!  Function for PCM mode estimation.
 Void TEncSearch::IPCMSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, TComYuv* pcRecoYuv )
 {
-  UInt        uiDepth      = pcCU->getDepth(0);
-  const UInt  uiDistortion = 0;
-  UInt        uiBits;
+  UInt              uiDepth      = pcCU->getDepth(0);
+  const Distortion  uiDistortion = 0;
+  UInt              uiBits;
 
   Double dCost;
 
@@ -3664,7 +3664,7 @@ Distortion TEncSearch::xGetTemplateCost( TComDataCU* pcCU,
   // calc distortion
 
   uiCost = m_pcRdCost->getDistPart( pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA), pcTemplateCand->getAddr(COMPONENT_Y, uiPartAddr), pcTemplateCand->getStride(COMPONENT_Y), pcOrgYuv->getAddr(COMPONENT_Y, uiPartAddr), pcOrgYuv->getStride(COMPONENT_Y), iSizeX, iSizeY, COMPONENT_Y, DF_SAD );
-  uiCost = (UInt) m_pcRdCost->calcRdCost( m_auiMVPIdxCost[iMVPIdx][iMVPNum], uiCost, false, DF_SAD );
+  uiCost = (UInt) m_pcRdCost->calcRdCost( m_auiMVPIdxCost[iMVPIdx][iMVPNum], uiCost, DF_SAD );
   return uiCost;
 }
 
