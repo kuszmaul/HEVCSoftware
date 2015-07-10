@@ -116,7 +116,7 @@ public:
   }
 
 #if ME_ENABLE_ROUNDING_OF_MVS
-  //! shift left with rounding
+  //! shift right with rounding
   Void divideByPowerOf2 (const Int i)
   {
     int offset = (i == 0) ? 0 : 1 << (i - 1); 
