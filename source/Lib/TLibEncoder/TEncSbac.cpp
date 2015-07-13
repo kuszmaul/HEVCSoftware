@@ -766,8 +766,7 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
     assert(uiNumIndices);
 #if SCM_U0086_SIM_NUM_INDEX_MAPPING 
     assert(uiNumIndices > 0);
-    uiMappedValue = uiNumIndices-1;
-    assert(uiMappedValue>=0);
+    uiMappedValue = uiNumIndices-1;    
 #else
     UInt uiInterval = bUsePLTSharingMode ? 8 : 32;
     UInt uiZeroPosition = bUsePLTSharingMode ? 3 : uiIndexMaxSize;
