@@ -1300,9 +1300,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     {
       pcSlice->setEnableTMVPFlag(0);
     }
-    /////////////////////////////////////////////////////////////////////////////////////////////////// Compress a slice
-    //  Slice compression
-    if (m_pcCfg->getUseASR())
+    
+    // set adaptive search range for non-intra-slices
+    if (m_pcCfg->getUseASR() && pcSlice->getSliceType()!=I_SLICE)
     {
       m_pcSliceEncoder->setSearchRange(pcSlice);
     }
