@@ -879,9 +879,17 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
               {
                 READ_UVLC( uiCode, "palette_max_size" );                      screenExtension.setPLTMaxSize( uiCode );
                 READ_UVLC( uiCode, "delta_palette_max_predictor_size" );      screenExtension.setPLTMaxPredSize( uiCode+screenExtension.getPLTMaxSize() );
+#if SCM_U0036_ZERO_PALETTE_SIZE
+                assert(screenExtension.getPLTMaxSize() != 0 || screenExtension.getPLTMaxPredSize() == 0);
+#endif
+
 #if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
                 READ_FLAG( uiCode, "sps_palette_predictor_initializer_flag" );
                 screenExtension.setUsePalettePredictor(uiCode);
+#if SCM_U0036_ZERO_PALETTE_SIZE
+                assert(screenExtension.getPLTMaxSize() != 0 || screenExtension.getUsePalettePredictor() == false);
+                assert(screenExtension.getUsePLTMode() != 0 || screenExtension.getUsePalettePredictor() == false);
+#endif
                 if( uiCode )
                 {
                   READ_UVLC( uiCode, "sps_num_palette_entries_minus1" ); uiCode++;

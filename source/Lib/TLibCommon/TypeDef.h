@@ -190,6 +190,7 @@
 #define SCM_U0095_FAST_INTRA_ACT                         0 ///< JCTVC-U0095, fast intra ACT search
 #define SCM_U0114_LOWDELAY_PALETTE_INITIALIZER_GENERATE  1 ///< JCTVC-U0114, generate the palette predictor initializer with low delay
 #define SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS   1 ///< JCTVC-U0084, allow signal palette predictor initializers at SPS
+#define SCM_U0036_ZERO_PALETTE_SIZE                      1 ///< JCTVC-U0036, add bitstream conformance requirements when maximum palette size is 0
 
 //------------------------------------------------
 // Derived macros
