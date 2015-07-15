@@ -1093,8 +1093,31 @@ Flag to disable intra PUs in inter slices.
 Specifies a value that is multiplied with the Lagrange multiplier
 $\lambda$, for use in the rate-distortion optimised cost calculation
 when encoding temporal layer~$N$.
+If LambdaModifierI is specified, then LambdaModifierI will be used for intra pictures.
 \par
 $N$ may be in the range 0 (inclusive) to 7 (exclusive).
+\\
+
+\Option{LambdaModifierI (-LMI)} &
+%\ShortOption{-LMI} &
+\Default{} &
+Specifies one or more of the LambdaModifiers to use intra pictures at each of the temporal layers.
+If not present, then the LambdaModifier$N$ settings are used instead. If the list of values
+(comma or space separated) does not include enough values for each of the temporal layers,
+the last value is repeated as required.
+\\
+
+\Option{IQPFactor (-IQF)} &
+%\ShortOption{-IQF} &
+\Default{-1} &
+Specifies the QP factor to be used for intra pictures during the lambda computation.
+(The values specified in the GOP structure are only used for inter pictures).
+If negative (default), the following equation is used to derive the value:
+\par
+$IQP_{factor}=0.57*(1.0-Max(0.5, Min(0.0, 0.05*s)))$
+\par
+where $s = Int(isField ? (GS-1)/2 : GS-1)$ and
+$GS$ is the gop size.
 \\
 
 \Option{ECU} &

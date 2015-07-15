@@ -122,6 +122,9 @@ Void TAppEncTop::xInitLibCfg()
   {
     m_cTEncTop.setLambdaModifier                                  ( uiLoop, m_adLambdaModifier[ uiLoop ] );
   }
+  m_cTEncTop.setIntraLambdaModifier                               ( m_adIntraLambdaModifier );
+  m_cTEncTop.setIntraQpFactor                                     ( m_dIntraQpFactor );
+
   m_cTEncTop.setQP                                                ( m_iQP );
 
   m_cTEncTop.setPad                                               ( m_aiPad );
