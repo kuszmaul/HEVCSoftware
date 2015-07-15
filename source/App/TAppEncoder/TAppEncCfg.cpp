@@ -404,7 +404,7 @@ template <class T>
 struct SMultiValueInput
 {
   const T              minValIncl;
-  const T              maxValIncl; // Use 0 for unlimited
+  const T              maxValIncl;
   const std::size_t    minNumValuesIncl;
   const std::size_t    maxNumValuesIncl; // Use 0 for unlimited
         std::vector<T> values;
@@ -416,115 +416,62 @@ struct SMultiValueInput
     : minValIncl(minValue), maxValIncl(maxValue), minNumValuesIncl(minNumberValues), maxNumValuesIncl(maxNumberValues), values(defValues, defValues+numDefValues)  { }
   SMultiValueInput<T> &operator=(const std::vector<T> &userValues) { values=userValues; return *this; }
   SMultiValueInput<T> &operator=(const SMultiValueInput<T> &userValues) { values=userValues.values; return *this; }
+
+  T readValue(const Char *&pStr, Bool &bSuccess);
+
+  istream& readValues(std::istream &in);
 };
 
-static inline istream& operator >> (istream &in, SMultiValueInput<UInt> &values)
+template <class T>
+static inline istream& operator >> (std::istream &in, SMultiValueInput<T> &values)
 {
-  values.values.clear();
-  string str;
-  while (!in.eof())
-  {
-    string tmp; in >> tmp; str+=" " + tmp;
-  }
-  if (!str.empty())
-  {
-    const Char *pStr=str.c_str();
-    // soak up any whitespace
-    for(;isspace(*pStr);pStr++);
-
-    while (*pStr != 0)
-    {
-      Char *eptr;
-      UInt val=strtoul(pStr, &eptr, 0);
-      if (*eptr!=0 && !isspace(*eptr) && *eptr!=',')
-      {
-        in.setstate(ios::failbit);
-        break;
-      }
-      if (val<values.minValIncl || val>values.maxValIncl)
-      {
-        in.setstate(ios::failbit);
-        break;
-      }
-
-      if (values.maxNumValuesIncl != 0 && values.values.size() >= values.maxNumValuesIncl)
-      {
-        in.setstate(ios::failbit);
-        break;
-      }
-      values.values.push_back(val);
-      // soak up any whitespace and up to 1 comma.
-      pStr=eptr;
-      for(;isspace(*pStr);pStr++);
-      if (*pStr == ',')
-      {
-        pStr++;
-      }
-      for(;isspace(*pStr);pStr++);
-    }
-  }
-  if (values.values.size() < values.minNumValuesIncl)
-  {
-    in.setstate(ios::failbit);
-  }
-  return in;
+  return values.readValues(in);
 }
 
-static inline istream& operator >> (istream &in, SMultiValueInput<Int> &values)
+template<>
+UInt SMultiValueInput<UInt>::readValue(const Char *&pStr, Bool &bSuccess)
 {
-  values.values.clear();
-  string str;
-  while (!in.eof())
-  {
-    string tmp; in >> tmp; str+=" " + tmp;
-  }
-  if (!str.empty())
-  {
-    const Char *pStr=str.c_str();
-    // soak up any whitespace
-    for(;isspace(*pStr);pStr++);
-
-    while (*pStr != 0)
-    {
-      Char *eptr;
-      Int val=strtol(pStr, &eptr, 0);
-      if (*eptr!=0 && !isspace(*eptr) && *eptr!=',')
-      {
-        in.setstate(ios::failbit);
-        break;
-      }
-      if (val<values.minValIncl || val>values.maxValIncl)
-      {
-        in.setstate(ios::failbit);
-        break;
-      }
-
-      if (values.maxNumValuesIncl != 0 && values.values.size() >= values.maxNumValuesIncl)
-      {
-        in.setstate(ios::failbit);
-        break;
-      }
-      values.values.push_back(val);
-      // soak up any whitespace and up to 1 comma.
-      pStr=eptr;
-      for(;isspace(*pStr);pStr++);
-      if (*pStr == ',')
-      {
-        pStr++;
-      }
-      for(;isspace(*pStr);pStr++);
-    }
-  }
-  if (values.values.size() < values.minNumValuesIncl)
-  {
-    in.setstate(ios::failbit);
-  }
-  return in;
+  Char *eptr;
+  UInt val=strtoul(pStr, &eptr, 0);
+  pStr=eptr;
+  bSuccess=!(*eptr!=0 && !isspace(*eptr) && *eptr!=',') && !(val<minValIncl || val>maxValIncl);
+  return val;
 }
 
-static inline istream& operator >> (istream &in, SMultiValueInput<Bool> &values)
+template<>
+Int SMultiValueInput<Int>::readValue(const Char *&pStr, Bool &bSuccess)
 {
-  values.values.clear();
+  Char *eptr;
+  Int val=strtol(pStr, &eptr, 0);
+  pStr=eptr;
+  bSuccess=!(*eptr!=0 && !isspace(*eptr) && *eptr!=',') && !(val<minValIncl || val>maxValIncl);
+  return val;
+}
+
+template<>
+Double SMultiValueInput<Double>::readValue(const Char *&pStr, Bool &bSuccess)
+{
+  Char *eptr;
+  Double val=strtod(pStr, &eptr);
+  pStr=eptr;
+  bSuccess=!(*eptr!=0 && !isspace(*eptr) && *eptr!=',') && !(val<minValIncl || val>maxValIncl);
+  return val;
+}
+
+template<>
+Bool SMultiValueInput<Bool>::readValue(const Char *&pStr, Bool &bSuccess)
+{
+  Char *eptr;
+  Int val=strtol(pStr, &eptr, 0);
+  pStr=eptr;
+  bSuccess=!(*eptr!=0 && !isspace(*eptr) && *eptr!=',') && !(val<Int(minValIncl) || val>Int(maxValIncl));
+  return val!=0;
+}
+
+template <class T>
+istream& SMultiValueInput<T>::readValues(std::istream &in)
+{
+  values.clear();
   string str;
   while (!in.eof())
   {
@@ -538,27 +485,21 @@ static inline istream& operator >> (istream &in, SMultiValueInput<Bool> &values)
 
     while (*pStr != 0)
     {
-      Char *eptr;
-      Int val=strtol(pStr, &eptr, 0);
-      if (*eptr!=0 && !isspace(*eptr) && *eptr!=',')
-      {
-        in.setstate(ios::failbit);
-        break;
-      }
-      if (val<Int(values.minValIncl) || val>Int(values.maxValIncl))
+      Bool bSuccess=true;
+      T val=readValue(pStr, bSuccess);
+      if (!bSuccess)
       {
         in.setstate(ios::failbit);
         break;
       }
 
-      if (values.maxNumValuesIncl != 0 && values.values.size() >= values.maxNumValuesIncl)
+      if (maxNumValuesIncl != 0 && values.size() >= maxNumValuesIncl)
       {
         in.setstate(ios::failbit);
         break;
       }
-      values.values.push_back(val!=0);
+      values.push_back(val);
       // soak up any whitespace and up to 1 comma.
-      pStr=eptr;
       for(;isspace(*pStr);pStr++);
       if (*pStr == ',')
       {
@@ -567,7 +508,7 @@ static inline istream& operator >> (istream &in, SMultiValueInput<Bool> &values)
       for(;isspace(*pStr);pStr++);
     }
   }
-  if (values.values.size() < values.minNumValuesIncl)
+  if (values.size() < minNumValuesIncl)
   {
     in.setstate(ios::failbit);
   }
@@ -680,6 +621,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   SMultiValueInput<Int>  cfg_startOfCodedInterval            (std::numeric_limits<Int>::min(), std::numeric_limits<Int>::max(), 0, 1<<16);
   SMultiValueInput<Int>  cfg_codedPivotValue                 (std::numeric_limits<Int>::min(), std::numeric_limits<Int>::max(), 0, 1<<16);
   SMultiValueInput<Int>  cfg_targetPivotValue                (std::numeric_limits<Int>::min(), std::numeric_limits<Int>::max(), 0, 1<<16);
+
+  SMultiValueInput<Double> cfg_adIntraLambdaModifier         (0, std::numeric_limits<Double>::max(), 0, MAX_TLAYER); ///< Lambda modifier for Intra pictures, one for each temporal layer. If size>temporalLayer, then use [temporalLayer], else if size>0, use [size()-1], else use m_adLambdaModifier.
+
 
   const UInt defaultInputKneeCodes[3]  = { 600, 800, 900 };
   const UInt defaultOutputKneeCodes[3] = { 100, 250, 450 };
@@ -811,13 +755,15 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("ASR",                                             m_bUseASR,                                        false, "Adaptive motion search range")
 
   // Mode decision parameters
-  ("LambdaModifier0,-LM0",                            m_adLambdaModifier[ 0 ],                  ( Double )1.0, "Lambda modifier for temporal layer 0")
-  ("LambdaModifier1,-LM1",                            m_adLambdaModifier[ 1 ],                  ( Double )1.0, "Lambda modifier for temporal layer 1")
-  ("LambdaModifier2,-LM2",                            m_adLambdaModifier[ 2 ],                  ( Double )1.0, "Lambda modifier for temporal layer 2")
-  ("LambdaModifier3,-LM3",                            m_adLambdaModifier[ 3 ],                  ( Double )1.0, "Lambda modifier for temporal layer 3")
-  ("LambdaModifier4,-LM4",                            m_adLambdaModifier[ 4 ],                  ( Double )1.0, "Lambda modifier for temporal layer 4")
-  ("LambdaModifier5,-LM5",                            m_adLambdaModifier[ 5 ],                  ( Double )1.0, "Lambda modifier for temporal layer 5")
-  ("LambdaModifier6,-LM6",                            m_adLambdaModifier[ 6 ],                  ( Double )1.0, "Lambda modifier for temporal layer 6")
+  ("LambdaModifier0,-LM0",                            m_adLambdaModifier[ 0 ],                  ( Double )1.0, "Lambda modifier for temporal layer 0. If LambdaModifierI is used, this will not affect intra pictures")
+  ("LambdaModifier1,-LM1",                            m_adLambdaModifier[ 1 ],                  ( Double )1.0, "Lambda modifier for temporal layer 1. If LambdaModifierI is used, this will not affect intra pictures")
+  ("LambdaModifier2,-LM2",                            m_adLambdaModifier[ 2 ],                  ( Double )1.0, "Lambda modifier for temporal layer 2. If LambdaModifierI is used, this will not affect intra pictures")
+  ("LambdaModifier3,-LM3",                            m_adLambdaModifier[ 3 ],                  ( Double )1.0, "Lambda modifier for temporal layer 3. If LambdaModifierI is used, this will not affect intra pictures")
+  ("LambdaModifier4,-LM4",                            m_adLambdaModifier[ 4 ],                  ( Double )1.0, "Lambda modifier for temporal layer 4. If LambdaModifierI is used, this will not affect intra pictures")
+  ("LambdaModifier5,-LM5",                            m_adLambdaModifier[ 5 ],                  ( Double )1.0, "Lambda modifier for temporal layer 5. If LambdaModifierI is used, this will not affect intra pictures")
+  ("LambdaModifier6,-LM6",                            m_adLambdaModifier[ 6 ],                  ( Double )1.0, "Lambda modifier for temporal layer 6. If LambdaModifierI is used, this will not affect intra pictures")
+  ("LambdaModifierI,-LMI",                            cfg_adIntraLambdaModifier,    cfg_adIntraLambdaModifier, "Lambda modifiers for Intra pictures, comma separated, up to one the number of temporal layer. If entry for temporalLayer exists, then use it, else if some are specified, use the last, else use the standard LambdaModifiers.")
+  ("IQPFactor,-IQF",                                  m_dIntraQpFactor,                                  -1.0, "Intra QP Factor for Lambda Computation. If negative, use the default equation: 0.57*(1.0 - Clip3( 0.0, 0.5, 0.05*(Double)(isField ? (GopSize-1)/2 : GopSize-1) ))")
 
   /* Quantization parameters */
   ("QP,q",                                            m_fQP,                                             30.0, "Qp value, if value is float, QP is switched once during encoding")
@@ -1120,6 +1066,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_pchReconFile = cfg_ReconFile.empty() ? NULL : strdup(cfg_ReconFile.c_str());
   m_pchdQPFile = cfg_dQPFile.empty() ? NULL : strdup(cfg_dQPFile.c_str());
 
+  m_adIntraLambdaModifier = cfg_adIntraLambdaModifier.values;
   if(m_isField)
   {
     //Frame height

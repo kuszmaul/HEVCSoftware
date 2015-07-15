@@ -188,7 +188,7 @@ TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
  \param isField       true for field coding
  */
 
-Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iGOPid, TComSlice*& rpcSlice, Bool isField )
+Void TEncSlice::initEncSlice( TComPic* pcPic, const Int pocLast, const Int pocCurr, const Int iGOPid, TComSlice*& rpcSlice, const Bool isField )
 {
   Double dQP;
   Double dLambda;
@@ -320,8 +320,6 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iGOP
     Int    NumberBFrames = ( m_pcCfg->getGOPSize() - 1 );
     Int    SHIFT_QP = 12;
 
-    Double dLambda_scale = 1.0 - Clip3( 0.0, 0.5, 0.05*(Double)(isField ? NumberBFrames/2 : NumberBFrames) );
-
 #if FULL_NBIT
     Int    bitdepth_luma_qp_scale = 6 * (rpcSlice->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA) - 8);
 #else
@@ -335,8 +333,18 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iGOP
     Double dQPFactor = m_pcCfg->getGOPEntry(iGOPid).m_QPFactor;
     if ( eSliceType==I_SLICE )
     {
-      dQPFactor=0.57*dLambda_scale;
+      if (m_pcCfg->getIntraQpFactor()>=0.0 && m_pcCfg->getGOPEntry(iGOPid).m_sliceType != I_SLICE)
+      {
+        dQPFactor=m_pcCfg->getIntraQpFactor();
+      }
+      else
+      {
+        Double dLambda_scale = 1.0 - Clip3( 0.0, 0.5, 0.05*(Double)(isField ? NumberBFrames/2 : NumberBFrames) );
+        
+        dQPFactor=0.57*dLambda_scale;
+      }
     }
+    
     dLambda = dQPFactor*pow( 2.0, qp_temp/3.0 );
 
     if ( depth>0 )
@@ -366,11 +374,20 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iGOP
   dQP     = m_pdRdPicQp    [0];
   iQP     = m_piRdPicQp    [0];
 
-  if( rpcSlice->getSliceType( ) != I_SLICE )
+  const Int temporalId=m_pcCfg->getGOPEntry(iGOPid).m_temporalId;
+  const std::vector<Double> &intraLambdaModifiers=m_pcCfg->getIntraLambdaModifier();
+
+  Double lambdaModifier;
+  if( rpcSlice->getSliceType( ) != I_SLICE || intraLambdaModifiers.empty())
   {
-    dLambda *= m_pcCfg->getLambdaModifier( m_pcCfg->getGOPEntry(iGOPid).m_temporalId );
+    lambdaModifier = m_pcCfg->getLambdaModifier( temporalId );
+  }
+  else
+  {
+    lambdaModifier = intraLambdaModifiers[ (temporalId < intraLambdaModifiers.size()) ? temporalId : (intraLambdaModifiers.size()-1) ];
   }
 
+  dLambda *= lambdaModifier;
   setUpLambda(rpcSlice, dLambda, iQP);
 
   if (m_pcCfg->getFastMEForGenBLowDelayEnabled())
@@ -444,7 +461,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iGOP
 
   rpcSlice->setDepth            ( depth );
 
-  pcPic->setTLayer( m_pcCfg->getGOPEntry(iGOPid).m_temporalId );
+  pcPic->setTLayer( temporalId );
   if(eSliceType==I_SLICE)
   {
     pcPic->setTLayer(0);
