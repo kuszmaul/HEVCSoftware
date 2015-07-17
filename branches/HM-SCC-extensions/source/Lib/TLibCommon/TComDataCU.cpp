@@ -3053,6 +3053,16 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     }
   }
   numValidMergeCand = uiArrayAddr;
+
+#if SCM_U0081_AMVR_UNIFICATION
+  if( m_pcSlice->getUseIntegerMv() )
+  {
+    for( Int i = 0; i < numValidMergeCand * (1 + (Int)getSlice()->isInterB()); i++ )
+    {
+      pcMvFieldNeighbours[i].setMvField((pcMvFieldNeighbours[i].getMv()>>2)<<2, pcMvFieldNeighbours[i].getRefIdx());
+    }
+  }
+#endif
 }
 
 /** Check whether the current PU and a spatial neighboring PU are in a same ME region.

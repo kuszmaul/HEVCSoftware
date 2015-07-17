@@ -647,7 +647,9 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
   }
   else if ( pcCU->getSlice()->getUseIntegerMv() )
   {
+#if !SCM_U0081_AMVR_UNIFICATION
     cMv <<= 2;
+#endif 
   }
   pcCU->clipMv(cMv);
 
