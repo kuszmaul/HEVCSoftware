@@ -192,6 +192,7 @@
 #define SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS   1 ///< JCTVC-U0084, allow signal palette predictor initializers at SPS
 #define SCM_U0036_ZERO_PALETTE_SIZE                      1 ///< JCTVC-U0036, add bitstream conformance requirements when maximum palette size is 0
 #define SCM_U0133_REORDER                                1 ///< JCTVC-U0133: change the positions of palette scanRotationModeFlag and palette delta qp and chroma qp offset
+#define SCM_U0081_AMVR_UNIFICATION                       1 ///< JCTVC-U0081 : AMVR unification
 
 //------------------------------------------------
 // Derived macros
