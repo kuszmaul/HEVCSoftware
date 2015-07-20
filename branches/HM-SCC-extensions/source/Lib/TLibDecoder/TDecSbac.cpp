@@ -1010,7 +1010,9 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     }
   }
   assert (uiIdx == uiTotal);
-
+#if SCM_U0087_SWAP_ESC_ORDER
+  for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
+#endif
   for( uiIdx = 0; uiIdx < uiTotal; uiIdx++ )
   {
     UInt uiTraIdx = m_puiScanOrder[uiIdx];
@@ -1038,7 +1040,9 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
           ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiY&1) == 0))) )
         )
       {
+#if !SCM_U0087_SWAP_ESC_ORDER
         for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
+#endif
         {
           if(comp == compBegin)
           {
