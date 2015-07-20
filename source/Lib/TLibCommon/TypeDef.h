@@ -194,6 +194,7 @@
 #define SCM_U0133_REORDER                                1 ///< JCTVC-U0133: change the positions of palette scanRotationModeFlag and palette delta qp and chroma qp offset
 #define SCM_U0081_AMVR_UNIFICATION                       1 ///< JCTVC-U0081 : AMVR unification
 #define SCM_IBC_CR_INTERPOLATION_ENABLE                  1 ///< JCTVC-O0080/77/103 : Enable IBC chroma interpolation
+#define SCM_U0087_SWAP_ESC_ORDER                         1 ///< JCTVC-U0087 : Swap the nesting of the the loops for sending the escape-coded entries so that they are sent in component-grouped order (U0087 approach #2)
 
 //------------------------------------------------
 // Derived macros
