@@ -193,6 +193,7 @@
 #define SCM_U0036_ZERO_PALETTE_SIZE                      1 ///< JCTVC-U0036, add bitstream conformance requirements when maximum palette size is 0
 #define SCM_U0133_REORDER                                1 ///< JCTVC-U0133: change the positions of palette scanRotationModeFlag and palette delta qp and chroma qp offset
 #define SCM_U0081_AMVR_UNIFICATION                       1 ///< JCTVC-U0081 : AMVR unification
+#define SCM_IBC_CR_INTERPOLATION_ENABLE                  1 ///< JCTVC-O0080/77/103 : Enable IBC chroma interpolation
 
 //------------------------------------------------
 // Derived macros

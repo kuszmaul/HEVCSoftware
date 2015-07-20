@@ -7051,12 +7051,23 @@ Bool TEncSearch::isBlockVectorValid( Int xPos, Int yPos, Int width, Int height, 
 
   Int ctuSizeLog2 = s_floorLog2[ctuSize];
 
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+  Int interpolationSamplesX = (pcCU->getPic()->getChromaFormat() == CHROMA_422 || pcCU->getPic()->getChromaFormat() == CHROMA_420) ?((xBv&0x1)<< 1) : 0;
+  Int interpolationSamplesY = (pcCU->getPic()->getChromaFormat() == CHROMA_420) ? ((yBv&0x1)<< 1) : 0;
+  Int refRightX  = xPos + xBv + width - 1 + interpolationSamplesX;
+  Int refBottomY = yPos + yBv + height - 1 + interpolationSamplesY;  
+#else
   Int refRightX = xPos + xBv + width - 1;   // including
   Int refBottomY = yPos + yBv + height - 1; // including
+#endif 
   Int picWidth = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
   Int picHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
 
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+  if ( (xPos + xBv - interpolationSamplesX) < 0 )
+#else
   if ( xPos + xBv < 0 )
+#endif 
   {
     return false;
   }
@@ -7064,7 +7075,11 @@ Bool TEncSearch::isBlockVectorValid( Int xPos, Int yPos, Int width, Int height, 
   {
     return false;
   }
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+  if ( (yPos + yBv - interpolationSamplesY) < 0 )
+#else
   if ( yPos + yBv < 0 )
+#endif 
   {
     return false;
   }
@@ -7072,7 +7087,12 @@ Bool TEncSearch::isBlockVectorValid( Int xPos, Int yPos, Int width, Int height, 
   {
     return false;
   }
+
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+  if ( (xBv + width + interpolationSamplesX) > 0 && (yBv + height+interpolationSamplesY) > 0 )
+#else
   if ( xBv + width > 0 && yBv + height > 0 )
+#endif 
   {
     return false;
   }
@@ -7253,14 +7273,30 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
     Int yCUStart = pcCU->getCUPelY();
     Int xStartInCU, yStartInCU;
     pcCU->getStartPosition( iPartIdx, xStartInCU, yStartInCU );
+#if SCM_IBC_CR_INTERPOLATION_ENABLE==0
     Int xStartInPic = xCUStart+xStartInCU;
     Int yStartInPic = yCUStart+yStartInCU;
+#endif 
     Pel* pCurrStart;
     Pel* pCurr;
+#if SCM_IBC_CR_INTERPOLATION_ENABLE==0
     Pel* pRefStart;
+#endif 
     Pel* pRef;
     Int currStride, refStride;
     distAMVPBest = 0;
+
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+    TComMv cMvQuaterPixl = cMv;
+    cMvQuaterPixl <<= 2;
+    pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllMv( cMvQuaterPixl, pcCU->getPartitionSize(0), uiPartAddr, 0, iPartIdx );
+    pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) - 1, pcCU->getPartitionSize(0), uiPartAddr, 0, iPartIdx );
+    pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMv( TComMv(), pcCU->getPartitionSize(0), uiPartAddr, 0, iPartIdx );
+    pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( -1, pcCU->getPartitionSize(0), uiPartAddr, 0, iPartIdx );
+    pcCU->setInterDirSubParts( 1 + REF_PIC_LIST_0, uiPartAddr, iPartIdx, pcCU->getDepth(0) );
+    motionCompensation( pcCU, &m_tmpYuvPred, REF_PIC_LIST_X, iPartIdx );    
+#endif
+
     for (UInt ch = COMPONENT_Y; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
     {
       Int iTempHeight = height >> pcCU->getPic()->getPicYuvRec()->getComponentScaleY(ComponentID(ch));
@@ -7269,11 +7305,15 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
       pCurrStart = pcOrgYuv->getAddr  ( ComponentID(ch), uiPartAddr );
       currStride = pcOrgYuv->getStride( ComponentID(ch) );
       pCurr = pCurrStart;
-
+#if SCM_IBC_CR_INTERPOLATION_ENABLE 
+      ComponentID compID = (ComponentID)ch;
+      pRef = m_tmpYuvPred.getAddr( compID, uiPartAddr);
+      refStride = m_tmpYuvPred.getStride(compID);
+#else
       pRefStart = pcCU->getPic()->getPicYuvRec()->getAddr( ComponentID(ch) );
       refStride = pcCU->getPic()->getPicYuvRec()->getStride( ComponentID(ch) );
       pRef = pRefStart + ((yStartInPic+ cMv.getVer())>> pcCU->getPic()->getPicYuvRec()->getComponentScaleY(ComponentID(ch)))*refStride + ((xStartInPic + cMv.getHor())>> pcCU->getPic()->getPicYuvRec()->getComponentScaleX(ComponentID(ch)));
-
+#endif 
       distAMVPBest += getSAD( pRef, refStride, pCurr, currStride, iTempWidth, iTempHeight, pcCU->getSlice()->getSPS()->getBitDepths() );
     }
 
@@ -7337,6 +7377,16 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
         bitsMergeTemp = mrgIdxTemp == m_pcEncCfg->getMaxNumMergeCand() ? mrgIdxTemp : mrgIdxTemp+1;
 
         distMergeTemp = 0;
+
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+        pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllMv( cMvFieldNeighbours[mrgIdxTemp<<1].getMv(), pcCU->getPartitionSize(0), uiPartAddr, 0, iPartIdx );
+        pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) - 1, pcCU->getPartitionSize(0), uiPartAddr, 0, iPartIdx );
+        pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMv( TComMv(), pcCU->getPartitionSize(0), uiPartAddr, 0, iPartIdx );
+        pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( -1, pcCU->getPartitionSize(0), uiPartAddr, 0, iPartIdx );
+        pcCU->setInterDirSubParts( 1 + REF_PIC_LIST_0, uiPartAddr, iPartIdx, pcCU->getDepth(0) );
+        motionCompensation( pcCU, &m_tmpYuvPred, REF_PIC_LIST_X, iPartIdx );
+#endif
+
         for (UInt ch = COMPONENT_Y; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
         {
           Int iTempHeight = height >> pcCU->getPic()->getPicYuvRec()->getComponentScaleY(ComponentID(ch));
@@ -7346,9 +7396,15 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
           currStride = pcOrgYuv->getStride( ComponentID(ch) );
           pCurr = pCurrStart;
 
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+          ComponentID compID = (ComponentID)ch;
+          pRef = m_tmpYuvPred.getAddr( compID, uiPartAddr);
+          refStride = m_tmpYuvPred.getStride(compID);
+#else
           pRefStart = pcCU->getPic()->getPicYuvRec()->getAddr( ComponentID(ch) );
           refStride = pcCU->getPic()->getPicYuvRec()->getStride( ComponentID(ch) );
           pRef = pRefStart + ((yStartInPic+ (cMvFieldNeighbours[mrgIdxTemp<<1].getVer()>>2))>> pcCU->getPic()->getPicYuvRec()->getComponentScaleY(ComponentID(ch)))*refStride + ((xStartInPic+ (cMvFieldNeighbours[mrgIdxTemp<<1].getHor()>>2))>>pcCU->getPic()->getPicYuvRec()->getComponentScaleX(ComponentID(ch)));      
+#endif 
           distMergeTemp += getSAD( pRef, refStride, pCurr, currStride, iTempWidth, iTempHeight, pcCU->getSlice()->getSPS()->getBitDepths() );
         }
         costMergeTemp = distMergeTemp + m_pcRdCost->getCost( bitsMergeTemp );
@@ -7537,16 +7593,29 @@ Bool TEncSearch::predMixedIntraBCInterSearch( TComDataCU * pcCU,
         Int yCUStart = pcCU->getCUPelY();
         Int xStartInCU, yStartInCU;
         pcCU->getStartPosition( iPartIdx, xStartInCU, yStartInCU );
+#if SCM_IBC_CR_INTERPOLATION_ENABLE==0
         Int xStartInPic = xCUStart+xStartInCU;
         Int yStartInPic = yCUStart+yStartInCU;
-
+#endif 
         Pel* pCurrStart;
         Int currStride;
         Pel* pCurr;
+#if SCM_IBC_CR_INTERPOLATION_ENABLE==0
         Pel* pRefStart;
+#endif 
         Int refStride;
         Pel* pRef;
         distAMVPBest = 0;
+
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+        pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllMv( cMv, pcCU->getPartitionSize(0), uiPartAddr, 0, iPartIdx );
+        pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) - 1, pcCU->getPartitionSize(0), uiPartAddr, 0, iPartIdx );
+        pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMv( TComMv(), pcCU->getPartitionSize(0), uiPartAddr, 0, iPartIdx );
+        pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( -1, pcCU->getPartitionSize(0), uiPartAddr, 0, iPartIdx );
+        pcCU->setInterDirSubParts( 1 + REF_PIC_LIST_0, uiPartAddr, iPartIdx, pcCU->getDepth(0) );
+        motionCompensation( pcCU, &m_tmpYuvPred, REF_PIC_LIST_X, iPartIdx );
+#endif
+
         for (UInt ch = COMPONENT_Y; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
         {
           Int iTempWidth = iDummyWidth >> pcCU->getPic()->getPicYuvRec()->getComponentScaleX(ComponentID(ch));
@@ -7556,9 +7625,15 @@ Bool TEncSearch::predMixedIntraBCInterSearch( TComDataCU * pcCU,
           currStride = pcOrgYuv->getStride( ComponentID(ch) );
           pCurr = pCurrStart;
 
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+          ComponentID compID = (ComponentID)ch;
+          pRef = m_tmpYuvPred.getAddr( compID, uiPartAddr);
+          refStride = m_tmpYuvPred.getStride(compID);
+#else
           pRefStart = pcCU->getPic()->getPicYuvRec()->getAddr( ComponentID(ch) );
           refStride = pcCU->getPic()->getPicYuvRec()->getStride( ComponentID(ch) );
           pRef = pRefStart + ((yStartInPic+(cMv.getVer()>>2))>>pcCU->getPic()->getPicYuvRec()->getComponentScaleY(ComponentID(ch)))*refStride + ((xStartInPic+(cMv.getHor()>>2)) >> pcCU->getPic()->getPicYuvRec()->getComponentScaleX(ComponentID(ch)));
+#endif 
           distAMVPBest += getSAD( pRef, refStride, pCurr, currStride, iTempWidth, iTempHeight, pcCU->getSlice()->getSPS()->getBitDepths() );
         }
 
@@ -7620,6 +7695,14 @@ Bool TEncSearch::predMixedIntraBCInterSearch( TComDataCU * pcCU,
             bitsMergeTemp = mrgIdxTemp == m_pcEncCfg->getMaxNumMergeCand() ? mrgIdxTemp : mrgIdxTemp+1;
 
             distMergeTemp = 0;
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+            pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllMv( cMvFieldNeighboursIBC[mrgIdxTemp<<1].getMv(), pcCU->getPartitionSize(0), uiPartAddr, 0, iPartIdx );
+            pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) - 1, pcCU->getPartitionSize(0), uiPartAddr, 0, iPartIdx );
+            pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMv( TComMv(), pcCU->getPartitionSize(0), uiPartAddr, 0, iPartIdx );
+            pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( -1, pcCU->getPartitionSize(0), uiPartAddr, 0, iPartIdx );
+            pcCU->setInterDirSubParts( 1 + REF_PIC_LIST_0, uiPartAddr, iPartIdx, pcCU->getDepth(0) );
+            motionCompensation( pcCU, &m_tmpYuvPred, REF_PIC_LIST_X, iPartIdx );
+#endif
             for (UInt ch = COMPONENT_Y; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
             {          
               Int iTempWidth = iDummyWidth >> pcCU->getPic()->getPicYuvRec()->getComponentScaleX(ComponentID(ch));
@@ -7628,10 +7711,15 @@ Bool TEncSearch::predMixedIntraBCInterSearch( TComDataCU * pcCU,
               pCurrStart = pcOrgYuv->getAddr( ComponentID(ch), uiPartAddr);
               currStride = pcOrgYuv->getStride( ComponentID(ch) );
               pCurr = pCurrStart;
-
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+              ComponentID compID = (ComponentID)ch;
+              pRef = m_tmpYuvPred.getAddr( compID, uiPartAddr);
+              refStride = m_tmpYuvPred.getStride(compID);
+#else
               pRefStart = pcCU->getPic()->getPicYuvRec()->getAddr( ComponentID(ch) );
               refStride = pcCU->getPic()->getPicYuvRec()->getStride( ComponentID(ch) );
               pRef = pRefStart + ((yStartInPic+(cMvFieldNeighboursIBC[mrgIdxTemp<<1].getVer() >> 2))>>pcCU->getPic()->getPicYuvRec()->getComponentScaleY(ComponentID(ch)))*refStride + ((xStartInPic+(cMvFieldNeighboursIBC[mrgIdxTemp<<1].getHor() >> 2))>>pcCU->getPic()->getPicYuvRec()->getComponentScaleX(ComponentID(ch)));
+#endif 
               distMergeTemp += getSAD( pRef, refStride, pCurr, currStride, iTempWidth , iTempHeight, pcCU->getSlice()->getSPS()->getBitDepths() );
             }
 
@@ -8601,6 +8689,9 @@ Int TEncSearch::xIntraBCSearchMVChromaRefine( TComDataCU* pcCU,
                                               Distortion* uiSadBestCand, 
                                               TComMv*     cMVCand, 
                                               UInt        uiPartOffset
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+                                             ,Int         iPartIdx
+#endif 
                                             )
 {
   Int iBestCandIdx = 0;
@@ -8629,6 +8720,16 @@ Int TEncSearch::xIntraBCSearchMVChromaRefine( TComDataCU* pcCU,
 
     uiTempSad = uiSadBestCand[iCand];
     BitDepths bitDepths = pcCU->getSlice()->getSPS()->getBitDepths();
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+    TComMv cMvQuaterPixl = cMVCand[iCand];
+    cMvQuaterPixl <<= 2;
+    pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllMv( cMvQuaterPixl, pcCU->getPartitionSize(0), uiPartOffset, 0, iPartIdx );
+    pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllRefIdx( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) - 1, pcCU->getPartitionSize(0), uiPartOffset, 0, iPartIdx );
+    pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMv( TComMv(), pcCU->getPartitionSize(0), uiPartOffset, 0, iPartIdx );
+    pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( -1, pcCU->getPartitionSize(0), uiPartOffset, 0, iPartIdx );
+    pcCU->setInterDirSubParts( 1 + REF_PIC_LIST_0, uiPartOffset, iPartIdx, pcCU->getDepth(0) );
+    motionCompensation( pcCU, &m_tmpYuvPred, REF_PIC_LIST_X, iPartIdx );
+#endif
     for (UInt ch = COMPONENT_Cb; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
     {
       pRef = pcCU->getPic()->getPicYuvRec()->getAddr(ComponentID(ch), pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu() + uiPartOffset);
@@ -8650,8 +8751,13 @@ Int TEncSearch::xIntraBCSearchMVChromaRefine( TComDataCU* pcCU,
       iMvx = cMVCand[iCand].getHor() >> pcCU->getPic()->getComponentScaleX(ComponentID(ch));
       iMvy = cMVCand[iCand].getVer() >> pcCU->getPic()->getComponentScaleY(ComponentID(ch));
 
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+      ComponentID compID = (ComponentID)ch;      
+      pRef = m_tmpYuvPred.getAddr( compID, uiPartOffset);
+      iRefStride = m_tmpYuvPred.getStride(compID);
+#else
       pRef = pRef + iMvy * iRefStride + iMvx;
-
+#endif 
       for(int row = 0; row < iHeight; row++)
       {
         for(int col = 0; col < iWidth; col++)
@@ -9003,7 +9109,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
     if((!iBestX && !iBestY) || (uiSadBest - m_pcRdCost->getCostMultiplePreds( iBestX, iBestY) <= 32))
     {
       //chroma refine
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+      iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, uiPartOffset,iPartIdx);
+#else 
       iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, uiPartOffset);
+#endif 
       iBestX       = cMVCand[iBestCandIdx].getHor();
       iBestY       = cMVCand[iBestCandIdx].getVer();
       uiSadBest    = uiSadBestCand[iBestCandIdx]; 
@@ -9070,7 +9180,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
       if(uiSadBest - m_pcRdCost->getCostMultiplePreds( iBestX, iBestY) <= 16)
       {
         //chroma refine
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+        iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, uiPartOffset,iPartIdx);
+#else
         iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, uiPartOffset);
+#endif 
         iBestX       = cMVCand[iBestCandIdx].getHor();
         iBestY       = cMVCand[iBestCandIdx].getVer();
         uiSadBest    = uiSadBestCand[iBestCandIdx]; 
@@ -9129,7 +9243,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
           if(uiSadBestCand[0] <= 5)
           {
             //chroma refine & return
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+            iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, uiPartOffset,iPartIdx);
+#else
             iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, uiPartOffset);
+#endif 
             iBestX       = cMVCand[iBestCandIdx].getHor();
             iBestY       = cMVCand[iBestCandIdx].getVer();
             uiSadBest    = uiSadBestCand[iBestCandIdx]; 
@@ -9147,7 +9265,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
       if((uiSadBest >= uiTempSadBest) || ((uiSadBest - m_pcRdCost->getCostMultiplePreds( iBestX, iBestY)) <= 32))
       {
         //chroma refine
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+        iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, uiPartOffset,iPartIdx);
+#else
         iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, uiPartOffset);
+#endif 
         iBestX       = cMVCand[iBestCandIdx].getHor();
         iBestY       = cMVCand[iBestCandIdx].getVer();
         uiSadBest    = uiSadBestCand[iBestCandIdx]; 
@@ -9209,7 +9331,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
           if(uiSadBestCand[0] <= 5)
           {
             //chroma refine & return
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+            iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, uiPartOffset,iPartIdx);
+#else
             iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, uiPartOffset);
+#endif 
             iBestX       = cMVCand[iBestCandIdx].getHor();
             iBestY       = cMVCand[iBestCandIdx].getVer();
             uiSadBest    = uiSadBestCand[iBestCandIdx]; 
@@ -9282,7 +9408,11 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
     }
   }
 
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+  iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, uiPartOffset,iPartIdx);
+#else
   iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, uiPartOffset);
+#endif 
   iBestX       = cMVCand[iBestCandIdx].getHor();
   iBestY       = cMVCand[iBestCandIdx].getVer();
   uiSadBest    = uiSadBestCand[iBestCandIdx];  
@@ -9530,6 +9660,15 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
       }
     }
 
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+    Int xBv = iTempX - cuPelX;
+    Int yBv = iTempY - cuPelY;
+    if ( !isBlockVectorValid(cuPelX,cuPelY,iRoiWidth,iRoiHeight,pcCU,uiPartAddr,0,0,xBv,yBv,pcCU->getSlice()->getSPS()->getMaxCUWidth()))
+    {
+      HashLinklist = HashLinklist->next;
+      continue;
+    }
+#else
      Int uiRefCuX   = (iTempX + iRoiWidth  - 1)/uiMaxCuWidth;
      Int uiRefCuY   = (iTempY + iRoiHeight - 1)/uiMaxCuHeight;     
      Int uiCuPelX   = (cuPelX / uiMaxCuWidth);
@@ -9540,7 +9679,7 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
       HashLinklist = HashLinklist->next;
       continue;
     }
-
+#endif 
 #if SCM_T0056_IBC_VALIDATE_TILES
     Int xPred = iTempX - cuPelX;
     Int yPred = iTempY - cuPelY;
@@ -9584,7 +9723,11 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
     HashLinklist = HashLinklist->next;
   }
 
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+  Int  iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, 0,iPartIdx);
+#else
   Int iBestCandIdx = xIntraBCSearchMVChromaRefine(pcCU, iRoiWidth, iRoiHeight, cuPelX, cuPelY, uiSadBestCand, cMVCand, 0);
+#endif 
   rcMv = cMVCand[iBestCandIdx];
 
   m_uiNumBVs = MergeCandLists(m_acBVs, m_uiNumBVs, cMVCand, CHROMA_REFINEMENT_CANDIDATES, false);

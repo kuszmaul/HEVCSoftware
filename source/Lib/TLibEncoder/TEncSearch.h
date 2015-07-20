@@ -417,6 +417,18 @@ public:
                                   Int           uiPartOffset)
 #endif
   {
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+    const Int  cuPelX        = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[ uiPartOffset ] ];
+    const Int  cuPelY        = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[ uiPartOffset ] ];
+
+    if ( !isBlockVectorValid(cuPelX,cuPelY,roiWidth,roiHeight,pcCU,uiPartOffset,g_auiRasterToPelX[ g_auiZscanToRaster[ uiPartOffset ] ],g_auiRasterToPelY[ g_auiZscanToRaster[ uiPartOffset ] ],predX,predY,pcCU->getSlice()->getSPS()->getMaxCUWidth()))
+    {
+      return false;
+    }
+
+    const Int uiMaxCuWidth   = pcCU->getSlice()->getSPS()->getMaxCUWidth();
+    const Int uiMaxCuHeight  = pcCU->getSlice()->getSPS()->getMaxCUHeight();
+#else
     const Int uiMaxCuWidth   = pcCU->getSlice()->getSPS()->getMaxCUWidth();
     const Int uiMaxCuHeight  = pcCU->getSlice()->getSPS()->getMaxCUHeight();
     const Int  cuPelX        = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[ uiPartOffset ] ];
@@ -430,7 +442,7 @@ public:
     {
       return false;
     }
-
+#endif 
 #if SCM_T0056_IBC_VALIDATE_TILES
     const UInt curTileIdx = pcCU->getPic()->getPicSym()->getTileIdxMap( pcCU->getCtuRsAddr() );
     TComTile* curTile = pcCU->getPic()->getPicSym()->getTComTile( curTileIdx );
@@ -551,7 +563,11 @@ public:
                                     Int         cuPelY,
                                     Distortion* uiSadBestCand, 
                                     TComMv*     cMVCand, 
-                                    UInt        uiPartAddr);
+                                    UInt        uiPartAddr
+#if SCM_IBC_CR_INTERPOLATION_ENABLE
+                                    ,Int         iPartIdx
+#endif 
+                                    );
 
   Void xIntraPatternSearch      ( TComDataCU*  pcCU,
                                   Int          iPartIdx,
