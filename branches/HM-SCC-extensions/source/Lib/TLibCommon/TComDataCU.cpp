@@ -2749,12 +2749,19 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     {
       pcCULeft->getMvField( pcCULeft, uiLeftPartIdx, REF_PIC_LIST_1, pcMvFieldNeighbours[(iCount<<1)+1] );
     }
-#if !SCM_U0081_AMVR_UNIFICATION
+#if SCM_U0081_AMVR_UNIFICATION
+    if ( m_pcSlice->getUseIntegerMv() )
+    {
+      for ( Int i = iCount<<1; i < (iCount<<1) + 1 + getSlice()->isInterB() ? 1 : 0; i++ )
+      {
+        pcMvFieldNeighbours[i].setMvField( (pcMvFieldNeighbours[i].getMv()>>2)<<2, pcMvFieldNeighbours[i].getRefIdx() );
+      }
+    }
+#endif
     if ( mrgCandIdx == iCount )
     {
       return;
     }
-#endif 
     iCount ++;
   }
 
@@ -2784,12 +2791,19 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     {
       pcCUAbove->getMvField( pcCUAbove, uiAbovePartIdx, REF_PIC_LIST_1, pcMvFieldNeighbours[(iCount<<1)+1] );
     }
-#if !SCM_U0081_AMVR_UNIFICATION
+#if SCM_U0081_AMVR_UNIFICATION
+    if ( m_pcSlice->getUseIntegerMv() )
+    {
+      for ( Int i = iCount<<1; i < (iCount<<1) + 1 + getSlice()->isInterB() ? 1 : 0; i++ )
+      {
+        pcMvFieldNeighbours[i].setMvField( (pcMvFieldNeighbours[i].getMv()>>2)<<2, pcMvFieldNeighbours[i].getRefIdx() );
+      }
+    }
+#endif
     if ( mrgCandIdx == iCount )
     {
       return;
     }
-#endif 
     iCount ++;
   }
   // early termination
@@ -2819,12 +2833,19 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
       pcCUAboveRight->getMvField( pcCUAboveRight, uiAboveRightPartIdx, REF_PIC_LIST_1, pcMvFieldNeighbours[(iCount<<1)+1] );
     }
 
-#if !SCM_U0081_AMVR_UNIFICATION
+#if SCM_U0081_AMVR_UNIFICATION
+    if ( m_pcSlice->getUseIntegerMv() )
+    {
+      for ( Int i = iCount<<1; i < (iCount<<1) + 1 + getSlice()->isInterB() ? 1 : 0; i++ )
+      {
+        pcMvFieldNeighbours[i].setMvField( (pcMvFieldNeighbours[i].getMv()>>2)<<2, pcMvFieldNeighbours[i].getRefIdx() );
+      }
+    }
+#endif
     if ( mrgCandIdx == iCount )
     {
       return;
     }
-#endif 
     iCount ++;
   }
   // early termination
@@ -2853,12 +2874,19 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     {
       pcCULeftBottom->getMvField( pcCULeftBottom, uiLeftBottomPartIdx, REF_PIC_LIST_1, pcMvFieldNeighbours[(iCount<<1)+1] );
     }
-#if !SCM_U0081_AMVR_UNIFICATION
+#if SCM_U0081_AMVR_UNIFICATION
+    if ( m_pcSlice->getUseIntegerMv() )
+    {
+      for ( Int i = iCount<<1; i < (iCount<<1) + 1 + getSlice()->isInterB() ? 1 : 0; i++ )
+      {
+        pcMvFieldNeighbours[i].setMvField( (pcMvFieldNeighbours[i].getMv()>>2)<<2, pcMvFieldNeighbours[i].getRefIdx() );
+      }
+    }
+#endif
     if ( mrgCandIdx == iCount )
     {
       return;
     }
-#endif 
     iCount ++;
   }
   // early termination
@@ -2890,12 +2918,19 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
       {
         pcCUAboveLeft->getMvField( pcCUAboveLeft, uiAboveLeftPartIdx, REF_PIC_LIST_1, pcMvFieldNeighbours[(iCount<<1)+1] );
       }
-#if !SCM_U0081_AMVR_UNIFICATION
+#if SCM_U0081_AMVR_UNIFICATION
+      if ( m_pcSlice->getUseIntegerMv() )
+      {
+        for ( Int i = iCount<<1; i < (iCount<<1) + 1 + getSlice()->isInterB() ? 1 : 0; i++ )
+        {
+          pcMvFieldNeighbours[i].setMvField( (pcMvFieldNeighbours[i].getMv()>>2)<<2, pcMvFieldNeighbours[i].getRefIdx() );
+        }
+      }
+#endif
       if ( mrgCandIdx == iCount )
       {
         return;
       }
-#endif 
       iCount ++;
     }
   }
@@ -2980,12 +3015,19 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     {
       puhInterDirNeighbours[uiArrayAddr] = dir;
       abCandIsInter[uiArrayAddr] = true;
-#if !SCM_U0081_AMVR_UNIFICATION
+#if SCM_U0081_AMVR_UNIFICATION
+      if ( m_pcSlice->getUseIntegerMv() )
+      {
+        for ( Int i = iCount<<1; i < (iCount<<1) + 1 + getSlice()->isInterB() ? 1 : 0; i++ )
+        {
+          pcMvFieldNeighbours[i].setMvField( (pcMvFieldNeighbours[i].getMv()>>2)<<2, pcMvFieldNeighbours[i].getRefIdx() );
+        }
+      }
+#endif
       if ( mrgCandIdx == iCount )
       {
         return;
       }
-#endif 
       iCount++;
     }
   }
@@ -3034,12 +3076,10 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     }
   }
   // early termination
-#if !SCM_U0081_AMVR_UNIFICATION
   if (uiArrayAddr == getSlice()->getMaxNumMergeCand())
   {
     return;
   }
-#endif 
 
   Int iNumRefIdx = (getSlice()->isInterB()) ? min(m_pcSlice->getNumRefIdx(REF_PIC_LIST_0), m_pcSlice->getNumRefIdx(REF_PIC_LIST_1)) : m_pcSlice->getNumRefIdx(REF_PIC_LIST_0);
 
@@ -3069,16 +3109,6 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     }
   }
   numValidMergeCand = uiArrayAddr;
-
-#if SCM_U0081_AMVR_UNIFICATION
-  if( m_pcSlice->getUseIntegerMv() )
-  {
-    for( Int i = 0; i < numValidMergeCand * (1 + (Int)getSlice()->isInterB()); i++ )
-    {
-      pcMvFieldNeighbours[i].setMvField((pcMvFieldNeighbours[i].getMv()>>2)<<2, pcMvFieldNeighbours[i].getRefIdx());
-    }
-  }
-#endif
 }
 
 /** Check whether the current PU and a spatial neighboring PU are in a same ME region.
