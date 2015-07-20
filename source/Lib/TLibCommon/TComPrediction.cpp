@@ -2286,8 +2286,11 @@ Double TComPrediction::calcPixelPredRD(TComDataCU* pcCU, Pel pOrg[3], TComRdCost
         Int iQP[3];
         Int iQPrem[3];
         Int iQPper[3];
-
+#if SCM_U0106_ACT_TU_SIG
         QpParam cQP(*pcCU, ComponentID(ch),0);
+#else
+        QpParam cQP(*pcCU, ComponentID(ch));
+#endif 
         iQP[ch] = cQP.Qp;
         iQPrem[ch] = iQP[ch] % 6;
         iQPper[ch] = iQP[ch] / 6;
