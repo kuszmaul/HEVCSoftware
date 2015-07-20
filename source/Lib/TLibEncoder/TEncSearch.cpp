@@ -9881,7 +9881,9 @@ Void TEncSearch::xCopyAMVPInfo (AMVPInfo* pSrc, AMVPInfo* pDst)
 Void TEncSearch::xCheckBestMVP ( TComDataCU* pcCU, RefPicList eRefPicList, TComMv cMv, TComMv& rcMvPred, Int& riMVPIdx, UInt& ruiBits, Distortion& ruiCost )
 {
   AMVPInfo* pcAMVPInfo = pcCU->getCUMvField(eRefPicList)->getAMVPInfo();
-
+#if SCM_U0081_AMVR_UNIFICATION
+  if(!pcCU->getSlice()->getUseIntegerMv() )  
+#endif
   assert(pcAMVPInfo->m_acMvCand[riMVPIdx] == rcMvPred);
 
   if (pcAMVPInfo->iN < 2)
