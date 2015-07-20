@@ -2749,10 +2749,12 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     {
       pcCULeft->getMvField( pcCULeft, uiLeftPartIdx, REF_PIC_LIST_1, pcMvFieldNeighbours[(iCount<<1)+1] );
     }
+#if !SCM_U0081_AMVR_UNIFICATION
     if ( mrgCandIdx == iCount )
     {
       return;
     }
+#endif 
     iCount ++;
   }
 
@@ -2782,10 +2784,12 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     {
       pcCUAbove->getMvField( pcCUAbove, uiAbovePartIdx, REF_PIC_LIST_1, pcMvFieldNeighbours[(iCount<<1)+1] );
     }
+#if !SCM_U0081_AMVR_UNIFICATION
     if ( mrgCandIdx == iCount )
     {
       return;
     }
+#endif 
     iCount ++;
   }
   // early termination
@@ -2814,10 +2818,13 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     {
       pcCUAboveRight->getMvField( pcCUAboveRight, uiAboveRightPartIdx, REF_PIC_LIST_1, pcMvFieldNeighbours[(iCount<<1)+1] );
     }
+
+#if !SCM_U0081_AMVR_UNIFICATION
     if ( mrgCandIdx == iCount )
     {
       return;
     }
+#endif 
     iCount ++;
   }
   // early termination
@@ -2846,10 +2853,12 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     {
       pcCULeftBottom->getMvField( pcCULeftBottom, uiLeftBottomPartIdx, REF_PIC_LIST_1, pcMvFieldNeighbours[(iCount<<1)+1] );
     }
+#if !SCM_U0081_AMVR_UNIFICATION
     if ( mrgCandIdx == iCount )
     {
       return;
     }
+#endif 
     iCount ++;
   }
   // early termination
@@ -2881,10 +2890,12 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
       {
         pcCUAboveLeft->getMvField( pcCUAboveLeft, uiAboveLeftPartIdx, REF_PIC_LIST_1, pcMvFieldNeighbours[(iCount<<1)+1] );
       }
+#if !SCM_U0081_AMVR_UNIFICATION
       if ( mrgCandIdx == iCount )
       {
         return;
       }
+#endif 
       iCount ++;
     }
   }
@@ -2969,19 +2980,22 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     {
       puhInterDirNeighbours[uiArrayAddr] = dir;
       abCandIsInter[uiArrayAddr] = true;
-
+#if !SCM_U0081_AMVR_UNIFICATION
       if ( mrgCandIdx == iCount )
       {
         return;
       }
+#endif 
       iCount++;
     }
   }
   // early termination
+#if !SCM_U0081_AMVR_UNIFICATION
   if (iCount == getSlice()->getMaxNumMergeCand())
   {
     return;
   }
+#endif 
 
   UInt uiArrayAddr = iCount;
   UInt uiCutoff = uiArrayAddr;
@@ -3020,10 +3034,12 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     }
   }
   // early termination
+#if !SCM_U0081_AMVR_UNIFICATION
   if (uiArrayAddr == getSlice()->getMaxNumMergeCand())
   {
     return;
   }
+#endif 
 
   Int iNumRefIdx = (getSlice()->isInterB()) ? min(m_pcSlice->getNumRefIdx(REF_PIC_LIST_0), m_pcSlice->getNumRefIdx(REF_PIC_LIST_1)) : m_pcSlice->getNumRefIdx(REF_PIC_LIST_0);
 
