@@ -294,6 +294,9 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
           case PPS_EXT__SCC:
             {
               const TComPPSSCC &ppsScreenExtension = pcPPS->getPpsScreenExtension();
+#if SCM_U0083_U0079_IBC_SIGNAL_PPS
+              WRITE_FLAG( (ppsScreenExtension.getUseIntraBlockCopy() ? 1 : 0), "curr_pic_as_ref_enabled_pps_flag" );
+#endif
               WRITE_FLAG( (ppsScreenExtension.getUseColourTrans() ? 1 : 0), "adaptive_colour_trans_flag" );
               if ( ppsScreenExtension.getUseColourTrans() )
               {

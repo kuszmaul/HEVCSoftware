@@ -1249,7 +1249,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       pcSlice->setSliceType(I_SLICE);
     }
 
+#if SCM_U0083_U0079_IBC_SIGNAL_PPS
+    if ( pcSlice->getSliceType() == I_SLICE && pcSlice->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
+#else
     if ( pcSlice->getSliceType() == I_SLICE && pcSlice->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
+#endif
     {
       pcSlice->setSliceType( P_SLICE );
     }
@@ -1259,7 +1263,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     if(pcSlice->getTemporalLayerNonReferenceFlag())
     {
       if (pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_TRAIL_R &&
+#if SCM_U0083_U0079_IBC_SIGNAL_PPS
+          !( m_iGopSize == 1 && ( pcSlice->getSliceType() == I_SLICE || pcSlice->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() ) ) )
+#else
           !( m_iGopSize == 1 && ( pcSlice->getSliceType() == I_SLICE || pcSlice->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() ) ) )
+#endif
         // Add this condition to avoid POC issues with encoder_intra_main.cfg configuration (see #1127 in bug tracker)
       {
         pcSlice->setNalUnitType(NAL_UNIT_CODED_SLICE_TRAIL_N);
@@ -1387,7 +1395,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice->setNumRefIdx(REF_PIC_LIST_0,min(m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive,pcSlice->getRPS()->getNumberOfPictures()));
     pcSlice->setNumRefIdx(REF_PIC_LIST_1,min(m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive,pcSlice->getRPS()->getNumberOfPictures()));
 
+#if SCM_U0083_U0079_IBC_SIGNAL_PPS
+    if ( pcSlice->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
+#else
     if ( pcSlice->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
+#endif
     {
       if ( m_pcCfg->getIntraPeriod() > 0 && pcSlice->getPOC() % m_pcCfg->getIntraPeriod() == 0 )
       {
@@ -1406,7 +1418,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     {
       pcSlice->setSliceType ( P_SLICE );
     }
+#if SCM_U0083_U0079_IBC_SIGNAL_PPS
+    if ( pcSlice->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() && pcSlice->getNumRefIdx( REF_PIC_LIST_0 ) == 1 )
+#else
     if ( pcSlice->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && pcSlice->getNumRefIdx( REF_PIC_LIST_0 ) == 1 )
+#endif
     {
       m_pcSliceEncoder->setEncCABACTableIdx(P_SLICE);
     }
@@ -1478,7 +1494,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     Bool bGPBcheck=false;
     if ( pcSlice->getSliceType() == B_SLICE)
     {
+#if SCM_U0083_U0079_IBC_SIGNAL_PPS
+      if ( pcSlice->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
+#else
       if ( pcSlice->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
+#endif
       {
         if ( pcSlice->getNumRefIdx( RefPicList( 0 ) ) - 1 == pcSlice->getNumRefIdx( RefPicList( 1 ) ) )
         {
@@ -1518,8 +1538,13 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcPic->getSlice(pcSlice->getSliceIdx())->setMvdL1ZeroFlag(pcSlice->getMvdL1ZeroFlag());
 
     pcSlice->setUseIntegerMv( false );
+#if SCM_U0083_U0079_IBC_SIGNAL_PPS
+    if ( ( !pcSlice->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() && !pcSlice->isIntra() ) ||
+         ( pcSlice->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() && !pcSlice->isOnlyCurrentPictureAsReference() ) )
+#else
     if ( ( !pcSlice->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && !pcSlice->isIntra() ) ||
           ( pcSlice->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && !pcSlice->isOnlyCurrentPictureAsReference() ) )
+#endif
     {
       if ( m_pcCfg->getMotionVectorResolutionControlIdc() == 2 )
       {
