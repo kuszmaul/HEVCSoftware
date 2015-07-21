@@ -3378,7 +3378,11 @@ Bool TComDataCU::isBipredRestriction(UInt puIdx)
 
   getPartIndexAndSize( puIdx, partAddr, width, height );
 #if SCM_U0078_BIPRED_RESTRICTION
+#if SCM_U0083_U0079_IBC_SIGNAL_PPS
+  if(getSlice()->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() && !getSlice()->getUseIntegerMv())
+#else
   if(getSlice()->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && !getSlice()->getUseIntegerMv())
+#endif
   {    
     if(getWidth(0) <= 8 && getHeight(0) <= 8)
     {

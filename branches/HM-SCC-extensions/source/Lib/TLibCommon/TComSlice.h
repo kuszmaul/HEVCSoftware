@@ -1170,13 +1170,18 @@ private:
 #if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
   Bool             m_usePalettePredictor;
 #endif
-
+#if SCM_U0083_U0079_IBC_SIGNAL_PPS
+  Bool             m_useIntraBlockCopyPps;
+#endif
 public:
   TComPPSSCC();
 
   Bool settingsDifferFromDefaults() const
   {
     return getUseColourTrans()
+#if SCM_U0083_U0079_IBC_SIGNAL_PPS
+        || getUseIntraBlockCopy()
+#endif
         || getNumPLTPred() > 0;
   }
 
@@ -1196,6 +1201,10 @@ public:
 #if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
   Bool     getUsePalettePredictor()              const { return m_usePalettePredictor; }
   Void     setUsePalettePredictor(Bool num)            { m_usePalettePredictor = num; }
+#endif
+#if SCM_U0083_U0079_IBC_SIGNAL_PPS
+  Bool                   getUseIntraBlockCopy()         const                                            { return m_useIntraBlockCopyPps;  }
+  Void                   setUseIntraBlockCopy(Bool value)                                                { m_useIntraBlockCopyPps = value; }
 #endif
 };
 

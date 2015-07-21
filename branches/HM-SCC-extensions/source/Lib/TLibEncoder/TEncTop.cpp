@@ -959,6 +959,9 @@ Void TEncTop::xInitPPS()
   {
     m_cPPS.setListsModificationPresentFlag( true );
   }
+#if SCM_U0083_U0079_IBC_SIGNAL_PPS
+   m_cPPS.getPpsScreenExtension().setUseIntraBlockCopy(m_cSPS.getSpsScreenExtension().getUseIntraBlockCopy());
+#endif
 }
 
 //Function for initializing m_RPSList, a list of TComReferencePictureSet, based on the GOPEntry objects read from the config file.
