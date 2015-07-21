@@ -142,7 +142,7 @@ public:
     return (m_iHor!=rcMv.m_iHor || m_iVer!=rcMv.m_iVer);
   }
 
-#if SCM_U0081_AMVR_UNIFICATION
+#if SCM_AMVR_UNIFICATION
    TComMv& operator>> (const Int i)
   {
     m_iHor >>= i;
