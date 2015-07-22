@@ -154,6 +154,7 @@ public:
 
   // Set border extension flag
   Void          setBorderExtension(Bool b) { m_bIsBorderExtended = b; }
+  Void          DefaultConvertPix(TComPicYuv* pcSrcPicYuv, const BitDepths& bitDepths);
 };// END CLASS DEFINITION TComPicYuv
 
 

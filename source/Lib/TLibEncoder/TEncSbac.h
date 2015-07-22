@@ -82,6 +82,17 @@ public:
   Void  store                  ( TEncSbac* pDest ) const;
   Void  loadContexts           ( const TEncSbac* pSrc  );
   Void  resetBits              ()                { m_pcBinIf->resetBits(); m_pcBitIf->resetBits(); }
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  UInt64  getNumPartialBits ()                   { return m_pcBinIf->getNumPartialBits(); }
+  Void storeNumPartialBits ()
+  {
+    m_pcBinIf->storeNumPartialBits();
+  };
+  Void restoreNumPartialBits ()
+  {
+    m_pcBinIf->restoreNumPartialBits();
+  };
+#endif
   UInt  getNumberOfWrittenBits ()                { return m_pcBinIf->getNumWrittenBits(); }
   //--SBAC RD
 
@@ -106,14 +117,23 @@ public:
                     , Bool onlyEstMergeInfo = false
                     );
 
+  Pel   writePLTIndex          ( UInt uiIdx, Pel *pLevel, Int iMaxSymbol, UChar *pSPoint = 0, Int iWidth = 0, UChar *pEscapeFlag = 0);
+  Void  encodeRun              ( UInt uiRun, Bool bCopyTopMode, const UInt uiPltIdx, const UInt uiMaxRun );
+
 private:
   Void  xWriteUnarySymbol    ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset );
   Void  xWriteUnaryMaxSymbol ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
+  Void  xEncodePLTPredIndicator(UChar *bReusedPrev, UInt uiPLTSizePrev, UInt &uiNumPLTPredicted, UInt uiMaxPLTSize);
+  Void  xWriteTruncBinCode      ( UInt uiSymbol, UInt uiMaxSymbol );
+  Void codeScanRotationModeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void  xWriteEpExGolomb     ( UInt uiSymbol, UInt uiCount );
   Void  xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam, const Bool useLimitedPrefixLength, const Int maxLog2TrDynamicRange );
 
   Void  xCopyFrom            ( const TEncSbac* pSrc );
   Void  xCopyContextsFrom    ( const TEncSbac* pSrc );
+
+  UInt xWriteTruncMsbP1      ( UInt uiSymbol, ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut);
+  Void xWriteTruncMsbP1RefinementBits ( UInt uiSymbol, ContextModel* pcSCModel, UInt uiMax, UInt uiCtxT, UChar *ucCtxLut);
 
 protected:
   TComBitIf*    m_pcBitIf;
@@ -123,6 +143,18 @@ protected:
 
 public:
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codePLTModeFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if SCM_S0043_PLT_DELTA_QP
+  Void codePLTModeSyntax      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp, Bool* bCodeDQP, Bool* codeChromaQpAdjFlag );
+#else
+  Void codePLTModeSyntax      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNumComp);
+#endif
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+  Void encodeSPointRD(UInt uiIdx, UInt uiWidth, UChar *pSPoint, UInt mode, UInt *uiRefScanOrder);
+  Void saveRestorePltCtx(UInt saveState);
+#endif
+
+  Void encodeSPoint      ( TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiIdx, UInt uiWidth, UChar *pSPoint, UInt *uiRefScanOrder );
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -130,6 +162,7 @@ public:
   Void codeMVPIdx        ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
 
   Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void codeColourTransformFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeTransformSubdivFlag ( UInt uiSymbol, UInt uiCtx );
@@ -169,6 +202,7 @@ public:
 
   TEncBinIf* getEncBinIf()  { return m_pcBinIf; }
 private:
+  UInt* m_puiScanOrder;
   ContextModel         m_contextModels[MAX_NUM_CTX_MOD];
   Int                  m_numContextModels;
   ContextModel3DBuffer m_cCUSplitFlagSCModel;
@@ -203,9 +237,17 @@ private:
   ContextModel3DBuffer m_explicitRdpcmFlagSCModel;
   ContextModel3DBuffer m_explicitRdpcmDirSCModel;
   ContextModel3DBuffer m_cCrossComponentPredictionSCModel;
-
+  ContextModel3DBuffer m_PLTModeFlagSCModel;
+  ContextModel3DBuffer m_SPointSCModel;
+  ContextModel3DBuffer m_cCopyTopRunSCModel;
+  ContextModel3DBuffer m_cRunSCModel;
+#if !SCM_U0090_REMOVE_LAST_RUN_TYPE_CTX
+  ContextModel3DBuffer m_PLTLastRunTypeSCModel;
+#endif
+  ContextModel3DBuffer m_PLTScanRotationModeFlagSCModel;
   ContextModel3DBuffer m_ChromaQpAdjFlagSCModel;
   ContextModel3DBuffer m_ChromaQpAdjIdcSCModel;
+  ContextModel3DBuffer m_cCUColourTransformFlagSCModel;
 
   UInt m_golombRiceAdaptationStatistics[RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS];
 };
