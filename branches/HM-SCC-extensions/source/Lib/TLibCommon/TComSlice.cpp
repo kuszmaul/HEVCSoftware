@@ -1962,6 +1962,12 @@ TComPPSSCC::TComPPSSCC()
 , m_actCbQpOffset                    (-5)
 , m_actCrQpOffset                    (-3)
 , m_uiNumPLTPred                     (0) // Implies palette pred in PPS deactivated
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+, m_usePalettePredictor              (false)
+#endif
+#if SCM_U0083_U0079_IBC_SIGNAL_PPS
+, m_useIntraBlockCopyPps             (false)
+#endif
 {
   for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
   {
