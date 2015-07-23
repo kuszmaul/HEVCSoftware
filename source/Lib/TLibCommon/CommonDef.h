@@ -41,6 +41,7 @@
 #include <algorithm>
 #include <iostream>
 #include <assert.h>
+#include <limits>
 
 #if _MSC_VER > 1000
 // disable "signed and unsigned mismatch"
