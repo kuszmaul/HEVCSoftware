@@ -69,6 +69,7 @@ Distortion TComRdCostWeightPrediction::xGetSADw( DistParam* pcDtParam )
   const Int             offset     = wpCur.offset;
   const Int             shift      = wpCur.shift;
   const Int             round      = wpCur.round;
+  const Int        distortionShift = DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8);
 
   Distortion uiSum = 0;
 
@@ -80,13 +81,17 @@ Distortion TComRdCostWeightPrediction::xGetSADw( DistParam* pcDtParam )
 
       uiSum += abs( piOrg[n] - pred );
     }
+    if (pcDtParam->m_maximumDistortionForEarlyExit <  ( uiSum >> distortionShift))
+    {
+      return uiSum >> distortionShift;
+    }
     piOrg += iStrideOrg;
     piCur += iStrideCur;
   }
 
   pcDtParam->compIdx = MAX_NUM_COMPONENT;  // reset for DEBUG (assert test)
 
-  return uiSum >> DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8);
+  return uiSum >> distortionShift;
 }
 
 

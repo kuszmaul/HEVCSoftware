@@ -385,6 +385,8 @@ __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchS
 
   // distortion
   m_cDistParam.bitDepth = pcPatternKey->getBitDepthY();
+  m_cDistParam.m_maximumDistortionForEarlyExit = rcStruct.uiBestSad;
+
   if(m_pcEncCfg->getFastSearch() == SELECTIVE)
   {
     Int isubShift = 0;
@@ -438,6 +440,7 @@ __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchS
           rcStruct.uiBestDistance = uiDistance;
           rcStruct.uiBestRound    = 0;
           rcStruct.ucPointNr      = ucPointNr;
+          m_cDistParam.m_maximumDistortionForEarlyExit = uiSad;
         }
       }
     }
@@ -457,6 +460,7 @@ __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchS
       rcStruct.uiBestDistance = uiDistance;
       rcStruct.uiBestRound    = 0;
       rcStruct.ucPointNr      = ucPointNr;
+      m_cDistParam.m_maximumDistortionForEarlyExit = uiSad;
     }
   }
 }
@@ -881,6 +885,7 @@ Distortion TEncSearch::xPatternRefinement( TComPattern* pcPatternKey,
     {
       uiDistBest  = uiDist;
       uiDirecBest = i;
+      m_cDistParam.m_maximumDistortionForEarlyExit = uiDist;
     }
   }
 
@@ -3847,6 +3852,7 @@ Void TEncSearch::xPatternSearch( TComPattern* pcPatternKey, Pel* piRefY, Int iRe
         uiSadBest = uiSad;
         iBestX    = x;
         iBestY    = y;
+        m_cDistParam.m_maximumDistortionForEarlyExit = uiSad;
       }
     }
     piRefY += iRefStride;

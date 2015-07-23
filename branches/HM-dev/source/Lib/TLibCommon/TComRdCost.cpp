@@ -193,6 +193,7 @@ Void TComRdCost::setDistParam( UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc, 
 
   // initialize
   rcDistParam.iSubShift  = 0;
+  rcDistParam.m_maximumDistortionForEarlyExit = std::numeric_limits<Distortion>::max();
 }
 
 // Setting the Distortion Parameter for Inter (ME)
@@ -209,6 +210,7 @@ Void TComRdCost::setDistParam( const TComPattern* const pcPatternKey, const Pel*
   rcDistParam.iCols    = pcPatternKey->getROIYWidth();
   rcDistParam.iRows    = pcPatternKey->getROIYHeight();
   rcDistParam.DistFunc = m_afpDistortFunc[DF_SAD + g_aucConvertToBit[ rcDistParam.iCols ] + 1 ];
+  rcDistParam.m_maximumDistortionForEarlyExit = std::numeric_limits<Distortion>::max();
 
   if (rcDistParam.iCols == 12)
   {
@@ -243,6 +245,8 @@ Void TComRdCost::setDistParam( const TComPattern* const pcPatternKey, const Pel*
   // set Block Width / Height
   rcDistParam.iCols    = pcPatternKey->getROIYWidth();
   rcDistParam.iRows    = pcPatternKey->getROIYHeight();
+
+  rcDistParam.m_maximumDistortionForEarlyExit = std::numeric_limits<Distortion>::max();
 
   // set distortion function
   if ( !bHADME )
@@ -282,6 +286,7 @@ Void TComRdCost::setDistParam( DistParam& rcDP, Int bitDepth, const Pel* p1, Int
   rcDP.iSubShift    = 0;
   rcDP.bitDepth     = bitDepth;
   rcDP.DistFunc     = m_afpDistortFunc[ ( bHadamard ? DF_HADS : DF_SADS ) + g_aucConvertToBit[ iWidth ] + 1 ];
+  rcDP.m_maximumDistortionForEarlyExit = std::numeric_limits<Distortion>::max();
 }
 
 Distortion TComRdCost::calcHAD( Int bitDepth, const Pel* pi0, Int iStride0, const Pel* pi1, Int iStride1, Int iWidth, Int iHeight )
@@ -357,26 +362,30 @@ Distortion TComRdCost::xGetSAD( DistParam* pcDtParam )
   {
     return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
-  const Pel* piOrg   = pcDtParam->pOrg;
-  const Pel* piCur   = pcDtParam->pCur;
-  Int  iRows   = pcDtParam->iRows;
-  Int  iCols   = pcDtParam->iCols;
-  Int  iStrideCur = pcDtParam->iStrideCur;
-  Int  iStrideOrg = pcDtParam->iStrideOrg;
+  const Pel* piOrg           = pcDtParam->pOrg;
+  const Pel* piCur           = pcDtParam->pCur;
+  const Int  iCols           = pcDtParam->iCols;
+  const Int  iStrideCur      = pcDtParam->iStrideCur;
+  const Int  iStrideOrg      = pcDtParam->iStrideOrg;
+  const UInt distortionShift = DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth - 8);
 
   Distortion uiSum = 0;
 
-  for( ; iRows != 0; iRows-- )
+  for(Int iRows = pcDtParam->iRows ; iRows != 0; iRows-- )
   {
     for (Int n = 0; n < iCols; n++ )
     {
       uiSum += abs( piOrg[n] - piCur[n] );
     }
+    if (pcDtParam->m_maximumDistortionForEarlyExit < ( uiSum >> distortionShift ))
+    {
+      return ( uiSum >> distortionShift );
+    }
     piOrg += iStrideOrg;
     piCur += iStrideCur;
   }
 
-  return ( uiSum >> DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8) );
+  return ( uiSum >> distortionShift );
 }
 
 Distortion TComRdCost::xGetSAD4( DistParam* pcDtParam )
