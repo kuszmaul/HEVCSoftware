@@ -78,6 +78,8 @@ public:
   Int                   bitDepth;
 
   Bool                  bApplyWeight;     // whether weighted prediction is used or not
+  Bool                  bIsBiPred;
+
   const WPScalingParam *wpCur;           // weighted prediction scaling parameters for current ref
   ComponentID           compIdx;
   Distortion            m_maximumDistortionForEarlyExit; /// During cost calculations, if distortion exceeds this value, cost calculations may early-terminate.
@@ -97,6 +99,7 @@ public:
      DistFunc(NULL),
      bitDepth(0),
      bApplyWeight(false),
+     bIsBiPred(false),
      wpCur(NULL),
      compIdx(MAX_NUM_COMPONENT),
      m_maximumDistortionForEarlyExit(std::numeric_limits<Distortion>::max()),
