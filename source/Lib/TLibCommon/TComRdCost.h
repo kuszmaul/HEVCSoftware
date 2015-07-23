@@ -80,6 +80,7 @@ public:
   Bool                  bApplyWeight;     // whether weighted prediction is used or not
   const WPScalingParam *wpCur;           // weighted prediction scaling parameters for current ref
   ComponentID           compIdx;
+  Distortion            m_maximumDistortionForEarlyExit; /// During cost calculations, if distortion exceeds this value, cost calculations may early-terminate.
 
   // (vertical) subsampling shift (for reducing complexity)
   // - 0 = no subsampling, 1 = even rows, 2 = every 4th, etc.
@@ -98,6 +99,7 @@ public:
      bApplyWeight(false),
      wpCur(NULL),
      compIdx(MAX_NUM_COMPONENT),
+     m_maximumDistortionForEarlyExit(std::numeric_limits<Distortion>::max()),
      iSubShift(0)
   { }
 };
