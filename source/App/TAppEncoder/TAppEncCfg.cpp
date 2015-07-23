@@ -612,6 +612,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   Int tmpInputChromaFormat;
   Int tmpConstraintChromaFormat;
   Int tmpWeightedPredictionMethod;
+  Int tmpFastInterSearchMode;
   string inputColourSpaceConvert;
   ExtendedProfileName extendedProfile;
   Int saoOffsetBitShift[MAX_NUM_CHANNEL_TYPE];
@@ -870,7 +871,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
                                                                                                                "\t1: use MD5\n"
                                                                                                                "\t0: disable")
   ("TMVPMode",                                        m_TMVPModeId,                                         1, "TMVP mode 0: TMVP disable for all slices. 1: TMVP enable for all slices (default) 2: TMVP enable for certain slices only")
-  ("FEN",                                             m_bUseFastEnc,                                    false, "fast encoder setting")
+  ("FEN",                                             tmpFastInterSearchMode,   Int(FASTINTERSEARCH_DISABLED), "fast encoder setting")
   ("ECU",                                             m_bUseEarlyCU,                                    false, "Early CU setting")
   ("FDM",                                             m_useFastDecisionForMerge,                         true, "Fast decision for Merge RD Cost")
   ("CFM",                                             m_bUseCbfFastMode,                                false, "Cbf fast mode setting")
@@ -1173,6 +1174,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     exit(EXIT_FAILURE);
   }
   m_weightedPredictionMethod = WeightedPredictionMethod(tmpWeightedPredictionMethod);
+
+  assert(tmpFastInterSearchMode>=0 && tmpFastInterSearchMode<=FASTINTERSEARCH_MODE3);
+  if (tmpFastInterSearchMode<0 || tmpFastInterSearchMode>FASTINTERSEARCH_MODE3)
+  {
+    exit(EXIT_FAILURE);
+  }
+  m_fastInterSearchMode = FastInterSearchMode(tmpFastInterSearchMode);
 
   if (extendedProfile >= 1000 && extendedProfile <= 12316)
   {
@@ -2394,7 +2402,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("SQP:%d ", m_uiDeltaQpRD                        );
   printf("ASR:%d ", m_bUseASR                            );
   printf("MinSearchWindow:%d ", m_minSearchWindow        );
-  printf("FEN:%d ", m_bUseFastEnc                        );
+  printf("FEN:%d ", Int(m_fastInterSearchMode)           );
   printf("ECU:%d ", m_bUseEarlyCU                        );
   printf("FDM:%d ", m_useFastDecisionForMerge            );
   printf("CFM:%d ", m_bUseCbfFastMode                    );
