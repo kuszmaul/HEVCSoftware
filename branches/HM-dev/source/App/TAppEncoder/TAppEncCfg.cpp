@@ -749,6 +749,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("FastSearch",                                      m_iFastSearch,                                        1, "0:Full search  1:Diamond  2:PMVFAST")
   ("SearchRange,-sr",                                 m_iSearchRange,                                      96, "Motion search range")
   ("BipredSearchRange",                               m_bipredSearchRange,                                  4, "Motion search range for bipred refinement")
+  ("MinSearchWindow",                                 m_minSearchWindow,                                    8, "Minimum motion search window size for the adaptive window ME")
   ("ClipForBiPredMEEnabled",                          m_bClipForBiPredMeEnabled,                        false, "Enables clipping in the Bi-Pred ME. It is disabled to reduce encoder run-time")
   ("FastMEAssumingSmootherMVEnabled",                 m_bFastMEAssumingSmootherMVEnabled,                true, "Enables fast ME assuming a smoother MV.")
 
@@ -1675,7 +1676,8 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_loopFilterTcOffsetDiv2 < -6 || m_loopFilterTcOffsetDiv2 > 6,            "Loop Filter Tc Offset div. 2 exceeds supported range (-6 to 6)");
   xConfirmPara( m_iFastSearch < 0 || m_iFastSearch > 2,                                     "Fast Search Mode is not supported value (0:Full search  1:Diamond  2:PMVFAST)" );
   xConfirmPara( m_iSearchRange < 0 ,                                                        "Search Range must be more than 0" );
-  xConfirmPara( m_bipredSearchRange < 0 ,                                                   "Search Range must be more than 0" );
+  xConfirmPara( m_bipredSearchRange < 0 ,                                                   "Bi-prediction refinement search range must be more than 0" );
+  xConfirmPara( m_minSearchWindow < 0,                                                      "Minimum motion search window size for the adaptive window ME must be greater than or equal to 0" );
   xConfirmPara( m_iMaxDeltaQP > 7,                                                          "Absolute Delta QP exceeds supported range (0 to 7)" );
   xConfirmPara( m_iMaxCuDQPDepth > m_uiMaxCUDepth - 1,                                          "Absolute depth for a minimum CuDQP exceeds maximum coding unit depth" );
 
@@ -2385,20 +2387,21 @@ Void TAppEncCfg::xPrintParameter()
 
   printf("TOOL CFG: ");
   printf("IBD:%d ", ((m_internalBitDepth[CHANNEL_TYPE_LUMA] > m_MSBExtendedBitDepth[CHANNEL_TYPE_LUMA]) || (m_internalBitDepth[CHANNEL_TYPE_CHROMA] > m_MSBExtendedBitDepth[CHANNEL_TYPE_CHROMA])));
-  printf("HAD:%d ", m_bUseHADME           );
-  printf("RDQ:%d ", m_useRDOQ            );
-  printf("RDQTS:%d ", m_useRDOQTS        );
-  printf("RDpenalty:%d ", m_rdPenalty  );
-  printf("SQP:%d ", m_uiDeltaQpRD         );
-  printf("ASR:%d ", m_bUseASR             );
-  printf("FEN:%d ", m_bUseFastEnc         );
-  printf("ECU:%d ", m_bUseEarlyCU         );
-  printf("FDM:%d ", m_useFastDecisionForMerge );
-  printf("CFM:%d ", m_bUseCbfFastMode         );
-  printf("ESD:%d ", m_useEarlySkipDetection  );
-  printf("RQT:%d ", 1     );
-  printf("TransformSkip:%d ",     m_useTransformSkip              );
-  printf("TransformSkipFast:%d ", m_useTransformSkipFast       );
+  printf("HAD:%d ", m_bUseHADME                          );
+  printf("RDQ:%d ", m_useRDOQ                            );
+  printf("RDQTS:%d ", m_useRDOQTS                        );
+  printf("RDpenalty:%d ", m_rdPenalty                    );
+  printf("SQP:%d ", m_uiDeltaQpRD                        );
+  printf("ASR:%d ", m_bUseASR                            );
+  printf("MinSearchWindow:%d ", m_minSearchWindow        );
+  printf("FEN:%d ", m_bUseFastEnc                        );
+  printf("ECU:%d ", m_bUseEarlyCU                        );
+  printf("FDM:%d ", m_useFastDecisionForMerge            );
+  printf("CFM:%d ", m_bUseCbfFastMode                    );
+  printf("ESD:%d ", m_useEarlySkipDetection              );
+  printf("RQT:%d ", 1                                    );
+  printf("TransformSkip:%d ",     m_useTransformSkip     );
+  printf("TransformSkipFast:%d ", m_useTransformSkipFast );
   printf("TransformSkipLog2MaxSize:%d ", m_log2MaxTransformSkipBlockSize);
   printf("Slice: M=%d ", m_sliceMode);
   if (m_sliceMode!=NO_SLICES)

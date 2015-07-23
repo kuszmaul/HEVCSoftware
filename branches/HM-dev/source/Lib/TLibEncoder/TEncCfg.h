@@ -179,6 +179,7 @@ protected:
   Int       m_bipredSearchRange;
   Bool      m_bClipForBiPredMeEnabled;
   Bool      m_bFastMEAssumingSmootherMVEnabled;
+  Int       m_minSearchWindow;
 
   //====== Quality control ========
   Int       m_iMaxDeltaQP;                      //  Max. absolute delta QP (1:default)
@@ -469,6 +470,7 @@ public:
   Void      setBipredSearchRange            ( Int   i )      { m_bipredSearchRange = i; }
   Void      setClipForBiPredMeEnabled       ( Bool  b )      { m_bClipForBiPredMeEnabled = b; }
   Void      setFastMEAssumingSmootherMVEnabled ( Bool b )    { m_bFastMEAssumingSmootherMVEnabled = b; }
+  Void      setMinSearchWindow              ( Int   i )      { m_minSearchWindow = i; }
 
   //====== Quality control ========
   Void      setMaxDeltaQP                   ( Int   i )      { m_iMaxDeltaQP = i; }
@@ -536,11 +538,12 @@ public:
   Bool      getDeblockingFilterMetric       ()      { return m_DeblockingFilterMetric; }
 
   //==== Motion search ========
-  Bool      getDisableIntraPUsInInterSlices () const { return m_bDisableIntraPUsInInterSlices; }
-  Int       getFastSearch                   () const { return m_iFastSearch; }
-  Int       getSearchRange                  () const { return m_iSearchRange; }
-  Bool      getClipForBiPredMeEnabled       () const { return m_bClipForBiPredMeEnabled; }
-  Bool      getFastMEAssumingSmootherMVEnabled ( ) const { return m_bFastMEAssumingSmootherMVEnabled; }
+  Bool      getDisableIntraPUsInInterSlices    () const { return m_bDisableIntraPUsInInterSlices; }
+  Int       getFastSearch                      () const { return m_iFastSearch; }
+  Int       getSearchRange                     () const { return m_iSearchRange; }
+  Bool      getClipForBiPredMeEnabled          () const { return m_bClipForBiPredMeEnabled; }
+  Bool      getFastMEAssumingSmootherMVEnabled () const { return m_bFastMEAssumingSmootherMVEnabled; }
+  Int       getMinSearchWindow                 () const { return m_minSearchWindow; }
 
   //==== Quality control ========
   Int       getMaxDeltaQP                   ()      { return  m_iMaxDeltaQP; }
@@ -557,11 +560,11 @@ public:
 #if T0196_SELECTIVE_RDOQ
   Void      setUseSelectiveRDOQ             ( Bool b )      { m_useSelectiveRDOQ = b; }
 #endif
-  Void      setRDpenalty                 ( UInt  b )     { m_rdPenalty  = b; }
+  Void      setRDpenalty                    ( UInt  b )     { m_rdPenalty  = b; }
   Void      setUseFastEnc                   ( Bool  b )     { m_bUseFastEnc = b; }
   Void      setUseEarlyCU                   ( Bool  b )     { m_bUseEarlyCU = b; }
   Void      setUseFastDecisionForMerge      ( Bool  b )     { m_useFastDecisionForMerge = b; }
-  Void      setUseCbfFastMode            ( Bool  b )     { m_bUseCbfFastMode = b; }
+  Void      setUseCbfFastMode               ( Bool  b )     { m_bUseCbfFastMode = b; }
   Void      setUseEarlySkipDetection        ( Bool  b )     { m_useEarlySkipDetection = b; }
   Void      setUseConstrainedIntraPred      ( Bool  b )     { m_bUseConstrainedIntraPred = b; }
   Void      setFastUDIUseMPMEnabled         ( Bool  b )     { m_bFastUDIUseMPMEnabled = b; }

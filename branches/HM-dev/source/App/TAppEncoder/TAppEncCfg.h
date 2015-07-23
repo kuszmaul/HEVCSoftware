@@ -218,19 +218,20 @@ protected:
   Int       m_iFastSearch;                                    ///< ME mode, 0 = full, 1 = diamond, 2 = PMVFAST
   Int       m_iSearchRange;                                   ///< ME search range
   Int       m_bipredSearchRange;                              ///< ME search range for bipred refinement
+  Int       m_minSearchWindow;                                ///< ME minimum search window size for the Adaptive Window ME
   Bool      m_bClipForBiPredMeEnabled;                        ///< Enables clipping for Bi-Pred ME.
   Bool      m_bFastMEAssumingSmootherMVEnabled;               ///< Enables fast ME assuming a smoother MV.
   Bool      m_bUseFastEnc;                                    ///< flag for using fast encoder setting
   Bool      m_bUseEarlyCU;                                    ///< flag for using Early CU setting
   Bool      m_useFastDecisionForMerge;                        ///< flag for using Fast Decision Merge RD-Cost
-  Bool      m_bUseCbfFastMode;                              ///< flag for using Cbf Fast PU Mode Decision
-  Bool      m_useEarlySkipDetection;                         ///< flag for using Early SKIP Detection
-  Int       m_sliceMode;                                     ///< 0: no slice limits, 1 : max number of CTBs per slice, 2: max number of bytes per slice,
-                                                             ///< 3: max number of tiles per slice
-  Int       m_sliceArgument;                                 ///< argument according to selected slice mode
-  Int       m_sliceSegmentMode;                              ///< 0: no slice segment limits, 1 : max number of CTBs per slice segment, 2: max number of bytes per slice segment,
-                                                             ///< 3: max number of tiles per slice segment
-  Int       m_sliceSegmentArgument;                          ///< argument according to selected slice segment mode
+  Bool      m_bUseCbfFastMode;                                ///< flag for using Cbf Fast PU Mode Decision
+  Bool      m_useEarlySkipDetection;                          ///< flag for using Early SKIP Detection
+  Int       m_sliceMode;                                      ///< 0: no slice limits, 1 : max number of CTBs per slice, 2: max number of bytes per slice,
+                                                              ///< 3: max number of tiles per slice
+  Int       m_sliceArgument;                                  ///< argument according to selected slice mode
+  Int       m_sliceSegmentMode;                               ///< 0: no slice segment limits, 1 : max number of CTBs per slice segment, 2: max number of bytes per slice segment,
+                                                              ///< 3: max number of tiles per slice segment
+  Int       m_sliceSegmentArgument;                           ///< argument according to selected slice segment mode
 
   Bool      m_bLFCrossSliceBoundaryFlag;  ///< 1: filter across slice boundaries 0: do not filter across slice boundaries
   Bool      m_bLFCrossTileBoundaryFlag;   ///< 1: filter across tile boundaries  0: do not filter across tile boundaries
