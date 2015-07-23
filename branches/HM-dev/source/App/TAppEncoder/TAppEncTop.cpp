@@ -149,6 +149,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setClipForBiPredMeEnabled                            ( m_bClipForBiPredMeEnabled );
   m_cTEncTop.setFastMEAssumingSmootherMVEnabled                   ( m_bFastMEAssumingSmootherMVEnabled );
   m_cTEncTop.setMinSearchWindow                                   ( m_minSearchWindow );
+  m_cTEncTop.setRestrictMESampling                                ( m_bRestrictMESampling );
 
   //====== Quality control ========
   m_cTEncTop.setMaxDeltaQP                                        ( m_iMaxDeltaQP  );
@@ -229,8 +230,9 @@ Void TAppEncTop::xInitLibCfg()
 
 
   //====== Weighted Prediction ========
-  m_cTEncTop.setUseWP                                             ( m_useWeightedPred      );
+  m_cTEncTop.setUseWP                                             ( m_useWeightedPred     );
   m_cTEncTop.setWPBiPred                                          ( m_useWeightedBiPred   );
+
   //====== Parallel Merge Estimation ========
   m_cTEncTop.setLog2ParallelMergeLevelMinus2                      ( m_log2ParallelMergeLevel - 2 );
 

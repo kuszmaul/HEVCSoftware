@@ -339,7 +339,7 @@ __inline Void TEncSearch::xTZSearchHelp( const TComPattern* const pcPatternKey, 
   m_cDistParam.bitDepth = pcPatternKey->getBitDepthY();
   m_cDistParam.m_maximumDistortionForEarlyExit = rcStruct.uiBestSad;
 
-  if(m_pcEncCfg->getFastSearch() == SELECTIVE)
+  if((m_pcEncCfg->getRestrictMESampling() == false) && m_pcEncCfg->getFastSearch() == SELECTIVE)
   {
     Int isubShift = 0;
     // motion cost
