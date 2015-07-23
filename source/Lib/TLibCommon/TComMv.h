@@ -121,7 +121,7 @@ public:
   //! shift right with rounding
   Void divideByPowerOf2 (const Int i)
   {
-    int offset = (i == 0) ? 0 : 1 << (i - 1); 
+    Int offset = (i == 0) ? 0 : 1 << (i - 1);
     m_iHor += offset;
     m_iVer += offset;
 
