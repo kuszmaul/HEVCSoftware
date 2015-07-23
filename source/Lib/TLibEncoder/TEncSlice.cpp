@@ -703,7 +703,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
       printf("Weighted Prediction is not supported with slice mode determined by max number of bins.\n"); exit(0);
     }
 
-    xEstimateWPParamSlice( pcSlice );
+    xEstimateWPParamSlice( pcSlice, m_pcCfg->getWeightedPredictionMethod() );
     pcSlice->initWpScaling(pcSlice->getSPS());
 
     // check WP on/off

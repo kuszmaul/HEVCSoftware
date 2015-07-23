@@ -611,6 +611,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   Int tmpChromaFormat;
   Int tmpInputChromaFormat;
   Int tmpConstraintChromaFormat;
+  Int tmpWeightedPredictionMethod;
   string inputColourSpaceConvert;
   ExtendedProfileName extendedProfile;
   Int saoOffsetBitShift[MAX_NUM_CHANNEL_TYPE];
@@ -843,6 +844,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("IntraReferenceSmoothing",                         m_enableIntraReferenceSmoothing,                   true, "0: Disable use of intra reference smoothing. 1: Enable use of intra reference smoothing (not valid in V1 profiles)")
   ("WeightedPredP,-wpP",                              m_useWeightedPred,                                false, "Use weighted prediction in P slices")
   ("WeightedPredB,-wpB",                              m_useWeightedBiPred,                              false, "Use weighted (bidirectional) prediction in B slices")
+  ("WeightedPredMethod,-wpM",                         tmpWeightedPredictionMethod, Int(WP_PER_PICTURE_WITH_SIMPLE_DC_COMBINED_COMPONENT), "Weighted prediction method")
   ("Log2ParallelMergeLevel",                          m_log2ParallelMergeLevel,                            2u, "Parallel merge estimation region")
     //deprecated copies of renamed tile parameters
   ("UniformSpacingIdc",                               m_tileUniformSpacingFlag,                         false,      "deprecated alias of TileUniformSpacing")
@@ -1163,6 +1165,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   m_InputChromaFormatIDC = numberToChromaFormat(tmpInputChromaFormat);
   m_chromaFormatIDC      = ((tmpChromaFormat == 0) ? (m_InputChromaFormatIDC) : (numberToChromaFormat(tmpChromaFormat)));
+
+  assert(tmpWeightedPredictionMethod>=0 && tmpWeightedPredictionMethod<=WP_PER_PICTURE_WITH_HISTOGRAM_AND_PER_COMPONENT_AND_CLIPPING_AND_EXTENSION);
+  if (!(tmpWeightedPredictionMethod>=0 && tmpWeightedPredictionMethod<=WP_PER_PICTURE_WITH_HISTOGRAM_AND_PER_COMPONENT_AND_CLIPPING_AND_EXTENSION))
+  {
+    exit(EXIT_FAILURE);
+  }
+  m_weightedPredictionMethod = WeightedPredictionMethod(tmpWeightedPredictionMethod);
 
   if (extendedProfile >= 1000 && extendedProfile <= 12316)
   {
@@ -2359,6 +2368,7 @@ Void TAppEncCfg::xPrintParameter()
   }
 
   printf("RateControl                            : %d\n", m_RCEnableRateControl );
+  printf("WPMethod                               : %d\n", Int(m_weightedPredictionMethod));
 
   if(m_RCEnableRateControl)
   {
