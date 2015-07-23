@@ -148,6 +148,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setBipredSearchRange                                 ( m_bipredSearchRange );
   m_cTEncTop.setClipForBiPredMeEnabled                            ( m_bClipForBiPredMeEnabled );
   m_cTEncTop.setFastMEAssumingSmootherMVEnabled                   ( m_bFastMEAssumingSmootherMVEnabled );
+  m_cTEncTop.setMinSearchWindow                                   ( m_minSearchWindow );
 
   //====== Quality control ========
   m_cTEncTop.setMaxDeltaQP                                        ( m_iMaxDeltaQP  );

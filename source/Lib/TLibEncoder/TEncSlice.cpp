@@ -168,7 +168,7 @@ TEncSlice::setUpLambda(TComSlice* slice, const Double dLambda, Int iQP)
 #endif
 
 // For SAO
-  slice   ->setLambdas( dLambdas );
+  slice->setLambdas( dLambdas );
 }
 
 
@@ -512,8 +512,8 @@ Void TEncSlice::setSearchRange( TComSlice* pcSlice )
     for (Int iRefIdx = 0; iRefIdx < pcSlice->getNumRefIdx(e); iRefIdx++)
     {
       iRefPOC = pcSlice->getRefPic(e, iRefIdx)->getPOC();
-      Int iNewSR = Clip3(8, iMaxSR, (iMaxSR*ADAPT_SR_SCALE*abs(iCurrPOC - iRefPOC)+iOffset)/iGOPSize);
-      m_pcPredSearch->setAdaptiveSearchRange(iDir, iRefIdx, iNewSR);
+      Int newSearchRange = Clip3(m_pcCfg->getMinSearchWindow(), iMaxSR, (iMaxSR*ADAPT_SR_SCALE*abs(iCurrPOC - iRefPOC)+iOffset)/iGOPSize);
+      m_pcPredSearch->setAdaptiveSearchRange(iDir, iRefIdx, newSearchRange);
     }
   }
 }
