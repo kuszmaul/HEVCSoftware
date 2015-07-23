@@ -196,7 +196,7 @@ Void TComRdCost::setDistParam( UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc, 
 }
 
 // Setting the Distortion Parameter for Inter (ME)
-Void TComRdCost::setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, DistParam& rcDistParam )
+Void TComRdCost::setDistParam( const TComPattern* const pcPatternKey, const Pel* piRefY, Int iRefStride, DistParam& rcDistParam )
 {
   // set Original & Curr Pointer / Stride
   rcDistParam.pOrg = pcPatternKey->getROIY();
@@ -228,7 +228,7 @@ Void TComRdCost::setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefS
 }
 
 // Setting the Distortion Parameter for Inter (subpel ME with step)
-Void TComRdCost::setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, Int iStep, DistParam& rcDistParam, Bool bHADME )
+Void TComRdCost::setDistParam( const TComPattern* const pcPatternKey, const Pel* piRefY, Int iRefStride, Int iStep, DistParam& rcDistParam, Bool bHADME )
 {
   // set Original & Curr Pointer / Stride
   rcDistParam.pOrg = pcPatternKey->getROIY();
@@ -270,21 +270,21 @@ Void TComRdCost::setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefS
   rcDistParam.iSubShift  = 0;
 }
 
-Void TComRdCost::setDistParam( DistParam& rcDP, Int bitDepth, Pel* p1, Int iStride1, Pel* p2, Int iStride2, Int iWidth, Int iHeight, Bool bHadamard )
+Void TComRdCost::setDistParam( DistParam& rcDP, Int bitDepth, const Pel* p1, Int iStride1, const Pel* p2, Int iStride2, Int iWidth, Int iHeight, Bool bHadamard )
 {
-  rcDP.pOrg       = p1;
-  rcDP.pCur       = p2;
-  rcDP.iStrideOrg = iStride1;
-  rcDP.iStrideCur = iStride2;
-  rcDP.iCols      = iWidth;
-  rcDP.iRows      = iHeight;
-  rcDP.iStep      = 1;
-  rcDP.iSubShift  = 0;
-  rcDP.bitDepth   = bitDepth;
-  rcDP.DistFunc   = m_afpDistortFunc[ ( bHadamard ? DF_HADS : DF_SADS ) + g_aucConvertToBit[ iWidth ] + 1 ];
+  rcDP.pOrg         = p1;
+  rcDP.pCur         = p2;
+  rcDP.iStrideOrg   = iStride1;
+  rcDP.iStrideCur   = iStride2;
+  rcDP.iCols        = iWidth;
+  rcDP.iRows        = iHeight;
+  rcDP.iStep        = 1;
+  rcDP.iSubShift    = 0;
+  rcDP.bitDepth     = bitDepth;
+  rcDP.DistFunc     = m_afpDistortFunc[ ( bHadamard ? DF_HADS : DF_SADS ) + g_aucConvertToBit[ iWidth ] + 1 ];
 }
 
-Distortion TComRdCost::calcHAD( Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iStride1, Int iWidth, Int iHeight )
+Distortion TComRdCost::calcHAD( Int bitDepth, const Pel* pi0, Int iStride0, const Pel* pi1, Int iStride1, Int iWidth, Int iHeight )
 {
   Distortion uiSum = 0;
   Int x, y;
@@ -319,7 +319,7 @@ Distortion TComRdCost::calcHAD( Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, 
   return ( uiSum >> DISTORTION_PRECISION_ADJUSTMENT(bitDepth-8) );
 }
 
-Distortion TComRdCost::getDistPart( Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, const ComponentID compID, DFunc eDFunc )
+Distortion TComRdCost::getDistPart( Int bitDepth, const Pel* piCur, Int iCurStride,  const Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, const ComponentID compID, DFunc eDFunc )
 {
   DistParam cDtParam;
   setDistParam( uiBlkWidth, uiBlkHeight, eDFunc, cDtParam );
@@ -1200,7 +1200,7 @@ Distortion TComRdCost::xGetSSE64( DistParam* pcDtParam )
 // HADAMARD with step (used in fractional search)
 // --------------------------------------------------------------------------------------------------------------------
 
-Distortion TComRdCost::xCalcHADs2x2( Pel *piOrg, Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
+Distortion TComRdCost::xCalcHADs2x2( const Pel *piOrg, const Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
 {
   Distortion satd = 0;
   TCoeff diff[4], m[4];
@@ -1222,7 +1222,7 @@ Distortion TComRdCost::xCalcHADs2x2( Pel *piOrg, Pel *piCur, Int iStrideOrg, Int
   return satd;
 }
 
-Distortion TComRdCost::xCalcHADs4x4( Pel *piOrg, Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
+Distortion TComRdCost::xCalcHADs4x4( const Pel *piOrg, const Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
 {
   Int k;
   Distortion satd = 0;
@@ -1318,7 +1318,7 @@ Distortion TComRdCost::xCalcHADs4x4( Pel *piOrg, Pel *piCur, Int iStrideOrg, Int
   return satd;
 }
 
-Distortion TComRdCost::xCalcHADs8x8( Pel *piOrg, Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
+Distortion TComRdCost::xCalcHADs8x8( const Pel *piOrg, const Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
 {
   Int k, i, j, jj;
   Distortion sad = 0;
@@ -1422,13 +1422,13 @@ Distortion TComRdCost::xGetHADs( DistParam* pcDtParam )
   {
     return TComRdCostWeightPrediction::xGetHADsw( pcDtParam );
   }
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
-  Int  iRows   = pcDtParam->iRows;
-  Int  iCols   = pcDtParam->iCols;
-  Int  iStrideCur = pcDtParam->iStrideCur;
-  Int  iStrideOrg = pcDtParam->iStrideOrg;
-  Int  iStep  = pcDtParam->iStep;
+  const Pel* piOrg      = pcDtParam->pOrg;
+  const Pel* piCur      = pcDtParam->pCur;
+  const Int  iRows      = pcDtParam->iRows;
+  const Int  iCols      = pcDtParam->iCols;
+  const Int  iStrideCur = pcDtParam->iStrideCur;
+  const Int  iStrideOrg = pcDtParam->iStrideOrg;
+  const Int  iStep      = pcDtParam->iStep;
 
   Int  x, y;
 

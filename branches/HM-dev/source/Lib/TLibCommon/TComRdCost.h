@@ -67,37 +67,39 @@ typedef Distortion (*FpDistFunc) (DistParam*); // TODO: can this pointer be repl
 class DistParam
 {
 public:
-  Pel*  pOrg;
-  Pel*  pCur;
-  Int   iStrideOrg;
-  Int   iStrideCur;
-  Int   iRows;
-  Int   iCols;
-  Int   iStep;
-  FpDistFunc DistFunc;
-  Int   bitDepth;
+  const Pel*            pOrg;
+  const Pel*            pCur;
+  Int                   iStrideOrg;
+  Int                   iStrideCur;
+  Int                   iRows;
+  Int                   iCols;
+  Int                   iStep;
+  FpDistFunc            DistFunc;
+  Int                   bitDepth;
 
-  Bool            bApplyWeight;     // whether weighted prediction is used or not
-  WPScalingParam  *wpCur;           // weighted prediction scaling parameters for current ref
-  ComponentID     compIdx;
+  Bool                  bApplyWeight;     // whether weighted prediction is used or not
+  const WPScalingParam *wpCur;           // weighted prediction scaling parameters for current ref
+  ComponentID           compIdx;
 
   // (vertical) subsampling shift (for reducing complexity)
   // - 0 = no subsampling, 1 = even rows, 2 = every 4th, etc.
-  Int   iSubShift;
+  Int             iSubShift;
 
   DistParam()
-  {
-    pOrg = NULL;
-    pCur = NULL;
-    iStrideOrg = 0;
-    iStrideCur = 0;
-    iRows = 0;
-    iCols = 0;
-    iStep = 1;
-    DistFunc = NULL;
-    iSubShift = 0;
-    bitDepth = 0;
-  }
+   : pOrg(NULL),
+     pCur(NULL),
+     iStrideOrg(0),
+     iStrideCur(0),
+     iRows(0),
+     iCols(0),
+     iStep(1),
+     DistFunc(NULL),
+     bitDepth(0),
+     bApplyWeight(false),
+     wpCur(NULL),
+     compIdx(MAX_NUM_COMPONENT),
+     iSubShift(0)
+  { }
 };
 
 /// RD cost computation class
@@ -141,11 +143,11 @@ public:
   Void    init();
 
   Void    setDistParam( UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc, DistParam& rcDistParam );
-  Void    setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride,            DistParam& rcDistParam );
-  Void    setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, Int iStep, DistParam& rcDistParam, Bool bHADME=false );
-  Void    setDistParam( DistParam& rcDP, Int bitDepth, Pel* p1, Int iStride1, Pel* p2, Int iStride2, Int iWidth, Int iHeight, Bool bHadamard = false );
+  Void    setDistParam( const TComPattern* const pcPatternKey, const Pel* piRefY, Int iRefStride,            DistParam& rcDistParam );
+  Void    setDistParam( const TComPattern* const pcPatternKey, const Pel* piRefY, Int iRefStride, Int iStep, DistParam& rcDistParam, Bool bHADME=false );
+  Void    setDistParam( DistParam& rcDP, Int bitDepth, const Pel* p1, Int iStride1, const Pel* p2, Int iStride2, Int iWidth, Int iHeight, Bool bHadamard = false );
 
-  Distortion calcHAD(Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iStride1, Int iWidth, Int iHeight );
+  Distortion calcHAD(Int bitDepth, const Pel* pi0, Int iStride0, const Pel* pi1, Int iStride1, Int iWidth, Int iHeight );
 
   // for motion cost
   static UInt    xGetExpGolombNumberOfBits( Int iVal );
@@ -189,14 +191,14 @@ private:
   static Distortion xGetSAD48         ( DistParam* pcDtParam );
 
   static Distortion xGetHADs          ( DistParam* pcDtParam );
-  static Distortion xCalcHADs2x2      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
-  static Distortion xCalcHADs4x4      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
-  static Distortion xCalcHADs8x8      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
+  static Distortion xCalcHADs2x2      ( const Pel *piOrg, const Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
+  static Distortion xCalcHADs4x4      ( const Pel *piOrg, const Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
+  static Distortion xCalcHADs8x8      ( const Pel *piOrg, const Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
 
 
 public:
 
-  Distortion   getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, const ComponentID compID, DFunc eDFunc = DF_SSE );
+  Distortion   getDistPart(Int bitDepth, const Pel* piCur, Int iCurStride, const Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, const ComponentID compID, DFunc eDFunc = DF_SSE );
 
 };// END CLASS DEFINITION TComRdCost
 
