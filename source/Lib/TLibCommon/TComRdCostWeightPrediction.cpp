@@ -587,7 +587,7 @@ Distortion TComRdCostWeightPrediction::xGetHADsw( DistParam* pcDtParam )
   const Int         iStep      = pcDtParam->iStep;
   const ComponentID compIdx    = pcDtParam->compIdx;
   assert(compIdx<MAX_NUM_COMPONENT);
-  const WPScalingParam  wpCur    = pcDtParam->wpCur[compIdx];
+  const WPScalingParam &wpCur  = pcDtParam->wpCur[compIdx];
 
   Distortion uiSum = 0;
 
