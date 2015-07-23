@@ -152,7 +152,7 @@ protected:
 
   typedef struct
   {
-    Pel*        piRefY;
+    const Pel*  piRefY;
     Int         iYStride;
     Int         iBestX;
     Int         iBestY;
@@ -163,10 +163,10 @@ protected:
   } IntTZSearchStruct;
 
   // sub-functions for ME
-  __inline Void xTZSearchHelp         ( TComPattern* pcPatternKey, IntTZSearchStruct& rcStruct, const Int iSearchX, const Int iSearchY, const UChar ucPointNr, const UInt uiDistance );
-  __inline Void xTZ2PointSearch       ( TComPattern* pcPatternKey, IntTZSearchStruct& rcStrukt, TComMv* pcMvSrchRngLT, TComMv* pcMvSrchRngRB );
-  __inline Void xTZ8PointSquareSearch ( TComPattern* pcPatternKey, IntTZSearchStruct& rcStrukt, TComMv* pcMvSrchRngLT, TComMv* pcMvSrchRngRB, const Int iStartX, const Int iStartY, const Int iDist );
-  __inline Void xTZ8PointDiamondSearch( TComPattern* pcPatternKey, IntTZSearchStruct& rcStrukt, TComMv* pcMvSrchRngLT, TComMv* pcMvSrchRngRB, const Int iStartX, const Int iStartY, const Int iDist );
+  __inline Void xTZSearchHelp         ( const TComPattern* const pcPatternKey, IntTZSearchStruct& rcStruct, const Int iSearchX, const Int iSearchY, const UChar ucPointNr, const UInt uiDistance );
+  __inline Void xTZ2PointSearch       ( const TComPattern* const pcPatternKey, IntTZSearchStruct& rcStruct, const TComMv* const pcMvSrchRngLT, const TComMv* const pcMvSrchRngRB );
+  __inline Void xTZ8PointSquareSearch ( const TComPattern* const pcPatternKey, IntTZSearchStruct& rcStruct, const TComMv* const pcMvSrchRngLT, const TComMv* const pcMvSrchRngRB, const Int iStartX, const Int iStartY, const Int iDist );
+  __inline Void xTZ8PointDiamondSearch( const TComPattern* const pcPatternKey, IntTZSearchStruct& rcStruct, const TComMv* const pcMvSrchRngLT, const TComMv* const pcMvSrchRngRB, const Int iStartX, const Int iStartY, const Int iDist );
 
   Void xGetInterPredictionError( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPartIdx, Distortion& ruiSAD, Bool Hadamard );
 
@@ -374,50 +374,50 @@ protected:
                                     Distortion&  ruiCost,
                                     Bool         bBi = false  );
 
-  Void xTZSearch                  ( TComDataCU*  pcCU,
-                                    TComPattern* pcPatternKey,
-                                    Pel*         piRefY,
-                                    Int          iRefStride,
-                                    TComMv*      pcMvSrchRngLT,
-                                    TComMv*      pcMvSrchRngRB,
-                                    TComMv&      rcMv,
-                                    Distortion&  ruiSAD,
-                                    const TComMv *pIntegerMv2Nx2NPred
+  Void xTZSearch                  ( const TComDataCU* const  pcCU,
+                                    const TComPattern* const pcPatternKey,
+                                    const Pel* const         piRefY,
+                                    const Int                iRefStride,
+                                    const TComMv* const      pcMvSrchRngLT,
+                                    const TComMv* const      pcMvSrchRngRB,
+                                    TComMv&                  rcMv,
+                                    Distortion&              ruiSAD,
+                                    const TComMv* const      pIntegerMv2Nx2NPred
                                     );
 
-  Void xTZSearchSelective         ( TComDataCU*  pcCU,
-                                    TComPattern* pcPatternKey,
-                                    Pel*         piRefY,
-                                    Int          iRefStride,
-                                    TComMv*      pcMvSrchRngLT,
-                                    TComMv*      pcMvSrchRngRB,
-                                    TComMv&      rcMv,
-                                    Distortion&  ruiSAD,
-                                    const TComMv *pIntegerMv2Nx2NPred
+  Void xTZSearchSelective         ( const TComDataCU* const  pcCU,
+                                    const TComPattern* const pcPatternKey,
+                                    const Pel* const         piRefY,
+                                    const Int                iRefStride,
+                                    const TComMv* const      pcMvSrchRngLT,
+                                    const TComMv* const      pcMvSrchRngRB,
+                                    TComMv&                  rcMv,
+                                    Distortion&              ruiSAD,
+                                    const TComMv* const      pIntegerMv2Nx2NPred
                                     );
 
-  Void xSetSearchRange            ( TComDataCU*  pcCU,
-                                    TComMv&      cMvPred,
-                                    Int          iSrchRng,
+  Void xSetSearchRange            ( const TComDataCU* const pcCU,
+                                    const TComMv&      cMvPred,
+                                    const Int          iSrchRng,
                                     TComMv&      rcMvSrchRngLT,
                                     TComMv&      rcMvSrchRngRB );
 
-  Void xPatternSearchFast         ( TComDataCU*  pcCU,
-                                    TComPattern* pcPatternKey,
-                                    Pel*         piRefY,
-                                    Int          iRefStride,
-                                    TComMv*      pcMvSrchRngLT,
-                                    TComMv*      pcMvSrchRngRB,
-                                    TComMv&      rcMv,
-                                    Distortion&  ruiSAD,
-                                    const TComMv* pIntegerMv2Nx2NPred
+  Void xPatternSearchFast         ( const TComDataCU* const  pcCU,
+                                    const TComPattern* const pcPatternKey,
+                                    const Pel* const         piRefY,
+                                    const Int                iRefStride,
+                                    const TComMv* const      pcMvSrchRngLT,
+                                    const TComMv* const      pcMvSrchRngRB,
+                                    TComMv&                  rcMv,
+                                    Distortion&              ruiSAD,
+                                    const TComMv* const      pIntegerMv2Nx2NPred
                                   );
 
-  Void xPatternSearch             ( TComPattern* pcPatternKey,
-                                    Pel*         piRefY,
-                                    Int          iRefStride,
-                                    TComMv*      pcMvSrchRngLT,
-                                    TComMv*      pcMvSrchRngRB,
+  Void xPatternSearch             ( const TComPattern* const pcPatternKey,
+                                    const Pel*               piRefY,
+                                    const Int                iRefStride,
+                                    const TComMv* const      pcMvSrchRngLT,
+                                    const TComMv* const      pcMvSrchRngRB,
                                     TComMv&      rcMv,
                                     Distortion&  ruiSAD );
 
