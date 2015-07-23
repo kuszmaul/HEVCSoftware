@@ -613,6 +613,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   Int tmpConstraintChromaFormat;
   Int tmpWeightedPredictionMethod;
   Int tmpFastInterSearchMode;
+  Int tmpMotionEstimationSearchMethod;
   string inputColourSpaceConvert;
   ExtendedProfileName extendedProfile;
   Int saoOffsetBitShift[MAX_NUM_CHANNEL_TYPE];
@@ -747,7 +748,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   // motion search options
   ("DisableIntraInInter",                             m_bDisableIntraPUsInInterSlices,                  false, "Flag to disable intra PUs in inter slices")
-  ("FastSearch",                                      m_iFastSearch,                                        1, "0:Full search  1:Diamond  2:PMVFAST")
+  ("FastSearch",                                      tmpMotionEstimationSearchMethod,  Int(MESEARCH_DIAMOND), "0:Full search 1:Diamond 2:Selective")
   ("SearchRange,-sr",                                 m_iSearchRange,                                      96, "Motion search range")
   ("BipredSearchRange",                               m_bipredSearchRange,                                  4, "Motion search range for bipred refinement")
   ("MinSearchWindow",                                 m_minSearchWindow,                                    8, "Minimum motion search window size for the adaptive window ME")
@@ -1182,6 +1183,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     exit(EXIT_FAILURE);
   }
   m_fastInterSearchMode = FastInterSearchMode(tmpFastInterSearchMode);
+
+  assert(tmpMotionEstimationSearchMethod>=0 && tmpMotionEstimationSearchMethod<MESEARCH_NUMBER_OF_METHODS);
+  if (tmpMotionEstimationSearchMethod<0 || tmpMotionEstimationSearchMethod>=MESEARCH_NUMBER_OF_METHODS)
+  {
+    exit(EXIT_FAILURE);
+  }
+  m_motionEstimationSearchMethod=MESearchMethod(tmpMotionEstimationSearchMethod);
 
   if (extendedProfile >= 1000 && extendedProfile <= 12316)
   {
@@ -1683,7 +1691,6 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_DeblockingFilterMetric && (m_bLoopFilterDisable || m_loopFilterOffsetInPPS), "If DeblockingFilterMetric is true then both LoopFilterDisable and LoopFilterOffsetInPPS must be 0");
   xConfirmPara( m_loopFilterBetaOffsetDiv2 < -6 || m_loopFilterBetaOffsetDiv2 > 6,        "Loop Filter Beta Offset div. 2 exceeds supported range (-6 to 6)");
   xConfirmPara( m_loopFilterTcOffsetDiv2 < -6 || m_loopFilterTcOffsetDiv2 > 6,            "Loop Filter Tc Offset div. 2 exceeds supported range (-6 to 6)");
-  xConfirmPara( m_iFastSearch < 0 || m_iFastSearch > 2,                                     "Fast Search Mode is not supported value (0:Full search  1:Diamond  2:PMVFAST)" );
   xConfirmPara( m_iSearchRange < 0 ,                                                        "Search Range must be more than 0" );
   xConfirmPara( m_bipredSearchRange < 0 ,                                                   "Bi-prediction refinement search range must be more than 0" );
   xConfirmPara( m_minSearchWindow < 0,                                                      "Minimum motion search window size for the adaptive window ME must be greater than or equal to 0" );

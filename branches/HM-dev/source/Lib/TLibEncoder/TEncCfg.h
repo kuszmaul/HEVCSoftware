@@ -174,7 +174,7 @@ protected:
 
   //====== Motion search ========
   Bool      m_bDisableIntraPUsInInterSlices;
-  Int       m_iFastSearch;                      //  0:Full search  1:Diamond  2:PMVFAST
+  MESearchMethod m_motionEstimationSearchMethod;
   Int       m_iSearchRange;                     //  0:Full frame
   Int       m_bipredSearchRange;
   Bool      m_bClipForBiPredMeEnabled;
@@ -466,7 +466,7 @@ public:
 
   //====== Motion search ========
   Void      setDisableIntraPUsInInterSlices ( Bool  b )      { m_bDisableIntraPUsInInterSlices = b; }
-  Void      setFastSearch                   ( Int   i )      { m_iFastSearch = i; }
+  Void      setMotionEstimationSearchMethod ( MESearchMethod e ) { m_motionEstimationSearchMethod = e; }
   Void      setSearchRange                  ( Int   i )      { m_iSearchRange = i; }
   Void      setBipredSearchRange            ( Int   i )      { m_bipredSearchRange = i; }
   Void      setClipForBiPredMeEnabled       ( Bool  b )      { m_bClipForBiPredMeEnabled = b; }
@@ -541,7 +541,7 @@ public:
 
   //==== Motion search ========
   Bool      getDisableIntraPUsInInterSlices    () const { return m_bDisableIntraPUsInInterSlices; }
-  Int       getFastSearch                      () const { return m_iFastSearch; }
+  MESearchMethod getMotionEstimationSearchMethod ( ) const { return m_motionEstimationSearchMethod; }
   Int       getSearchRange                     () const { return m_iSearchRange; }
   Bool      getClipForBiPredMeEnabled          () const { return m_bClipForBiPredMeEnabled; }
   Bool      getFastMEAssumingSmootherMVEnabled () const { return m_bFastMEAssumingSmootherMVEnabled; }

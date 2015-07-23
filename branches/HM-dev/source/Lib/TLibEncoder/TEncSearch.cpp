@@ -120,7 +120,7 @@ TEncSearch::TEncSearch()
 , m_pcEntropyCoder (NULL)
 , m_iSearchRange (0)
 , m_bipredSearchRange (0)
-, m_iFastSearch (0)
+, m_motionEstimationSearchMethod (MESEARCH_FULL)
 , m_pppcRDSbacCoder (NULL)
 , m_pcRDGoOnSbacCoder (NULL)
 , m_pTempPel (NULL)
@@ -225,31 +225,31 @@ TEncSearch::~TEncSearch()
 
 
 
-Void TEncSearch::init(TEncCfg*      pcEncCfg,
-                      TComTrQuant*  pcTrQuant,
-                      Int           iSearchRange,
-                      Int           bipredSearchRange,
-                      Int           iFastSearch,
-                      const UInt    maxCUWidth,
-                      const UInt    maxCUHeight,
-                      const UInt    maxTotalCUDepth,
-                      TEncEntropy*  pcEntropyCoder,
-                      TComRdCost*   pcRdCost,
-                      TEncSbac*** pppcRDSbacCoder,
-                      TEncSbac*   pcRDGoOnSbacCoder
+Void TEncSearch::init(TEncCfg*       pcEncCfg,
+                      TComTrQuant*   pcTrQuant,
+                      Int            iSearchRange,
+                      Int            bipredSearchRange,
+                      MESearchMethod motionEstimationSearchMethod,
+                      const UInt     maxCUWidth,
+                      const UInt     maxCUHeight,
+                      const UInt     maxTotalCUDepth,
+                      TEncEntropy*   pcEntropyCoder,
+                      TComRdCost*    pcRdCost,
+                      TEncSbac***    pppcRDSbacCoder,
+                      TEncSbac*      pcRDGoOnSbacCoder
                       )
 {
   assert (!m_isInitialized);
-  m_pcEncCfg             = pcEncCfg;
-  m_pcTrQuant            = pcTrQuant;
-  m_iSearchRange         = iSearchRange;
-  m_bipredSearchRange    = bipredSearchRange;
-  m_iFastSearch          = iFastSearch;
-  m_pcEntropyCoder       = pcEntropyCoder;
-  m_pcRdCost             = pcRdCost;
+  m_pcEncCfg                     = pcEncCfg;
+  m_pcTrQuant                    = pcTrQuant;
+  m_iSearchRange                 = iSearchRange;
+  m_bipredSearchRange            = bipredSearchRange;
+  m_motionEstimationSearchMethod = motionEstimationSearchMethod;
+  m_pcEntropyCoder               = pcEntropyCoder;
+  m_pcRdCost                     = pcRdCost;
 
-  m_pppcRDSbacCoder     = pppcRDSbacCoder;
-  m_pcRDGoOnSbacCoder   = pcRDGoOnSbacCoder;
+  m_pppcRDSbacCoder              = pppcRDSbacCoder;
+  m_pcRDGoOnSbacCoder            = pcRDGoOnSbacCoder;
 
   for (UInt iDir = 0; iDir < MAX_NUM_REF_LIST_ADAPT_SR; iDir++)
   {
@@ -339,7 +339,7 @@ __inline Void TEncSearch::xTZSearchHelp( const TComPattern* const pcPatternKey, 
   m_cDistParam.bitDepth = pcPatternKey->getBitDepthY();
   m_cDistParam.m_maximumDistortionForEarlyExit = rcStruct.uiBestSad;
 
-  if((m_pcEncCfg->getRestrictMESampling() == false) && m_pcEncCfg->getFastSearch() == SELECTIVE)
+  if((m_pcEncCfg->getRestrictMESampling() == false) && m_pcEncCfg->getMotionEstimationSearchMethod() == MESEARCH_SELECTIVE)
   {
     Int isubShift = 0;
     // motion cost
@@ -3706,7 +3706,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
 
   setWpScalingDistParam( pcCU, iRefIdxPred, eRefPicList );
   //  Do integer search
-  if ( !m_iFastSearch || bBi )
+  if ( (m_motionEstimationSearchMethod==MESEARCH_FULL) || bBi )
   {
     xPatternSearch      ( pcPatternKey, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost );
   }
@@ -3849,15 +3849,17 @@ Void TEncSearch::xPatternSearchFast( const TComDataCU* const  pcCU,
   assert (MD_ABOVE_RIGHT < NUM_MV_PREDICTORS);
   pcCU->getMvPredAboveRight ( m_acMvPredictors[MD_ABOVE_RIGHT] );
 
-  switch ( m_iFastSearch )
+  switch ( m_motionEstimationSearchMethod )
   {
-    case 1:
+    case MESEARCH_DIAMOND:
       xTZSearch( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD, pIntegerMv2Nx2NPred );
       break;
 
-    case 2:
+    case MESEARCH_SELECTIVE:
       xTZSearchSelective( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD, pIntegerMv2Nx2NPred );
       break;
+
+    case MESEARCH_FULL: // shouldn't get here.
     default:
       break;
   }
