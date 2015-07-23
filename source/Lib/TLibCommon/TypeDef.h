@@ -420,9 +420,10 @@ enum TransformDirection
 /// supported ME search methods
 enum MESearchMethod
 {
-  FULL_SEARCH                = 0,     ///< Full search
-  DIAMOND                    = 1,     ///< Fast search
-  SELECTIVE                  = 2      ///< Selective search
+  MESEARCH_FULL              = 0,
+  MESEARCH_DIAMOND           = 1,
+  MESEARCH_SELECTIVE         = 2,
+  MESEARCH_NUMBER_OF_METHODS   = 3
 };
 
 /// coefficient scanning type used in ACS
