@@ -3710,6 +3710,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
 
     fWeight = 0.5;
   }
+  m_cDistParam.bIsBiPred = bBi;
 
   //  Search key pattern initialization
   pcPatternKey->initPattern( pcYuv->getAddr  ( COMPONENT_Y, uiPartAddr ),

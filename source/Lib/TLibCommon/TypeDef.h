@@ -80,6 +80,7 @@
 
 #define DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES  1 ///< TODO: integrate this macro into a broader conformance checking system.
 #define T0196_SELECTIVE_RDOQ                              1 ///< selective RDOQ
+#define U0040_MODIFIED_WEIGHTEDPREDICTION_WITH_BIPRED_AND_CLIPPING 1
 
 // ====================================================================================================================
 // Tool Switches
