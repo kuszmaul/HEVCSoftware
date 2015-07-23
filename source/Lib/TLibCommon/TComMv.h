@@ -108,12 +108,14 @@ public:
     return  *this;
   }
 
+#if !ME_ENABLE_ROUNDING_OF_MVS
   const TComMv& operator>>= (const Int i)
   {
     m_iHor >>= i;
     m_iVer >>= i;
     return  *this;
   }
+#endif
 
 #if ME_ENABLE_ROUNDING_OF_MVS
   //! shift right with rounding
