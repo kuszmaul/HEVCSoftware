@@ -208,7 +208,7 @@ protected:
   Bool      m_useSelectiveRDOQ;
 #endif
   UInt      m_rdPenalty;
-  Bool      m_bUseFastEnc;
+  FastInterSearchMode m_fastInterSearchMode;
   Bool      m_bUseEarlyCU;
   Bool      m_useFastDecisionForMerge;
   Bool      m_bUseCbfFastMode;
@@ -560,8 +560,8 @@ public:
 #if T0196_SELECTIVE_RDOQ
   Void      setUseSelectiveRDOQ             ( Bool b )      { m_useSelectiveRDOQ = b; }
 #endif
-  Void      setRDpenalty                    ( UInt  b )     { m_rdPenalty  = b; }
-  Void      setUseFastEnc                   ( Bool  b )     { m_bUseFastEnc = b; }
+  Void      setRDpenalty                    ( UInt  u )     { m_rdPenalty  = u; }
+  Void      setFastInterSearchMode          ( FastInterSearchMode m ) { m_fastInterSearchMode = m; }
   Void      setUseEarlyCU                   ( Bool  b )     { m_bUseEarlyCU = b; }
   Void      setUseFastDecisionForMerge      ( Bool  b )     { m_useFastDecisionForMerge = b; }
   Void      setUseCbfFastMode               ( Bool  b )     { m_bUseCbfFastMode = b; }
@@ -588,7 +588,7 @@ public:
   Bool      getUseSelectiveRDOQ             ()      { return m_useSelectiveRDOQ; }
 #endif
   Int       getRDpenalty                    ()      { return m_rdPenalty;  }
-  Bool      getUseFastEnc                   ()      { return m_bUseFastEnc; }
+  FastInterSearchMode getFastInterSearchMode() const{ return m_fastInterSearchMode;  }
   Bool      getUseEarlyCU                   ()      { return m_bUseEarlyCU; }
   Bool      getUseFastDecisionForMerge      ()      { return m_useFastDecisionForMerge; }
   Bool      getUseCbfFastMode               ()      { return m_bUseCbfFastMode; }

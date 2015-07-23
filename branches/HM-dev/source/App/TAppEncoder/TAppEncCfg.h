@@ -221,7 +221,7 @@ protected:
   Int       m_minSearchWindow;                                ///< ME minimum search window size for the Adaptive Window ME
   Bool      m_bClipForBiPredMeEnabled;                        ///< Enables clipping for Bi-Pred ME.
   Bool      m_bFastMEAssumingSmootherMVEnabled;               ///< Enables fast ME assuming a smoother MV.
-  Bool      m_bUseFastEnc;                                    ///< flag for using fast encoder setting
+  FastInterSearchMode m_fastInterSearchMode;                  ///< Parameter that controls fast encoder settings
   Bool      m_bUseEarlyCU;                                    ///< flag for using Early CU setting
   Bool      m_useFastDecisionForMerge;                        ///< flag for using Fast Decision Merge RD-Cost
   Bool      m_bUseCbfFastMode;                                ///< flag for using Cbf Fast PU Mode Decision

@@ -578,6 +578,14 @@ enum WeightedPredictionMethod
   WP_PER_PICTURE_WITH_HISTOGRAM_AND_PER_COMPONENT_AND_CLIPPING_AND_EXTENSION=4
 };
 
+enum FastInterSearchMode
+{
+  FASTINTERSEARCH_DISABLED = 0,
+  FASTINTERSEARCH_MODE1    = 1, // TODO: assign better names to these.
+  FASTINTERSEARCH_MODE2    = 2,
+  FASTINTERSEARCH_MODE3    = 3
+};
+
 enum SPSExtensionFlagIndex
 {
   SPS_EXT__REXT           = 0,
