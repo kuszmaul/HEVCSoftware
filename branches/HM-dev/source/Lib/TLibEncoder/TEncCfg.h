@@ -321,6 +321,7 @@ protected:
   //====== Weighted Prediction ========
   Bool      m_useWeightedPred;       //< Use of Weighting Prediction (P_SLICE)
   Bool      m_useWeightedBiPred;    //< Use of Bi-directional Weighting Prediction (B_SLICE)
+  WeightedPredictionMethod m_weightedPredictionMethod;
   UInt      m_log2ParallelMergeLevelMinus2;       ///< Parallel merge estimation region
   UInt      m_maxNumMergeCand;                    ///< Maximum number of merge candidates
   ScalingListMode m_useScalingListId;            ///< Using quantization matrix i.e. 0=off, 1=default, 2=file.
@@ -810,6 +811,8 @@ public:
   Char*        getScalingListFile     ()                             { return m_scalingListFile;    }
   Void         setTMVPModeId ( Int  u )                              { m_TMVPModeId = u;    }
   Int          getTMVPModeId ()                                      { return m_TMVPModeId; }
+  WeightedPredictionMethod getWeightedPredictionMethod() const       { return m_weightedPredictionMethod; }
+  Void         setWeightedPredictionMethod( WeightedPredictionMethod m ) { m_weightedPredictionMethod = m; }
   Void         setSignHideFlag( Bool signHideFlag )                  { m_signHideFlag = signHideFlag; }
   Bool         getSignHideFlag()                                     { return m_signHideFlag; }
   Bool         getUseRateCtrl         ()                             { return m_RCEnableRateControl;   }

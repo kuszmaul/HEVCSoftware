@@ -166,6 +166,9 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setQPAdaptationRange                                 ( m_iQPAdaptationRange );
   m_cTEncTop.setExtendedPrecisionProcessingFlag                   ( m_extendedPrecisionProcessingFlag );
   m_cTEncTop.setHighPrecisionOffsetsEnabledFlag                   ( m_highPrecisionOffsetsEnabledFlag );
+
+  m_cTEncTop.setWeightedPredictionMethod( m_weightedPredictionMethod );
+
   //====== Tool list ========
   m_cTEncTop.setDeltaQpRD                                         ( m_uiDeltaQpRD  );
   m_cTEncTop.setFastDeltaQp                                       ( m_bFastDeltaQP  );
