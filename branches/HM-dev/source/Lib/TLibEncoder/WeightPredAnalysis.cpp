@@ -219,37 +219,6 @@ Distortion xSearchHistogram(const std::vector<Int> &histogramSource,
   return minDistortion;
 }
 
-//! calculate SSE values for both WP version and non-WP version.
-/*
-static
-Int64 xCalcSSEvalueWP(const Int   bitDepth,
-                      const Pel  *pOrgPel,
-                      const Pel  *pRefPel,
-                      const Int   width,
-                      const Int   height,
-                      const Int   orgStride,
-                      const Int   refStride,
-                      const Int   log2Denom,
-                      const Int   weight,
-                      const Int   offset,
-                      const Bool  useHighPrecision)
-{
-  const Int64 realLog2Denom = useHighPrecision ? log2Denom : (log2Denom + (bitDepth - 8));
-
-  Int64 SSE = 0;
-  for( Int y = 0; y < height; y++ )
-  {
-    for( Int x = 0; x < width; x++ )
-    {
-      Int64 distortion = (( ((Int64)pOrgPel[x]<<(Int64)log2Denom) - ( (Int64)pRefPel[x] * (Int64)weight + ((Int64)offset<<realLog2Denom) ) ) );
-      SSE += distortion * distortion;
-    }
-    pOrgPel += orgStride;
-    pRefPel += refStride;
-  }
-
-  return SSE;
-}*/
 
 // -----------------------------------------------------------------------------
 // Member functions
@@ -672,6 +641,8 @@ Bool WeightPredAnalysis::xSelectWP(TComSlice *const slice, const Int log2Denom)
   return true;
 }
 
+// Alternatively, a SSE-based measure could be used instead.
+// The respective function has been removed as it currently redundant.
 static
 Int64 xCalcSADvalueWP(const Int   bitDepth,
                       const Pel  *pOrgPel,
