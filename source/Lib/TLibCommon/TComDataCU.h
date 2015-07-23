@@ -376,10 +376,10 @@ public:
   Void          setMVPIdxSubParts     ( Int iMVPIdx, RefPicList eRefPicList, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   Void          setMVPNumSubParts     ( Int iMVPNum, RefPicList eRefPicList, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
 
-  Void          clipMv                ( TComMv&     rcMv     );
-  Void          getMvPredLeft         ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldA.getMv(); }
-  Void          getMvPredAbove        ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldB.getMv(); }
-  Void          getMvPredAboveRight   ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldC.getMv(); }
+  Void          clipMv                ( TComMv&     rcMv     ) const;
+  Void          getMvPredLeft         ( TComMv&     rcMvPred ) const  { rcMvPred = m_cMvFieldA.getMv(); }
+  Void          getMvPredAbove        ( TComMv&     rcMvPred ) const  { rcMvPred = m_cMvFieldB.getMv(); }
+  Void          getMvPredAboveRight   ( TComMv&     rcMvPred ) const  { rcMvPred = m_cMvFieldC.getMv(); }
 
   Void          compressMV            ();
 
