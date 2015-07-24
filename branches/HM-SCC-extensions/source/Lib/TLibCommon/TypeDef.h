@@ -197,7 +197,7 @@
 #define SCM_U0087_SWAP_ESC_ORDER                         1 ///< JCTVC-U0087 : Swap the nesting of the the loops for sending the escape-coded entries so that they are sent in component-grouped order (U0087 approach #2)
 #define SCM_U0083_U0079_IBC_SIGNAL_PPS                   1 ///< JCTVC-U0083/0079 : Signal the use of current picture as reference picture at PPS
 #define SCM_U0180_IBC_RPLC                               1 ///< JCTVC-U0180 : Add current picture into last position of reference picture list L0 by default, when RPLM is not used
-
+#define SCM_PLT_DEBLOCK_FIX                              1 ///< Bug Fix related to plt deblocking (software mismatch with the spec).
 //------------------------------------------------
 // Derived macros
 //------------------------------------------------
