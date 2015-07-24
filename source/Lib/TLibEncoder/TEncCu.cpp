@@ -2355,7 +2355,6 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #endif
 
   TComDataCU *rpcTempCUPre = NULL;
-  Bool   bColourTrans       = false;
   Bool   bEnableTrans      = rpcBestCU->getSlice()->getPPS()->getPpsScreenExtension().getUseColourTrans();
 
   UChar  uiColourTransform = 0;
@@ -2472,7 +2471,6 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
       {
         rpcTempCU->initEstData( uhDepth, orgQP, bTransquantBypassFlag);
         rpcTempCU->copyPartFrom( rpcBestCU, 0, uhDepth );
-        bColourTrans = true;
       }
     }
   }
@@ -2712,7 +2710,6 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
   if (bValid)
   {
     TComDataCU *rpcTempCUPre = NULL;
-    Bool   bColourTrans       = false;
     Bool   bEnableTrans      = rpcBestCU->getSlice()->getPPS()->getPpsScreenExtension().getUseColourTrans();
     UChar  uiColourTransform = 0;
     Bool   bRGB              = m_pcEncCfg->getRGBFormatFlag();
@@ -2831,7 +2828,6 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
           {
             rpcTempCU->initEstData( uiDepth, orgQP, bTransquantBypassFlag );
             rpcTempCU->copyPartFrom( rpcBestCU, 0, uiDepth );
-            bColourTrans = true;
           }
         }
         else
@@ -2885,7 +2881,6 @@ Void TEncCu::xCheckRDCostIntraBCMixed( TComDataCU *&rpcBestCU,
   if ( bValid )
   {
     TComDataCU *rpcTempCUPre = NULL;
-    Bool   bColourTrans       = false;
     Bool   bEnableTrans      = rpcBestCU->getSlice()->getPPS()->getPpsScreenExtension().getUseColourTrans();
     UChar  uiColourTransform = 0;
     Bool   bRGB              = m_pcEncCfg->getRGBFormatFlag();
@@ -2995,7 +2990,6 @@ Void TEncCu::xCheckRDCostIntraBCMixed( TComDataCU *&rpcBestCU,
           {
             rpcTempCU->initEstData( uiDepth, orgQP, bTransquantBypassFlag );
             rpcTempCU->copyPartFrom( rpcBestCU, 0, uiDepth );
-            bColourTrans = true;
           }
         }
         else
@@ -3033,7 +3027,6 @@ Void TEncCu::xCheckRDCostHashInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
   if ( m_pcPredSearch->predInterHashSearch( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], isPerfectMatch ) )
   {
     TComDataCU *rpcTempCUPre = NULL;
-    Bool   bColourTrans       = false;
     Bool   bEnableTrans      = rpcBestCU->getSlice()->getPPS()->getPpsScreenExtension().getUseColourTrans();
     UChar  uiColourTransform = 0;
     Bool   bRGB              = m_pcEncCfg->getRGBFormatFlag();
@@ -3145,7 +3138,6 @@ Void TEncCu::xCheckRDCostHashInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
           {
             rpcTempCU->initEstData( uhDepth, orgQP, bTransquantBypassFlag);
             rpcTempCU->copyPartFrom( rpcBestCU, 0, uhDepth );
-            bColourTrans = true;
           }
         }
       }

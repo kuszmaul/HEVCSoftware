@@ -2542,15 +2542,13 @@ TEncSearch::xRecurIntraCodingQTTUCSC( TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TCo
 
   Double              dSingleCost                                 = MAX_DOUBLE;
   Distortion          uiSingleDist[MAX_NUM_CHANNEL_TYPE]          = {0, 0};
-  UInt                uiSingleBits                                = 0;
-
+  
   UInt                uiSingleColorSpaceId                        = 0;
   Double              dSingleColorSpaceCost[2]                        = {MAX_DOUBLE, MAX_DOUBLE};
   Distortion          uiSingleColorSpaceDist[2][MAX_NUM_CHANNEL_TYPE] = {{0, 0}, {0, 0}};
   UInt                uiSingleColorSpaceBits[2]                       = {0, 0};  
 
   Double              dSingleComponentCost[2][MAX_NUM_COMPONENT]              = {{MAX_DOUBLE, MAX_DOUBLE, MAX_DOUBLE}, {MAX_DOUBLE, MAX_DOUBLE, MAX_DOUBLE}};
-  Distortion          uiSingleComponentDist[2][MAX_NUM_COMPONENT]             = {{0, 0, 0}, {0, 0, 0}};
   UInt                uiSingleComponentCbf[2][MAX_NUM_COMPONENT]              = {{0, 0, 0}, {0, 0, 0}};
   UInt                uiSingleComponentTransformMode[2][MAX_NUM_COMPONENT]    = {{0, 0, 0}, {0, 0, 0}};
   Char                cSingleComponentPredictionAlpha[2][MAX_NUM_COMPONENT]   = {{0, 0, 0}, {0, 0, 0}};
@@ -2779,7 +2777,6 @@ TEncSearch::xRecurIntraCodingQTTUCSC( TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TCo
             if( dSingleCostTmp < dSingleComponentCost[colorSpaceId][compID] )
             {
               dSingleComponentCost[colorSpaceId][compID]             = dSingleCostTmp;
-              uiSingleComponentDist[colorSpaceId][compID]            = uiSingleDistTmp;
               uiSingleComponentCbf[colorSpaceId][compID]             = uiSingleCbfTmp;
               cSingleComponentPredictionAlpha[colorSpaceId][compID]  = (crossCPredictionModeId != 0) ? pcCU->getCrossComponentPredictionAlpha(uiAbsPartIdx, compID) : 0;
               uiSingleComponentTransformMode[colorSpaceId][compID]   = transformSkipModeId;
@@ -2886,7 +2883,6 @@ TEncSearch::xRecurIntraCodingQTTUCSC( TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TCo
         dSingleCost                       = dSingleColorSpaceCost[colorSpaceId];
         uiSingleDist[CHANNEL_TYPE_LUMA]   = uiSingleColorSpaceDist[colorSpaceId][CHANNEL_TYPE_LUMA];
         uiSingleDist[CHANNEL_TYPE_CHROMA] = uiSingleColorSpaceDist[colorSpaceId][CHANNEL_TYPE_CHROMA];
-        uiSingleBits                      = uiSingleColorSpaceBits[colorSpaceId];
         uiSingleColorSpaceId              = colorSpaceId;
 
         xStoreIntraResultQT(COMPONENT_Y,  rTu, true);
@@ -8714,7 +8710,6 @@ Int TEncSearch::xIntraBCSearchMVChromaRefine( TComDataCU* pcCU,
   Pel* pOrg;
   Int iRefStride, iOrgStride;
   Int iWidth, iHeight;
-  Int iMvx, iMvy;
 
   Int iPicWidth = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
   Int iPicHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
@@ -8760,8 +8755,6 @@ Int TEncSearch::xIntraBCSearchMVChromaRefine( TComDataCU* pcCU,
       iOrgStride = pcCU->getPic()->getPicYuvOrg()->getStride(ComponentID(ch));
       iWidth = iRoiWidth >> pcCU->getPic()->getComponentScaleX(ComponentID(ch));
       iHeight = iRoiHeight >> pcCU->getPic()->getComponentScaleY(ComponentID(ch));
-      iMvx = cMVCand[iCand].getHor() >> pcCU->getPic()->getComponentScaleX(ComponentID(ch));
-      iMvy = cMVCand[iCand].getVer() >> pcCU->getPic()->getComponentScaleY(ComponentID(ch));
 
 #if SCM_IBC_CR_INTERPOLATION_ENABLE
       ComponentID compID = (ComponentID)ch;      
