@@ -166,7 +166,7 @@ Distortion xSearchHistogram(const std::vector<Int> &histogramSource,
   const Int minSearchWeight = std::max<Int>(initialWeight - weightRange, defaultWeight - range);
   const Int maxSearchWeight = std::min<Int>(initialWeight + weightRange+1, defaultWeight + range);
 
-  Distortion minDistortion   = std::numeric_limits<Int64>::max();
+  Distortion minDistortion   = std::numeric_limits<Distortion>::max();
   Int        bestWeight      = initialWeight;
   Int        bestOffset      = initialOffset;
 
