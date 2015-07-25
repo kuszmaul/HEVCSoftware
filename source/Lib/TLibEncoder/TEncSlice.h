@@ -97,7 +97,10 @@ private:
   UInt                    m_uiSliceIdx;
   TEncSbac                m_lastSliceSegmentEndContextState;    ///< context storage for state at the end of the previous slice-segment (used for dependent slices only).
   TEncSbac                m_entropyCodingSyncContextState;      ///< context storate for state of contexts at the wavefront/WPP/entropy-coding-sync second CTU of tile-row
+  PaletteInfoBuffer       m_lastSliceSegmentEndPaletteState;
+  PaletteInfoBuffer       m_entropyCodingSyncPaletteState;
   SliceType               m_encCABACTableIdx;
+  Int                     m_numIDRs, m_numFrames, m_refreshRate;
 
   Void     setUpLambda(TComSlice* slice, const Double dLambda, Int iQP);
   Void     calculateBoundingCtuTsAddrForSlice(UInt &startCtuTSAddrSlice, UInt &boundingCtuTSAddrSlice, Bool &haveReachedTileBoundary, TComPic* pcPic, const Int sliceMode, const Int sliceArgument);
@@ -129,9 +132,16 @@ public:
   Void    setSliceIdx(UInt i)   { m_uiSliceIdx = i;                       }
 
   SliceType getEncCABACTableIdx() const           { return m_encCABACTableIdx;        }
+  Void      setEncCABACTableIdx( SliceType idx )  { m_encCABACTableIdx = idx;         }
 
 private:
   Double  xGetQPValueAccordingToLambda ( Double lambda );
+  Void    xSetPredFromPPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT], TComSlice *pcSlice);
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+  Void    xSetPredFromSPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT], TComSlice *pcSlice);
+  Void    xSetPredDefault(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT], TComSlice *pcSlice);
+#endif
+
 };
 
 //! \}

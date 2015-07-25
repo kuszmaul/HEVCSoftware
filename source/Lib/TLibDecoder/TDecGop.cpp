@@ -153,6 +153,7 @@ Void TDecGop::filterPicture(TComPic* pcPic)
 
   pcPic->compressMotion();
   Char c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
+
   if (!pcSlice->isReferenced())
   {
     c += 32;
