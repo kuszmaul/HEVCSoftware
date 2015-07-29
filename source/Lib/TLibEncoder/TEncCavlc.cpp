@@ -66,7 +66,17 @@ Void  xTraceSliceHeader ()
 
 #endif
 
+Void AUDWriter::codeAUD(TComBitIf& bs, const Int pictureType)
+{
+#if ENC_DEC_TRACE
+  xTraceAccessUnitDelimiter();
+#endif
 
+  assert (pictureType < 3);
+  setBitstream(&bs);
+  WRITE_CODE(pictureType, 3, "pic_type");
+  xWriteRbspTrailingBits();
+}
 
 // ====================================================================================================================
 // Constructor / destructor / create / destroy

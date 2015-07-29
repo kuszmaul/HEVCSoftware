@@ -178,6 +178,17 @@ Int TEncGOP::xWriteParameterSets (AccessUnit &accessUnit, TComSlice *slice)
   return actualTotalBits;
 }
 
+Void TEncGOP::xWriteAccessUnitDelimiter (AccessUnit &accessUnit, TComSlice *slice)
+{
+  AUDWriter audWriter;
+  OutputNALUnit nalu(NAL_UNIT_ACCESS_UNIT_DELIMITER);
+
+  Int picType = slice->isIntra() ? 0 : (slice->isInterP() ? 1 : 2);
+
+  audWriter.codeAUD(nalu.m_Bitstream, picType);
+  accessUnit.push_front(new NALUnitEBSP(nalu));
+}
+
 // write SEI list into one NAL unit and add it to the Access unit at auPos
 Void TEncGOP::xWriteSEI (NalUnitType naluType, SEIMessages& seiMessages, AccessUnit &accessUnit, AccessUnit::iterator &auPos, Int temporalId, const TComSPS *sps)
 {
@@ -1477,6 +1488,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       xCreateIRAPLeadingSEIMessages(leadingSeiMessages, pcSlice->getSPS(), pcSlice->getPPS());
 
       m_bSeqFirst = false;
+    }
+    if (m_pcCfg->getAccessUnitDelimiter())
+    {
+      xWriteAccessUnitDelimiter(accessUnit, pcSlice);
     }
 
     // reset presence of BP SEI indication

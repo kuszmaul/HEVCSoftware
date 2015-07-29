@@ -142,6 +142,7 @@ protected:
 
   Int       m_aiPad[2];
 
+  Bool      m_AccessUnitDelimiter;               ///< add Access Unit Delimiter NAL units
 
   Int       m_iMaxRefPicNum;                     ///< this is used to mimic the sliding mechanism used by the decoder
                                                  // TODO: We need to have a common sliding mechanism used by both the encoder and decoder
@@ -525,6 +526,9 @@ public:
   Int       getQP                           ()      { return  m_iQP; }
 
   Int       getPad                          ( Int i )      { assert (i < 2 );                      return  m_aiPad[i]; }
+
+  Bool      getAccessUnitDelimiter() const  { return m_AccessUnitDelimiter; }
+  Void      setAccessUnitDelimiter(Bool val){ m_AccessUnitDelimiter = val; }
 
   //======== Transform =============
   UInt      getQuadtreeTULog2MaxSize        ()      const { return m_uiQuadtreeTULog2MaxSize; }

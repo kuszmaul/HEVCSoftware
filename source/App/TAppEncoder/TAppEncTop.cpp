@@ -129,6 +129,8 @@ Void TAppEncTop::xInitLibCfg()
 
   m_cTEncTop.setPad                                               ( m_aiPad );
 
+  m_cTEncTop.setAccessUnitDelimiter                               ( m_AccessUnitDelimiter );
+
   m_cTEncTop.setMaxTempLayer                                      ( m_maxTempLayer );
   m_cTEncTop.setUseAMP( m_enableAMP );
 
