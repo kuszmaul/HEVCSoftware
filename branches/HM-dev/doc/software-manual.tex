@@ -3,7 +3,11 @@
 \usepackage{geometry}[2010/02/12]
 
 \usepackage{hyperref}
-\hypersetup{colorlinks=true}
+\hypersetup{colorlinks=true,
+            linkcolor=black,      % color of internal links (change box color with linkbordercolor)
+            citecolor=black,      % color of links to bibliography
+            filecolor=black,      % color of file links
+            urlcolor=blue}
 \usepackage{color,soul}
 
 \usepackage[position=bottom]{subfig}
@@ -484,7 +488,7 @@ $K$ is the index of the RPS to be inter coded and the $M$ is the
 index of the reference RPS, as follows.
 
 \setlength{\algomargin}{2em}
-\begin{algorithm}[h]
+\begin{algorithm}[ht]
 \SetKwData{deltaRIdx}{deltaRIdx}
 \SetKwData{deltaRPS}{deltaRPS}
 \SetKwData{numrefidcs}{num_ref_idcs}
