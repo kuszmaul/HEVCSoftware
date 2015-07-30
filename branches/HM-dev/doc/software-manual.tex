@@ -1015,8 +1015,9 @@ Enables or disables the use of a fast motion search.
 \par
 \begin{tabular}{cp{0.45\textwidth}}
  0 & Full search method \\
- 1 & Fast search method \\
- 2 & Previous motion vector fast search method \\
+ 1 & Fast search method - TZSearch\\
+ 2 & Predictive motion vector fast search method \\
+ 3 & Extended TZSearch method \\
 \end{tabular}
 \\
 
@@ -1152,15 +1153,25 @@ Enables or disables the use of early skip detection.  When enabled, the skip mod
 
 \Option{FEN} &
 %\ShortOption{\None} &
-\Default{false} &
-Enables or disables the use of fast encoder mode.  When enabled,
-the following occurs:
-\begin{itemize}
-\item In the SAD computation for blocks having size larger than 8, only
-      the lines of even rows in the block are considered.
-\item The number of iterations used in the bi-directional motion vector
-      refinement in the motion estimation process is reduced from 4 to 1.
-\end{itemize}
+\Default{0} &
+Controls the use of different fast encoder coding tools.  The following
+tools are supported in different combinations:
+\par
+\begin{tabular}{cp{0.45\textwidth}}
+ a & In the SAD computation for blocks having size larger than 8, only
+     the lines of even rows in the block are considered. \\
+ b & The number of iterations used in the bi-directional motion vector
+     refinement in the motion estimation process is reduced from 4 to 1. \\
+\end{tabular}
+Depending on the value of the parameter, the following combinations are
+supported:
+\par
+\begin{tabular}{cp{0.45\textwidth}}
+ 0 & Disable all modes \\
+ 1 & Use both a \& b tools\\
+ 2 & Use only tool b \\
+ 3 & Use only tool a \\
+\end{tabular}
 \\
 
 \Option{FDM} &
@@ -1629,6 +1640,21 @@ Enables the use of weighted prediction in P slices.
 \Default{false} &
 Enables the use of weighted prediction in B slices.
 \\
+
+\Option{WPMethod (-wpM)} &
+%\ShortOption{\-wpM} &
+\Default{0} &
+Sets the Weighted Prediction method to be used.
+\par
+\begin{tabular}{cp{0.45\textwidth}}
+  0 & Image DC based method with joint color component decision. \\
+  1 & Image DC based method with separate color component decision. \\
+  2 & DC + Histogram refinement method (no clipping). \\
+  3 & DC + Histogram refinement method (with clipping). \\
+  4 & DC + Dual Histogram refinement method (with clipping). \\
+\end{tabular}
+\\
+
 
 \Option{Log2ParallelMergeLevel} &
 %\ShortOption{\None} &
