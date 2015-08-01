@@ -149,8 +149,7 @@ private:
   Pel*          m_piLastPLTInLcuFinal[MAX_NUM_COMPONENT]; ///< Palette
   UChar         m_uhLastPLTSizeFinal[MAX_NUM_COMPONENT];
   UChar         m_uhLastPLTUsedSizeFinal[MAX_NUM_COMPONENT];
-  Bool*         m_pbPLTScanRotationModeFlag;
-  Bool*         m_pbPLTScanTraverseModeFlag;
+  Bool*         m_pbPLTScanRotationModeFlag;  
   UChar*        m_piEscapeFlag[MAX_NUM_COMPONENT];
 
   // -------------------------------------------------------------------------------------------------------------------

@@ -131,8 +131,7 @@ private:
   Int                     m_iCostScale;
   Bool                    m_bRGBformat;
   Bool                    m_useColourTrans;
-  Bool                    m_useLL;
-  Bool                    m_usePaletteMode;
+  Bool                    m_useLL;  
 public:
   TComRdCost();
   virtual ~TComRdCost();
