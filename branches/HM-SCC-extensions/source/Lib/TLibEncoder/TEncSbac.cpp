@@ -908,7 +908,7 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
         uiYC = (uiY>>uiScaleX);
         uiTraIdxC = uiYC * (height>>uiScaleY) + uiXC;
       }
-
+#if !SCM_U0087_SWAP_ESC_ORDER_FIX
       if(   pcCU->getPic()->getChromaFormat() == CHROMA_444 ||
           ( pcCU->getPic()->getChromaFormat() == CHROMA_420 && ((uiX&1) == 0) && ((uiY&1) == 0)) ||
           ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiY&1) == 0))) )
@@ -918,6 +918,7 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
         for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
 #endif
         {
+#endif
           if ( comp == compBegin )
           {
 
@@ -936,6 +937,13 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
           }
           else
           {
+#if SCM_U0087_SWAP_ESC_ORDER_FIX
+            if(   pcCU->getPic()->getChromaFormat() == CHROMA_444 ||
+              ( pcCU->getPic()->getChromaFormat() == CHROMA_420 && ((uiX&1) == 0) && ((uiY&1) == 0)) ||
+              ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiY&1) == 0))) )
+              )
+            {
+#endif
 #if SCM_U0052_ESCAPE_PIXEL_CODING
             if ( isLossless )
             {
@@ -948,7 +956,11 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
 #else
             xWriteTruncBinCode( (UInt)pPixelValue[comp][uiTraIdxC], uiMaxVal[comp] + 1 );
 #endif
+#if SCM_U0087_SWAP_ESC_ORDER_FIX
           }
+#endif
+          }
+#if !SCM_U0087_SWAP_ESC_ORDER_FIX
         }
       }
       else
@@ -966,6 +978,7 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
         xWriteTruncBinCode( (UInt)pPixelValue[compBegin][uiTraIdx], uiMaxVal[compBegin] + 1 );
 #endif
       }
+#endif
     }
   }
 }

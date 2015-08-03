@@ -1035,6 +1035,7 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
         uiTraIdxC = uiYC * (uiHeight>>uiScaleY) + uiXC;  
       }
 
+#if !SCM_U0087_SWAP_ESC_ORDER_FIX
       if(   pcCU->getPic()->getChromaFormat() == CHROMA_444 ||
           ( pcCU->getPic()->getChromaFormat() == CHROMA_420 && ((uiX&1) == 0) && ((uiY&1) == 0)) ||
           ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiY&1) == 0))) )
@@ -1044,6 +1045,7 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
         for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
 #endif
         {
+#endif
           if(comp == compBegin)
           {
 #if SCM_U0052_ESCAPE_PIXEL_CODING
@@ -1062,6 +1064,13 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
           }
           else
           {
+#if SCM_U0087_SWAP_ESC_ORDER_FIX
+            if(   pcCU->getPic()->getChromaFormat() == CHROMA_444 ||
+              ( pcCU->getPic()->getChromaFormat() == CHROMA_420 && ((uiX&1) == 0) && ((uiY&1) == 0)) ||
+              ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiY&1) == 0))) )
+              )
+            {
+#endif
 #if SCM_U0052_ESCAPE_PIXEL_CODING
             if ( isLossless )
             {
@@ -1075,7 +1084,11 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
             xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
 #endif
             pPixelValue[comp][uiTraIdxC] = uiSymbol;
+#if SCM_U0087_SWAP_ESC_ORDER_FIX
           }
+#endif
+          }
+#if !SCM_U0087_SWAP_ESC_ORDER_FIX
         }
       }
       else
@@ -1094,6 +1107,7 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
 #endif
         pPixelValue[compBegin][uiTraIdx] = uiSymbol;
       }
+#endif
     }
   }
 }
