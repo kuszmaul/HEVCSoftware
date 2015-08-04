@@ -1467,27 +1467,28 @@ Void TEncCavlc::xCodeScalingList(const TComScalingList* scalingList, UInt sizeId
   Int nextCoef = SCALING_LIST_START_VALUE;
   Int data;
   const Int *src = scalingList->getScalingListAddress(sizeId, listId);
-    if( sizeId > SCALING_LIST_8x8 )
+  if( sizeId > SCALING_LIST_8x8 )
+  {
+    WRITE_SVLC( scalingList->getScalingListDC(sizeId,listId) - 8, "scaling_list_dc_coef_minus8");
+    nextCoef = scalingList->getScalingListDC(sizeId,listId);
+  }
+  for(Int i=0;i<coefNum;i++)
+  {
+    data = src[scan[i]] - nextCoef;
+    nextCoef = src[scan[i]];
+    if(data > 127)
     {
-      WRITE_SVLC( scalingList->getScalingListDC(sizeId,listId) - 8, "scaling_list_dc_coef_minus8");
-      nextCoef = scalingList->getScalingListDC(sizeId,listId);
+      data = data - 256;
     }
-    for(Int i=0;i<coefNum;i++)
+    if(data < -128)
     {
-      data = src[scan[i]] - nextCoef;
-      nextCoef = src[scan[i]];
-      if(data > 127)
-      {
-        data = data - 256;
-      }
-      if(data < -128)
-      {
-        data = data + 256;
-      }
+      data = data + 256;
+    }
 
-      WRITE_SVLC( data,  "scaling_list_delta_coef");
-    }
+    WRITE_SVLC( data,  "scaling_list_delta_coef");
+  }
 }
+
 Bool TEncCavlc::findMatchingLTRP ( TComSlice* pcSlice, UInt *ltrpsIndex, Int ltrpPOC, Bool usedFlag )
 {
   // Bool state = true, state2 = false;
