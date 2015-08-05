@@ -96,8 +96,8 @@ Void TComPicYuv::createWithoutCUInfo ( const Int picWidth,                 ///< 
   for(UInt comp=0; comp<getNumberValidComponents(); comp++)
   {
     const ComponentID ch=ComponentID(comp);
-    m_apiPicBuf[comp] = (Pel*)xMalloc( Pel, getStride(ch)       * getTotalHeight(ch));
-    m_piPicOrg[comp]  = m_apiPicBuf[comp] + (m_iMarginY >> getComponentScaleY(ch))   * getStride(ch)       + (m_iMarginX >> getComponentScaleX(ch));
+    m_apiPicBuf[comp] = (Pel*)xMalloc( Pel, getStride(ch) * getTotalHeight(ch));
+    m_piPicOrg[comp]  = m_apiPicBuf[comp] + (m_marginY >> getComponentScaleY(ch)) * getStride(ch) + (m_marginX >> getComponentScaleX(ch));
   }
   // initialize pointers for unused components to NULL
   for(UInt comp=getNumberValidComponents();comp<MAX_NUM_COMPONENT; comp++)
@@ -238,7 +238,7 @@ Void TComPicYuv::extendPicBorder ()
     const Int width=getWidth(compId);
     const Int height=getHeight(compId);
     const Int marginX=getMarginX(compId);
-    const Int marginY=getMarginY(compId;
+    const Int marginY=getMarginY(compId);
 
     Pel*  pi = piTxt;
     // do left and right margins
