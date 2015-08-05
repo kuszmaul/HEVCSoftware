@@ -94,6 +94,8 @@ static Void scalePlane(Pel* img, const UInt stride, const UInt width, const UInt
   }
 }
 
+static Void
+copyPlane(const TComPicYuv &src, const ComponentID srcPlane, TComPicYuv &dest, const ComponentID destPlane);
 
 // ====================================================================================================================
 // Public member functions
@@ -759,22 +761,14 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUser, const InputColourSpaceConversi
   TComPicYuv cPicYuvCSCd;
   if (ipCSC!=IPCOLOURSPACE_UNCHANGED)
   {
-    cPicYuvCSCd.create(pPicYuvUser->getWidth(COMPONENT_Y), pPicYuvUser->getHeight(COMPONENT_Y), pPicYuvUser->getChromaFormat(), pPicYuvUser->getWidth(COMPONENT_Y), pPicYuvUser->getHeight(COMPONENT_Y), 0, false);
+    cPicYuvCSCd.createWithoutCUInfo(pPicYuvUser->getWidth(COMPONENT_Y), pPicYuvUser->getHeight(COMPONENT_Y), pPicYuvUser->getChromaFormat() );
     ColourSpaceConvert(*pPicYuvUser, cPicYuvCSCd, ipCSC, false);
   }
   TComPicYuv *pPicYuv=(ipCSC==IPCOLOURSPACE_UNCHANGED) ? pPicYuvUser : &cPicYuvCSCd;
 
   // compute actual YUV frame size excluding padding size
-  const Int   iStride444 = pPicYuv->getStride(COMPONENT_Y);
-  const UInt width444  = pPicYuv->getWidth(COMPONENT_Y) - confLeft - confRight;
-  const UInt height444 = pPicYuv->getHeight(COMPONENT_Y) -  confTop  - confBottom;
   Bool is16bit = false;
   Bool nonZeroBitDepthShift=false;
-
-  if ((width444 == 0) || (height444 == 0))
-  {
-    printf ("\nWarning: writing %d x %d luma sample output picture!", width444, height444);
-  }
 
   for(UInt ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
   {
@@ -798,8 +792,7 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUser, const InputColourSpaceConversi
   if (nonZeroBitDepthShift)
   {
     dstPicYuv = new TComPicYuv;
-    dstPicYuv->create( pPicYuv->getWidth(COMPONENT_Y), pPicYuv->getHeight(COMPONENT_Y), pPicYuv->getChromaFormat(), pPicYuv->getWidth(COMPONENT_Y), pPicYuv->getHeight(COMPONENT_Y), 0, false );
-    pPicYuv->copyToPic(dstPicYuv);
+    dstPicYuv->createWithoutCUInfo( pPicYuv->getWidth(COMPONENT_Y), pPicYuv->getHeight(COMPONENT_Y), pPicYuv->getChromaFormat() );
 
     for(UInt comp=0; comp<dstPicYuv->getNumberValidComponents(); comp++)
     {
@@ -809,6 +802,7 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUser, const InputColourSpaceConversi
       const Pel minval = b709Compliance? ((   1 << (m_MSBExtendedBitDepth[ch] - 8))   ) : 0;
       const Pel maxval = b709Compliance? ((0xff << (m_MSBExtendedBitDepth[ch] - 8)) -1) : (1 << m_MSBExtendedBitDepth[ch]) - 1;
 
+      copyPlane(*pPicYuv, compID, *dstPicYuv, compID);
       scalePlane(dstPicYuv->getAddr(compID), dstPicYuv->getStride(compID), dstPicYuv->getWidth(compID), dstPicYuv->getHeight(compID), -m_bitdepthShift[ch], minval, maxval);
     }
   }
@@ -817,14 +811,23 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUser, const InputColourSpaceConversi
     dstPicYuv = pPicYuv;
   }
 
+  const Int  stride444 = dstPicYuv->getStride(COMPONENT_Y);
+  const UInt width444  = dstPicYuv->getWidth(COMPONENT_Y) - confLeft - confRight;
+  const UInt height444 = dstPicYuv->getHeight(COMPONENT_Y) -  confTop  - confBottom;
+
+  if ((width444 == 0) || (height444 == 0))
+  {
+    printf ("\nWarning: writing %d x %d luma sample output picture!", width444, height444);
+  }
+
   for(UInt comp=0; retval && comp<dstPicYuv->getNumberValidComponents(); comp++)
   {
     const ComponentID compID = ComponentID(comp);
     const ChannelType ch=toChannelType(compID);
-    const UInt csx = pPicYuv->getComponentScaleX(compID);
-    const UInt csy = pPicYuv->getComponentScaleY(compID);
-    const Int planeOffset =  (confLeft>>csx) + (confTop>>csy) * pPicYuv->getStride(compID);
-    if (! writePlane(m_cHandle, dstPicYuv->getAddr(compID) + planeOffset, is16bit, iStride444, width444, height444, compID, dstPicYuv->getChromaFormat(), format, m_fileBitdepth[ch]))
+    const UInt csx = dstPicYuv->getComponentScaleX(compID);
+    const UInt csy = dstPicYuv->getComponentScaleY(compID);
+    const Int planeOffset =  (confLeft>>csx) + (confTop>>csy) * dstPicYuv->getStride(compID);
+    if (! writePlane(m_cHandle, dstPicYuv->getAddr(compID) + planeOffset, is16bit, stride444, width444, height444, compID, dstPicYuv->getChromaFormat(), format, m_fileBitdepth[ch]))
     {
       retval=false;
     }
@@ -848,8 +851,8 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUserTop, TComPicYuv* pPicYuvUserBott
   TComPicYuv cPicYuvBottomCSCd;
   if (ipCSC!=IPCOLOURSPACE_UNCHANGED)
   {
-    cPicYuvTopCSCd   .create(pPicYuvUserTop   ->getWidth(COMPONENT_Y), pPicYuvUserTop   ->getHeight(COMPONENT_Y), pPicYuvUserTop   ->getChromaFormat(), pPicYuvUserTop   ->getWidth(COMPONENT_Y), pPicYuvUserTop   ->getHeight(COMPONENT_Y), 0, false);
-    cPicYuvBottomCSCd.create(pPicYuvUserBottom->getWidth(COMPONENT_Y), pPicYuvUserBottom->getHeight(COMPONENT_Y), pPicYuvUserBottom->getChromaFormat(), pPicYuvUserBottom->getWidth(COMPONENT_Y), pPicYuvUserBottom->getHeight(COMPONENT_Y), 0, false);
+    cPicYuvTopCSCd   .createWithoutCUInfo(pPicYuvUserTop   ->getWidth(COMPONENT_Y), pPicYuvUserTop   ->getHeight(COMPONENT_Y), pPicYuvUserTop   ->getChromaFormat() );
+    cPicYuvBottomCSCd.createWithoutCUInfo(pPicYuvUserBottom->getWidth(COMPONENT_Y), pPicYuvUserBottom->getHeight(COMPONENT_Y), pPicYuvUserBottom->getChromaFormat() );
     ColourSpaceConvert(*pPicYuvUserTop,    cPicYuvTopCSCd,    ipCSC, false);
     ColourSpaceConvert(*pPicYuvUserBottom, cPicYuvBottomCSCd, ipCSC, false);
   }
@@ -888,8 +891,7 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUserTop, TComPicYuv* pPicYuvUserBott
     if (nonZeroBitDepthShift)
     {
       dstPicYuv = new TComPicYuv;
-      dstPicYuv->create( pPicYuv->getWidth(COMPONENT_Y), pPicYuv->getHeight(COMPONENT_Y), pPicYuv->getChromaFormat(), pPicYuv->getWidth(COMPONENT_Y), pPicYuv->getHeight(COMPONENT_Y), 0, false );
-      pPicYuv->copyToPic(dstPicYuv);
+      dstPicYuv->createWithoutCUInfo( pPicYuv->getWidth(COMPONENT_Y), pPicYuv->getHeight(COMPONENT_Y), pPicYuv->getChromaFormat() );
 
       for(UInt comp=0; comp<dstPicYuv->getNumberValidComponents(); comp++)
       {
@@ -899,6 +901,7 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUserTop, TComPicYuv* pPicYuvUserBott
         const Pel minval = b709Compliance? ((   1 << (m_MSBExtendedBitDepth[ch] - 8))   ) : 0;
         const Pel maxval = b709Compliance? ((0xff << (m_MSBExtendedBitDepth[ch] - 8)) -1) : (1 << m_MSBExtendedBitDepth[ch]) - 1;
 
+        copyPlane(*pPicYuv, compID, *dstPicYuv, compID);
         scalePlane(dstPicYuv->getAddr(compID), dstPicYuv->getStride(compID), dstPicYuv->getWidth(compID), dstPicYuv->getHeight(compID), -m_bitdepthShift[ch], minval, maxval);
       }
     }
@@ -912,15 +915,14 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuvUserTop, TComPicYuv* pPicYuvUserBott
 
   assert(dstPicYuvTop->getNumberValidComponents() == dstPicYuvBottom->getNumberValidComponents());
   assert(dstPicYuvTop->getChromaFormat()          == dstPicYuvBottom->getChromaFormat()         );
-  assert(dstPicYuvTop->getWidth(COMPONENT_Y)      == dstPicYuvBottom->getWidth(COMPONENT_Y)    );
-  assert(dstPicYuvTop->getHeight(COMPONENT_Y)     == dstPicYuvBottom->getHeight(COMPONENT_Y)    );
-  assert(dstPicYuvTop->getStride(COMPONENT_Y)     == dstPicYuvBottom->getStride(COMPONENT_Y)    );
 
   for(UInt comp=0; retval && comp<dstPicYuvTop->getNumberValidComponents(); comp++)
   {
     const ComponentID compID = ComponentID(comp);
     const ChannelType ch=toChannelType(compID);
 
+    assert(dstPicYuvTop->getWidth          (compID) == dstPicYuvBottom->getWidth          (compID));
+    assert(dstPicYuvTop->getHeight         (compID) == dstPicYuvBottom->getHeight         (compID));
     assert(dstPicYuvTop->getComponentScaleX(compID) == dstPicYuvBottom->getComponentScaleX(compID));
     assert(dstPicYuvTop->getComponentScaleY(compID) == dstPicYuvBottom->getComponentScaleY(compID));
     assert(dstPicYuvTop->getStride         (compID) == dstPicYuvBottom->getStride         (compID));
