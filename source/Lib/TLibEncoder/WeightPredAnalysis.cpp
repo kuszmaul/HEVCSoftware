@@ -215,6 +215,14 @@ Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *const slice, const Int
       slice->getWpAcDcParam(currWeightACDCParam);
       slice->getRefPic(eRefPicList, refIdxTemp)->getSlice(0)->getWpAcDcParam(refWeightACDCParam);
 
+#if SCM_U0104_DIS_WP_IBC
+#if SCM_U0083_U0079_IBC_SIGNAL_PPS
+      if( !slice->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() || (slice->getRefPic((RefPicList)refList, refIdxTemp)->getPOC() != slice->getPOC()) )
+#else
+      if( !slice->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() || (slice->getRefPic((RefPicList)refList, refIdxTemp)->getPOC() != slice->getPOC()) )
+#endif
+      {
+#endif
       for ( Int comp = 0; comp < numComp; comp++ )
       {
         const ComponentID compID        = ComponentID(comp);
@@ -262,6 +270,9 @@ Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *const slice, const Int
         m_wp[refList][refIdxTemp][comp].iOffset           = clippedOffset;
         m_wp[refList][refIdxTemp][comp].uiLog2WeightDenom = log2Denom;
       }
+#if SCM_U0104_DIS_WP_IBC
+      }
+#endif
     }
   }
   return true;
@@ -284,6 +295,24 @@ Bool WeightPredAnalysis::xSelectWP(TComSlice *const slice, const Int log2Denom)
 
     for ( Int iRefIdxTemp = 0; iRefIdxTemp < slice->getNumRefIdx(eRefPicList); iRefIdxTemp++ )
     {
+#if SCM_U0104_DIS_WP_IBC
+#if SCM_U0083_U0079_IBC_SIGNAL_PPS
+      if( slice->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() && (slice->getRefPic((RefPicList)iRefList, iRefIdxTemp)->getPOC() == slice->getPOC()) )
+#else
+      if( slice->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && (slice->getRefPic((RefPicList)iRefList, iRefIdxTemp)->getPOC() == slice->getPOC()) )
+#endif
+      {
+        for(Int comp=0; comp<pPic->getNumberValidComponents(); comp++)
+        {
+          m_wp[iRefList][iRefIdxTemp][comp].bPresentFlag      = false;
+          m_wp[iRefList][iRefIdxTemp][comp].iOffset           = 0;
+          m_wp[iRefList][iRefIdxTemp][comp].iWeight           = iDefaultWeight;
+          m_wp[iRefList][iRefIdxTemp][comp].uiLog2WeightDenom = log2Denom;
+        }
+      }
+      else
+      {
+#endif
       Int64 iSADWP = 0, iSADnoWP = 0;
 
       for(Int comp=0; comp<pPic->getNumberValidComponents(); comp++)
@@ -313,6 +342,9 @@ Bool WeightPredAnalysis::xSelectWP(TComSlice *const slice, const Int log2Denom)
           m_wp[iRefList][iRefIdxTemp][comp].uiLog2WeightDenom = log2Denom;
         }
       }
+#if SCM_U0104_DIS_WP_IBC
+      }
+#endif
     }
   }
 

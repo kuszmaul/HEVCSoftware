@@ -142,6 +142,22 @@ public:
     return (m_iHor!=rcMv.m_iHor || m_iVer!=rcMv.m_iVer);
   }
 
+#if SCM_AMVR_UNIFICATION
+   TComMv& operator>> (const Int i)
+  {
+    m_iHor >>= i;
+    m_iVer >>= i;
+    return  *this;
+  }
+
+   TComMv& operator<< (const Int i)
+  {
+    m_iHor <<= i;
+    m_iVer <<= i;
+    return  *this;
+  }
+#endif 
+
   const TComMv scaleMv( Int iScale ) const
   {
     Int mvx = Clip3( -32768, 32767, (iScale * getHor() + 127 + (iScale * getHor() < 0)) >> 8 );

@@ -60,13 +60,15 @@ TComPic::TComPic()
   {
     m_apcPicYuv[i]      = NULL;
   }
+  m_apcPicYuvCSC = NULL;
 }
 
 TComPic::~TComPic()
 {
 }
 
-Void TComPic::create( const TComSPS &sps, const TComPPS &pps, const Bool bIsVirtual)
+Void TComPic::create( const TComSPS &sps, const TComPPS &pps,
+                      UInt uiPLTMaxSize, UInt uiPLTMaxPredSize, const Bool bIsVirtual )
 {
   const ChromaFormat chromaFormatIDC = sps.getChromaFormatIdc();
   const Int          iWidth          = sps.getPicWidthInLumaSamples();
@@ -75,7 +77,7 @@ Void TComPic::create( const TComSPS &sps, const TComPPS &pps, const Bool bIsVirt
   const UInt         uiMaxCuHeight   = sps.getMaxCUHeight();
   const UInt         uiMaxDepth      = sps.getMaxTotalCUDepth();
 
-  m_picSym.create( sps, pps, uiMaxDepth );
+  m_picSym.create( sps, pps, uiMaxDepth, uiPLTMaxSize, uiPLTMaxPredSize );
   if (!bIsVirtual)
   {
     m_apcPicYuv[PIC_YUV_ORG    ]   = new TComPicYuv;  m_apcPicYuv[PIC_YUV_ORG     ]->create( iWidth, iHeight, chromaFormatIDC, uiMaxCuWidth, uiMaxCuHeight, uiMaxDepth, true );
@@ -89,6 +91,7 @@ Void TComPic::create( const TComSPS &sps, const TComPPS &pps, const Bool bIsVirt
     deleteSEIs (m_SEIs);
   }
   m_bUsedByCurr = false;
+  m_hashMap.clearAll();
 }
 
 Void TComPic::destroy()
@@ -103,6 +106,14 @@ Void TComPic::destroy()
       delete m_apcPicYuv[i];
       m_apcPicYuv[i]  = NULL;
     }
+  }
+
+  m_hashMap.clearAll();
+  if (m_apcPicYuvCSC)
+  {
+    m_apcPicYuvCSC->destroy();
+    delete m_apcPicYuvCSC;
+    m_apcPicYuvCSC = NULL;
   }
 
   deleteSEIs(m_SEIs);
@@ -162,5 +173,16 @@ UInt TComPic::getSubstreamForCtuAddr(const UInt ctuAddr, const Bool bAddressInRa
   return subStrm;
 }
 
+Void TComPic::addPictureToHashMapForInter()
+{
+  Int picWidth = getSlice( 0 )->getSPS()->getPicWidthInLumaSamples();
+  Int picHeight = getSlice( 0 )->getSPS()->getPicHeightInLumaSamples();
+
+  m_hashMap.create();
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 8, 8, getSlice( 0 )->getSPS()->getBitDepths() );
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 16, 16, getSlice( 0 )->getSPS()->getBitDepths() );
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 32, 32, getSlice( 0 )->getSPS()->getBitDepths() );
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 64, 64, getSlice( 0 )->getSPS()->getBitDepths() );
+}
 
 //! \}
