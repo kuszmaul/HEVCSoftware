@@ -1764,6 +1764,25 @@ Rate control: initial QP value for the first picture.
 \Default{false} &
 Rate control: force intra QP to be equal to initial QP or not.
 \\
+
+\Option{RCCpbSaturation} &
+%\ShortOption{\None} &
+\Default{false} &
+Rate control: enable target bits saturation to avoid CPB overflow and underflow or not.
+\\
+
+\Option{RCCpbSize} &
+%\ShortOption{\None} &
+\Default{0} &
+Rate control: CPB size, in bps.
+\\
+
+\Option{RCInitialCpbFullness} &
+%\ShortOption{\None} &
+\Default{0.9} &
+Rate control: ratio of initial CPB fullness per CPB size. (InitalCpbFullness/CpbSize)
+RCInitialCpbFullness should be smaller than or equal to 1.
+\\
 \end{OptionTableNoShorthand}
 
 %%
