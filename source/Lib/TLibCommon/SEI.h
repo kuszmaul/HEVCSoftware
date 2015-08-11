@@ -82,7 +82,7 @@ public:
     MASTERING_DISPLAY_COLOUR_VOLUME      = 137,
     SEGM_RECT_FRAME_PACKING              = 138,
     TEMP_MOTION_CONSTRAINED_TILE_SETS    = 139,
-    CHROMA_SAMPLING_FILTER_HINT          = 140,
+    CHROMA_RESAMPLING_FILTER_HINT        = 140,
     KNEE_FUNCTION_INFO                   = 141
   };
 
@@ -419,43 +419,20 @@ public:
   std::vector<Int> m_kneeOutputKneePoint;
 };
 
-class SEIChromaSamplingFilterHint : public SEI
+class SEIChromaResamplingFilterHint : public SEI
 {
 public:
-  PayloadType payloadType() const {return CHROMA_SAMPLING_FILTER_HINT;}
-  SEIChromaSamplingFilterHint() {}
-  virtual ~SEIChromaSamplingFilterHint() {
-    if(m_verChromaFilterIdc == 1)
-    {
-      for(Int i = 0; i < m_numVerticalFilters; i ++)
-      {
-        free(m_verFilterCoeff[i]);
-      }
-      free(m_verFilterCoeff);
-      free(m_verTapLengthMinus1);
-    }
-    if(m_horChromaFilterIdc == 1)
-    {
-      for(Int i = 0; i < m_numHorizontalFilters; i ++)
-      {
-        free(m_horFilterCoeff[i]);
-      }
-      free(m_horFilterCoeff);
-      free(m_horTapLengthMinus1);
-    }
-  }
+  PayloadType payloadType() const {return CHROMA_RESAMPLING_FILTER_HINT;}
+  SEIChromaResamplingFilterHint() {}
+  virtual ~SEIChromaResamplingFilterHint() {}
 
-  Int   m_verChromaFilterIdc;
-  Int   m_horChromaFilterIdc;
-  Bool  m_verFilteringProcessFlag;
-  Int   m_targetFormatIdc;
-  Bool  m_perfectReconstructionFlag;
-  Int   m_numVerticalFilters;
-  Int*  m_verTapLengthMinus1;
-  Int** m_verFilterCoeff;
-  Int   m_numHorizontalFilters;
-  Int*  m_horTapLengthMinus1;
-  Int** m_horFilterCoeff;
+  Int                            m_verChromaFilterIdc;
+  Int                            m_horChromaFilterIdc;
+  Bool                           m_verFilteringFieldProcessingFlag;
+  Int                            m_targetFormatIdc;
+  Bool                           m_perfectReconstructionFlag;
+  std::vector<std::vector<Int> > m_verFilterCoeff;
+  std::vector<std::vector<Int> > m_horFilterCoeff;
 };
 
 class SEIMasteringDisplayColourVolume : public SEI

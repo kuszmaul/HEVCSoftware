@@ -255,9 +255,9 @@ protected:
   Int       m_bufferingPeriodSEIEnabled;
   Int       m_pictureTimingSEIEnabled;
   Bool      m_toneMappingInfoSEIEnabled;
-  Bool      m_chromaSamplingFilterSEIenabled;
-  Int       m_chromaSamplingHorFilterIdc;
-  Int       m_chromaSamplingVerFilterIdc;
+  Bool      m_chromaResamplingFilterSEIenabled;
+  Int       m_chromaResamplingHorFilterIdc;
+  Int       m_chromaResamplingVerFilterIdc;
   Int       m_toneMapId;
   Bool      m_toneMapCancelFlag;
   Bool      m_toneMapPersistenceFlag;

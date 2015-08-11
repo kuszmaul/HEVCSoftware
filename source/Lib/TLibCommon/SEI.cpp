@@ -147,7 +147,7 @@ const Char *SEI::getSEIMessageString(SEI::PayloadType payloadType)
     case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:      return "Mastering display colour volume";
     case SEI::SEGM_RECT_FRAME_PACKING:              return "Segmented rectangular frame packing arrangement";
     case SEI::TEMP_MOTION_CONSTRAINED_TILE_SETS:    return "Temporal motion constrained tile sets";
-    case SEI::CHROMA_SAMPLING_FILTER_HINT:          return "Chroma sampling filter hint";
+    case SEI::CHROMA_RESAMPLING_FILTER_HINT:        return "Chroma sampling filter hint";
     default:                                        return "Unknown";
   }
 }

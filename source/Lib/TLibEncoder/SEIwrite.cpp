@@ -105,8 +105,8 @@ Void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, const TComSP
   case SEI::SCALABLE_NESTING:
     xWriteSEIScalableNesting(bs, *static_cast<const SEIScalableNesting*>(&sei), sps);
     break;
-  case SEI::CHROMA_SAMPLING_FILTER_HINT:
-    xWriteSEIChromaSamplingFilterHint(*static_cast<const SEIChromaSamplingFilterHint*>(&sei)/*, sps*/);
+  case SEI::CHROMA_RESAMPLING_FILTER_HINT:
+    xWriteSEIChromaResamplingFilterHint(*static_cast<const SEIChromaResamplingFilterHint*>(&sei));
     break;
   case SEI::TEMP_MOTION_CONSTRAINED_TILE_SETS:
     xWriteSEITempMotionConstrainedTileSets(*static_cast<const SEITempMotionConstrainedTileSets*>(&sei));
@@ -121,7 +121,7 @@ Void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, const TComSP
     xWriteSEIMasteringDisplayColourVolume(*static_cast<const SEIMasteringDisplayColourVolume*>(&sei));
     break;
   default:
-    assert(!"Unhandled SEI message");
+    assert(!"Trying to write unhandled SEI message");
     break;
   }
   xWriteByteAlign();
@@ -658,82 +658,45 @@ Void SEIWriter::xWriteSEITimeCode(const SEITimeCode& sei)
   }
 }
 
-Void SEIWriter::xWriteSEIChromaSamplingFilterHint(const SEIChromaSamplingFilterHint &sei/*, TComSPS* sps*/)
+Void SEIWriter::xWriteSEIChromaResamplingFilterHint(const SEIChromaResamplingFilterHint &sei)
 {
   WRITE_CODE(sei.m_verChromaFilterIdc, 8, "ver_chroma_filter_idc");
   WRITE_CODE(sei.m_horChromaFilterIdc, 8, "hor_chroma_filter_idc");
-  WRITE_FLAG(sei.m_verFilteringProcessFlag, "ver_filtering_process_flag");
+  WRITE_FLAG(sei.m_verFilteringFieldProcessingFlag, "ver_filtering_field_processing_flag");
   if(sei.m_verChromaFilterIdc == 1 || sei.m_horChromaFilterIdc == 1)
   {
-    writeUserDefinedCoefficients(sei);
-  }
-}
-
-// write hardcoded chroma filter coefficients in the SEI messages
-Void SEIWriter::writeUserDefinedCoefficients(const SEIChromaSamplingFilterHint &sei)
-{
-  Int const iNumVerticalFilters = 3;
-  Int verticalTapLength_minus1[iNumVerticalFilters] = {5,3,3};
-  Int* userVerticalCoefficients[iNumVerticalFilters];
-  for(Int i = 0; i < iNumVerticalFilters; i ++)
-  {
-    userVerticalCoefficients[i] = (Int*)malloc( (verticalTapLength_minus1[i]+1) * sizeof(Int));
-  }
-  userVerticalCoefficients[0][0] = -3;
-  userVerticalCoefficients[0][1] = 13;
-  userVerticalCoefficients[0][2] = 31;
-  userVerticalCoefficients[0][3] = 23;
-  userVerticalCoefficients[0][4] = 3;
-  userVerticalCoefficients[0][5] = -3;
-
-  userVerticalCoefficients[1][0] = -1;
-  userVerticalCoefficients[1][1] = 25;
-  userVerticalCoefficients[1][2] = 247;
-  userVerticalCoefficients[1][3] = -15;
-
-  userVerticalCoefficients[2][0] = -20;
-  userVerticalCoefficients[2][1] = 186;
-  userVerticalCoefficients[2][2] = 100;
-  userVerticalCoefficients[2][3] = -10;
-  
-  Int const iNumHorizontalFilters = 1;
-  Int horizontalTapLength_minus1[iNumHorizontalFilters] = {3};
-  Int* userHorizontalCoefficients[iNumHorizontalFilters];
-  for(Int i = 0; i < iNumHorizontalFilters; i ++)
-  {
-    userHorizontalCoefficients[i] = (Int*)malloc( (horizontalTapLength_minus1[i]+1) * sizeof(Int));
-  }
-  userHorizontalCoefficients[0][0] = 1;
-  userHorizontalCoefficients[0][1] = 6;
-  userHorizontalCoefficients[0][2] = 1;
-
-  WRITE_UVLC(3, "target_format_idc");
-  if(sei.m_verChromaFilterIdc == 1)
-  {
-    WRITE_UVLC(iNumVerticalFilters, "num_vertical_filters");
-    if(iNumVerticalFilters > 0)
+    WRITE_UVLC(sei.m_targetFormatIdc, "target_format_idc");
+    if(sei.m_verChromaFilterIdc == 1)
     {
-      for(Int i = 0; i < iNumVerticalFilters; i ++)
+      const Int numVerticalFilter = (Int)sei.m_verFilterCoeff.size();
+      WRITE_UVLC(numVerticalFilter, "num_vertical_filters");
+      if(numVerticalFilter > 0)
       {
-        WRITE_UVLC(verticalTapLength_minus1[i], "ver_tap_length_minus_1");
-        for(Int j = 0; j < verticalTapLength_minus1[i]; j ++)
+        for(Int i = 0; i < numVerticalFilter; i ++)
         {
-          WRITE_SVLC(userVerticalCoefficients[i][j], "ver_filter_coeff");
+          const Int verTapLengthMinus1 = (Int) sei.m_verFilterCoeff[i].size() - 1;
+          WRITE_UVLC(verTapLengthMinus1, "ver_tap_length_minus_1");
+          for(Int j = 0; j < (verTapLengthMinus1 + 1); j ++)
+          {
+            WRITE_SVLC(sei.m_verFilterCoeff[i][j], "ver_filter_coeff");
+          }
         }
       }
     }
-  }
-  if(sei.m_horChromaFilterIdc == 1)
-  {
-    WRITE_UVLC(iNumHorizontalFilters, "num_horizontal_filters");
-    if(iNumHorizontalFilters > 0)
+    if(sei.m_horChromaFilterIdc == 1)
     {
-      for(Int i = 0; i < iNumHorizontalFilters; i ++)
+      const Int numHorizontalFilter = (Int) sei.m_horFilterCoeff.size();
+      WRITE_UVLC(numHorizontalFilter, "num_horizontal_filters");
+      if(numHorizontalFilter > 0)
       {
-        WRITE_UVLC(horizontalTapLength_minus1[i], "hor_tap_length_minus_1");
-        for(Int j = 0; j < horizontalTapLength_minus1[i]; j ++)
+        for(Int i = 0; i < numHorizontalFilter; i ++)
         {
-          WRITE_SVLC(userHorizontalCoefficients[i][j], "hor_filter_coeff");
+          const Int horTapLengthMinus1 = (Int) sei.m_horFilterCoeff[i].size() - 1;
+          WRITE_UVLC(horTapLengthMinus1, "hor_tap_length_minus_1");
+          for(Int j = 0; j < (horTapLengthMinus1 + 1); j ++)
+          {
+            WRITE_SVLC(sei.m_horFilterCoeff[i][j], "hor_filter_coeff");
+          }
         }
       }
     }

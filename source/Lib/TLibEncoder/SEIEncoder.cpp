@@ -397,57 +397,68 @@ Void SEIEncoder::initSEIKneeFunctionInfo(SEIKneeFunctionInfo *seiKneeFunctionInf
   }
 }
 
-Void SEIEncoder::initSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint *seiChromaSamplingFilterHint, Int iHorFilterIndex, Int iVerFilterIndex)
+Void SEIEncoder::initSEIChromaResamplingFilterHint(SEIChromaResamplingFilterHint *seiChromaResamplingFilterHint, Int iHorFilterIndex, Int iVerFilterIndex)
 {
   assert (m_isInitialized);
-  assert (seiChromaSamplingFilterHint!=NULL);
+  assert (seiChromaResamplingFilterHint!=NULL);
 
-  seiChromaSamplingFilterHint->m_verChromaFilterIdc = iVerFilterIndex;
-  seiChromaSamplingFilterHint->m_horChromaFilterIdc = iHorFilterIndex;
-  seiChromaSamplingFilterHint->m_verFilteringProcessFlag = 1;
-  seiChromaSamplingFilterHint->m_targetFormatIdc = 3;
-  seiChromaSamplingFilterHint->m_perfectReconstructionFlag = false;
-  if(seiChromaSamplingFilterHint->m_verChromaFilterIdc == 1)
+  seiChromaResamplingFilterHint->m_verChromaFilterIdc = iVerFilterIndex;
+  seiChromaResamplingFilterHint->m_horChromaFilterIdc = iHorFilterIndex;
+  seiChromaResamplingFilterHint->m_verFilteringFieldProcessingFlag = 1;
+  seiChromaResamplingFilterHint->m_targetFormatIdc = 3;
+  seiChromaResamplingFilterHint->m_perfectReconstructionFlag = false;
+
+  // this creates some example filter values, if explicit filter definition is selected
+  if (seiChromaResamplingFilterHint->m_verChromaFilterIdc == 1)
   {
-    seiChromaSamplingFilterHint->m_numVerticalFilters = 1;
-    seiChromaSamplingFilterHint->m_verTapLengthMinus1 = (Int*)malloc(seiChromaSamplingFilterHint->m_numVerticalFilters * sizeof(Int));
-    seiChromaSamplingFilterHint->m_verFilterCoeff =    (Int**)malloc(seiChromaSamplingFilterHint->m_numVerticalFilters * sizeof(Int*));
-    for(Int i = 0; i < seiChromaSamplingFilterHint->m_numVerticalFilters; i ++)
+    const Int numVerticalFilters = 3;
+    const Int verTapLengthMinus1[] = {5,3,3};
+
+    seiChromaResamplingFilterHint->m_verFilterCoeff.resize(numVerticalFilters);
+    for(Int i = 0; i < numVerticalFilters; i ++)
     {
-      seiChromaSamplingFilterHint->m_verTapLengthMinus1[i] = 0;
-      seiChromaSamplingFilterHint->m_verFilterCoeff[i] = (Int*)malloc(seiChromaSamplingFilterHint->m_verTapLengthMinus1[i] * sizeof(Int));
-      for(Int j = 0; j < seiChromaSamplingFilterHint->m_verTapLengthMinus1[i]; j ++)
-      {
-        seiChromaSamplingFilterHint->m_verFilterCoeff[i][j] = 0;
-      }
+      seiChromaResamplingFilterHint->m_verFilterCoeff[i].resize(verTapLengthMinus1[i]+1);
     }
+    // Note: C++11 -> seiChromaResamplingFilterHint->m_verFilterCoeff[0] = {-3,13,31,23,3,-3};
+    seiChromaResamplingFilterHint->m_verFilterCoeff[0][0] = -3;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[0][1] = 13;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[0][2] = 31;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[0][3] = 23;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[0][4] = 3;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[0][5] = -3;
+
+    seiChromaResamplingFilterHint->m_verFilterCoeff[1][0] = -1;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[1][1] = 25;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[1][2] = 247;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[1][3] = -15;
+
+    seiChromaResamplingFilterHint->m_verFilterCoeff[2][0] = -20;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[2][1] = 186;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[2][2] = 100;
+    seiChromaResamplingFilterHint->m_verFilterCoeff[2][3] = -10;
   }
   else
   {
-    seiChromaSamplingFilterHint->m_numVerticalFilters = 0;
-    seiChromaSamplingFilterHint->m_verTapLengthMinus1 = NULL;
-    seiChromaSamplingFilterHint->m_verFilterCoeff = NULL;
+    seiChromaResamplingFilterHint->m_verFilterCoeff.resize(0);
   }
-  if(seiChromaSamplingFilterHint->m_horChromaFilterIdc == 1)
+
+  if (seiChromaResamplingFilterHint->m_horChromaFilterIdc == 1)
   {
-    seiChromaSamplingFilterHint->m_numHorizontalFilters = 1;
-    seiChromaSamplingFilterHint->m_horTapLengthMinus1 = (Int*)malloc(seiChromaSamplingFilterHint->m_numHorizontalFilters * sizeof(Int));
-    seiChromaSamplingFilterHint->m_horFilterCoeff = (Int**)malloc(seiChromaSamplingFilterHint->m_numHorizontalFilters * sizeof(Int*));
-    for(Int i = 0; i < seiChromaSamplingFilterHint->m_numHorizontalFilters; i ++)
+    Int const numHorizontalFilters = 1;
+    const Int horTapLengthMinus1[] = {3};
+
+    seiChromaResamplingFilterHint->m_horFilterCoeff.resize(numHorizontalFilters);
+    for(Int i = 0; i < numHorizontalFilters; i ++)
     {
-      seiChromaSamplingFilterHint->m_horTapLengthMinus1[i] = 0;
-      seiChromaSamplingFilterHint->m_horFilterCoeff[i] = (Int*)malloc(seiChromaSamplingFilterHint->m_horTapLengthMinus1[i] * sizeof(Int));
-      for(Int j = 0; j < seiChromaSamplingFilterHint->m_horTapLengthMinus1[i]; j ++)
-      {
-        seiChromaSamplingFilterHint->m_horFilterCoeff[i][j] = 0;
-      }
+      seiChromaResamplingFilterHint->m_horFilterCoeff[i].resize(horTapLengthMinus1[i]+1);
     }
+    seiChromaResamplingFilterHint->m_horFilterCoeff[0][0] = 1;
+    seiChromaResamplingFilterHint->m_horFilterCoeff[0][1] = 6;
+    seiChromaResamplingFilterHint->m_horFilterCoeff[0][2] = 1;
   }
   else
   {
-    seiChromaSamplingFilterHint->m_numHorizontalFilters = 0;
-    seiChromaSamplingFilterHint->m_horTapLengthMinus1 = NULL;
-    seiChromaSamplingFilterHint->m_horFilterCoeff = NULL;
+    seiChromaResamplingFilterHint->m_horFilterCoeff.resize(0);
   }
 }
 
