@@ -521,9 +521,6 @@ Void TEncGOP::xCreateScalableNestingSEI (SEIMessages& seiMessages, SEIMessages& 
 
 Void TEncGOP::xCreatePictureTimingSEI  (Int IRAPGOPid, SEIMessages& seiMessages, SEIMessages& nestedSeiMessages, SEIMessages& duInfoSeiMessages, TComSlice *slice, Bool isField, std::deque<DUData> &duData)
 {
-  Int picSptDpbOutputDuDelay = 0;
-  SEIPictureTiming *pictureTimingSEI = new SEIPictureTiming();
-
   const TComVUI *vui = slice->getSPS()->getVuiParameters();
   const TComHRD *hrd = vui->getHrdParameters();
 
@@ -532,6 +529,9 @@ Void TEncGOP::xCreatePictureTimingSEI  (Int IRAPGOPid, SEIMessages& seiMessages,
     ( slice->getSPS()->getVuiParametersPresentFlag() ) &&
     (  hrd->getNalHrdParametersPresentFlag() || hrd->getVclHrdParametersPresentFlag() ) )
   {
+    Int picSptDpbOutputDuDelay = 0;
+    SEIPictureTiming *pictureTimingSEI = new SEIPictureTiming();
+
     // DU parameters
     if( hrd->getSubPicCpbParamsPresentFlag() )
     {
@@ -648,6 +648,11 @@ Void TEncGOP::xCreatePictureTimingSEI  (Int IRAPGOPid, SEIMessages& seiMessages,
 
         duInfoSeiMessages.push_back(duInfoSEI);
       }
+    }
+
+    if( !m_pcCfg->getPictureTimingSEIEnabled() && pictureTimingSEI )
+    {
+      delete pictureTimingSEI;
     }
   }
 }
