@@ -975,12 +975,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIToneMapNominalBlackLevelLumaCodeValue",        m_nominalBlackLevelLumaCodeValue,                    16, "Specifies luma sample value of the nominal black level assigned decoded pictures")
   ("SEIToneMapNominalWhiteLevelLumaCodeValue",        m_nominalWhiteLevelLumaCodeValue,                   235, "Specifies luma sample value of the nominal white level assigned decoded pictures")
   ("SEIToneMapExtendedWhiteLevelLumaCodeValue",       m_extendedWhiteLevelLumaCodeValue,                  300, "Specifies luma sample value of the extended dynamic range assigned decoded pictures")
-  ("SEIChromaSamplingFilterHint",                     m_chromaSamplingFilterSEIenabled,                 false, "Control generation of the chroma sampling filter hint SEI message")
-  ("SEIChromaSamplingHorizontalFilterType",           m_chromaSamplingHorFilterIdc,                         2, "Defines the Index of the chroma sampling horizontal filter\n"
+  ("SEIChromaResamplingFilterHint",                   m_chromaResamplingFilterSEIenabled,               false, "Control generation of the chroma sampling filter hint SEI message")
+  ("SEIChromaResamplingHorizontalFilterType",         m_chromaResamplingHorFilterIdc,                       2, "Defines the Index of the chroma sampling horizontal filter\n"
                                                                                                                "\t0: unspecified  - Chroma filter is unknown or is determined by the application"
                                                                                                                "\t1: User-defined - Filter coefficients are specified in the chroma sampling filter hint SEI message"
                                                                                                                "\t2: Standards-defined - ITU-T Rec. T.800 | ISO/IEC15444-1, 5/3 filter")
-  ("SEIChromaSamplingVerticalFilterType",             m_chromaSamplingVerFilterIdc,                         2, "Defines the Index of the chroma sampling vertical filter\n"
+  ("SEIChromaResamplingVerticalFilterType",           m_chromaResamplingVerFilterIdc,                         2, "Defines the Index of the chroma sampling vertical filter\n"
                                                                                                                "\t0: unspecified  - Chroma filter is unknown or is determined by the application"
                                                                                                                "\t1: User-defined - Filter coefficients are specified in the chroma sampling filter hint SEI message"
                                                                                                                "\t2: Standards-defined - ITU-T Rec. T.800 | ISO/IEC15444-1, 5/3 filter")
@@ -2235,6 +2235,12 @@ Void TAppEncCfg::xCheckParameter()
         xConfirmPara( m_kneeSEIOutputKneePoint[i-1] > m_kneeSEIOutputKneePoint[i],  "The i-th SEIKneeFunctionOutputKneePointValue must be greater than or equal to the (i-1)-th value");
       }
     }
+  }
+
+  if (m_chromaResamplingFilterSEIenabled)
+  {
+    xConfirmPara( (m_chromaFormatIDC == CHROMA_400 ), "chromaResamplingFilterSEI is not allowed to be present when ChromaFormatIDC is equal to zero (4:0:0)" );
+    xConfirmPara(m_vuiParametersPresentFlag && m_chromaLocInfoPresentFlag && (m_chromaSampleLocTypeTopField != m_chromaSampleLocTypeBottomField ), "When chromaResamplingFilterSEI is enabled, ChromaSampleLocTypeTopField has to be equal to ChromaSampleLocTypeBottomField" );
   }
 
   if ( m_RCEnableRateControl )

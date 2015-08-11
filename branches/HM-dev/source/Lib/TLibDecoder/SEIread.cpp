@@ -263,9 +263,9 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEITimeCode;
       xParseSEITimeCode((SEITimeCode&) *sei, payloadSize, pDecodedMessageOutputStream);
       break;
-    case SEI::CHROMA_SAMPLING_FILTER_HINT:
-      sei = new SEIChromaSamplingFilterHint;
-      xParseSEIChromaSamplingFilterHint((SEIChromaSamplingFilterHint&) *sei, payloadSize/*, sps*/, pDecodedMessageOutputStream);
+    case SEI::CHROMA_RESAMPLING_FILTER_HINT:
+      sei = new SEIChromaResamplingFilterHint;
+      xParseSEIChromaResamplingFilterHint((SEIChromaResamplingFilterHint&) *sei, payloadSize, pDecodedMessageOutputStream);
       //}
       break;
     case SEI::KNEE_FUNCTION_INFO:
@@ -965,29 +965,28 @@ Void SEIReader::xParseSEITimeCode(SEITimeCode& sei, UInt payloadSize, std::ostre
   }
 }
 
-Void SEIReader::xParseSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint& sei, UInt payloadSize/*, TComSPS* sps*/, std::ostream *pDecodedMessageOutputStream)
+Void SEIReader::xParseSEIChromaResamplingFilterHint(SEIChromaResamplingFilterHint& sei, UInt payloadSize, std::ostream *pDecodedMessageOutputStream)
 {
   UInt uiCode;
   output_sei_message_header(sei, pDecodedMessageOutputStream, payloadSize);
 
   sei_read_code( pDecodedMessageOutputStream, 8, uiCode, "ver_chroma_filter_idc"); sei.m_verChromaFilterIdc = uiCode;
   sei_read_code( pDecodedMessageOutputStream, 8, uiCode, "hor_chroma_filter_idc"); sei.m_horChromaFilterIdc = uiCode;
-  sei_read_flag( pDecodedMessageOutputStream, uiCode, "ver_filtering_process_flag"); sei.m_verFilteringProcessFlag = uiCode;
+  sei_read_flag( pDecodedMessageOutputStream, uiCode, "ver_filtering_field_processing_flag"); sei.m_verFilteringFieldProcessingFlag = uiCode;
   if(sei.m_verChromaFilterIdc == 1 || sei.m_horChromaFilterIdc == 1)
   {
     sei_read_uvlc( pDecodedMessageOutputStream, uiCode, "target_format_idc"); sei.m_targetFormatIdc = uiCode;
     if(sei.m_verChromaFilterIdc == 1)
     {
-      sei_read_uvlc( pDecodedMessageOutputStream, uiCode, "num_vertical_filters"); sei.m_numVerticalFilters = uiCode;
-      if(sei.m_numVerticalFilters > 0)
+      UInt numVerticalFilters;
+      sei_read_uvlc( pDecodedMessageOutputStream, numVerticalFilters, "num_vertical_filters"); sei.m_verFilterCoeff.resize(numVerticalFilters);
+      if(numVerticalFilters > 0)
       {
-        sei.m_verTapLengthMinus1 = (Int*)malloc(sei.m_numVerticalFilters * sizeof(Int));
-        sei.m_verFilterCoeff = (Int**)malloc(sei.m_numVerticalFilters * sizeof(Int*));
-        for(Int i = 0; i < sei.m_numVerticalFilters; i ++)
+        for(Int i = 0; i < numVerticalFilters; i++)
         {
-          sei_read_uvlc( pDecodedMessageOutputStream, uiCode, "ver_tap_length_minus_1"); sei.m_verTapLengthMinus1[i] = uiCode;
-          sei.m_verFilterCoeff[i] = (Int*)malloc(sei.m_verTapLengthMinus1[i] * sizeof(Int));
-          for(Int j = 0; j < sei.m_verTapLengthMinus1[i]; j ++)
+          UInt verTapLengthMinus1;
+          sei_read_uvlc( pDecodedMessageOutputStream, verTapLengthMinus1, "ver_tap_length_minus_1"); sei.m_verFilterCoeff[i].resize(verTapLengthMinus1+1);
+          for(Int j = 0; j < (verTapLengthMinus1 + 1); j++)
           {
             sei_read_svlc( pDecodedMessageOutputStream, sei.m_verFilterCoeff[i][j], "ver_filter_coeff");
           }
@@ -996,16 +995,15 @@ Void SEIReader::xParseSEIChromaSamplingFilterHint(SEIChromaSamplingFilterHint& s
     }
     if(sei.m_horChromaFilterIdc == 1)
     {
-      sei_read_uvlc( pDecodedMessageOutputStream, uiCode, "num_horizontal_filters"); sei.m_numHorizontalFilters = uiCode;
-      if(sei.m_numHorizontalFilters  > 0)
+      UInt numHorizontalFilters;
+      sei_read_uvlc( pDecodedMessageOutputStream, numHorizontalFilters, "num_horizontal_filters"); sei.m_horFilterCoeff.resize(numHorizontalFilters);
+      if(numHorizontalFilters  > 0)
       {
-        sei.m_horTapLengthMinus1 = (Int*)malloc(sei.m_numHorizontalFilters * sizeof(Int));
-        sei.m_horFilterCoeff = (Int**)malloc(sei.m_numHorizontalFilters * sizeof(Int*));
-        for(Int i = 0; i < sei.m_numHorizontalFilters; i ++)
+        for(Int i = 0; i < numHorizontalFilters; i++)
         {
-          sei_read_uvlc( pDecodedMessageOutputStream, uiCode, "hor_tap_length_minus_1"); sei.m_horTapLengthMinus1[i] = uiCode;
-          sei.m_horFilterCoeff[i] = (Int*)malloc(sei.m_horTapLengthMinus1[i] * sizeof(Int));
-          for(Int j = 0; j < sei.m_horTapLengthMinus1[i]; j ++)
+          UInt horTapLengthMinus1;
+          sei_read_uvlc( pDecodedMessageOutputStream, horTapLengthMinus1, "hor_tap_length_minus_1"); sei.m_horFilterCoeff[i].resize(horTapLengthMinus1+1);
+          for(Int j = 0; j < (horTapLengthMinus1 + 1); j++)
           {
             sei_read_svlc( pDecodedMessageOutputStream, sei.m_horFilterCoeff[i][j], "hor_filter_coeff");
           }

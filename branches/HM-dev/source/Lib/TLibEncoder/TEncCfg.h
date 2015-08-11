@@ -353,9 +353,9 @@ protected:
   Int       m_activeParameterSetsSEIEnabled;                  ///< enable active parameter set SEI message
   Bool      m_vuiParametersPresentFlag;                       ///< enable generation of VUI parameters
   Bool      m_aspectRatioInfoPresentFlag;                     ///< Signals whether aspect_ratio_idc is present
-  Bool      m_chromaSamplingFilterHintEnabled;                ///< Signals whether chroma sampling filter hint data is present
-  Int       m_chromaSamplingHorFilterIdc;                     ///< Specifies the Index of filter to use
-  Int       m_chromaSamplingVerFilterIdc;                     ///< Specifies the Index of filter to use
+  Bool      m_chromaResamplingFilterHintEnabled;              ///< Signals whether chroma sampling filter hint data is present
+  Int       m_chromaResamplingHorFilterIdc;                   ///< Specifies the Index of filter to use
+  Int       m_chromaResamplingVerFilterIdc;                   ///< Specifies the Index of filter to use
   Int       m_aspectRatioIdc;                                 ///< aspect_ratio_idc
   Int       m_sarWidth;                                       ///< horizontal size of the sample aspect ratio
   Int       m_sarHeight;                                      ///< vertical size of the sample aspect ratio
@@ -962,12 +962,13 @@ public:
 
   Bool         getLowerBitRateConstraintFlag() const                 { return m_lowerBitRateConstraintFlag; }
   Void         setLowerBitRateConstraintFlag(Bool b)                 { m_lowerBitRateConstraintFlag=b; }
-  Bool      getChromaSamplingFilterHintEnabled()                     { return m_chromaSamplingFilterHintEnabled;}
-  Void      setChromaSamplingFilterHintEnabled(Bool i)               { m_chromaSamplingFilterHintEnabled = i;}
-  Int       getChromaSamplingHorFilterIdc()                          { return m_chromaSamplingHorFilterIdc;}
-  Void      setChromaSamplingHorFilterIdc(Int i)                     { m_chromaSamplingHorFilterIdc = i;}
-  Int       getChromaSamplingVerFilterIdc()                          { return m_chromaSamplingVerFilterIdc;}
-  Void      setChromaSamplingVerFilterIdc(Int i)                     { m_chromaSamplingVerFilterIdc = i;}
+
+  Bool         getChromaResamplingFilterHintEnabled()                { return m_chromaResamplingFilterHintEnabled;}
+  Void         setChromaResamplingFilterHintEnabled(Bool i)          { m_chromaResamplingFilterHintEnabled = i;}
+  Int          getChromaResamplingHorFilterIdc()                     { return m_chromaResamplingHorFilterIdc;}
+  Void         setChromaResamplingHorFilterIdc(Int i)                { m_chromaResamplingHorFilterIdc = i;}
+  Int          getChromaResamplingVerFilterIdc()                     { return m_chromaResamplingVerFilterIdc;}
+  Void         setChromaResamplingVerFilterIdc(Int i)                { m_chromaResamplingVerFilterIdc = i;}
 
   Void      setSummaryOutFilename(const std::string &s)              { m_summaryOutFilename = s; }
   const std::string& getSummaryOutFilename() const                   { return m_summaryOutFilename; }
