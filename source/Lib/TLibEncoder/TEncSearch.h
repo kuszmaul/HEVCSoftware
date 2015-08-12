@@ -80,7 +80,7 @@ private:
   TComYuv*        m_pcQTTempTComYuv;
   TComYuv         m_tmpYuvPred; // To be used in xGetInterPredictionError() to avoid constant memory allocation/deallocation
 
-  Char*           m_phQTTempCrossComponentPredictionAlpha[MAX_NUM_COMPONENT];
+  SChar*          m_phQTTempCrossComponentPredictionAlpha[MAX_NUM_COMPONENT];
   Pel*            m_pSharedPredTransformSkip[MAX_NUM_COMPONENT];
   TCoeff*         m_pcQTTempTUCoeff[MAX_NUM_COMPONENT];
   UChar*          m_puhQTTempTransformSkipFlag[MAX_NUM_COMPONENT];
@@ -277,7 +277,7 @@ protected:
                                                const Int     strideResi,
                                                const Int     strideBest );
 
-  Char xCalcCrossComponentPredictionAlpha    (       TComTU &rTu,
+  SChar xCalcCrossComponentPredictionAlpha   (       TComTU &rTu,
                                                const ComponentID compID,
                                                const Pel*        piResiL,
                                                const Pel*        piResiC,

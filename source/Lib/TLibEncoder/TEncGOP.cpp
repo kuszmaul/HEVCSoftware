@@ -809,12 +809,12 @@ cabac_zero_word_padding(TComSlice *const pcSlice, TComPic *const pcPic, const st
       const std::size_t numberOfAdditionalCabacZeroBytes=numberOfAdditionalCabacZeroWords*3;
       if (cabacZeroWordPaddingEnabled)
       {
-        std::vector<Char> zeroBytesPadding(numberOfAdditionalCabacZeroBytes, Char(0));
+        std::vector<UChar> zeroBytesPadding(numberOfAdditionalCabacZeroBytes, UChar(0));
         for(std::size_t i=0; i<numberOfAdditionalCabacZeroWords; i++)
         {
           zeroBytesPadding[i*3+2]=3;  // 00 00 03
         }
-        nalUnitData.write(&(zeroBytesPadding[0]), numberOfAdditionalCabacZeroBytes);
+        nalUnitData.write(reinterpret_cast<const TChar*>(&(zeroBytesPadding[0])), numberOfAdditionalCabacZeroBytes);
         printf("Adding %d bytes of padding\n", UInt(numberOfAdditionalCabacZeroWords*3));
       }
       else
@@ -2101,7 +2101,7 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
     m_gcAnalyzeB.addResult (dPSNR, (Double)uibits, MSEyuvframe);
   }
 
-  Char c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
+  TChar c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
   if (!pcSlice->isReferenced())
   {
     c += 32;

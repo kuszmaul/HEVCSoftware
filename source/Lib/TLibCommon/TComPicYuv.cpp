@@ -275,18 +275,9 @@ Void TComPicYuv::extendPicBorder ()
 
 
 // NOTE: This function is never called, but may be useful for developers.
-Void TComPicYuv::dump (const Char* pFileName, const BitDepths &bitDepths, Bool bAdd) const
+Void TComPicYuv::dump (const std::string &fileName, const BitDepths &bitDepths, Bool bAdd) const
 {
-  FILE* pFile;
-  if (!bAdd)
-  {
-    pFile = fopen (pFileName, "wb");
-  }
-  else
-  {
-    pFile = fopen (pFileName, "ab");
-  }
-
+  FILE* pFile = fopen (fileName.c_str(), bAdd?"ab":"wb");
 
   for(Int comp = 0; comp < getNumberValidComponents(); comp++)
   {

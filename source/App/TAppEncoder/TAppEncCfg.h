@@ -55,9 +55,9 @@ class TAppEncCfg
 {
 protected:
   // file I/O
-  Char*     m_pchInputFile;                                   ///< source file name
-  Char*     m_pchBitstreamFile;                               ///< output bitstream file
-  Char*     m_pchReconFile;                                   ///< output reconstruction file
+  std::string m_inputFileName;                                ///< source file name
+  std::string m_bitstreamFileName;                            ///< output bitstream file
+  std::string m_reconFileName;                                ///< output reconstruction file
 
   // Lambda modifiers
   Double    m_adLambdaModifier[ MAX_TLAYER ];                 ///< Lambda modifier array for each temporal layer
@@ -135,7 +135,7 @@ protected:
   // coding quality
   Double    m_fQP;                                            ///< QP value of key-picture (floating point)
   Int       m_iQP;                                            ///< QP value of key-picture (integer)
-  Char*     m_pchdQPFile;                                     ///< QP offset for each slice (initialized from external file)
+  std::string m_dQPFileName;                                  ///< QP offset for each slice (initialized from external file)
   Int*      m_aidQP;                                          ///< array of slice QP values
   Int       m_iMaxDeltaQP;                                    ///< max. |delta QP|
   UInt      m_uiDeltaQpRD;                                    ///< dQP range for multi-pass slice QP optimization
@@ -338,7 +338,7 @@ protected:
   Double    m_RCInitialCpbFullness;               ///< initial CPB fullness 
 #endif
   ScalingListMode m_useScalingListId;                         ///< using quantization matrix
-  Char*     m_scalingListFile;                                ///< quantization matrix file name
+  std::string m_scalingListFileName;                          ///< quantization matrix file name
 
   Bool      m_TransquantBypassEnableFlag;                     ///< transquant_bypass_enable_flag setting in PPS.
   Bool      m_CUTransquantBypassFlagForce;                    ///< if transquant_bypass_enable_flag, then, if true, all CU transquant bypass flags will be set to true.
@@ -398,7 +398,7 @@ public:
 public:
   Void  create    ();                                         ///< create option handling class
   Void  destroy   ();                                         ///< destroy option handling class
-  Bool  parseCfg  ( Int argc, Char* argv[] );                 ///< parse configuration file to fill member variables
+  Bool  parseCfg  ( Int argc, TChar* argv[] );                ///< parse configuration file to fill member variables
 
 };// END CLASS DEFINITION TAppEncCfg
 

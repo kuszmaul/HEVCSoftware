@@ -255,7 +255,7 @@ Void TEncTop::xInitScalingLists()
   else if(getUseScalingListId() == SCALING_LIST_FILE_READ)
   {
     m_cSPS.getScalingList().setDefaultScalingList ();
-    if(m_cSPS.getScalingList().xParseScalingList(getScalingListFile()))
+    if(m_cSPS.getScalingList().xParseScalingList(getScalingListFileName()))
     {
       Bool bParsedScalingList=false; // Use of boolean so that assertion outputs useful string
       assert(bParsedScalingList);
