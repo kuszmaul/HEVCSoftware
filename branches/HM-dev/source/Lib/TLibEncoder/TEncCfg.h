@@ -56,7 +56,7 @@ struct GOPEntry
   Int m_temporalId;
   Bool m_refPic;
   Int m_numRefPicsActive;
-  Char m_sliceType;
+  SChar m_sliceType;
   Int m_numRefPics;
   Int m_referencePics[MAX_NUM_REF_PICS];
   Int m_usedByCurrPic[MAX_NUM_REF_PICS];
@@ -327,8 +327,8 @@ protected:
   WeightedPredictionMethod m_weightedPredictionMethod;
   UInt      m_log2ParallelMergeLevelMinus2;       ///< Parallel merge estimation region
   UInt      m_maxNumMergeCand;                    ///< Maximum number of merge candidates
-  ScalingListMode m_useScalingListId;            ///< Using quantization matrix i.e. 0=off, 1=default, 2=file.
-  Char*     m_scalingListFile;          ///< quantization matrix file name
+  ScalingListMode m_useScalingListId;             ///< Using quantization matrix i.e. 0=off, 1=default, 2=file.
+  std::string m_scalingListFileName;              ///< quantization matrix file name
   Int       m_TMVPModeId;
   Bool      m_signHideFlag;
   Bool      m_RCEnableRateControl;
@@ -822,8 +822,8 @@ public:
   UInt         getMaxNumMergeCand                ()                  { return m_maxNumMergeCand;   }
   Void         setUseScalingListId    ( ScalingListMode u )          { m_useScalingListId       = u;   }
   ScalingListMode getUseScalingListId    ()                          { return m_useScalingListId;      }
-  Void         setScalingListFile     ( Char*  pch )                 { m_scalingListFile     = pch; }
-  Char*        getScalingListFile     ()                             { return m_scalingListFile;    }
+  Void         setScalingListFileName       ( const std::string &s ) { m_scalingListFileName = s;      }
+  const std::string& getScalingListFileName () const                 { return m_scalingListFileName;   }
   Void         setTMVPModeId ( Int  u )                              { m_TMVPModeId = u;    }
   Int          getTMVPModeId ()                                      { return m_TMVPModeId; }
   WeightedPredictionMethod getWeightedPredictionMethod() const       { return m_weightedPredictionMethod; }

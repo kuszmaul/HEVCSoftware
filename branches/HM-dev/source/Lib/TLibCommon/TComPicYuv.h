@@ -164,7 +164,7 @@ public:
   Void          extendPicBorder   ();
 
   //  Dump picture
-  Void          dump              (const Char* pFileName, const BitDepths &bitDepths, Bool bAdd = false) const ;
+  Void          dump              (const std::string &fileName, const BitDepths &bitDepths, Bool bAdd = false) const ;
 
   // Set border extension flag
   Void          setBorderExtension(Bool b) { m_bIsBorderExtended = b; }

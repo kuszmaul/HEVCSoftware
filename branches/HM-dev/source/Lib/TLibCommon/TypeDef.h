@@ -174,12 +174,9 @@
 typedef       void                Void;
 typedef       bool                Bool;
 
-#ifdef __arm__
-typedef       signed char         Char;
-#else
-typedef       char                Char;
-#endif
-typedef       unsigned char       UChar;
+typedef       char                TChar; // Used for text/characters
+typedef       signed char         SChar; // Signed 8-bit values
+typedef       unsigned char       UChar; // Unsigned 8-bit values
 typedef       short               Short;
 typedef       unsigned short      UShort;
 typedef       int                 Int;

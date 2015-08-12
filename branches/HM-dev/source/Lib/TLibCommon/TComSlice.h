@@ -170,7 +170,7 @@ public:
 
   Void       checkDcOfMatrix();
   Void       processRefMatrix(UInt sizeId, UInt listId , UInt refListId );
-  Bool       xParseScalingList(Char* pchFile);
+  Bool       xParseScalingList(const std::string &fileName);
   Void       setDefaultScalingList();
   Bool       checkDefaultScalingList();
 

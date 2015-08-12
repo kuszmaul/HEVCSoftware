@@ -102,14 +102,9 @@ enum ExtendedProfileName // this is used for determining profile strings, where 
 // ====================================================================================================================
 
 TAppEncCfg::TAppEncCfg()
-: m_pchInputFile()
-, m_pchBitstreamFile()
-, m_pchReconFile()
-, m_inputColourSpaceConvert(IPCOLOURSPACE_UNCHANGED)
+: m_inputColourSpaceConvert(IPCOLOURSPACE_UNCHANGED)
 , m_snrInternalColourSpace(false)
 , m_outputInternalColourSpace(false)
-, m_pchdQPFile()
-, m_scalingListFile()
 {
   m_aidQP = NULL;
   m_startOfCodedInterval = NULL;
@@ -138,12 +133,6 @@ TAppEncCfg::~TAppEncCfg()
     delete[] m_targetPivotValue;
     m_targetPivotValue = NULL;
   }
-
-  free(m_pchInputFile);
-  free(m_pchBitstreamFile);
-  free(m_pchReconFile);
-  free(m_pchdQPFile);
-  free(m_scalingListFile);
 }
 
 Void TAppEncCfg::create()
@@ -186,7 +175,7 @@ std::istringstream &operator>>(std::istringstream &in, GOPEntry &entry)     //in
   return in;
 }
 
-Bool confirmPara(Bool bflag, const Char* message);
+Bool confirmPara(Bool bflag, const TChar* message);
 
 static inline ChromaFormat numberToChromaFormat(const Int val)
 {
@@ -202,7 +191,7 @@ static inline ChromaFormat numberToChromaFormat(const Int val)
 
 static const struct MapStrToProfile
 {
-  const Char* str;
+  const TChar* str;
   Profile::Name value;
 }
 strToProfile[] =
@@ -217,7 +206,7 @@ strToProfile[] =
 
 static const struct MapStrToExtendedProfile
 {
-  const Char* str;
+  const TChar* str;
   ExtendedProfileName value;
 }
 strToExtendedProfile[] =
@@ -276,7 +265,7 @@ static const ExtendedProfileName validRExtProfileNames[2/* intraConstraintFlag*/
 
 static const struct MapStrToTier
 {
-  const Char* str;
+  const TChar* str;
   Level::Tier value;
 }
 strToTier[] =
@@ -287,7 +276,7 @@ strToTier[] =
 
 static const struct MapStrToLevel
 {
-  const Char* str;
+  const TChar* str;
   Level::Name value;
 }
 strToLevel[] =
@@ -320,7 +309,7 @@ UInt g_uiMaxCpbSize[2][21] =
 
 static const struct MapStrToCostMode
 {
-  const Char* str;
+  const TChar* str;
   CostMode    value;
 }
 strToCostMode[] =
@@ -333,7 +322,7 @@ strToCostMode[] =
 
 static const struct MapStrToScalingListMode
 {
-  const Char* str;
+  const TChar* str;
   ScalingListMode value;
 }
 strToScalingListMode[] =
@@ -426,7 +415,7 @@ struct SMultiValueInput
   SMultiValueInput<T> &operator=(const std::vector<T> &userValues) { values=userValues; return *this; }
   SMultiValueInput<T> &operator=(const SMultiValueInput<T> &userValues) { values=userValues.values; return *this; }
 
-  T readValue(const Char *&pStr, Bool &bSuccess);
+  T readValue(const TChar *&pStr, Bool &bSuccess);
 
   istream& readValues(std::istream &in);
 };
@@ -438,9 +427,9 @@ static inline istream& operator >> (std::istream &in, SMultiValueInput<T> &value
 }
 
 template<>
-UInt SMultiValueInput<UInt>::readValue(const Char *&pStr, Bool &bSuccess)
+UInt SMultiValueInput<UInt>::readValue(const TChar *&pStr, Bool &bSuccess)
 {
-  Char *eptr;
+  TChar *eptr;
   UInt val=strtoul(pStr, &eptr, 0);
   pStr=eptr;
   bSuccess=!(*eptr!=0 && !isspace(*eptr) && *eptr!=',') && !(val<minValIncl || val>maxValIncl);
@@ -448,9 +437,9 @@ UInt SMultiValueInput<UInt>::readValue(const Char *&pStr, Bool &bSuccess)
 }
 
 template<>
-Int SMultiValueInput<Int>::readValue(const Char *&pStr, Bool &bSuccess)
+Int SMultiValueInput<Int>::readValue(const TChar *&pStr, Bool &bSuccess)
 {
-  Char *eptr;
+  TChar *eptr;
   Int val=strtol(pStr, &eptr, 0);
   pStr=eptr;
   bSuccess=!(*eptr!=0 && !isspace(*eptr) && *eptr!=',') && !(val<minValIncl || val>maxValIncl);
@@ -458,9 +447,9 @@ Int SMultiValueInput<Int>::readValue(const Char *&pStr, Bool &bSuccess)
 }
 
 template<>
-Double SMultiValueInput<Double>::readValue(const Char *&pStr, Bool &bSuccess)
+Double SMultiValueInput<Double>::readValue(const TChar *&pStr, Bool &bSuccess)
 {
-  Char *eptr;
+  TChar *eptr;
   Double val=strtod(pStr, &eptr);
   pStr=eptr;
   bSuccess=!(*eptr!=0 && !isspace(*eptr) && *eptr!=',') && !(val<minValIncl || val>maxValIncl);
@@ -468,9 +457,9 @@ Double SMultiValueInput<Double>::readValue(const Char *&pStr, Bool &bSuccess)
 }
 
 template<>
-Bool SMultiValueInput<Bool>::readValue(const Char *&pStr, Bool &bSuccess)
+Bool SMultiValueInput<Bool>::readValue(const TChar *&pStr, Bool &bSuccess)
 {
-  Char *eptr;
+  TChar *eptr;
   Int val=strtol(pStr, &eptr, 0);
   pStr=eptr;
   bSuccess=!(*eptr!=0 && !isspace(*eptr) && *eptr!=',') && !(val<Int(minValIncl) || val>Int(maxValIncl));
@@ -488,7 +477,7 @@ istream& SMultiValueInput<T>::readValues(std::istream &in)
   }
   if (!str.empty())
   {
-    const Char *pStr=str.c_str();
+    const TChar *pStr=str.c_str();
     // soak up any whitespace
     for(;isspace(*pStr);pStr++);
 
@@ -607,15 +596,9 @@ automaticallySelectRExtProfile(const Bool bUsingGeneralRExtTools,
     \param  argv        array of arguments
     \retval             true when success
  */
-Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
+Bool TAppEncCfg::parseCfg( Int argc, TChar* argv[] )
 {
   Bool do_help = false;
-
-  string cfg_InputFile;
-  string cfg_BitstreamFile;
-  string cfg_ReconFile;
-  string cfg_dQPFile;
-  string cfg_ScalingListFile;
 
   Int tmpChromaFormat;
   Int tmpInputChromaFormat;
@@ -670,9 +653,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("WarnUnknowParameter,w",                           warnUnknowParameter,                                  0, "warn for unknown configuration parameters instead of failing")
 
   // File, I/O and source parameters
-  ("InputFile,i",                                     cfg_InputFile,                               string(""), "Original YUV input file name")
-  ("BitstreamFile,b",                                 cfg_BitstreamFile,                           string(""), "Bitstream output file name")
-  ("ReconFile,o",                                     cfg_ReconFile,                               string(""), "Reconstructed YUV output file name")
+  ("InputFile,i",                                     m_inputFileName,                             string(""), "Original YUV input file name")
+  ("BitstreamFile,b",                                 m_bitstreamFileName,                         string(""), "Bitstream output file name")
+  ("ReconFile,o",                                     m_reconFileName,                             string(""), "Reconstructed YUV output file name")
   ("SourceWidth,-wdt",                                m_iSourceWidth,                                       0, "Source picture width")
   ("SourceHeight,-hgt",                               m_iSourceHeight,                                      0, "Source picture height")
   ("InputBitDepth",                                   m_inputBitDepth[CHANNEL_TYPE_LUMA],                   8, "Bit-depth of input file")
@@ -797,7 +780,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   ("AdaptiveQP,-aq",                                  m_bUseAdaptiveQP,                                 false, "QP adaptation based on a psycho-visual model")
   ("MaxQPAdaptationRange,-aqr",                       m_iQPAdaptationRange,                                 6, "QP adaptation range")
-  ("dQPFile,m",                                       cfg_dQPFile,                                 string(""), "dQP file name")
+  ("dQPFile,m",                                       m_dQPFileName,                               string(""), "dQP file name")
   ("RDOQ",                                            m_useRDOQ,                                         true)
   ("RDOQTS",                                          m_useRDOQTS,                                       true)
 #if T0196_SELECTIVE_RDOQ
@@ -873,7 +856,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("LFCrossTileBoundaryFlag",                         m_bLFCrossTileBoundaryFlag,                        true, "1: cross-tile-boundary loop filtering. 0:non-cross-tile-boundary loop filtering")
   ("WaveFrontSynchro",                                m_iWaveFrontSynchro,                                  0, "0: no synchro; 1 synchro with top-right-right")
   ("ScalingList",                                     m_useScalingListId,                    SCALING_LIST_OFF, "0/off: no scaling list, 1/default: default scaling lists, 2/file: scaling lists specified in ScalingListFile")
-  ("ScalingListFile",                                 cfg_ScalingListFile,                         string(""), "Scaling list file name. Use an empty string to produce help.")
+  ("ScalingListFile",                                 m_scalingListFileName,                       string(""), "Scaling list file name. Use an empty string to produce help.")
   ("SignHideFlag,-SBH",                               m_signHideFlag,                                    true)
   ("MaxNumMergeCand",                                 m_maxNumMergeCand,                                   5u, "Maximum number of merge candidates")
   /* Misc. */
@@ -1055,9 +1038,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   }
   po::setDefaults(opts);
   po::ErrorReporter err;
-  const list<const Char*>& argv_unhandled = po::scanArgv(opts, argc, (const Char**) argv, err);
+  const list<const TChar*>& argv_unhandled = po::scanArgv(opts, argc, (const TChar**) argv, err);
 
-  for (list<const Char*>::const_iterator it = argv_unhandled.begin(); it != argv_unhandled.end(); it++)
+  for (list<const TChar*>::const_iterator it = argv_unhandled.begin(); it != argv_unhandled.end(); it++)
   {
     fprintf(stderr, "Unhandled argument ignored: `%s'\n", *it);
   }
@@ -1081,11 +1064,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   /*
    * Set any derived parameters
    */
-  /* convert std::string to c string for compatability */
-  m_pchInputFile = cfg_InputFile.empty() ? NULL : strdup(cfg_InputFile.c_str());
-  m_pchBitstreamFile = cfg_BitstreamFile.empty() ? NULL : strdup(cfg_BitstreamFile.c_str());
-  m_pchReconFile = cfg_ReconFile.empty() ? NULL : strdup(cfg_ReconFile.c_str());
-  m_pchdQPFile = cfg_dQPFile.empty() ? NULL : strdup(cfg_dQPFile.c_str());
 
   m_adIntraLambdaModifier = cfg_adIntraLambdaModifier.values;
   if(m_isField)
@@ -1149,8 +1127,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   {
     m_tileRowHeight.clear();
   }
-
-  m_scalingListFile = cfg_ScalingListFile.empty() ? NULL : strdup(cfg_ScalingListFile.c_str());
 
   /* rules for input, output and internal bitdepths as per help text */
   if (m_MSBExtendedBitDepth[CHANNEL_TYPE_LUMA  ] == 0)
@@ -1398,9 +1374,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   }
 
   // reading external dQP description from file
-  if ( m_pchdQPFile )
+  if ( !m_dQPFileName.empty() )
   {
-    FILE* fpt=fopen( m_pchdQPFile, "r" );
+    FILE* fpt=fopen( m_dQPFileName.c_str(), "r" );
     if ( fpt )
     {
       Int iValue;
@@ -1549,7 +1525,7 @@ Void TAppEncCfg::xCheckParameter()
   Bool check_failed = false; /* abort if there is a fatal configuration problem */
 #define xConfirmPara(a,b) check_failed |= confirmPara(a,b)
 
-  xConfirmPara(m_pchBitstreamFile==NULL, "A bitstream file name must be specified (BitstreamFile)");
+  xConfirmPara(m_bitstreamFileName.empty(), "A bitstream file name must be specified (BitstreamFile)");
   const UInt maxBitDepth=(m_chromaFormatIDC==CHROMA_400) ? m_internalBitDepth[CHANNEL_TYPE_LUMA] : std::max(m_internalBitDepth[CHANNEL_TYPE_LUMA], m_internalBitDepth[CHANNEL_TYPE_CHROMA]);
   xConfirmPara(m_bitDepthConstraint<maxBitDepth, "The internalBitDepth must not be greater than the bitDepthConstraint value");
   xConfirmPara(m_chromaFormatConstraint<m_chromaFormatIDC, "The chroma format used must not be greater than the chromaFormatConstraint value");
@@ -2302,7 +2278,7 @@ Void TAppEncCfg::xCheckParameter()
   }
 }
 
-const Char *profileToString(const Profile::Name profile)
+const TChar *profileToString(const Profile::Name profile)
 {
   static const UInt numberOfProfiles = sizeof(strToProfile)/sizeof(*strToProfile);
 
@@ -2324,9 +2300,9 @@ const Char *profileToString(const Profile::Name profile)
 Void TAppEncCfg::xPrintParameter()
 {
   printf("\n");
-  printf("Input          File                    : %s\n", m_pchInputFile          );
-  printf("Bitstream      File                    : %s\n", m_pchBitstreamFile      );
-  printf("Reconstruction File                    : %s\n", m_pchReconFile          );
+  printf("Input          File                    : %s\n", m_inputFileName.c_str()          );
+  printf("Bitstream      File                    : %s\n", m_bitstreamFileName.c_str()      );
+  printf("Reconstruction File                    : %s\n", m_reconFileName.c_str()          );
   printf("Real     Format                        : %dx%d %dHz\n", m_iSourceWidth - m_confWinLeft - m_confWinRight, m_iSourceHeight - m_confWinTop - m_confWinBottom, m_iFrameRate );
   printf("Internal Format                        : %dx%d %dHz\n", m_iSourceWidth, m_iSourceHeight, m_iFrameRate );
   printf("Sequence PSNR output                   : %s\n", (m_printMSEBasedSequencePSNR ? "Linear average, MSE-based" : "Linear average only") );
@@ -2506,7 +2482,7 @@ Void TAppEncCfg::xPrintParameter()
   fflush(stdout);
 }
 
-Bool confirmPara(Bool bflag, const Char* message)
+Bool confirmPara(Bool bflag, const TChar* message)
 {
   if (!bflag)
   {

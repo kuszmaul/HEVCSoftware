@@ -122,16 +122,16 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
 
   if ( !bDecSubCu )
   {
-    m_phQP               = (Char*     )xMalloc(Char,     uiNumPartition);
+    m_phQP               = (SChar*    )xMalloc(SChar,    uiNumPartition);
     m_puhDepth           = (UChar*    )xMalloc(UChar,    uiNumPartition);
     m_puhWidth           = (UChar*    )xMalloc(UChar,    uiNumPartition);
     m_puhHeight          = (UChar*    )xMalloc(UChar,    uiNumPartition);
 
     m_ChromaQpAdj        = new UChar[ uiNumPartition ];
     m_skipFlag           = new Bool[ uiNumPartition ];
-    m_pePartSize         = new Char[ uiNumPartition ];
+    m_pePartSize         = new SChar[ uiNumPartition ];
     memset( m_pePartSize, NUMBER_OF_PART_SIZES,uiNumPartition * sizeof( *m_pePartSize ) );
-    m_pePredMode         = new Char[ uiNumPartition ];
+    m_pePredMode         = new SChar[ uiNumPartition ];
     m_CUTransquantBypass = new Bool[ uiNumPartition ];
 
     m_pbMergeFlag        = (Bool*  )xMalloc(Bool,   uiNumPartition);
@@ -148,9 +148,9 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
     for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
     {
       const RefPicList rpl=RefPicList(i);
-      m_apiMVPIdx[rpl]       = new Char[ uiNumPartition ];
-      m_apiMVPNum[rpl]       = new Char[ uiNumPartition ];
-      memset( m_apiMVPIdx[rpl], -1,uiNumPartition * sizeof( Char ) );
+      m_apiMVPIdx[rpl]       = new SChar[ uiNumPartition ];
+      m_apiMVPNum[rpl]       = new SChar[ uiNumPartition ];
+      memset( m_apiMVPIdx[rpl], -1,uiNumPartition * sizeof( SChar ) );
     }
 
     for (UInt comp=0; comp<MAX_NUM_COMPONENT; comp++)
@@ -159,7 +159,7 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
       const UInt chromaShift = getComponentScaleX(compID, chromaFormatIDC) + getComponentScaleY(compID, chromaFormatIDC);
       const UInt totalSize   = (uiWidth * uiHeight) >> chromaShift;
 
-      m_crossComponentPredictionAlpha[compID] = (Char*  )xMalloc(Char,   uiNumPartition);
+      m_crossComponentPredictionAlpha[compID] = (SChar* )xMalloc(SChar,  uiNumPartition);
       m_puhTransformSkip[compID]              = (UChar* )xMalloc(UChar,  uiNumPartition);
       m_explicitRdpcmMode[compID]             = (UChar* )xMalloc(UChar,  uiNumPartition);
       m_puhCbf[compID]                        = (UChar* )xMalloc(UChar,  uiNumPartition);
@@ -645,7 +645,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
 
   Int iSizeInUchar = sizeof( UChar  ) * m_uiNumPartition;
   Int iSizeInBool  = sizeof( Bool   ) * m_uiNumPartition;
-  Int sizeInChar = sizeof( Char  ) * m_uiNumPartition;
+  Int sizeInChar = sizeof( SChar  ) * m_uiNumPartition;
 
   memset( m_phQP,              qp,  sizeInChar );
   memset( m_pbMergeFlag,        0, iSizeInBool  );
@@ -872,7 +872,7 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   Int iSizeInUchar  = sizeof( UChar ) * uiNumPartition;
   Int iSizeInBool   = sizeof( Bool  ) * uiNumPartition;
 
-  Int sizeInChar  = sizeof( Char ) * uiNumPartition;
+  Int sizeInChar  = sizeof( SChar ) * uiNumPartition;
   memcpy( m_skipFlag   + uiOffset, pcCU->getSkipFlag(),       sizeof( *m_skipFlag )   * uiNumPartition );
   memcpy( m_phQP       + uiOffset, pcCU->getQP(),             sizeInChar                        );
   memcpy( m_pePartSize + uiOffset, pcCU->getPartitionSize(),  sizeof( *m_pePartSize ) * uiNumPartition );
@@ -954,7 +954,7 @@ Void TComDataCU::copyToPic( UChar uhDepth )
 
   Int iSizeInUchar  = sizeof( UChar ) * m_uiNumPartition;
   Int iSizeInBool   = sizeof( Bool  ) * m_uiNumPartition;
-  Int sizeInChar  = sizeof( Char ) * m_uiNumPartition;
+  Int sizeInChar  = sizeof( SChar ) * m_uiNumPartition;
 
   memcpy( pCtu->getSkipFlag() + m_absZIdxInCtu, m_skipFlag, sizeof( *m_skipFlag ) * m_uiNumPartition );
 
@@ -1295,9 +1295,9 @@ TComDataCU* TComDataCU::getQpMinCuAbove( UInt& uiAPartUnitIdx, UInt uiCurrAbsIdx
 
 /** Get reference QP from left QpMinCu or latest coded QP
 *\param   uiCurrAbsIdxInCtu
-*\returns Char   reference QP value
+*\returns SChar   reference QP value
 */
-Char TComDataCU::getRefQP( UInt uiCurrAbsIdxInCtu )
+SChar TComDataCU::getRefQP( UInt uiCurrAbsIdxInCtu )
 {
   UInt lPartIdx = MAX_UINT;
   UInt aPartIdx = MAX_UINT;
@@ -1318,7 +1318,7 @@ Int TComDataCU::getLastValidPartIdx( Int iAbsPartIdx )
   return iLastValidPartIdx;
 }
 
-Char TComDataCU::getLastCodedQP( UInt uiAbsPartIdx )
+SChar TComDataCU::getLastCodedQP( UInt uiAbsPartIdx )
 {
   UInt uiQUPartIdxMask = ~((1<<((getSlice()->getSPS()->getMaxTotalCUDepth() - getSlice()->getPPS()->getMaxCuDQPDepth())<<1))-1);
   Int iLastValidPartIdx = getLastValidPartIdx( uiAbsPartIdx&uiQUPartIdxMask ); // A idx will be invalid if it is off the right or bottom edge of the picture.
@@ -1813,12 +1813,12 @@ Void TComDataCU::setInterDirSubParts( UInt uiDir, UInt uiAbsPartIdx, UInt uiPart
 
 Void TComDataCU::setMVPIdxSubParts( Int iMVPIdx, RefPicList eRefPicList, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
 {
-  setSubPart<Char>( iMVPIdx, m_apiMVPIdx[eRefPicList], uiAbsPartIdx, uiDepth, uiPartIdx );
+  setSubPart<SChar>( iMVPIdx, m_apiMVPIdx[eRefPicList], uiAbsPartIdx, uiDepth, uiPartIdx );
 }
 
 Void TComDataCU::setMVPNumSubParts( Int iMVPNum, RefPicList eRefPicList, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
 {
-  setSubPart<Char>( iMVPNum, m_apiMVPNum[eRefPicList], uiAbsPartIdx, uiDepth, uiPartIdx );
+  setSubPart<SChar>( iMVPNum, m_apiMVPNum[eRefPicList], uiAbsPartIdx, uiDepth, uiPartIdx );
 }
 
 
@@ -1851,9 +1851,9 @@ Void TComDataCU::setTransformSkipPartRange ( UInt useTransformSkip, ComponentID 
   memset((m_puhTransformSkip[compID] + uiAbsPartIdx), useTransformSkip, (sizeof(UChar) * uiCoveredPartIdxes));
 }
 
-Void TComDataCU::setCrossComponentPredictionAlphaPartRange( Char alphaValue, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes )
+Void TComDataCU::setCrossComponentPredictionAlphaPartRange( SChar alphaValue, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes )
 {
-  memset((m_crossComponentPredictionAlpha[compID] + uiAbsPartIdx), alphaValue, (sizeof(Char) * uiCoveredPartIdxes));
+  memset((m_crossComponentPredictionAlpha[compID] + uiAbsPartIdx), alphaValue, (sizeof(SChar) * uiCoveredPartIdxes));
 }
 
 Void TComDataCU::setExplicitRdpcmModePartRange ( UInt rdpcmMode, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes )

@@ -117,7 +117,7 @@ copyPlane(const TComPicYuv &src, const ComponentID srcPlane, TComPicYuv &dest, c
  * \param MSBExtendedBitDepth
  * \param internalBitDepth bit-depth array to scale image data to/from when reading/writing.
  */
-Void TVideoIOYuv::open( Char* pchFile, Bool bWriteMode, const Int fileBitDepth[MAX_NUM_CHANNEL_TYPE], const Int MSBExtendedBitDepth[MAX_NUM_CHANNEL_TYPE], const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] )
+Void TVideoIOYuv::open( const std::string &fileName, Bool bWriteMode, const Int fileBitDepth[MAX_NUM_CHANNEL_TYPE], const Int MSBExtendedBitDepth[MAX_NUM_CHANNEL_TYPE], const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] )
 {
   //NOTE: files cannot have bit depth greater than 16
   for(UInt ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
@@ -142,7 +142,7 @@ Void TVideoIOYuv::open( Char* pchFile, Bool bWriteMode, const Int fileBitDepth[M
 
   if ( bWriteMode )
   {
-    m_cHandle.open( pchFile, ios::binary | ios::out );
+    m_cHandle.open( fileName.c_str(), ios::binary | ios::out );
 
     if( m_cHandle.fail() )
     {
@@ -152,7 +152,7 @@ Void TVideoIOYuv::open( Char* pchFile, Bool bWriteMode, const Int fileBitDepth[M
   }
   else
   {
-    m_cHandle.open( pchFile, ios::binary | ios::in );
+    m_cHandle.open( fileName.c_str(), ios::binary | ios::in );
 
     if( m_cHandle.fail() )
     {
@@ -218,7 +218,7 @@ Void TVideoIOYuv::skipFrames(UInt numFrames, UInt width, UInt height, ChromaForm
   m_cHandle.clear();
 
   /* fall back to consuming the input */
-  Char buf[512];
+  TChar buf[512];
   const streamoff offset_mod_bufsize = offset % sizeof(buf);
   for (streamoff i = 0; i < offset - offset_mod_bufsize; i += sizeof(buf))
   {
@@ -274,8 +274,8 @@ static Bool readPlane(Pel* dst,
   const UInt full_height_dest = height_dest+pad_y_dest;
 
   const UInt stride_file      = (width444 * (is16bit ? 2 : 1)) >> csx_file;
-
-  UChar  *buf   = new UChar[stride_file];
+  std::vector<UChar> bufVec(stride_file);
+  UChar *buf=&(bufVec[0]);
 
   if (compID!=COMPONENT_Y && (fileFormat==CHROMA_400 || destFormat==CHROMA_400))
   {
@@ -298,7 +298,6 @@ static Bool readPlane(Pel* dst,
       fd.seekg(height_file*stride_file, ios::cur);
       if (fd.eof() || fd.fail() )
       {
-        delete[] buf;
         return false;
       }
     }
@@ -312,10 +311,9 @@ static Bool readPlane(Pel* dst,
       if ((y444&mask_y_file)==0)
       {
         // read a new line
-        fd.read(reinterpret_cast<Char*>(buf), stride_file);
+        fd.read(reinterpret_cast<TChar*>(buf), stride_file);
         if (fd.eof() || fd.fail() )
         {
-          delete[] buf;
           return false;
         }
       }
@@ -382,7 +380,6 @@ static Bool readPlane(Pel* dst,
       }
     }
   }
-  delete[] buf;
   return true;
 }
 
@@ -420,7 +417,8 @@ static Bool writePlane(ostream& fd, Pel* src, Bool is16bit,
   const UInt width_file       = width444 >>csx_file;
   const UInt height_file      = height444>>csy_file;
 
-  UChar  *buf   = new UChar[stride_file];
+  std::vector<UChar> bufVec(stride_file);
+  UChar *buf=&(bufVec[0]);
 
   if (compID!=COMPONENT_Y && (fileFormat==CHROMA_400 || srcFormat==CHROMA_400))
   {
@@ -448,10 +446,9 @@ static Bool writePlane(ostream& fd, Pel* src, Bool is16bit,
           }
         }
 
-        fd.write(reinterpret_cast<Char*>(buf), stride_file);
+        fd.write(reinterpret_cast<const TChar*>(buf), stride_file);
         if (fd.eof() || fd.fail() )
         {
-          delete[] buf;
           return false;
         }
       }
@@ -507,10 +504,9 @@ static Bool writePlane(ostream& fd, Pel* src, Bool is16bit,
           }
         }
 
-        fd.write(reinterpret_cast<Char*>(buf), stride_file);
+        fd.write(reinterpret_cast<const TChar*>(buf), stride_file);
         if (fd.eof() || fd.fail() )
         {
-          delete[] buf;
           return false;
         }
       }
@@ -522,7 +518,6 @@ static Bool writePlane(ostream& fd, Pel* src, Bool is16bit,
 
     }
   }
-  delete[] buf;
   return true;
 }
 
@@ -545,7 +540,8 @@ static Bool writeField(ostream& fd, Pel* top, Pel* bottom, Bool is16bit,
   const UInt width_file       = width444 >>csx_file;
   const UInt height_file      = height444>>csy_file;
 
-  UChar  *buf   = new UChar[stride_file * 2];
+  std::vector<UChar> bufVec(stride_file * 2);
+  UChar *buf=&(bufVec[0]);
 
   if (compID!=COMPONENT_Y && (fileFormat==CHROMA_400 || srcFormat==CHROMA_400))
   {
@@ -578,10 +574,9 @@ static Bool writeField(ostream& fd, Pel* top, Pel* bottom, Bool is16bit,
           }
         }
 
-        fd.write(reinterpret_cast<Char*>(buf), (stride_file * 2));
+        fd.write(reinterpret_cast<const TChar*>(buf), (stride_file * 2));
         if (fd.eof() || fd.fail() )
         {
-          delete[] buf;
           return false;
         }
       }
@@ -643,10 +638,9 @@ static Bool writeField(ostream& fd, Pel* top, Pel* bottom, Bool is16bit,
           }
         }
 
-        fd.write(reinterpret_cast<Char*>(buf), (stride_file * 2));
+        fd.write(reinterpret_cast<const TChar*>(buf), (stride_file * 2));
         if (fd.eof() || fd.fail() )
         {
-          delete[] buf;
           return false;
         }
       }
@@ -659,7 +653,6 @@ static Bool writeField(ostream& fd, Pel* top, Pel* bottom, Bool is16bit,
 
     }
   }
-  delete[] buf;
   return true;
 }
 

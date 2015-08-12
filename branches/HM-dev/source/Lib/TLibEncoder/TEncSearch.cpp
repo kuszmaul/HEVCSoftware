@@ -304,7 +304,7 @@ Void TEncSearch::init(TEncCfg*       pcEncCfg,
 #endif
     }
 
-    m_phQTTempCrossComponentPredictionAlpha[ch]    = new Char  [uiNumPartitions];
+    m_phQTTempCrossComponentPredictionAlpha[ch]    = new SChar  [uiNumPartitions];
     m_pSharedPredTransformSkip[ch]                 = new Pel   [MAX_CU_SIZE*MAX_CU_SIZE];
     m_pcQTTempTUCoeff[ch]                          = new TCoeff[MAX_CU_SIZE*MAX_CU_SIZE];
 #if ADAPTIVE_QP_SELECTION
@@ -1879,7 +1879,7 @@ TEncSearch::xStoreCrossComponentPredictionResult(       Pel    *pResiDst,
   }
 }
 
-Char
+SChar
 TEncSearch::xCalcCrossComponentPredictionAlpha(       TComTU &rTu,
                                                 const ComponentID compID,
                                                 const Pel*        piResiL,
@@ -1896,7 +1896,7 @@ TEncSearch::xCalcCrossComponentPredictionAlpha(       TComTU &rTu,
   const Int  absPartIdx = rTu.GetAbsPartIdxTU( compID );
   const Int diffBitDepth = pCU->getSlice()->getSPS()->getDifferentialLumaChromaBitDepth();
 
-  Char alpha = 0;
+  SChar alpha = 0;
   Int SSxy  = 0;
   Int SSxx  = 0;
 
@@ -1916,9 +1916,9 @@ TEncSearch::xCalcCrossComponentPredictionAlpha(       TComTU &rTu,
   if( SSxx != 0 )
   {
     Double dAlpha = SSxy / Double( SSxx );
-    alpha = Char(Clip3<Int>(-16, 16, (Int)(dAlpha * 16)));
+    alpha = SChar(Clip3<Int>(-16, 16, (Int)(dAlpha * 16)));
 
-    static const Char alphaQuant[17] = {0, 1, 1, 2, 2, 2, 4, 4, 4, 4, 4, 4, 8, 8, 8, 8, 8};
+    static const SChar alphaQuant[17] = {0, 1, 1, 2, 2, 2, 4, 4, 4, 4, 4, 4, 8, 8, 8, 8, 8};
 
     alpha = (alpha < 0) ? -alphaQuant[Int(-alpha)] : alphaQuant[Int(alpha)];
   }
@@ -1997,7 +1997,7 @@ TEncSearch::xRecurIntraChromaCodingQT(TComYuv*    pcOrgYuv,
         Distortion singleDistCTmp            = 0;
         Double     singleCostTmp             = 0;
         UInt       singleCbfCTmp             = 0;
-        Char       bestCrossCPredictionAlpha = 0;
+        SChar      bestCrossCPredictionAlpha = 0;
         Int        bestTransformSkipMode     = 0;
 
         const Bool checkCrossComponentPrediction =    (pcCU->getIntraDir(CHANNEL_TYPE_CHROMA, subTUAbsPartIdx) == DM_CHROMA_IDX)
@@ -2657,7 +2657,7 @@ TEncSearch::estIntraPredChromaQT(TComDataCU* pcCU,
               const ComponentID compID = ComponentID(componentIndex);
               ::memcpy( m_puhQTTempCbf[compID], pcCU->getCbf( compID )+uiPartOffset, uiQPartNum * sizeof( UChar ) );
               ::memcpy( m_puhQTTempTransformSkipFlag[compID], pcCU->getTransformSkip( compID )+uiPartOffset, uiQPartNum * sizeof( UChar ) );
-              ::memcpy( m_phQTTempCrossComponentPredictionAlpha[compID], pcCU->getCrossComponentPredictionAlpha(compID)+uiPartOffset, uiQPartNum * sizeof( Char ) );
+              ::memcpy( m_phQTTempCrossComponentPredictionAlpha[compID], pcCU->getCrossComponentPredictionAlpha(compID)+uiPartOffset, uiQPartNum * sizeof( SChar ) );
             }
           }
         }
@@ -2670,7 +2670,7 @@ TEncSearch::estIntraPredChromaQT(TComDataCU* pcCU,
           const ComponentID compID = ComponentID(componentIndex);
           ::memcpy( pcCU->getCbf( compID )+uiPartOffset, m_puhQTTempCbf[compID], uiQPartNum * sizeof( UChar ) );
           ::memcpy( pcCU->getTransformSkip( compID )+uiPartOffset, m_puhQTTempTransformSkipFlag[compID], uiQPartNum * sizeof( UChar ) );
-          ::memcpy( pcCU->getCrossComponentPredictionAlpha(compID)+uiPartOffset, m_phQTTempCrossComponentPredictionAlpha[compID], uiQPartNum * sizeof( Char ) );
+          ::memcpy( pcCU->getCrossComponentPredictionAlpha(compID)+uiPartOffset, m_phQTTempCrossComponentPredictionAlpha[compID], uiQPartNum * sizeof( SChar ) );
         }
       }
 
@@ -4516,7 +4516,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     {
       const ComponentID component = ComponentID(comp);
       ::memset( pcCU->getCbf( component ) , 0, uiQPartNum * sizeof(UChar) );
-      ::memset( pcCU->getCrossComponentPredictionAlpha(component), 0, ( uiQPartNum * sizeof(Char) ) );
+      ::memset( pcCU->getCrossComponentPredictionAlpha(component), 0, ( uiQPartNum * sizeof(SChar) ) );
     }
     static const UInt useTS[MAX_NUM_COMPONENT]={0,0,0};
     pcCU->setTransformSkipSubParts ( useTS, 0, pcCU->getDepth(0) );
@@ -4616,7 +4616,7 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
   UInt       uiBestTransformMode         [MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{0,0},{0,0},{0,0}};
   //  Stores the best explicit RDPCM mode for a TU encoded without split
   UInt       bestExplicitRdpcmModeUnSplit[MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{3,3}, {3,3}, {3,3}};
-  Char       bestCrossCPredictionAlpha   [MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{0,0},{0,0},{0,0}};
+  SChar      bestCrossCPredictionAlpha   [MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{0,0},{0,0},{0,0}};
 
   m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
 
@@ -4683,7 +4683,7 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
                                                          && pcCU->getSlice()->getPPS()->getPpsRangeExtension().getCrossComponentPredictionEnabledFlag()
                                                          && (pcCU->getCbf(subTUAbsPartIdx, COMPONENT_Y, uiTrMode) != 0);
 
-          Char preCalcAlpha = 0;
+          SChar preCalcAlpha = 0;
           const Pel *pLumaResi = m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix( COMPONENT_Y, rTu.getRect( COMPONENT_Y ).x0, rTu.getRect( COMPONENT_Y ).y0 );
 
           if (isCrossCPredictionAvailable)

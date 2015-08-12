@@ -81,10 +81,10 @@ protected:
   Void xParseSEIKneeFunctionInfo              (SEIKneeFunctionInfo& sei,              UInt payloadSize,                     std::ostream *pDecodedMessageOutputStream);
   Void xParseSEIMasteringDisplayColourVolume  (SEIMasteringDisplayColourVolume& sei,  UInt payloadSize,                     std::ostream *pDecodedMessageOutputStream);
 
-  Void sei_read_code(std::ostream *pOS, UInt uiLength, UInt& ruiCode, const Char *pSymbolName);
-  Void sei_read_uvlc(std::ostream *pOS,                UInt& ruiCode, const Char *pSymbolName);
-  Void sei_read_svlc(std::ostream *pOS,                Int&  ruiCode, const Char *pSymbolName);
-  Void sei_read_flag(std::ostream *pOS,                UInt& ruiCode, const Char *pSymbolName);
+  Void sei_read_code(std::ostream *pOS, UInt uiLength, UInt& ruiCode, const TChar *pSymbolName);
+  Void sei_read_uvlc(std::ostream *pOS,                UInt& ruiCode, const TChar *pSymbolName);
+  Void sei_read_svlc(std::ostream *pOS,                Int&  ruiCode, const TChar *pSymbolName);
+  Void sei_read_flag(std::ostream *pOS,                UInt& ruiCode, const TChar *pSymbolName);
 };
 
 

@@ -66,16 +66,8 @@ Void TAppDecTop::create()
 
 Void TAppDecTop::destroy()
 {
-  if (m_pchBitstreamFile)
-  {
-    free (m_pchBitstreamFile);
-    m_pchBitstreamFile = NULL;
-  }
-  if (m_pchReconFile)
-  {
-    free (m_pchReconFile);
-    m_pchReconFile = NULL;
-  }
+  m_bitstreamFileName.clear();
+  m_reconFileName.clear();
 }
 
 // ====================================================================================================================
@@ -95,10 +87,10 @@ Void TAppDecTop::decode()
   Int                 poc;
   TComList<TComPic*>* pcListPic = NULL;
 
-  ifstream bitstreamFile(m_pchBitstreamFile, ifstream::in | ifstream::binary);
+  ifstream bitstreamFile(m_bitstreamFileName.c_str(), ifstream::in | ifstream::binary);
   if (!bitstreamFile)
   {
-    fprintf(stderr, "\nfailed to open bitstream file `%s' for reading\n", m_pchBitstreamFile);
+    fprintf(stderr, "\nfailed to open bitstream file `%s' for reading\n", m_bitstreamFileName.c_str());
     exit(EXIT_FAILURE);
   }
 
@@ -201,7 +193,7 @@ Void TAppDecTop::decode()
 
     if( pcListPic )
     {
-      if ( m_pchReconFile && !openedReconFile )
+      if ( (!m_reconFileName.empty()) && (!openedReconFile) )
       {
         const BitDepths &bitDepths=pcListPic->front()->getPicSym()->getSPS().getBitDepths(); // use bit depths of first reconstructed picture.
         for (UInt channelType = 0; channelType < MAX_NUM_CHANNEL_TYPE; channelType++)
@@ -212,7 +204,7 @@ Void TAppDecTop::decode()
           }
         }
 
-        m_cTVideoIOYuvReconFile.open( m_pchReconFile, true, m_outputBitDepth, m_outputBitDepth, bitDepths.recon ); // write mode
+        m_cTVideoIOYuvReconFile.open( m_reconFileName, true, m_outputBitDepth, m_outputBitDepth, bitDepths.recon ); // write mode
         openedReconFile = true;
       }
       // write reconstruction to file
@@ -267,9 +259,9 @@ Void TAppDecTop::xCreateDecLib()
 
 Void TAppDecTop::xDestroyDecLib()
 {
-  if ( m_pchReconFile )
+  if ( !m_reconFileName.empty() )
   {
-    m_cTVideoIOYuvReconFile. close();
+    m_cTVideoIOYuvReconFile.close();
   }
 
   // destroy decoder class
@@ -361,7 +353,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
       {
         // write to file
         numPicsNotYetDisplayed = numPicsNotYetDisplayed-2;
-        if ( m_pchReconFile )
+        if ( !m_reconFileName.empty() )
         {
           const Window &conf = pcPicTop->getConformanceWindow();
           const Window  defDisp = m_respectDefDispWindow ? pcPicTop->getDefDisplayWindow() : Window();
@@ -430,7 +422,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
           dpbFullness--;
         }
 
-        if ( m_pchReconFile )
+        if ( !m_reconFileName.empty() )
         {
           const Window &conf    = pcPic->getConformanceWindow();
           const Window  defDisp = m_respectDefDispWindow ? pcPic->getDefDisplayWindow() : Window();
@@ -490,7 +482,7 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
       if ( pcPicTop->getOutputMark() && pcPicBottom->getOutputMark() && !(pcPicTop->getPOC()%2) && (pcPicBottom->getPOC() == pcPicTop->getPOC()+1) )
       {
         // write to file
-        if ( m_pchReconFile )
+        if ( !m_reconFileName.empty() )
         {
           const Window &conf = pcPicTop->getConformanceWindow();
           const Window  defDisp = m_respectDefDispWindow ? pcPicTop->getDefDisplayWindow() : Window();
@@ -548,7 +540,7 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
       if ( pcPic->getOutputMark() )
       {
         // write to file
-        if ( m_pchReconFile )
+        if ( !m_reconFileName.empty() )
         {
           const Window &conf    = pcPic->getConformanceWindow();
           const Window  defDisp = m_respectDefDispWindow ? pcPic->getDefDisplayWindow() : Window();

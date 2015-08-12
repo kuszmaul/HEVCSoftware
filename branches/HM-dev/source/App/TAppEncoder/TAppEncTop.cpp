@@ -350,7 +350,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setWaveFrontSynchro                                  ( m_iWaveFrontSynchro );
   m_cTEncTop.setTMVPModeId                                        ( m_TMVPModeId );
   m_cTEncTop.setUseScalingListId                                  ( m_useScalingListId  );
-  m_cTEncTop.setScalingListFile                                   ( m_scalingListFile   );
+  m_cTEncTop.setScalingListFileName                               ( m_scalingListFileName );
   m_cTEncTop.setSignHideFlag                                      ( m_signHideFlag);
   m_cTEncTop.setUseRateCtrl                                       ( m_RCEnableRateControl );
   m_cTEncTop.setTargetBitrate                                     ( m_RCTargetBitrate );
@@ -411,12 +411,12 @@ Void TAppEncTop::xInitLibCfg()
 Void TAppEncTop::xCreateLib()
 {
   // Video I/O
-  m_cTVideoIOYuvInputFile.open( m_pchInputFile,     false, m_inputBitDepth, m_MSBExtendedBitDepth, m_internalBitDepth );  // read  mode
+  m_cTVideoIOYuvInputFile.open( m_inputFileName,     false, m_inputBitDepth, m_MSBExtendedBitDepth, m_internalBitDepth );  // read  mode
   m_cTVideoIOYuvInputFile.skipFrames(m_FrameSkip, m_iSourceWidth - m_aiPad[0], m_iSourceHeight - m_aiPad[1], m_InputChromaFormatIDC);
 
-  if (m_pchReconFile)
+  if (!m_reconFileName.empty())
   {
-    m_cTVideoIOYuvReconFile.open(m_pchReconFile, true, m_outputBitDepth, m_outputBitDepth, m_internalBitDepth);  // write mode
+    m_cTVideoIOYuvReconFile.open(m_reconFileName, true, m_outputBitDepth, m_outputBitDepth, m_internalBitDepth);  // write mode
   }
 
   // Neo Decoder
@@ -452,10 +452,10 @@ Void TAppEncTop::xInitLib(Bool isFieldCoding)
  */
 Void TAppEncTop::encode()
 {
-  fstream bitstreamFile(m_pchBitstreamFile, fstream::binary | fstream::out);
+  fstream bitstreamFile(m_bitstreamFileName.c_str(), fstream::binary | fstream::out);
   if (!bitstreamFile)
   {
-    fprintf(stderr, "\nfailed to open bitstream file `%s' for writing\n", m_pchBitstreamFile);
+    fprintf(stderr, "\nfailed to open bitstream file `%s' for writing\n", m_bitstreamFileName.c_str());
     exit(EXIT_FAILURE);
   }
 
@@ -625,7 +625,7 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
       TComPicYuv*  pcPicYuvRecTop  = *(iterPicYuvRec++);
       TComPicYuv*  pcPicYuvRecBottom  = *(iterPicYuvRec++);
 
-      if (m_pchReconFile)
+      if (!m_reconFileName.empty())
       {
         m_cTVideoIOYuvReconFile.write( pcPicYuvRecTop, pcPicYuvRecBottom, ipCSC, m_confWinLeft, m_confWinRight, m_confWinTop, m_confWinBottom, NUM_CHROMA_FORMAT, m_isTopFieldFirst );
       }
@@ -654,7 +654,7 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
     for ( i = 0; i < iNumEncoded; i++ )
     {
       TComPicYuv*  pcPicYuvRec  = *(iterPicYuvRec++);
-      if (m_pchReconFile)
+      if (!m_reconFileName.empty())
       {
         m_cTVideoIOYuvReconFile.write( pcPicYuvRec, ipCSC, m_confWinLeft, m_confWinRight, m_confWinTop, m_confWinBottom,
             NUM_CHROMA_FORMAT, m_bClipOutputVideoToRec709Range  );

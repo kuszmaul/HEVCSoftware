@@ -91,11 +91,11 @@ private:
   // -------------------------------------------------------------------------------------------------------------------
 
   Bool*          m_skipFlag;           ///< array of skip flags
-  Char*          m_pePartSize;         ///< array of partition sizes
-  Char*          m_pePredMode;         ///< array of prediction modes
-  Char*          m_crossComponentPredictionAlpha[MAX_NUM_COMPONENT]; ///< array of cross-component prediction alpha values
+  SChar*         m_pePartSize;         ///< array of partition sizes
+  SChar*         m_pePredMode;         ///< array of prediction modes
+  SChar*         m_crossComponentPredictionAlpha[MAX_NUM_COMPONENT]; ///< array of cross-component prediction alpha values
   Bool*          m_CUTransquantBypass;   ///< array of cu_transquant_bypass flags
-  Char*          m_phQP;               ///< array of QP values
+  SChar*         m_phQP;               ///< array of QP values
   UChar*         m_ChromaQpAdj;        ///< array of chroma QP adjustments (indexed). when value = 0, cu_chroma_qp_offset_flag=0; when value>0, indicates cu_chroma_qp_offset_flag=1 and cu_chroma_qp_offset_idx=value-1
   UInt           m_codedChromaQpAdj;
   UChar*         m_puhTrIdx;           ///< array of transform indices
@@ -135,8 +135,8 @@ private:
 #endif
   UChar*        m_puhIntraDir[MAX_NUM_CHANNEL_TYPE]; // 0-> Luma, 1-> Chroma
   UChar*        m_puhInterDir;        ///< array of inter directions
-  Char*         m_apiMVPIdx[NUM_REF_PIC_LIST_01];       ///< array of motion vector predictor candidates
-  Char*         m_apiMVPNum[NUM_REF_PIC_LIST_01];       ///< array of number of possible motion vectors predictors
+  SChar*        m_apiMVPIdx[NUM_REF_PIC_LIST_01];       ///< array of motion vector predictor candidates
+  SChar*        m_apiMVPNum[NUM_REF_PIC_LIST_01];       ///< array of number of possible motion vectors predictors
   Bool*         m_pbIPCMFlag;         ///< array of intra_pcm flags
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -148,7 +148,7 @@ private:
   Distortion    m_uiTotalDistortion;  ///< sum of partition distortion
   UInt          m_uiTotalBits;        ///< sum of partition bits
   UInt          m_uiTotalBins;        ///< sum of partition bins
-  Char          m_codedQP;
+  SChar         m_codedQP;
   UChar*        m_explicitRdpcmMode[MAX_NUM_COMPONENT]; ///< Stores the explicit RDPCM mode for all TUs belonging to this CU
 
 protected:
@@ -215,7 +215,7 @@ public:
   // member functions for CU data
   // -------------------------------------------------------------------------------------------------------------------
 
-  Char*         getPartitionSize      ()                        { return m_pePartSize;        }
+  SChar*        getPartitionSize      ()                        { return m_pePartSize;        }
   PartSize      getPartitionSize      ( UInt uiIdx )            { return static_cast<PartSize>( m_pePartSize[uiIdx] ); }
   Void          setPartitionSize      ( UInt uiIdx, PartSize uh){ m_pePartSize[uiIdx] = uh;   }
   Void          setPartSizeSubParts   ( PartSize eMode, UInt uiAbsPartIdx, UInt uiDepth );
@@ -226,13 +226,13 @@ public:
   Void          setSkipFlag           ( UInt idx, Bool skip)     { m_skipFlag[idx] = skip;   }
   Void          setSkipFlagSubParts   ( Bool skip, UInt absPartIdx, UInt depth );
 
-  Char*         getPredictionMode     ()                        { return m_pePredMode;        }
+  SChar*        getPredictionMode     ()                        { return m_pePredMode;        }
   PredMode      getPredictionMode     ( UInt uiIdx )            { return static_cast<PredMode>( m_pePredMode[uiIdx] ); }
   Void          setPredictionMode     ( UInt uiIdx, PredMode uh){ m_pePredMode[uiIdx] = uh;   }
   Void          setPredModeSubParts   ( PredMode eMode, UInt uiAbsPartIdx, UInt uiDepth );
 
-  Char*         getCrossComponentPredictionAlpha( ComponentID compID )             { return m_crossComponentPredictionAlpha[compID];         }
-  Char          getCrossComponentPredictionAlpha( UInt uiIdx, ComponentID compID ) { return m_crossComponentPredictionAlpha[compID][uiIdx];  }
+  SChar*        getCrossComponentPredictionAlpha( ComponentID compID )             { return m_crossComponentPredictionAlpha[compID];         }
+  SChar         getCrossComponentPredictionAlpha( UInt uiIdx, ComponentID compID ) { return m_crossComponentPredictionAlpha[compID][uiIdx];  }
 
   Bool*         getCUTransquantBypass ()                        { return m_CUTransquantBypass;        }
   Bool          getCUTransquantBypass( UInt uiIdx )             { return m_CUTransquantBypass[uiIdx]; }
@@ -247,22 +247,22 @@ public:
 
   Void          setSizeSubParts       ( UInt uiWidth, UInt uiHeight, UInt uiAbsPartIdx, UInt uiDepth );
 
-  Char*         getQP                 ()                        { return m_phQP;              }
-  Char          getQP                 ( UInt uiIdx ) const      { return m_phQP[uiIdx];       }
-  Void          setQP                 ( UInt uiIdx, Char value ){ m_phQP[uiIdx] =  value;     }
+  SChar*        getQP                 ()                        { return m_phQP;              }
+  SChar         getQP                 ( UInt uiIdx ) const      { return m_phQP[uiIdx];       }
+  Void          setQP                 ( UInt uiIdx, SChar value){ m_phQP[uiIdx] =  value;     }
   Void          setQPSubParts         ( Int qp,   UInt uiAbsPartIdx, UInt uiDepth );
   Int           getLastValidPartIdx   ( Int iAbsPartIdx );
-  Char          getLastCodedQP        ( UInt uiAbsPartIdx );
+  SChar         getLastCodedQP        ( UInt uiAbsPartIdx );
   Void          setQPSubCUs           ( Int qp, UInt absPartIdx, UInt depth, Bool &foundNonZeroCbf );
-  Void          setCodedQP            ( Char qp )               { m_codedQP = qp;             }
-  Char          getCodedQP            ()                        { return m_codedQP;           }
+  Void          setCodedQP            ( SChar qp )              { m_codedQP = qp;             }
+  SChar         getCodedQP            ()                        { return m_codedQP;           }
 
   UChar*        getChromaQpAdj        ()                        { return m_ChromaQpAdj;       } ///< array of chroma QP adjustments (indexed). when value = 0, cu_chroma_qp_offset_flag=0; when value>0, indicates cu_chroma_qp_offset_flag=1 and cu_chroma_qp_offset_idx=value-1
   UChar         getChromaQpAdj        (Int idx)           const { return m_ChromaQpAdj[idx];  } ///< When value = 0, cu_chroma_qp_offset_flag=0; when value>0, indicates cu_chroma_qp_offset_flag=1 and cu_chroma_qp_offset_idx=value-1
   Void          setChromaQpAdj        (Int idx, UChar val)      { m_ChromaQpAdj[idx] = val;   } ///< When val = 0,   cu_chroma_qp_offset_flag=0; when val>0,   indicates cu_chroma_qp_offset_flag=1 and cu_chroma_qp_offset_idx=val-1
   Void          setChromaQpAdjSubParts( UChar val, Int absPartIdx, Int depth );
-  Void          setCodedChromaQpAdj   ( Char qp )               { m_codedChromaQpAdj = qp;    }
-  Char          getCodedChromaQpAdj   ()                        { return m_codedChromaQpAdj;  }
+  Void          setCodedChromaQpAdj   ( SChar qp )              { m_codedChromaQpAdj = qp;    }
+  SChar         getCodedChromaQpAdj   ()                        { return m_codedChromaQpAdj;  }
 
   Bool          isLosslessCoded       ( UInt absPartIdx );
 
@@ -281,7 +281,7 @@ public:
 
   Bool          isRDPCMEnabled         ( UInt uiAbsPartIdx )  { return getSlice()->getSPS()->getSpsRangeExtension().getRdpcmEnabledFlag(isIntra(uiAbsPartIdx) ? RDPCM_SIGNAL_IMPLICIT : RDPCM_SIGNAL_EXPLICIT); }
 
-  Void          setCrossComponentPredictionAlphaPartRange    ( Char alphaValue, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
+  Void          setCrossComponentPredictionAlphaPartRange    ( SChar alphaValue, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
   Void          setTransformSkipPartRange                    ( UInt useTransformSkip, ComponentID compID, UInt uiAbsPartIdx, UInt uiCoveredPartIdxes );
 
   UInt          getQuadtreeTULog2MinSizeInCU( UInt uiIdx );
@@ -367,11 +367,11 @@ public:
 
   Void          setMVPIdx             ( RefPicList eRefPicList, UInt uiIdx, Int iMVPIdx)  { m_apiMVPIdx[eRefPicList][uiIdx] = iMVPIdx;  }
   Int           getMVPIdx             ( RefPicList eRefPicList, UInt uiIdx)               { return m_apiMVPIdx[eRefPicList][uiIdx];     }
-  Char*         getMVPIdx             ( RefPicList eRefPicList )                          { return m_apiMVPIdx[eRefPicList];            }
+  SChar*        getMVPIdx             ( RefPicList eRefPicList )                          { return m_apiMVPIdx[eRefPicList];            }
 
   Void          setMVPNum             ( RefPicList eRefPicList, UInt uiIdx, Int iMVPNum ) { m_apiMVPNum[eRefPicList][uiIdx] = iMVPNum;  }
   Int           getMVPNum             ( RefPicList eRefPicList, UInt uiIdx )              { return m_apiMVPNum[eRefPicList][uiIdx];     }
-  Char*         getMVPNum             ( RefPicList eRefPicList )                          { return m_apiMVPNum[eRefPicList];            }
+  SChar*        getMVPNum             ( RefPicList eRefPicList )                          { return m_apiMVPNum[eRefPicList];            }
 
   Void          setMVPIdxSubParts     ( Int iMVPIdx, RefPicList eRefPicList, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   Void          setMVPNumSubParts     ( Int iMVPNum, RefPicList eRefPicList, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
@@ -412,7 +412,7 @@ public:
 
   TComDataCU*   getQpMinCuLeft              ( UInt&  uiLPartUnitIdx , UInt uiCurrAbsIdxInCtu );
   TComDataCU*   getQpMinCuAbove             ( UInt&  uiAPartUnitIdx , UInt uiCurrAbsIdxInCtu );
-  Char          getRefQP                    ( UInt   uiCurrAbsIdxInCtu                       );
+  SChar         getRefQP                    ( UInt   uiCurrAbsIdxInCtu                       );
 
   /// returns CU and part index of the PU above the top row of the current uiCurrPartUnitIdx of the CU, at a horizontal offset (to the right) of uiPartUnitOffset (in parts)
   TComDataCU*   getPUAboveRight             ( UInt&  uiARPartUnitIdx, UInt uiCurrPartUnitIdx, UInt uiPartUnitOffset = 1, Bool bEnforceSliceRestriction=true );
