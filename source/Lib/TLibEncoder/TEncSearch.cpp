@@ -74,13 +74,6 @@ static const TComMv s_acMvRefineQ[9] =
   TComMv(  1,  1 )  // 8
 };
 
-static const UInt s_auiDFilter[9] =
-{
-  0, 1, 0,
-  2, 3, 2,
-  0, 1, 0
-};
-
 static Void offsetSubTUCBFs(TComTU &rTu, const ComponentID compID)
 {
         TComDataCU *pcCU              = rTu.getCU();
@@ -124,16 +117,13 @@ TEncSearch::TEncSearch()
 , m_pppcRDSbacCoder (NULL)
 , m_pcRDGoOnSbacCoder (NULL)
 , m_pTempPel (NULL)
-, m_puiDFilter (NULL)
 , m_isInitialized (false)
 {
   for (UInt ch=0; ch<MAX_NUM_COMPONENT; ch++)
   {
     m_ppcQTTempCoeff[ch]                           = NULL;
-    m_pcQTTempCoeff[ch]                            = NULL;
 #if ADAPTIVE_QP_SELECTION
     m_ppcQTTempArlCoeff[ch]                        = NULL;
-    m_pcQTTempArlCoeff[ch]                         = NULL;
 #endif
     m_puhQTTempCbf[ch]                             = NULL;
     m_phQTTempCrossComponentPredictionAlpha[ch]    = NULL;
@@ -181,11 +171,9 @@ Void TEncSearch::destroy()
 #endif
       }
       delete[] m_ppcQTTempCoeff[ch];
-      delete[] m_pcQTTempCoeff[ch];
       delete[] m_puhQTTempCbf[ch];
 #if ADAPTIVE_QP_SELECTION
       delete[] m_ppcQTTempArlCoeff[ch];
-      delete[] m_pcQTTempArlCoeff[ch];
 #endif
     }
 
@@ -259,8 +247,6 @@ Void TEncSearch::init(TEncCfg*       pcEncCfg,
     }
   }
 
-  m_puiDFilter = s_auiDFilter + 4;
-
   // initialize motion cost
   for( Int iNum = 0; iNum < AMVP_MAX_NUM_CANDS+1; iNum++)
   {
@@ -289,10 +275,8 @@ Void TEncSearch::init(TEncCfg*       pcEncCfg,
     const UInt csx=::getComponentScaleX(ComponentID(ch), cform);
     const UInt csy=::getComponentScaleY(ComponentID(ch), cform);
     m_ppcQTTempCoeff[ch] = new TCoeff* [uiNumLayersToAllocate];
-    m_pcQTTempCoeff[ch]   = new TCoeff [(maxCUWidth*maxCUHeight)>>(csx+csy)   ];
 #if ADAPTIVE_QP_SELECTION
     m_ppcQTTempArlCoeff[ch]  = new TCoeff*[uiNumLayersToAllocate];
-    m_pcQTTempArlCoeff[ch]   = new TCoeff [(maxCUWidth*maxCUHeight)>>(csx+csy)   ];
 #endif
     m_puhQTTempCbf[ch] = new UChar  [uiNumPartitions];
 

@@ -69,10 +69,8 @@ class TEncSearch : public TComPrediction
 {
 private:
   TCoeff**        m_ppcQTTempCoeff[MAX_NUM_COMPONENT /* 0->Y, 1->Cb, 2->Cr*/];
-  TCoeff*         m_pcQTTempCoeff[MAX_NUM_COMPONENT];
 #if ADAPTIVE_QP_SELECTION
   TCoeff**        m_ppcQTTempArlCoeff[MAX_NUM_COMPONENT];
-  TCoeff*         m_pcQTTempArlCoeff[MAX_NUM_COMPONENT];
 #endif
   UChar*          m_puhQTTempTrIdx;
   UChar*          m_puhQTTempCbf[MAX_NUM_COMPONENT];
@@ -114,7 +112,6 @@ protected:
 
   // Misc.
   Pel*            m_pTempPel;
-  const UInt*     m_puiDFilter;
 
   // AMVP cost computation
   // UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+1][AMVP_MAX_NUM_CANDS];
