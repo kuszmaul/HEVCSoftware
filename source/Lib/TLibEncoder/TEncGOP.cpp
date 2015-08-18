@@ -687,7 +687,7 @@ Void TEncGOP::xUpdateDuData(AccessUnit &testAU, std::deque<DUData> &duData)
   }
 
   // The last DU may have a trailing SEI
-  if (m_pcCfg->getDecodedPictureHashSEIEnabled())
+  if (m_pcCfg->getDecodedPictureHashSEIType()!=HASHTYPE_NONE)
   {
     duData.back().accumBitsDU += ( 20 << 3 ); // probably around 20 bytes - should be further adjusted, e.g. by type
     duData.back().accumNalsDU += 1;
@@ -1000,6 +1000,39 @@ static UInt calculateCollocatedFromL1Flag(TEncCfg *pCfg, const Int GOPid, const 
   else
   {
     return 1;
+  }
+}
+
+
+static Void
+printHash(const HashType hashType, const std::string &digestStr)
+{
+  const TChar *decodedPictureHashModeName;
+  switch (hashType)
+  {
+    case HASHTYPE_MD5:
+      decodedPictureHashModeName = "MD5";
+      break;
+    case HASHTYPE_CRC:
+      decodedPictureHashModeName = "CRC";
+      break;
+    case HASHTYPE_CHECKSUM:
+      decodedPictureHashModeName = "Checksum";
+      break;
+    default:
+      decodedPictureHashModeName = NULL;
+      break;
+  }
+  if (decodedPictureHashModeName != NULL)
+  {
+    if (digestStr.empty())
+    {
+      printf(" [%s:%s]", decodedPictureHashModeName, "?");
+    }
+    else
+    {
+      printf(" [%s:%s]", decodedPictureHashModeName, digestStr.c_str());
+    }
   }
 }
 
@@ -1693,7 +1726,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     Double dEncTime = (Double)(clock()-iBeforeTime) / CLOCKS_PER_SEC;
 
     std::string digestStr;
-    if (m_pcCfg->getDecodedPictureHashSEIEnabled())
+    if (m_pcCfg->getDecodedPictureHashSEIType()!=HASHTYPE_NONE)
     {
       SEIDecodedPictureHash *decodedPictureHashSei = new SEIDecodedPictureHash();
       m_seiEncoder.initDecodedPictureHashSEI(decodedPictureHashSei, pcPic, digestStr, pcSlice->getSPS()->getBitDepths());
@@ -1705,21 +1738,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     xCalculateAddPSNRs( isField, isTff, iGOPid, pcPic, accessUnit, rcListPic, dEncTime, snr_conversion, printFrameMSE );
 
-    if (!digestStr.empty())
-    {
-      if(m_pcCfg->getDecodedPictureHashSEIEnabled() == 1)
-      {
-        printf(" [MD5:%s]", digestStr.c_str());
-      }
-      else if(m_pcCfg->getDecodedPictureHashSEIEnabled() == 2)
-      {
-        printf(" [CRC:%s]", digestStr.c_str());
-      }
-      else if(m_pcCfg->getDecodedPictureHashSEIEnabled() == 3)
-      {
-        printf(" [Checksum:%s]", digestStr.c_str());
-      }
-    }
+    printHash(m_pcCfg->getDecodedPictureHashSEIType(), digestStr);
 
     if ( m_pcCfg->getUseRateCtrl() )
     {

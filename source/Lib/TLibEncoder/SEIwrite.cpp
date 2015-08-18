@@ -212,9 +212,9 @@ Void SEIWriter::xWriteSEIDecodedPictureHash(const SEIDecodedPictureHash& sei)
   const TChar *traceString="\0";
   switch (sei.method)
   {
-    case SEIDecodedPictureHash::MD5: traceString="picture_md5"; break;
-    case SEIDecodedPictureHash::CRC: traceString="picture_crc"; break;
-    case SEIDecodedPictureHash::CHECKSUM: traceString="picture_checksum"; break;
+    case HASHTYPE_MD5: traceString="picture_md5"; break;
+    case HASHTYPE_CRC: traceString="picture_crc"; break;
+    case HASHTYPE_CHECKSUM: traceString="picture_checksum"; break;
     default: assert(false); break;
   }
 

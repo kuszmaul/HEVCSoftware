@@ -907,7 +907,7 @@ Void TEncTop::xInitPPS()
   m_cPPS.setQpOffset(COMPONENT_Cb, m_chromaCbQpOffset );
   m_cPPS.setQpOffset(COMPONENT_Cr, m_chromaCrQpOffset );
 
-  m_cPPS.setEntropyCodingSyncEnabledFlag( m_iWaveFrontSynchro > 0 );
+  m_cPPS.setEntropyCodingSyncEnabledFlag( m_entropyCodingSyncEnabledFlag );
   m_cPPS.setTilesEnabledFlag( (m_iNumColumnsMinus1 > 0 || m_iNumRowsMinus1 > 0) );
   m_cPPS.setUseWP( m_useWeightedPred );
   m_cPPS.setWPBiPred( m_useWeightedBiPred );
