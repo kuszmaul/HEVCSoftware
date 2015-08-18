@@ -228,12 +228,10 @@ protected:
   Bool      m_useFastDecisionForMerge;                        ///< flag for using Fast Decision Merge RD-Cost
   Bool      m_bUseCbfFastMode;                                ///< flag for using Cbf Fast PU Mode Decision
   Bool      m_useEarlySkipDetection;                          ///< flag for using Early SKIP Detection
-  Int       m_sliceMode;                                      ///< 0: no slice limits, 1 : max number of CTBs per slice, 2: max number of bytes per slice,
-                                                              ///< 3: max number of tiles per slice
-  Int       m_sliceArgument;                                  ///< argument according to selected slice mode
-  Int       m_sliceSegmentMode;                               ///< 0: no slice segment limits, 1 : max number of CTBs per slice segment, 2: max number of bytes per slice segment,
-                                                              ///< 3: max number of tiles per slice segment
-  Int       m_sliceSegmentArgument;                           ///< argument according to selected slice segment mode
+  SliceConstraint m_sliceMode;
+  Int             m_sliceArgument;                            ///< argument according to selected slice mode
+  SliceConstraint m_sliceSegmentMode;
+  Int             m_sliceSegmentArgument;                     ///< argument according to selected slice segment mode
 
   Bool      m_bLFCrossSliceBoundaryFlag;  ///< 1: filter across slice boundaries 0: do not filter across slice boundaries
   Bool      m_bLFCrossTileBoundaryFlag;   ///< 1: filter across tile boundaries  0: do not filter across tile boundaries
@@ -242,18 +240,17 @@ protected:
   Int       m_numTileRowsMinus1;
   std::vector<Int> m_tileColumnWidth;
   std::vector<Int> m_tileRowHeight;
-  Int       m_iWaveFrontSynchro; //< 0: no WPP. >= 1: WPP is enabled, the "Top right" from which inheritance occurs is this LCU offset in the line above the current.
-  Int       m_iWaveFrontFlush; //< enable(1)/disable(0) the CABAC flush at the end of each line of LCUs.
+  Bool      m_entropyCodingSyncEnabledFlag;
 
   Bool      m_bUseConstrainedIntraPred;                       ///< flag for using constrained intra prediction
   Bool      m_bFastUDIUseMPMEnabled;
   Bool      m_bFastMEForGenBLowDelayEnabled;
   Bool      m_bUseBLambdaForNonKeyLowDelayPictures;
 
-  Int       m_decodedPictureHashSEIEnabled;                    ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
-  Int       m_recoveryPointSEIEnabled;
-  Int       m_bufferingPeriodSEIEnabled;
-  Int       m_pictureTimingSEIEnabled;
+  HashType  m_decodedPictureHashSEIType;                      ///< Checksum mode for decoded picture hash SEI message
+  Bool      m_recoveryPointSEIEnabled;
+  Bool      m_bufferingPeriodSEIEnabled;
+  Bool      m_pictureTimingSEIEnabled;
   Bool      m_toneMappingInfoSEIEnabled;
   Bool      m_chromaResamplingFilterSEIenabled;
   Int       m_chromaResamplingHorFilterIdc;
@@ -284,22 +281,22 @@ protected:
   Int*      m_startOfCodedInterval;
   Int*      m_codedPivotValue;
   Int*      m_targetPivotValue;
-  Int       m_framePackingSEIEnabled;
+  Bool      m_framePackingSEIEnabled;
   Int       m_framePackingSEIType;
   Int       m_framePackingSEIId;
   Int       m_framePackingSEIQuincunx;
   Int       m_framePackingSEIInterpretation;
-  Int       m_segmentedRectFramePackingSEIEnabled;
+  Bool      m_segmentedRectFramePackingSEIEnabled;
   Bool      m_segmentedRectFramePackingSEICancel;
   Int       m_segmentedRectFramePackingSEIType;
   Bool      m_segmentedRectFramePackingSEIPersistence;
   Int       m_displayOrientationSEIAngle;
-  Int       m_temporalLevel0IndexSEIEnabled;
-  Int       m_gradualDecodingRefreshInfoEnabled;
+  Bool      m_temporalLevel0IndexSEIEnabled;
+  Bool      m_gradualDecodingRefreshInfoEnabled;
   Int       m_noDisplaySEITLayer;
-  Int       m_decodingUnitInfoSEIEnabled;
-  Int       m_SOPDescriptionSEIEnabled;
-  Int       m_scalableNestingSEIEnabled;
+  Bool      m_decodingUnitInfoSEIEnabled;
+  Bool      m_SOPDescriptionSEIEnabled;
+  Bool      m_scalableNestingSEIEnabled;
   Bool      m_tmctsSEIEnabled;
   Bool      m_timeCodeSEIEnabled;
   Int       m_timeCodeSEINumTs;

@@ -293,23 +293,28 @@ Void SEIEncoder::initDecodedPictureHashSEI(SEIDecodedPictureHash *decodedPicture
   assert (decodedPictureHashSEI!=NULL);
   assert (pcPic!=NULL);
 
-  if(m_pcCfg->getDecodedPictureHashSEIEnabled() == 1)
+  decodedPictureHashSEI->method = m_pcCfg->getDecodedPictureHashSEIType();
+  switch (m_pcCfg->getDecodedPictureHashSEIType())
   {
-    decodedPictureHashSEI->method = SEIDecodedPictureHash::MD5;
-    UInt numChar=calcMD5(*pcPic->getPicYuvRec(), decodedPictureHashSEI->m_pictureHash, bitDepths);
-    rHashString = hashToString(decodedPictureHashSEI->m_pictureHash, numChar);
-  }
-  else if(m_pcCfg->getDecodedPictureHashSEIEnabled() == 2)
-  {
-    decodedPictureHashSEI->method = SEIDecodedPictureHash::CRC;
-    UInt numChar=calcCRC(*pcPic->getPicYuvRec(), decodedPictureHashSEI->m_pictureHash, bitDepths);
-    rHashString = hashToString(decodedPictureHashSEI->m_pictureHash, numChar);
-  }
-  else if(m_pcCfg->getDecodedPictureHashSEIEnabled() == 3)
-  {
-    decodedPictureHashSEI->method = SEIDecodedPictureHash::CHECKSUM;
-    UInt numChar=calcChecksum(*pcPic->getPicYuvRec(), decodedPictureHashSEI->m_pictureHash, bitDepths);
-    rHashString = hashToString(decodedPictureHashSEI->m_pictureHash, numChar);
+    case HASHTYPE_MD5:
+      {
+        UInt numChar=calcMD5(*pcPic->getPicYuvRec(), decodedPictureHashSEI->m_pictureHash, bitDepths);
+        rHashString = hashToString(decodedPictureHashSEI->m_pictureHash, numChar);
+      }
+      break;
+    case HASHTYPE_CRC:
+      {
+        UInt numChar=calcCRC(*pcPic->getPicYuvRec(), decodedPictureHashSEI->m_pictureHash, bitDepths);
+        rHashString = hashToString(decodedPictureHashSEI->m_pictureHash, numChar);
+      }
+      break;
+    case HASHTYPE_CHECKSUM:
+    default:
+      {
+        UInt numChar=calcChecksum(*pcPic->getPicYuvRec(), decodedPictureHashSEI->m_pictureHash, bitDepths);
+        rHashString = hashToString(decodedPictureHashSEI->m_pictureHash, numChar);
+      }
+      break;
   }
 }
 

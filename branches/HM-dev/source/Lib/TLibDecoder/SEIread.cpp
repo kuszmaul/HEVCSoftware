@@ -413,14 +413,14 @@ Void SEIReader::xParseSEIDecodedPictureHash(SEIDecodedPictureHash& sei, UInt pay
 
   UInt val;
   sei_read_code( pDecodedMessageOutputStream, 8, val, "hash_type");
-  sei.method = static_cast<SEIDecodedPictureHash::Method>(val); bytesRead++;
+  sei.method = static_cast<HashType>(val); bytesRead++;
 
   const TChar *traceString="\0";
   switch (sei.method)
   {
-    case SEIDecodedPictureHash::MD5: traceString="picture_md5"; break;
-    case SEIDecodedPictureHash::CRC: traceString="picture_crc"; break;
-    case SEIDecodedPictureHash::CHECKSUM: traceString="picture_checksum"; break;
+    case HASHTYPE_MD5: traceString="picture_md5"; break;
+    case HASHTYPE_CRC: traceString="picture_crc"; break;
+    case HASHTYPE_CHECKSUM: traceString="picture_checksum"; break;
     default: assert(false); break;
   }
 

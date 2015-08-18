@@ -256,12 +256,12 @@ protected:
   std::vector<Int> m_tileColumnWidth;
   std::vector<Int> m_tileRowHeight;
 
-  Int       m_iWaveFrontSynchro;
+  Bool      m_entropyCodingSyncEnabledFlag;
 
-  Int       m_decodedPictureHashSEIEnabled;              ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
-  Int       m_bufferingPeriodSEIEnabled;
-  Int       m_pictureTimingSEIEnabled;
-  Int       m_recoveryPointSEIEnabled;
+  HashType  m_decodedPictureHashSEIType;
+  Bool      m_bufferingPeriodSEIEnabled;
+  Bool      m_pictureTimingSEIEnabled;
+  Bool      m_recoveryPointSEIEnabled;
   Bool      m_toneMappingInfoSEIEnabled;
   Int       m_toneMapId;
   Bool      m_toneMapCancelFlag;
@@ -289,22 +289,22 @@ protected:
   Int*      m_startOfCodedInterval;
   Int*      m_codedPivotValue;
   Int*      m_targetPivotValue;
-  Int       m_framePackingSEIEnabled;
+  Bool      m_framePackingSEIEnabled;
   Int       m_framePackingSEIType;
   Int       m_framePackingSEIId;
   Int       m_framePackingSEIQuincunx;
   Int       m_framePackingSEIInterpretation;
-  Int       m_segmentedRectFramePackingSEIEnabled;
+  Bool      m_segmentedRectFramePackingSEIEnabled;
   Bool      m_segmentedRectFramePackingSEICancel;
   Int       m_segmentedRectFramePackingSEIType;
   Bool      m_segmentedRectFramePackingSEIPersistence;
   Int       m_displayOrientationSEIAngle;
-  Int       m_temporalLevel0IndexSEIEnabled;
-  Int       m_gradualDecodingRefreshInfoEnabled;
+  Bool      m_temporalLevel0IndexSEIEnabled;
+  Bool      m_gradualDecodingRefreshInfoEnabled;
   Int       m_noDisplaySEITLayer;
-  Int       m_decodingUnitInfoSEIEnabled;
-  Int       m_SOPDescriptionSEIEnabled;
-  Int       m_scalableNestingSEIEnabled;
+  Bool      m_decodingUnitInfoSEIEnabled;
+  Bool      m_SOPDescriptionSEIEnabled;
+  Bool      m_scalableNestingSEIEnabled;
   Bool      m_tmctsSEIEnabled;
   Bool      m_timeCodeSEIEnabled;
   Int       m_timeCodeSEINumTs;
@@ -683,16 +683,16 @@ public:
   Void  setRowHeight ( const std::vector<Int>& rowHeight)            { m_tileRowHeight = rowHeight; }
   UInt  getRowHeight                   ( UInt rowIdx )               { return m_tileRowHeight[rowIdx]; }
   Void  xCheckGSParameters();
-  Void  setWaveFrontSynchro(Int iWaveFrontSynchro)                   { m_iWaveFrontSynchro = iWaveFrontSynchro; }
-  Int   getWaveFrontsynchro()                                        { return m_iWaveFrontSynchro; }
-  Void  setDecodedPictureHashSEIEnabled(Int b)                       { m_decodedPictureHashSEIEnabled = b; }
-  Int   getDecodedPictureHashSEIEnabled()                            { return m_decodedPictureHashSEIEnabled; }
-  Void  setBufferingPeriodSEIEnabled(Int b)                          { m_bufferingPeriodSEIEnabled = b; }
-  Int   getBufferingPeriodSEIEnabled()                               { return m_bufferingPeriodSEIEnabled; }
-  Void  setPictureTimingSEIEnabled(Int b)                            { m_pictureTimingSEIEnabled = b; }
-  Int   getPictureTimingSEIEnabled()                                 { return m_pictureTimingSEIEnabled; }
-  Void  setRecoveryPointSEIEnabled(Int b)                            { m_recoveryPointSEIEnabled = b; }
-  Int   getRecoveryPointSEIEnabled()                                 { return m_recoveryPointSEIEnabled; }
+  Void  setEntropyCodingSyncEnabledFlag(Bool b)                      { m_entropyCodingSyncEnabledFlag = b; }
+  Bool  getEntropyCodingSyncEnabledFlag() const                      { return m_entropyCodingSyncEnabledFlag; }
+  Void  setDecodedPictureHashSEIType(HashType m)                     { m_decodedPictureHashSEIType = m; }
+  HashType getDecodedPictureHashSEIType() const                      { return m_decodedPictureHashSEIType; }
+  Void  setBufferingPeriodSEIEnabled(Bool b)                         { m_bufferingPeriodSEIEnabled = b; }
+  Bool  getBufferingPeriodSEIEnabled() const                         { return m_bufferingPeriodSEIEnabled; }
+  Void  setPictureTimingSEIEnabled(Bool b)                           { m_pictureTimingSEIEnabled = b; }
+  Bool  getPictureTimingSEIEnabled() const                           { return m_pictureTimingSEIEnabled; }
+  Void  setRecoveryPointSEIEnabled(Bool b)                           { m_recoveryPointSEIEnabled = b; }
+  Bool  getRecoveryPointSEIEnabled() const                           { return m_recoveryPointSEIEnabled; }
   Void  setToneMappingInfoSEIEnabled(Bool b)                         { m_toneMappingInfoSEIEnabled = b;  }
   Bool  getToneMappingInfoSEIEnabled()                               { return m_toneMappingInfoSEIEnabled;  }
   Void  setTMISEIToneMapId(Int b)                                    { m_toneMapId = b;  }
@@ -747,8 +747,8 @@ public:
   Int   getTMISEINominalWhiteLevelLumaCodeValue()                    { return m_nominalWhiteLevelLumaCodeValue;  }
   Void  setTMISEIExtendedWhiteLevelLumaCodeValue(Int b)              { m_extendedWhiteLevelLumaCodeValue =b;  }
   Int   getTMISEIExtendedWhiteLevelLumaCodeValue()                   { return m_extendedWhiteLevelLumaCodeValue;  }
-  Void  setFramePackingArrangementSEIEnabled(Int b)                  { m_framePackingSEIEnabled = b; }
-  Int   getFramePackingArrangementSEIEnabled()                       { return m_framePackingSEIEnabled; }
+  Void  setFramePackingArrangementSEIEnabled(Bool b)                 { m_framePackingSEIEnabled = b; }
+  Bool  getFramePackingArrangementSEIEnabled() const                 { return m_framePackingSEIEnabled; }
   Void  setFramePackingArrangementSEIType(Int b)                     { m_framePackingSEIType = b; }
   Int   getFramePackingArrangementSEIType()                          { return m_framePackingSEIType; }
   Void  setFramePackingArrangementSEIId(Int b)                       { m_framePackingSEIId = b; }
@@ -757,8 +757,8 @@ public:
   Int   getFramePackingArrangementSEIQuincunx()                      { return m_framePackingSEIQuincunx; }
   Void  setFramePackingArrangementSEIInterpretation(Int b)           { m_framePackingSEIInterpretation = b; }
   Int   getFramePackingArrangementSEIInterpretation()                { return m_framePackingSEIInterpretation; }
-  Void  setSegmentedRectFramePackingArrangementSEIEnabled(Int b)     { m_segmentedRectFramePackingSEIEnabled = b; }
-  Int   getSegmentedRectFramePackingArrangementSEIEnabled()          { return m_segmentedRectFramePackingSEIEnabled; }
+  Void  setSegmentedRectFramePackingArrangementSEIEnabled(Bool b)    { m_segmentedRectFramePackingSEIEnabled = b; }
+  Bool  getSegmentedRectFramePackingArrangementSEIEnabled() const    { return m_segmentedRectFramePackingSEIEnabled; }
   Void  setSegmentedRectFramePackingArrangementSEICancel(Int b)      { m_segmentedRectFramePackingSEICancel = b; }
   Int   getSegmentedRectFramePackingArrangementSEICancel()           { return m_segmentedRectFramePackingSEICancel; }
   Void  setSegmentedRectFramePackingArrangementSEIType(Int b)        { m_segmentedRectFramePackingSEIType = b; }
@@ -767,18 +767,18 @@ public:
   Int   getSegmentedRectFramePackingArrangementSEIPersistence()      { return m_segmentedRectFramePackingSEIPersistence; }
   Void  setDisplayOrientationSEIAngle(Int b)                         { m_displayOrientationSEIAngle = b; }
   Int   getDisplayOrientationSEIAngle()                              { return m_displayOrientationSEIAngle; }
-  Void  setTemporalLevel0IndexSEIEnabled(Int b)                      { m_temporalLevel0IndexSEIEnabled = b; }
-  Int   getTemporalLevel0IndexSEIEnabled()                           { return m_temporalLevel0IndexSEIEnabled; }
-  Void  setGradualDecodingRefreshInfoEnabled(Int b)                  { m_gradualDecodingRefreshInfoEnabled = b;    }
-  Int   getGradualDecodingRefreshInfoEnabled()                       { return m_gradualDecodingRefreshInfoEnabled; }
+  Void  setTemporalLevel0IndexSEIEnabled(Bool b)                     { m_temporalLevel0IndexSEIEnabled = b; }
+  Bool  getTemporalLevel0IndexSEIEnabled() const                     { return m_temporalLevel0IndexSEIEnabled; }
+  Void  setGradualDecodingRefreshInfoEnabled(Bool b)                 { m_gradualDecodingRefreshInfoEnabled = b;    }
+  Bool  getGradualDecodingRefreshInfoEnabled() const                 { return m_gradualDecodingRefreshInfoEnabled; }
   Void  setNoDisplaySEITLayer(Int b)                                 { m_noDisplaySEITLayer = b;    }
   Int   getNoDisplaySEITLayer()                                      { return m_noDisplaySEITLayer; }
-  Void  setDecodingUnitInfoSEIEnabled(Int b)                         { m_decodingUnitInfoSEIEnabled = b;    }
-  Int   getDecodingUnitInfoSEIEnabled()                              { return m_decodingUnitInfoSEIEnabled; }
-  Void  setSOPDescriptionSEIEnabled(Int b)                           { m_SOPDescriptionSEIEnabled = b; }
-  Int   getSOPDescriptionSEIEnabled()                                { return m_SOPDescriptionSEIEnabled; }
-  Void  setScalableNestingSEIEnabled(Int b)                          { m_scalableNestingSEIEnabled = b; }
-  Int   getScalableNestingSEIEnabled()                               { return m_scalableNestingSEIEnabled; }
+  Void  setDecodingUnitInfoSEIEnabled(Bool b)                        { m_decodingUnitInfoSEIEnabled = b;    }
+  Bool  getDecodingUnitInfoSEIEnabled() const                        { return m_decodingUnitInfoSEIEnabled; }
+  Void  setSOPDescriptionSEIEnabled(Bool b)                          { m_SOPDescriptionSEIEnabled = b; }
+  Bool  getSOPDescriptionSEIEnabled() const                          { return m_SOPDescriptionSEIEnabled; }
+  Void  setScalableNestingSEIEnabled(Bool b)                         { m_scalableNestingSEIEnabled = b; }
+  Bool  getScalableNestingSEIEnabled() const                         { return m_scalableNestingSEIEnabled; }
   Void  setTMCTSSEIEnabled(Bool b)                                   { m_tmctsSEIEnabled = b; }
   Bool  getTMCTSSEIEnabled()                                         { return m_tmctsSEIEnabled; }
   Void  setTimeCodeSEIEnabled(Bool b)                                { m_timeCodeSEIEnabled = b; }
