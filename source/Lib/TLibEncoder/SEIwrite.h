@@ -72,6 +72,9 @@ protected:
   Void xWriteSEITimeCode(const SEITimeCode& sei);
   Void xWriteSEIChromaResamplingFilterHint(const SEIChromaResamplingFilterHint& sei);
   Void xWriteSEIKneeFunctionInfo(const SEIKneeFunctionInfo &sei);
+#if Q0074_COLOUR_REMAPPING_SEI
+  Void xWriteSEIColourRemappingInfo(const SEIColourRemappingInfo& sei);
+#endif
   Void xWriteSEIMasteringDisplayColourVolume( const SEIMasteringDisplayColourVolume& sei);
 
   Void xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, const TComSPS *sps);

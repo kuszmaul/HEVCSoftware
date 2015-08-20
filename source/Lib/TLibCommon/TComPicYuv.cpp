@@ -275,28 +275,54 @@ Void TComPicYuv::extendPicBorder ()
 
 
 // NOTE: This function is never called, but may be useful for developers.
-Void TComPicYuv::dump (const std::string &fileName, const BitDepths &bitDepths, Bool bAdd) const
+Void TComPicYuv::dump (const std::string &fileName, const BitDepths &bitDepths, const Bool bAppend, const Bool bForceTo8Bit) const
 {
-  FILE* pFile = fopen (fileName.c_str(), bAdd?"ab":"wb");
+  FILE *pFile = fopen (fileName.c_str(), bAppend?"ab":"wb");
+
+  Bool is16bit=false;
+  for(Int comp = 0; comp < getNumberValidComponents() && !bForceTo8Bit; comp++)
+  {
+    if (bitDepths.recon[toChannelType(ComponentID(comp))]>8)
+    {
+      is16bit=true;
+    }
+  }
 
   for(Int comp = 0; comp < getNumberValidComponents(); comp++)
   {
     const ComponentID  compId = ComponentID(comp);
-    const Int          shift  = bitDepths.recon[toChannelType(compId)] - 8;
-    const Int          offset = (shift>0)?(1<<(shift-1)):0;
     const Pel         *pi     = getAddr(compId);
     const Int          stride = getStride(compId);
     const Int          height = getHeight(compId);
     const Int          width  = getWidth(compId);
 
-    for (Int y = 0; y < height; y++ )
+    if (is16bit)
     {
-      for (Int x = 0; x < width; x++ )
+      for (Int y = 0; y < height; y++ )
       {
-        UChar uc = (UChar)Clip3<Pel>(0, 255, (pi[x]+offset)>>shift);
-        fwrite( &uc, sizeof(UChar), 1, pFile );
+        for (Int x = 0; x < width; x++ )
+        {
+          UChar uc = (UChar)((pi[x]>>0) & 0xff);
+          fwrite( &uc, sizeof(UChar), 1, pFile );
+          uc = (UChar)((pi[x]>>8) & 0xff);
+          fwrite( &uc, sizeof(UChar), 1, pFile );
+        }
+        pi += stride;
       }
-      pi += stride;
+    }
+    else
+    {
+      const Int shift  = bitDepths.recon[toChannelType(compId)] - 8;
+      const Int offset = (shift>0)?(1<<(shift-1)):0;
+      for (Int y = 0; y < height; y++ )
+      {
+        for (Int x = 0; x < width; x++ )
+        {
+          UChar uc = (UChar)Clip3<Pel>(0, 255, (pi[x]+offset)>>shift);
+          fwrite( &uc, sizeof(UChar), 1, pFile );
+        }
+        pi += stride;
+      }
     }
   }
 
