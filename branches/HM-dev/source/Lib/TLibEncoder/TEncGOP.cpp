@@ -502,6 +502,24 @@ Void TEncGOP::xCreatePerPictureSEIMessages (Int picInGOP, SEIMessages& seiMessag
     seiNoDisplay->m_noDisplay = true;
     seiMessages.push_back(seiNoDisplay);
   }
+
+#if Q0074_COLOUR_REMAPPING_SEI
+  // insert one Colour Remapping Info SEI for the picture (if the file exists)
+  if (!m_pcCfg->getColourRemapInfoSEIFileRoot().empty())
+  {
+    SEIColourRemappingInfo *seiColourRemappingInfo = new SEIColourRemappingInfo();
+    const Bool success = m_seiEncoder.initSEIColourRemappingInfo(seiColourRemappingInfo, slice->getPOC() );
+
+    if(success)
+    {
+      seiMessages.push_back(seiColourRemappingInfo);
+    }
+    else
+    {
+      delete seiColourRemappingInfo;
+    }
+  }
+#endif
 }
 
 Void TEncGOP::xCreateScalableNestingSEI (SEIMessages& seiMessages, SEIMessages& nestedSeiMessages)

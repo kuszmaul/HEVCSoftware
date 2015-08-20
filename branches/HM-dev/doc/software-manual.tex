@@ -2057,7 +2057,7 @@ The table below lists the SEI messages defined for Version 1 and Range-Extension
   139 & Temporal motion-constrained tile sets    & Table \ref{tab:sei-tmcts} \\
   140 & Chroma resampling filter hint            & Table \ref{tab:chroma-resampling-filter-hint} \\
   141 & Knee function information                & Table \ref{tab:sei-knee-function} \\
-  142 & Colour remapping information             & (Not handled)\\
+  142 & Colour remapping information             & Table \ref{tab:sei-colour-remapping}\\
   143 & Deinterlaced field identification        & (Not handled)\\
 \end{SEIListTable}
 %%
@@ -2632,6 +2632,16 @@ Array of output knee point. Default table can be set to the following:
 \end{OptionTableNoShorthand}
 
 
+\begin{OptionTableNoShorthand}{Colour remapping SEI message encoder parameters}{tab:sei-colour-remapping}
+\Option{SEIColourRemappingInfoFileRoot (-cri)} &
+\Default{\NotSet} &
+Specifies the prefix of input Colour Remapping Information file. Prefix is completed by ``_x.txt'' where x is the  POC number.
+The contents of the file are a list of the SEI message's syntax element names (in decoding order) immediately followed by a `:' and then the associated value.
+An example file can be found in cfg/misc/example_colour_remapping_sei_encoder_0.txt.
+\\
+\end{OptionTableNoShorthand}
+
+
 
 %\Option{SEITimeCode} &
 %\Default{false} &
@@ -2808,6 +2818,13 @@ has the following behaviour:
 %\ShortOption{\None} &
 \Default{\NotSet} &
 When a non-empty file name is specified, information regarding any decoded SEI messages will be output to the indicated file. If the file name is '-', then stdout is used instead.
+\\
+
+\Option{SEIColourRemappingInfoFilename} &
+%\ShortOption{\None} &
+\Default{\NotSet} &
+Specifies that the colour remapping SEI message should be applied to the output video, with the output written to this file.
+If no value is specified, the SEI message is ignored and no mapping is applied.
 \\
 
 \Option{RespectDefDispWindow (-w)} &
