@@ -832,7 +832,7 @@ private:
   Bool             m_scalingListPresentFlag;
   TComScalingList  m_scalingList;
   UInt             m_uiMaxDecPicBuffering[MAX_TLAYER];
-  UInt             m_uiMaxLatencyIncrease[MAX_TLAYER];  // Really max latency increase plus 1 (value 0 expresses no limit)
+  UInt             m_uiMaxLatencyIncreasePlus1[MAX_TLAYER];
 
   Bool             m_useStrongIntraSmoothing;
 
@@ -964,8 +964,8 @@ public:
   const TComScalingList& getScalingList() const                                                          { return m_scalingList;                                                }
   UInt                   getMaxDecPicBuffering(UInt tlayer) const                                        { return m_uiMaxDecPicBuffering[tlayer];                               }
   Void                   setMaxDecPicBuffering( UInt ui, UInt tlayer )                                   { assert(tlayer < MAX_TLAYER); m_uiMaxDecPicBuffering[tlayer] = ui;    }
-  UInt                   getMaxLatencyIncrease(UInt tlayer) const                                        { return m_uiMaxLatencyIncrease[tlayer];                               }
-  Void                   setMaxLatencyIncrease( UInt ui , UInt tlayer)                                   { m_uiMaxLatencyIncrease[tlayer] = ui;                                 }
+  UInt                   getMaxLatencyIncreasePlus1(UInt tlayer) const                                   { return m_uiMaxLatencyIncreasePlus1[tlayer];                          }
+  Void                   setMaxLatencyIncreasePlus1( UInt ui , UInt tlayer)                              { m_uiMaxLatencyIncreasePlus1[tlayer] = ui;                            }
 
   Void                   setUseStrongIntraSmoothing(Bool bVal)                                           { m_useStrongIntraSmoothing = bVal;                                    }
   Bool                   getUseStrongIntraSmoothing() const                                              { return m_useStrongIntraSmoothing;                                    }
