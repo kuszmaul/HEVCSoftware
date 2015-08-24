@@ -53,7 +53,7 @@
 /// parameters for AMVP
 typedef struct _AMVPInfo
 {
-  TComMv m_acMvCand[ AMVP_MAX_NUM_CANDS_MEM ];  ///< array of motion vector predictor candidates
+  TComMv m_acMvCand[ AMVP_MAX_NUM_CANDS ];  ///< array of motion vector predictor candidates
   Int    iN;                                ///< number of motion vector predictor candidates
 } AMVPInfo;
 
