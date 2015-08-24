@@ -127,7 +127,6 @@ static const Int MAX_QP =                                          51;
 static const Int NOT_VALID =                                       -1;
 
 static const Int AMVP_MAX_NUM_CANDS =                               2; ///< AMVP: advanced motion vector prediction - max number of final candidates
-static const Int AMVP_MAX_NUM_CANDS_MEM =                           3; ///< AMVP: advanced motion vector prediction - max number of candidates
 static const Int AMVP_DECIMATION_FACTOR =                           4;
 static const Int MRG_MAX_NUM_CANDS =                                5; ///< MERGE
 

@@ -1459,7 +1459,8 @@ public:
   Int                         getNumRefIdx( RefPicList e ) const                     { return m_aiNumRefIdx[e];                                      }
   TComPic*                    getPic()                                               { return m_pcPic;                                               }
   TComPic*                    getRefPic( RefPicList e, Int iRefIdx)                  { return m_apcRefPicList[e][iRefIdx];                           }
-  Int                         getRefPOC( RefPicList e, Int iRefIdx)                  { return m_aiRefPOCList[e][iRefIdx];                            }
+  const TComPic*              getRefPic( RefPicList e, Int iRefIdx) const            { return m_apcRefPicList[e][iRefIdx];                           }
+  Int                         getRefPOC( RefPicList e, Int iRefIdx) const            { return m_aiRefPOCList[e][iRefIdx];                            }
   Int                         getDepth() const                                       { return m_iDepth;                                              }
   Bool                        getColFromL0Flag() const                               { return m_colFromL0Flag;                                       }
   UInt                        getColRefIdx() const                                   { return m_colRefIdx;                                           }
@@ -1620,7 +1621,7 @@ public:
   Bool                        getLFCrossSliceBoundaryFlag()                          { return m_LFCrossSliceBoundaryFlag;                            }
 
   Void                        setEnableTMVPFlag( Bool   b )                          { m_enableTMVPFlag = b;                                         }
-  Bool                        getEnableTMVPFlag()                                    { return m_enableTMVPFlag;                                      }
+  Bool                        getEnableTMVPFlag() const                              { return m_enableTMVPFlag;                                      }
 
   Void                        setEncCABACTableIdx( SliceType idx )                   { m_encCABACTableIdx = idx;                                     }
   SliceType                   getEncCABACTableIdx() const                            { return m_encCABACTableIdx;                                    }
