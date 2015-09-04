@@ -327,7 +327,7 @@ __inline Void TEncSearch::xTZSearchHelp( const TComPattern* const pcPatternKey, 
   {
     Int isubShift = 0;
     // motion cost
-    Distortion uiBitCost = m_pcRdCost->getCost( iSearchX, iSearchY );
+    Distortion uiBitCost = m_pcRdCost->getCostOfVectorWithPredictor( iSearchX, iSearchY );
 
     // Skip search if bit cost is already larger than best SAD
     if (uiBitCost < rcStruct.uiBestSad)
@@ -403,7 +403,7 @@ __inline Void TEncSearch::xTZSearchHelp( const TComPattern* const pcPatternKey, 
     if( uiSad < rcStruct.uiBestSad )
     {
       // motion cost
-      uiSad += m_pcRdCost->getCost( iSearchX, iSearchY );
+      uiSad += m_pcRdCost->getCostOfVectorWithPredictor( iSearchX, iSearchY );
 
       if( uiSad < rcStruct.uiBestSad )
       {
@@ -861,7 +861,7 @@ Distortion TEncSearch::xPatternRefinement( TComPattern* pcPatternKey,
     m_cDistParam.pCur = piRefPos;
     m_cDistParam.bitDepth = pcPatternKey->getBitDepthY();
     uiDist = m_cDistParam.DistFunc( &m_cDistParam );
-    uiDist += m_pcRdCost->getCost( cMvTest.getHor(), cMvTest.getVer() );
+    uiDist += m_pcRdCost->getCostOfVectorWithPredictor( cMvTest.getHor(), cMvTest.getVer() );
 
     if ( uiDist < uiDistBest )
     {
@@ -3047,7 +3047,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
             uiCostTemp -= m_pcRdCost->getCost( uiBitsTempL0[pcCU->getSlice()->getList1IdxToList0Idx( iRefIdxTemp )] );
             /*correct the bit-rate part of the current ref*/
             m_pcRdCost->setPredictor  ( cMvPred[iRefList][iRefIdxTemp] );
-            uiBitsTemp += m_pcRdCost->getBits( cMvTemp[1][iRefIdxTemp].getHor(), cMvTemp[1][iRefIdxTemp].getVer() );
+            uiBitsTemp += m_pcRdCost->getBitsOfVectorWithPredictor( cMvTemp[1][iRefIdxTemp].getHor(), cMvTemp[1][iRefIdxTemp].getVer() );
             /*calculate the correct cost*/
             uiCostTemp += m_pcRdCost->getCost( uiBitsTemp );
           }
@@ -3341,7 +3341,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
       UInt uiMEInterDir = 0;
       TComMvField cMEMvField[2];
 
-      m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
+      m_pcRdCost->selectMotionLambda( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
 
 #if AMP_MRG
       // calculate ME cost
@@ -3573,13 +3573,13 @@ Void TEncSearch::xCheckBestMVP ( TComDataCU* pcCU, RefPicList eRefPicList, TComM
     return;
   }
 
-  m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(0) );
+  m_pcRdCost->selectMotionLambda( true, 0, pcCU->getCUTransquantBypass(0) );
   m_pcRdCost->setCostScale ( 0    );
 
   Int iBestMVPIdx = riMVPIdx;
 
   m_pcRdCost->setPredictor( rcMvPred );
-  Int iOrgMvBits  = m_pcRdCost->getBits(cMv.getHor(), cMv.getVer());
+  Int iOrgMvBits  = m_pcRdCost->getBitsOfVectorWithPredictor(cMv.getHor(), cMv.getVer());
   iOrgMvBits += m_auiMVPIdxCost[riMVPIdx][AMVP_MAX_NUM_CANDS];
   Int iBestMvBits = iOrgMvBits;
 
@@ -3592,7 +3592,7 @@ Void TEncSearch::xCheckBestMVP ( TComDataCU* pcCU, RefPicList eRefPicList, TComM
 
     m_pcRdCost->setPredictor( pcAMVPInfo->m_acMvCand[iMVPIdx] );
 
-    Int iMvBits = m_pcRdCost->getBits(cMv.getHor(), cMv.getVer());
+    Int iMvBits = m_pcRdCost->getBitsOfVectorWithPredictor(cMv.getHor(), cMv.getVer());
     iMvBits += m_auiMVPIdxCost[iMVPIdx][AMVP_MAX_NUM_CANDS];
 
     if (iMvBits < iBestMvBits)
@@ -3713,7 +3713,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
     xSetSearchRange   ( pcCU, cMvPred, iSrchRng, cMvSrchRngLT, cMvSrchRngRB );
   }
 
-  m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
+  m_pcRdCost->selectMotionLambda( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
 
   m_pcRdCost->setPredictor  ( *pcMvPred );
   m_pcRdCost->setCostScale  ( 2 );
@@ -3739,7 +3739,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
     }
   }
 
-  m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
+  m_pcRdCost->selectMotionLambda( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
   m_pcRdCost->setCostScale ( 1 );
 
   const Bool bIsLosslessCoded = pcCU->getCUTransquantBypass(uiPartAddr) != 0;
@@ -3750,7 +3750,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   rcMv += (cMvHalf <<= 1);
   rcMv +=  cMvQter;
 
-  UInt uiMvBits = m_pcRdCost->getBits( rcMv.getHor(), rcMv.getVer() );
+  UInt uiMvBits = m_pcRdCost->getBitsOfVectorWithPredictor( rcMv.getHor(), rcMv.getVer() );
 
   ruiBits      += uiMvBits;
   ruiCost       = (Distortion)( floor( fWeight * ( (Double)ruiCost - (Double)m_pcRdCost->getCost( uiMvBits ) ) ) + (Double)m_pcRdCost->getCost( ruiBits ) );
@@ -3826,7 +3826,7 @@ Void TEncSearch::xPatternSearch( const TComPattern* const pcPatternKey,
       uiSad = m_cDistParam.DistFunc( &m_cDistParam );
 
       // motion cost
-      uiSad += m_pcRdCost->getCost( x, y );
+      uiSad += m_pcRdCost->getCostOfVectorWithPredictor( x, y );
 
       if ( uiSad < uiSadBest )
       {
@@ -3841,7 +3841,7 @@ Void TEncSearch::xPatternSearch( const TComPattern* const pcPatternKey,
 
   rcMv.set( iBestX, iBestY );
 
-  ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY );
+  ruiSAD = uiSadBest - m_pcRdCost->getCostOfVectorWithPredictor( iBestX, iBestY );
   return;
 }
 
@@ -4184,7 +4184,7 @@ Void TEncSearch::xTZSearch( const TComDataCU* const pcCU,
 
   // write out best match
   rcMv.set( cStruct.iBestX, cStruct.iBestY );
-  ruiSAD = cStruct.uiBestSad - m_pcRdCost->getCost( cStruct.iBestX, cStruct.iBestY );
+  ruiSAD = cStruct.uiBestSad - m_pcRdCost->getCostOfVectorWithPredictor( cStruct.iBestX, cStruct.iBestY );
 }
 
 
@@ -4361,7 +4361,7 @@ Void TEncSearch::xTZSearchSelective( const TComDataCU* const   pcCU,
 
   // write out best match
   rcMv.set( cStruct.iBestX, cStruct.iBestY );
-  ruiSAD = cStruct.uiBestSad - m_pcRdCost->getCost( cStruct.iBestX, cStruct.iBestY );
+  ruiSAD = cStruct.uiBestSad - m_pcRdCost->getCostOfVectorWithPredictor( cStruct.iBestX, cStruct.iBestY );
 
 }
 

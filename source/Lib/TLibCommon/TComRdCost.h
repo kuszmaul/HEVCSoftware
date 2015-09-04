@@ -124,7 +124,7 @@ private:
 
   // for motion cost
   TComMv                  m_mvPredictor;
-  Double                  m_dCost;
+  Double                  m_motionLambda;
   Int                     m_iCostScale;
 
 public:
@@ -156,18 +156,18 @@ public:
 
   // for motion cost
   static UInt    xGetExpGolombNumberOfBits( Int iVal );
-  Void    getMotionCost( Bool bSad, Int iAdd, Bool bIsTransquantBypass ) { m_dCost = (bSad ? m_dLambdaMotionSAD[(bIsTransquantBypass && m_costMode==COST_MIXED_LOSSLESS_LOSSY_CODING) ?1:0] + iAdd : m_dLambdaMotionSSE[(bIsTransquantBypass && m_costMode==COST_MIXED_LOSSLESS_LOSSY_CODING)?1:0] + iAdd); }
+  Void    selectMotionLambda( Bool bSad, Int iAdd, Bool bIsTransquantBypass ) { m_motionLambda = (bSad ? m_dLambdaMotionSAD[(bIsTransquantBypass && m_costMode==COST_MIXED_LOSSLESS_LOSSY_CODING) ?1:0] + iAdd : m_dLambdaMotionSSE[(bIsTransquantBypass && m_costMode==COST_MIXED_LOSSLESS_LOSSY_CODING)?1:0] + iAdd); }
   Void    setPredictor( TComMv& rcMv )
   {
     m_mvPredictor = rcMv;
   }
   Void    setCostScale( Int iCostScale )    { m_iCostScale = iCostScale; }
-  __inline Distortion getCost( Int x, Int y )
+  Distortion getCost( UInt b )                 { return Distortion(( m_motionLambda * b ) / 65536.0); }
+  Distortion getCostOfVectorWithPredictor( const Int x, const Int y )
   {
-    return Distortion((m_dCost * getBits(x, y)) / 65536.0);
+    return Distortion((m_motionLambda * getBitsOfVectorWithPredictor(x, y)) / 65536.0);
   }
-  Distortion getCost( UInt b )                 { return Distortion(( m_dCost * b ) / 65536.0); }
-  UInt    getBits( Int x, Int y )
+  UInt getBitsOfVectorWithPredictor( const Int x, const Int y )
   {
     return xGetExpGolombNumberOfBits((x << m_iCostScale) - m_mvPredictor.getHor())
     +      xGetExpGolombNumberOfBits((y << m_iCostScale) - m_mvPredictor.getVer());

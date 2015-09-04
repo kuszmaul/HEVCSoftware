@@ -101,8 +101,6 @@ protected:
   Int             m_bipredSearchRange; // Search range for bi-prediction
   MESearchMethod  m_motionEstimationSearchMethod;
   Int             m_aaiAdaptSR[MAX_NUM_REF_LIST_ADAPT_SR][MAX_IDX_ADAPT_SR];
-  TComMv          m_cSrchRngLT;
-  TComMv          m_cSrchRngRB;
   TComMv          m_acMvPredictors[NUM_MV_PREDICTORS]; // Left, Above, AboveRight. enum MVP_DIR first NUM_MV_PREDICTORS entries are suitable for accessing.
 
   // RD computation
