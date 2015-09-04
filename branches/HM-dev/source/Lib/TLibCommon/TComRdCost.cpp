@@ -164,7 +164,7 @@ Void TComRdCost::init()
 
   m_costMode                   = COST_STANDARD_LOSSY;
 
-  m_dCost                      = 0;
+  m_motionLambda               = 0;
   m_iCostScale                 = 0;
 }
 
