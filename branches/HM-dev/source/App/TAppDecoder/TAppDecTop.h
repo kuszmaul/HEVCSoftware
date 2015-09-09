@@ -69,7 +69,6 @@ private:
 
 #if Q0074_COLOUR_REMAPPING_SEI
   SEIColourRemappingInfo*         m_pcSeiColourRemappingInfoPrevious;
-  TComPicYuv*                     m_pcPicYuvColourRemapped;       ///< Colour Remapped picture
 #endif
 
 public:
@@ -93,7 +92,7 @@ protected:
 #if Q0074_COLOUR_REMAPPING_SEI
 private:
   Void applyColourRemapping(const TComPicYuv& pic, SEIColourRemappingInfo& pCriSEI, const TComSPS &activeSPS);
-  Void xOutputColourRemapPic(TComPic* pcPic, const TComSPS* activeSPS);
+  Void xOutputColourRemapPic(TComPic* pcPic);
 #endif
 };
 

@@ -59,7 +59,6 @@ TAppDecTop::TAppDecTop()
 : m_iPOCLastDisplay(-MAX_INT)
 #if Q0074_COLOUR_REMAPPING_SEI
  ,m_pcSeiColourRemappingInfoPrevious(NULL)
- ,m_pcPicYuvColourRemapped(NULL)
 #endif
 {
 }
@@ -114,6 +113,17 @@ Void TAppDecTop::decode()
   xCreateDecLib();
   xInitDecLib  ();
   m_iPOCLastDisplay += m_iSkipFrame;      // set the last displayed POC correctly for skip forward.
+
+  // clear contents of colour-remap-information-SEI output file
+  if (!m_colourRemapSEIFileName.empty())
+  {
+    std::ofstream ofile(m_colourRemapSEIFileName.c_str());
+    if (!ofile.good() || !ofile.is_open())
+    {
+      fprintf(stderr, "\nUnable to open file '%s' for writing colour-remap-information-SEI video\n", m_colourRemapSEIFileName.c_str());
+      exit(EXIT_FAILURE);
+    }
+  }
 
   // main decoder loop
   Bool openedReconFile = false; // reconstruction file not yet opened. (must be performed after SPS is seen)
@@ -270,6 +280,14 @@ Void TAppDecTop::xDestroyDecLib()
 
   // destroy decoder class
   m_cTDecTop.destroy();
+
+#if Q0074_COLOUR_REMAPPING_SEI
+  if (m_pcSeiColourRemappingInfoPrevious != NULL)
+  {
+    delete m_pcSeiColourRemappingInfoPrevious;
+    m_pcSeiColourRemappingInfoPrevious = NULL;
+  }
+#endif
 }
 
 Void TAppDecTop::xInitDecLib()
@@ -290,12 +308,6 @@ Void TAppDecTop::xInitDecLib()
   {
     delete m_pcSeiColourRemappingInfoPrevious;
     m_pcSeiColourRemappingInfoPrevious = NULL;
-  }
-  if (m_pcPicYuvColourRemapped != NULL)
-  {
-    m_pcPicYuvColourRemapped->destroy();
-    delete m_pcPicYuvColourRemapped;
-    m_pcPicYuvColourRemapped  = NULL;
   }
 #endif
 }
@@ -456,7 +468,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
 #if Q0074_COLOUR_REMAPPING_SEI
         if (!m_colourRemapSEIFileName.empty())
         {
-          xOutputColourRemapPic(pcPic, activeSPS);
+          xOutputColourRemapPic(pcPic);
         }
 #endif
 
@@ -581,7 +593,7 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
 #if Q0074_COLOUR_REMAPPING_SEI
         if (!m_colourRemapSEIFileName.empty())
         {
-          xOutputColourRemapPic(pcPic, &(pcPic->getPicSym()->getSPS()));
+          xOutputColourRemapPic(pcPic);
         }
 #endif
 
@@ -631,8 +643,9 @@ Bool TAppDecTop::isNaluWithinTargetDecLayerIdSet( InputNALUnit* nalu )
 
 #if Q0074_COLOUR_REMAPPING_SEI
 
-Void TAppDecTop::xOutputColourRemapPic(TComPic* pcPic, const TComSPS* activeSPS)
+Void TAppDecTop::xOutputColourRemapPic(TComPic* pcPic)
 {
+  const TComSPS &sps=pcPic->getPicSym()->getSPS();
   SEIMessages colourRemappingInfo = getSeisByType(pcPic->getSEIs(), SEI::COLOUR_REMAPPING_INFO );
   SEIColourRemappingInfo *seiColourRemappingInfo = ( colourRemappingInfo.size() > 0 ) ? (SEIColourRemappingInfo*) *(colourRemappingInfo.begin()) : NULL;
 
@@ -642,32 +655,26 @@ Void TAppDecTop::xOutputColourRemapPic(TComPic* pcPic, const TComSPS* activeSPS)
   }
   if (seiColourRemappingInfo)
   {
-    applyColourRemapping(*pcPic->getPicYuvRec(), *seiColourRemappingInfo, *activeSPS);
+    applyColourRemapping(*pcPic->getPicYuvRec(), *seiColourRemappingInfo, sps);
+
+    // save the last CRI SEI received
+    if (m_pcSeiColourRemappingInfoPrevious == NULL)
+    {
+      m_pcSeiColourRemappingInfoPrevious = new SEIColourRemappingInfo();
+    }
+    m_pcSeiColourRemappingInfoPrevious->copyFrom(*seiColourRemappingInfo);
   }
   else  // using the last CRI SEI received
   {
+    // TODO: prevent persistence of CRI SEI across C(L)VS.
     if (m_pcSeiColourRemappingInfoPrevious != NULL)
     {
       if (m_pcSeiColourRemappingInfoPrevious->m_colourRemapPersistenceFlag == false)
       {
         printf("Warning No SEI-CRI message is present for the current picture, persistence of the CRI is not managed\n");
       }
-      SEIColourRemappingInfo *seiColourRemappingInfoCopy;
-      seiColourRemappingInfoCopy = m_pcSeiColourRemappingInfoPrevious;
-      applyColourRemapping(*pcPic->getPicYuvRec(), *seiColourRemappingInfoCopy, *activeSPS);
+      applyColourRemapping(*pcPic->getPicYuvRec(), *m_pcSeiColourRemappingInfoPrevious, sps);
     }
-  }
-
-  // save the last CRI SEI received
-  if( seiColourRemappingInfo != NULL)
-  {
-    if (m_pcSeiColourRemappingInfoPrevious != NULL)
-    {
-      delete m_pcSeiColourRemappingInfoPrevious;
-      m_pcSeiColourRemappingInfoPrevious = NULL;
-    }
-    m_pcSeiColourRemappingInfoPrevious = new SEIColourRemappingInfo();
-    m_pcSeiColourRemappingInfoPrevious->copyFrom(*seiColourRemappingInfo);
   }
 }
 
@@ -840,34 +847,24 @@ setColourRemappingInfoMatrixOffsets(      Int  (&matrixInputOffset)[3],
 Void TAppDecTop::applyColourRemapping(const TComPicYuv& pic, SEIColourRemappingInfo& criSEI, const TComSPS &activeSPS)
 {  
   const Int maxBitDepth = 16;
-  Bool firstPicture = true;
 
   // create colour remapped picture
-  if ( m_pcPicYuvColourRemapped == NULL )
+  if( !criSEI.m_colourRemapCancelFlag && pic.getChromaFormat()!=CHROMA_400) // 4:0:0 not supported.
   {
-    const ChromaFormat chromaFormatIDC = activeSPS.getChromaFormatIdc();
-    const Int          iWidth          = activeSPS.getPicWidthInLumaSamples();
-    const Int          iHeight         = activeSPS.getPicHeightInLumaSamples();
-    const UInt         uiMaxCuWidth    = activeSPS.getMaxCUWidth();
-    const UInt         uiMaxCuHeight   = activeSPS.getMaxCUHeight();
-    const UInt         uiMaxDepth      = activeSPS.getMaxTotalCUDepth();
-    m_pcPicYuvColourRemapped  = new TComPicYuv;
-    m_pcPicYuvColourRemapped->create( iWidth, iHeight, chromaFormatIDC, uiMaxCuWidth, uiMaxCuHeight, uiMaxDepth, true );
-  }
-  else
-  {
-    firstPicture = false;
-  }
+    const Int          iHeight         = pic.getHeight(COMPONENT_Y);
+    const Int          iWidth          = pic.getWidth(COMPONENT_Y);
+    const ChromaFormat chromaFormatIDC = pic.getChromaFormat();
 
-  if( !criSEI.m_colourRemapCancelFlag )
-  {
-    const Int  iHeight  = pic.getHeight(COMPONENT_Y);
-    const Int  iWidth   = pic.getWidth(COMPONENT_Y);
-    const Int  iStride  = pic.getStride(COMPONENT_Y);
-    const Int  iCStride = pic.getStride(COMPONENT_Cb);
-    const Bool b444     = ( pic.getChromaFormat() == CHROMA_444 );
-    const Bool b422     = ( pic.getChromaFormat() == CHROMA_422 );
-    const Bool b420     = ( pic.getChromaFormat() == CHROMA_420 );
+    TComPicYuv picYuvColourRemapped;
+    picYuvColourRemapped.createWithoutCUInfo( iWidth, iHeight, chromaFormatIDC );
+
+    const Int  iStrideIn   = pic.getStride(COMPONENT_Y);
+    const Int  iCStrideIn  = pic.getStride(COMPONENT_Cb);
+    const Int  iStrideOut  = picYuvColourRemapped.getStride(COMPONENT_Y);
+    const Int  iCStrideOut = picYuvColourRemapped.getStride(COMPONENT_Cb);
+    const Bool b444        = ( pic.getChromaFormat() == CHROMA_444 );
+    const Bool b422        = ( pic.getChromaFormat() == CHROMA_422 );
+    const Bool b420        = ( pic.getChromaFormat() == CHROMA_420 );
 
     std::vector<Int> preLut[3];
     std::vector<Int> postLut[3];
@@ -878,12 +875,14 @@ Void TAppDecTop::applyColourRemapping(const TComPicYuv& pic, SEIColourRemappingI
     YUVIn[COMPONENT_Y]  = pic.getAddr(COMPONENT_Y);
     YUVIn[COMPONENT_Cb] = pic.getAddr(COMPONENT_Cb);
     YUVIn[COMPONENT_Cr] = pic.getAddr(COMPONENT_Cr);
-    YUVOut[COMPONENT_Y]  = m_pcPicYuvColourRemapped->getAddr(COMPONENT_Y);
-    YUVOut[COMPONENT_Cb] = m_pcPicYuvColourRemapped->getAddr(COMPONENT_Cb);
-    YUVOut[COMPONENT_Cr] = m_pcPicYuvColourRemapped->getAddr(COMPONENT_Cr);
+    YUVOut[COMPONENT_Y]  = picYuvColourRemapped.getAddr(COMPONENT_Y);
+    YUVOut[COMPONENT_Cb] = picYuvColourRemapped.getAddr(COMPONENT_Cb);
+    YUVOut[COMPONENT_Cr] = picYuvColourRemapped.getAddr(COMPONENT_Cr);
 
-    Int bitDepthY = activeSPS.getBitDepth(CHANNEL_TYPE_LUMA);
-    assert(bitDepthY == activeSPS.getBitDepth(CHANNEL_TYPE_CHROMA)); // Different bitdepth is not implemented
+    const Int bitDepth = criSEI.m_colourRemapBitDepth;
+    BitDepths        bitDepthsCriFile;
+    bitDepthsCriFile.recon[CHANNEL_TYPE_LUMA]   = bitDepth;
+    bitDepthsCriFile.recon[CHANNEL_TYPE_CHROMA] = bitDepth; // Different bitdepth is not implemented
 
     const Int postOffsetShift = criSEI.m_log2MatrixDenom;
     const Int matrixRound = 1 << (postOffsetShift - 1);
@@ -913,7 +912,7 @@ Void TAppDecTop::applyColourRemapping(const TComPicYuv& pic, SEIColourRemappingI
     matrixOutputOffset[2] += applyColourRemappingInfoMatrix(criSEI.m_colourRemapCoeffs[2], 0, matrixInputOffset[0], matrixInputOffset[1], matrixInputOffset[2], 0);
 
     // rescaling output: include CRI/output frame difference
-    const Int scaleShiftOut_neg = abs(bitDepthY - maxBitDepth);
+    const Int scaleShiftOut_neg = abs(bitDepth - maxBitDepth);
     const Int scaleOut_round = 1 << (scaleShiftOut_neg-1);
 
     initColourRemappingInfoLuts(preLut, postLut, criSEI, maxBitDepth);
@@ -948,18 +947,19 @@ Void TAppDecTop::applyColourRemapping(const TComPicYuv& pic, SEIColourRemappingI
         }
       }
 
-      YUVIn[COMPONENT_Y]  += iStride;
-      YUVOut[COMPONENT_Y] += iStride;
+      YUVIn[COMPONENT_Y]  += iStrideIn;
+      YUVOut[COMPONENT_Y] += iStrideOut;
       if( !(b420 && !(y&1)) )
       {
-         YUVIn[COMPONENT_Cb]  += iCStride;
-         YUVIn[COMPONENT_Cr]  += iCStride;
-         YUVOut[COMPONENT_Cb] += iCStride;
-         YUVOut[COMPONENT_Cr] += iCStride;
+         YUVIn[COMPONENT_Cb]  += iCStrideIn;
+         YUVIn[COMPONENT_Cr]  += iCStrideIn;
+         YUVOut[COMPONENT_Cb] += iCStrideOut;
+         YUVOut[COMPONENT_Cr] += iCStrideOut;
       }
     }
     //Write remapped picture in display order
-    m_pcPicYuvColourRemapped->dump( m_colourRemapSEIFileName, activeSPS.getBitDepths(), !firstPicture );
+    picYuvColourRemapped.dump( m_colourRemapSEIFileName, bitDepthsCriFile, true );
+    picYuvColourRemapped.destroy();
   }
 }
 #endif
