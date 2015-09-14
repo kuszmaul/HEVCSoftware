@@ -503,7 +503,6 @@ Void TEncGOP::xCreatePerPictureSEIMessages (Int picInGOP, SEIMessages& seiMessag
     seiMessages.push_back(seiNoDisplay);
   }
 
-#if Q0074_COLOUR_REMAPPING_SEI
   // insert one Colour Remapping Info SEI for the picture (if the file exists)
   if (!m_pcCfg->getColourRemapInfoSEIFileRoot().empty())
   {
@@ -519,7 +518,6 @@ Void TEncGOP::xCreatePerPictureSEIMessages (Int picInGOP, SEIMessages& seiMessag
       delete seiColourRemappingInfo;
     }
   }
-#endif
 }
 
 Void TEncGOP::xCreateScalableNestingSEI (SEIMessages& seiMessages, SEIMessages& nestedSeiMessages)

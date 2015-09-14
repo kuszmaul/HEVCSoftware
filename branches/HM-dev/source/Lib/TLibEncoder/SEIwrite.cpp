@@ -117,11 +117,9 @@ Void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, const TComSP
   case SEI::KNEE_FUNCTION_INFO:
     xWriteSEIKneeFunctionInfo(*static_cast<const SEIKneeFunctionInfo*>(&sei));
     break;
-#if Q0074_COLOUR_REMAPPING_SEI
   case SEI::COLOUR_REMAPPING_INFO:
     xWriteSEIColourRemappingInfo(*static_cast<const SEIColourRemappingInfo*>(&sei));
     break;
-#endif
   case SEI::MASTERING_DISPLAY_COLOUR_VOLUME:
     xWriteSEIMasteringDisplayColourVolume(*static_cast<const SEIMasteringDisplayColourVolume*>(&sei));
     break;
@@ -728,7 +726,6 @@ Void SEIWriter::xWriteSEIKneeFunctionInfo(const SEIKneeFunctionInfo &sei)
   }
 }
 
-#if Q0074_COLOUR_REMAPPING_SEI
 Void SEIWriter::xWriteSEIColourRemappingInfo(const SEIColourRemappingInfo& sei)
 {
   WRITE_UVLC( sei.m_colourRemapId,                             "colour_remap_id" );
@@ -785,7 +782,6 @@ Void SEIWriter::xWriteSEIColourRemappingInfo(const SEIColourRemappingInfo& sei)
     }
   }
 }
-#endif
 
 Void SEIWriter::xWriteSEIMasteringDisplayColourVolume(const SEIMasteringDisplayColourVolume& sei)
 {
