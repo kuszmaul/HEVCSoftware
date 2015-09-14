@@ -80,9 +80,7 @@ public:
   Void initSEIKneeFunctionInfo(SEIKneeFunctionInfo *sei);
   Void initSEIChromaResamplingFilterHint(SEIChromaResamplingFilterHint *sei, Int iHorFilterIndex, Int iVerFilterIndex);
   Void initSEITimeCode(SEITimeCode *sei);
-#if Q0074_COLOUR_REMAPPING_SEI
   Bool initSEIColourRemappingInfo(SEIColourRemappingInfo *sei, Int currPOC); // returns true on success, false on failure.
-#endif
 
   // trailing SEIs
   Void initDecodedPictureHashSEI(SEIDecodedPictureHash *sei, TComPic *pcPic, std::string &rHashString, const BitDepths &bitDepths);

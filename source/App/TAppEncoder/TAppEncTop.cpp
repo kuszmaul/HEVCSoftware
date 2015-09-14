@@ -330,9 +330,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setKneeSEINumKneePointsMinus1                        ( m_kneeSEINumKneePointsMinus1 );
   m_cTEncTop.setKneeSEIInputKneePoint                             ( m_kneeSEIInputKneePoint );
   m_cTEncTop.setKneeSEIOutputKneePoint                            ( m_kneeSEIOutputKneePoint );
-#if Q0074_COLOUR_REMAPPING_SEI
   m_cTEncTop.setColourRemapInfoSEIFileRoot                        ( m_colourRemapSEIFileRoot );
-#endif
   m_cTEncTop.setMasteringDisplaySEI                               ( m_masteringDisplay );
 
   m_cTEncTop.setTileUniformSpacingFlag                            ( m_tileUniformSpacingFlag );

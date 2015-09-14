@@ -57,9 +57,7 @@
 
 TAppDecTop::TAppDecTop()
 : m_iPOCLastDisplay(-MAX_INT)
-#if Q0074_COLOUR_REMAPPING_SEI
  ,m_pcSeiColourRemappingInfoPrevious(NULL)
-#endif
 {
 }
 
@@ -281,13 +279,11 @@ Void TAppDecTop::xDestroyDecLib()
   // destroy decoder class
   m_cTDecTop.destroy();
 
-#if Q0074_COLOUR_REMAPPING_SEI
   if (m_pcSeiColourRemappingInfoPrevious != NULL)
   {
     delete m_pcSeiColourRemappingInfoPrevious;
     m_pcSeiColourRemappingInfoPrevious = NULL;
   }
-#endif
 }
 
 Void TAppDecTop::xInitDecLib()
@@ -303,13 +299,11 @@ Void TAppDecTop::xInitDecLib()
     std::ostream &os=m_seiMessageFileStream.is_open() ? m_seiMessageFileStream : std::cout;
     m_cTDecTop.setDecodedSEIMessageOutputStream(&os);
   }
-#if Q0074_COLOUR_REMAPPING_SEI
   if (m_pcSeiColourRemappingInfoPrevious != NULL)
   {
     delete m_pcSeiColourRemappingInfoPrevious;
     m_pcSeiColourRemappingInfoPrevious = NULL;
   }
-#endif
 }
 
 /** \param pcListPic list of pictures to be written to file
@@ -465,12 +459,10 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
                                          NUM_CHROMA_FORMAT, m_bClipOutputVideoToRec709Range  );
         }
 
-#if Q0074_COLOUR_REMAPPING_SEI
         if (!m_colourRemapSEIFileName.empty())
         {
           xOutputColourRemapPic(pcPic);
         }
-#endif
 
         // update POC of display order
         m_iPOCLastDisplay = pcPic->getPOC();
@@ -590,12 +582,10 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
                                          NUM_CHROMA_FORMAT, m_bClipOutputVideoToRec709Range );
         }
 
-#if Q0074_COLOUR_REMAPPING_SEI
         if (!m_colourRemapSEIFileName.empty())
         {
           xOutputColourRemapPic(pcPic);
         }
-#endif
 
         // update POC of display order
         m_iPOCLastDisplay = pcPic->getPOC();
@@ -640,8 +630,6 @@ Bool TAppDecTop::isNaluWithinTargetDecLayerIdSet( InputNALUnit* nalu )
   }
   return false;
 }
-
-#if Q0074_COLOUR_REMAPPING_SEI
 
 Void TAppDecTop::xOutputColourRemapPic(TComPic* pcPic)
 {
@@ -962,6 +950,5 @@ Void TAppDecTop::applyColourRemapping(const TComPicYuv& pic, SEIColourRemappingI
     picYuvColourRemapped.destroy();
   }
 }
-#endif
 
 //! \}

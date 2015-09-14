@@ -65,9 +65,7 @@ protected:
   Int           m_iMaxTemporalLayer;                  ///< maximum temporal layer to be decoded
   Int           m_decodedPictureHashSEIEnabled;       ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
   Bool          m_decodedNoDisplaySEIEnabled;         ///< Enable(true)/disable(false) writing only pictures that get displayed based on the no display SEI message
-#if Q0074_COLOUR_REMAPPING_SEI
   std::string   m_colourRemapSEIFileName;             ///< output Colour Remapping file name
-#endif
   std::vector<Int> m_targetDecLayerIdSet;             ///< set of LayerIds to be included in the sub-bitstream extraction process.
   Int           m_respectDefDispWindow;               ///< Only output content inside the default display window
 #if O0043_BEST_EFFORT_DECODING
@@ -86,9 +84,7 @@ public:
   , m_iMaxTemporalLayer(-1)
   , m_decodedPictureHashSEIEnabled(0)
   , m_decodedNoDisplaySEIEnabled(false)
-#if Q0074_COLOUR_REMAPPING_SEI
   , m_colourRemapSEIFileName()
-#endif
   , m_targetDecLayerIdSet()
   , m_respectDefDispWindow(0)
 #if O0043_BEST_EFFORT_DECODING
