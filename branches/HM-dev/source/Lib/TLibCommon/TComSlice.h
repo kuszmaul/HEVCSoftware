@@ -959,7 +959,6 @@ public:
   Void                   setScalingListFlag( Bool b )                                                    { m_scalingListEnabledFlag  = b;                                       }
   Bool                   getScalingListPresentFlag() const                                               { return m_scalingListPresentFlag;                                     }
   Void                   setScalingListPresentFlag( Bool b )                                             { m_scalingListPresentFlag  = b;                                       }
-  Void                   setScalingList( TComScalingList *scalingList);
   TComScalingList&       getScalingList()                                                                { return m_scalingList;                                                }
   const TComScalingList& getScalingList() const                                                          { return m_scalingList;                                                }
   UInt                   getMaxDecPicBuffering(UInt tlayer) const                                        { return m_uiMaxDecPicBuffering[tlayer];                               }
@@ -979,31 +978,6 @@ public:
 
   const TComSPSRExt&     getSpsRangeExtension() const                                                    { return m_spsRangeExtension;                                          }
   TComSPSRExt&           getSpsRangeExtension()                                                          { return m_spsRangeExtension;                                          }
-
-  // Sequence parameter set range extension syntax
-  // WAS: getUseResidualRotation and setUseResidualRotation
-  // Now getSpsRangeExtension().getTransformSkipRotationEnabledFlag and getSpsRangeExtension().setTransformSkipRotationEnabledFlag
-
-  // WAS: getUseSingleSignificanceMapContext and setUseSingleSignificanceMapContext
-  // Now: getSpsRangeExtension().getTransformSkipContextEnabledFlag and getSpsRangeExtension().setTransformSkipContextEnabledFlag
-
-  // WAS: getUseResidualDPCM and setUseResidualDPCM
-  // Now: getSpsRangeExtension().getRdpcmEnabledFlag and getSpsRangeExtension().setRdpcmEnabledFlag and
-
-  // WAS: getUseExtendedPrecision and setUseExtendedPrecision
-  // Now: getSpsRangeExtension().getExtendedPrecisionProcessingFlag and getSpsRangeExtension().setExtendedPrecisionProcessingFlag
-
-  // WAS: getDisableIntraReferenceSmoothing and setDisableIntraReferenceSmoothing
-  // Now: getSpsRangeExtension().getIntraSmoothingDisabledFlag and getSpsRangeExtension().setIntraSmoothingDisabledFlag
-
-  // WAS: getUseHighPrecisionPredictionWeighting and setUseHighPrecisionPredictionWeighting
-  // Now: getSpsRangeExtension().getHighPrecisionOffsetsEnabledFlag and getSpsRangeExtension().setHighPrecisionOffsetsEnabledFlag
-
-  // WAS: getUseGolombRiceParameterAdaptation and setUseGolombRiceParameterAdaptation
-  // Now: getSpsRangeExtension().getPersistentRiceAdaptationEnabledFlag and getSpsRangeExtension().setPersistentRiceAdaptationEnabledFlag
-
-  // WAS: getAlignCABACBeforeBypass and setAlignCABACBeforeBypass
-  // Now: getSpsRangeExtension().getCabacBypassAlignmentEnabledFlag and getSpsRangeExtension().setCabacBypassAlignmentEnabledFlag
 };
 
 
@@ -1020,9 +994,6 @@ private:
 public:
           TComRefPicListModification();
   virtual ~TComRefPicListModification();
-
-  Void    create();
-  Void    destroy();
 
   Bool    getRefPicListModificationFlagL0() const        { return m_refPicListModificationFlagL0;                                  }
   Void    setRefPicListModificationFlagL0(Bool flag)     { m_refPicListModificationFlagL0 = flag;                                  }
@@ -1263,28 +1234,6 @@ public:
 
   const TComPPSRExt&     getPpsRangeExtension() const                                     { return m_ppsRangeExtension;                   }
   TComPPSRExt&           getPpsRangeExtension()                                           { return m_ppsRangeExtension;                   }
-
-  // WAS: getTransformSkipLog2MaxSize and setTransformSkipLog2MaxSize
-  // Now: getPpsRangeExtension().getLog2MaxTransformSkipBlockSize and getPpsRangeExtension().setLog2MaxTransformSkipBlockSize
-
-  // WAS: getUseCrossComponentPrediction and setUseCrossComponentPrediction
-  // Now: getPpsRangeExtension().getCrossComponentPredictionEnabledFlag and getPpsRangeExtension().setCrossComponentPredictionEnabledFlag
-
-  // WAS: clearChromaQpAdjTable
-  // Now: getPpsRangeExtension().clearChromaQpOffsetList
-
-  // WAS: getMaxCuChromaQpAdjDepth and setMaxCuChromaQpAdjDepth
-  // Now: getPpsRangeExtension().getDiffCuChromaQpOffsetDepth and getPpsRangeExtension().setDiffCuChromaQpOffsetDepth
-
-  // WAS: getChromaQpAdjTableSize
-  // Now: getPpsRangeExtension().getChromaQpOffsetListLen
-
-  // WAS: getChromaQpAdjTableAt and setChromaQpAdjTableAt
-  // Now: getPpsRangeExtension().getChromaQpOffsetListEntry and getPpsRangeExtension().setChromaQpOffsetListEntry
-
-  // WAS: getSaoOffsetBitShift and setSaoOffsetBitShift
-  // Now: getPpsRangeExtension().getLog2SaoOffsetScale and getPpsRangeExtension().setLog2SaoOffsetScale
-
 };
 
 struct WPScalingParam
