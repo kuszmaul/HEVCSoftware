@@ -980,6 +980,9 @@ Void TComPrediction::preCalcPLTIndexRD(TComDataCU* pcCU, Pel *Palette[3], Pel* p
         if (pcCU->getCUTransquantBypass(0))
         {
           errorTemp = 0;
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT_FIX
+          rdCost = pcCost->getLambda() * 24;
+#endif
           if (uiMinError > iErrorLimit)
           {
             m_cIndexBlock[uiPos] -= maxSpsPltSize;

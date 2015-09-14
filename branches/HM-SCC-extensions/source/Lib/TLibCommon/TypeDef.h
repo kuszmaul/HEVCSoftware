@@ -199,7 +199,7 @@
 #define SCM_U0180_IBC_RPLC                               1 ///< JCTVC-U0180 : Add current picture into last position of reference picture list L0 by default, when RPLM is not used
 #define SCM_PLT_DEBLOCK_FIX                              1 ///< Bug Fix related to plt deblocking (software mismatch with the spec).
 #define SCM_U0087_SWAP_ESC_ORDER_FIX                     1 ///< Bug fix for JCTVC-U0087 in non-444 format
-
+#define SCM_U0096_PLT_ENCODER_IMPROVEMENT_FIX            1 ///< Bug fixes for JCTVC-U0096.
 //------------------------------------------------
 // Derived macros
 //------------------------------------------------
