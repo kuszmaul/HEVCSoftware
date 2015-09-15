@@ -61,6 +61,17 @@ public:
   Void  encodeBinsEP      ( UInt  binValues, Int numBins              );
   Void  encodeBinTrm      ( UInt  binValue                            );
 
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT_FIX
+  UInt64  getNumPartialBits()                    { return m_fracBits; }
+  Void storeNumPartialBits()
+  {
+    m_fracBitsStored = m_fracBits;
+  };
+  Void restoreNumPartialBits()
+  {
+    m_fracBits = m_fracBitsStored;
+  };
+#endif
   Void  align             ();
 
 private:

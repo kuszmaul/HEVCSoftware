@@ -77,7 +77,9 @@ public:
   Void  init                    ( TDecEntropy* pcEntropyDecoder, TComTrQuant* pcTrQuant, TComPrediction* pcPrediction );
 
   /// create internal buffers
-  Void  create                  ( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight, ChromaFormat chromaFormatIDC );
+  Void  create                  ( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight, ChromaFormat chromaFormatIDC
+                                 ,UInt uiPLTMaxSize, UInt uiPLTMaxPredSize
+    );
 
   /// destroy internal buffers
   Void  destroy                 ();
@@ -96,10 +98,13 @@ protected:
   Void xDecompressCU            ( TComDataCU* pCtu, UInt uiAbsPartIdx, UInt uiDepth );
 
   Void xReconInter              ( TComDataCU* pcCU, UInt uiDepth );
-
+  Void xReconPLTMode          ( TComDataCU* pcCU, UInt uiDepth );
+  Void xDecodePLTTexture      ( TComDataCU* pcCU, const UInt uiPartIdx, Pel* pPalette,  Pel* pLevel, UChar *pSPoint, Pel *pPixelValue, Pel* piReco,const UInt uiStride, const UInt uiWidth, const UInt uiHeight, const ComponentID compID, UChar* pEscapeFlag);
   Void xReconIntraQT            ( TComDataCU* pcCU, UInt uiDepth );
   Void xIntraRecBlk             ( TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, const ComponentID component, TComTU &rTu );
   Void xIntraRecQT              ( TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, const ChannelType chType, TComTU &rTu );
+  Void xIntraRecBlk             ( TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, TComTU &rTu );
+  Void xIntraRecQT              ( TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, TComTU &rTu );
 
   Void xReconPCM                ( TComDataCU* pcCU, UInt uiDepth );
 
