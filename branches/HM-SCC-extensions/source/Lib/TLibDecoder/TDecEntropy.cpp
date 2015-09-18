@@ -421,9 +421,17 @@ Void TDecEntropy::decodeMVPIdxPU( TComDataCU* pcSubCU, UInt uiPartAddr, UInt uiD
   {
     m_pcPrediction->getMvPredAMVP( pcSubCU, uiPartIdx, uiPartAddr, eRefList, cMv);
 #if SCM_AMVR_UNIFICATION
+#if SCM_TICKET_1411
+    if( pcSubCU->getSlice()->getUseIntegerMv() || (pcSubCU->getSlice()->getRefPic( eRefList, iRefIdx )->getPOC() == pcSubCU->getSlice()->getPOC()) )
+#else
     if( pcSubCU->getSlice()->getUseIntegerMv() || ( (eRefList == REF_PIC_LIST_0) && (pcSubCU->getSlice()->getRefPic( eRefList, iRefIdx )->getPOC() == pcSubCU->getSlice()->getPOC()) ) )
+#endif 
+#else
+#if SCM_TICKET_1411
+     if (pcSubCU->getSlice()->getRefPic( eRefList, iRefIdx )->getPOC() == pcSubCU->getSlice()->getPOC() )
 #else
     if ( (eRefList == REF_PIC_LIST_0) && (pcSubCU->getSlice()->getRefPic( eRefList, iRefIdx )->getPOC() == pcSubCU->getSlice()->getPOC()) )
+#endif 
 #endif 
     {
       cMv >>= 2;

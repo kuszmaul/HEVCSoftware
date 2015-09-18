@@ -201,6 +201,7 @@
 #define SCM_U0087_SWAP_ESC_ORDER_FIX                     1 ///< Bug fix for JCTVC-U0087 in non-444 format
 #define SCM_U0096_PLT_ENCODER_IMPROVEMENT_FIX            1 ///< Bug fixes for JCTVC-U0096.
 #define SCM_CLEANUPS                                     1 ///< Miscellaneous cleanups. No change to CTC.
+#define SCM_TICKET_1411                                  1 ///< Fix for Ticket #1411
 
 //------------------------------------------------
 // Derived macros
