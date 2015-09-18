@@ -981,7 +981,12 @@ Void TComPrediction::preCalcPLTIndexRD(TComDataCU* pcCU, Pel *Palette[3], Pel* p
         {
           errorTemp = 0;
 #if SCM_U0096_PLT_ENCODER_IMPROVEMENT_FIX
+#if SCM_CLEANUPS
+          UInt uiNumTotalBits = pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA) + (pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_CHROMA)<<1);
+          rdCost += pcCost->getLambda() * uiNumTotalBits;
+#else
           rdCost = pcCost->getLambda() * 24;
+#endif 
 #endif
           if (uiMinError > iErrorLimit)
           {
@@ -1413,7 +1418,12 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
 
   uiPLTSize = 0;
   Pel *pPred[3]  = { pcCU->getLastPLTInLcuFinal(0), pcCU->getLastPLTInLcuFinal(1), pcCU->getLastPLTInLcuFinal(2) };
+#if SCM_CLEANUPS
+  UInt uiNumTotalBits = pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA) + (pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_CHROMA)<<1);
+  Double bitCost = pcCost->getLambda() * uiNumTotalBits;  
+#else
   Double bitCost = pcCost->getLambda() * 24;
+#endif 
   BitDepths bitDepths = pcCU->getSlice()->getSPS()->getBitDepths();
   for (Int i = 0; i < pcCU->getSlice()->getSPS()->getSpsScreenExtension().getPLTMaxSize(); i++)
   {
@@ -2601,7 +2611,12 @@ Void TComPrediction::derivePLTLossyForcePrediction(TComDataCU *pcCU, Pel *Palett
     }
   }
 
+#if SCM_CLEANUPS
+  UInt uiNumTotalBits = pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA) + (pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_CHROMA)<<1);
+  Double bitCost = pcCost->getLambda() * uiNumTotalBits;  
+#else
   Double bitCost = pcCost->getLambda() * 24;
+#endif 
 
   for( Int i = 0; i < maxPLTSizeSPS && uiPLTSize < maxPLTSizeSPS; i++ )
   {
