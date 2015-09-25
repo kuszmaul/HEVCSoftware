@@ -1106,12 +1106,25 @@ Void  TComPrediction::reorderPLT(TComDataCU* pcCU, Pel *pPalette[3], UInt uiNumC
   bReusedPrev = (Bool*)xMalloc(Bool, uiMaxPLTPredSize + 1);
   memset(bPredicted, 0, sizeof(Bool)*(uiMaxPLTSize + 1));
   memset(bReusedPrev, 0, sizeof(Bool)*(uiMaxPLTPredSize + 1));
+
+#if SCM_FIX_PLT_REORDER_TICKET_1419
+  Int uiNumPLTRceived = uiDictMaxSize;
+  UInt uiNumPLTPredicted = 0;
+
+  for (uiIdxCurr = 0; uiIdxCurr < uiDictMaxSize; uiIdxCurr++)
+#else
   UInt uiNumPLTRceived = uiDictMaxSize, uiNumPLTPredicted = 0;
   for (uiIdxPrev = 0; uiIdxPrev < uiPLTSizePrev; uiIdxPrev++)
+#endif
   {
     bReused = false;
     Int iCounter = 0;
+
+#if SCM_FIX_PLT_REORDER_TICKET_1419
+    for (uiIdxPrev = 0; uiIdxPrev < uiPLTSizePrev; uiIdxPrev++)
+#else
     for (uiIdxCurr = 0; uiIdxCurr < uiDictMaxSize; uiIdxCurr++)
+#endif
     {
       iCounter = 0;
 
@@ -1136,6 +1149,12 @@ Void  TComPrediction::reorderPLT(TComDataCU* pcCU, Pel *pPalette[3], UInt uiNumC
       uiNumPLTPredicted++;
     }
   }
+
+#if SCM_FIX_PLT_REORDER_TICKET_1419
+  assert( uiNumPLTRceived >= 0 );
+  assert( uiNumPLTPredicted <= uiDictMaxSize );
+#endif
+
   for (uiIdxPrev = 0; uiIdxPrev < uiMaxPLTPredSize; uiIdxPrev++)
   {
     for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
