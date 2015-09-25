@@ -202,6 +202,7 @@
 #define SCM_U0096_PLT_ENCODER_IMPROVEMENT_FIX            1 ///< Bug fixes for JCTVC-U0096.
 #define SCM_CLEANUPS                                     1 ///< Miscellaneous cleanups. No change to CTC.
 #define SCM_TICKET_1411                                  1 ///< Fix for Ticket #1411
+#define SCM_FIX_PLT_REORDER_TICKET_1419                  1 ///< Fix for Ticket #1419
 
 //------------------------------------------------
 // Derived macros
@@ -212,7 +213,6 @@
 #define SCM_S0067_MAX_CAND_SIZE                          32 ///< 32 or 64, 16 by default
 #define SCM_T0227_INTER_SEARCH_YUV                        1 ///< use 3 components for Inter in mixed CU decision(Intra BC and inter CU)
 #define SCM_T0048_PLT_PRED_IN_PPS_REFRESH                16 ///< Periodicity of the palette refresh
-
 
 
 //------------------------------------------------
