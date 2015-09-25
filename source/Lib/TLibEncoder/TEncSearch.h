@@ -282,7 +282,11 @@ public:
                                           );
 
   /// encoder estimation - inter prediction (non-skip)
+#if SCM_IBC_BUGFIX_TICKET_1418
+  Bool predInterSearch          ( TComDataCU* pcCU,
+#else
   Void predInterSearch          ( TComDataCU* pcCU,
+#endif
                                   TComYuv*    pcOrgYuv,
                                   TComYuv*    pcPredYuv,
                                   TComYuv*    pcResiYuv,
