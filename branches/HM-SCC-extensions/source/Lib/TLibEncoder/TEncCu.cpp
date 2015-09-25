@@ -1331,6 +1331,18 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
 
   if( !terminateAllFurtherRDO && bSubBranch && uiDepth < sps.getLog2DiffMaxMinCodingBlockSize() && (!getFastDeltaQp() || uiWidth > fastDeltaQPCuMaxSize || bBoundary))
   {
+#if SCM_FIX_PLT_PRED_TICKET_1420
+    PaletteInfoBuffer tempPalettePredictor;
+
+    if( iMinQP != iMaxQP )
+    {
+      memcpy( tempPalettePredictor.lastPLTSize, lastPLTSize, sizeof( lastPLTSize ) );
+      memcpy( tempPalettePredictor.lastPLT[0],  lastPLT[0], sizeof( tempPalettePredictor.lastPLT[0] ) );
+      memcpy( tempPalettePredictor.lastPLT[1],  lastPLT[1], sizeof( tempPalettePredictor.lastPLT[1] ) );
+      memcpy( tempPalettePredictor.lastPLT[2],  lastPLT[2], sizeof( tempPalettePredictor.lastPLT[2] ) );
+    }
+#endif
+
     // further split
     for (Int iQP=iMinQP; iQP<=iMaxQP; iQP++)
     {
@@ -1342,6 +1354,16 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
       TComDataCU* pcSubBestPartCU     = m_ppcBestCU[uhNextDepth];
       TComDataCU* pcSubTempPartCU     = m_ppcTempCU[uhNextDepth];
       DEBUG_STRING_NEW(sTempDebug)
+
+#if SCM_FIX_PLT_PRED_TICKET_1420
+      if( iMinQP != iMaxQP && iQP != iMinQP )
+      {
+        memcpy( lastPLTSize, tempPalettePredictor.lastPLTSize, sizeof( lastPLTSize ) );
+        memcpy( lastPLT[0],  tempPalettePredictor.lastPLT[0],  sizeof( tempPalettePredictor.lastPLT[0] ) );
+        memcpy( lastPLT[1],  tempPalettePredictor.lastPLT[1],  sizeof( tempPalettePredictor.lastPLT[1] ) );
+        memcpy( lastPLT[2],  tempPalettePredictor.lastPLT[2],  sizeof( tempPalettePredictor.lastPLT[2] ) );
+      }
+#endif
 
       for ( UInt uiPartUnitIdx = 0; uiPartUnitIdx < 4; uiPartUnitIdx++ )
       {
