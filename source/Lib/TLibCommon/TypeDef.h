@@ -45,7 +45,6 @@
 #include <vector>
 #include <cstdlib>
 
-
 //! \ingroup TLibCommon
 //! \{
 
@@ -205,6 +204,8 @@
 #define SCM_TICKET_1411                                  1 ///< Fix for Ticket #1411
 #define SCM_FIX_PLT_REORDER_TICKET_1419                  1 ///< Fix for Ticket #1419
 #define SCM_IBC_BUGFIX_TICKET_1418                       1 ///< Fix for Ticket #1418
+#define SCM_FIX_PLT_PRED_TICKET_1420                     1 ///< Fix for Ticket #1420
+
 //------------------------------------------------
 // Derived macros
 //------------------------------------------------
