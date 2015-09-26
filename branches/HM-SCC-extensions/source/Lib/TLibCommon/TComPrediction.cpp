@@ -535,7 +535,11 @@ Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel
 #endif
       xPredIntraAng( channelsBitDepthForPrediction, ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType, uiDirMode, enableEdgeFilters );
       
+#if SCM_FIX_DC_FILT_TICKET_1417
+      if( uiDirMode == DC_IDX && !pcCU->getSlice()->getSPS()->getSpsScreenExtension().getDisableIntraBoundaryFilter() )
+#else
       if( uiDirMode == DC_IDX && enableEdgeFilters )
+#endif 
       {
         xDCPredFiltering( ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, channelType );
       }
