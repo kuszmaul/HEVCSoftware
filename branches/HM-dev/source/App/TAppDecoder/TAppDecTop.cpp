@@ -907,6 +907,7 @@ Void TAppDecTop::applyColourRemapping(const TComPicYuv& pic, SEIColourRemappingI
 
     assert(pic.getChromaFormat() != CHROMA_400);
     const Int hs = pic.getComponentScaleX(ComponentID(COMPONENT_Cb));
+    const Int maxOutputValue = (1 << bitDepth) - 1;
 
     for( Int y = 0; y < iHeight; y++ )
     {
@@ -921,17 +922,17 @@ Void TAppDecTop::applyColourRemapping(const TComPicYuv& pic, SEIColourRemappingI
 
         Int YUVMat_0 = applyColourRemappingInfoMatrix(criSEI.m_colourRemapCoeffs[0], postOffsetShift, YUVPre_0, YUVPre_1, YUVPre_2, matrixOutputOffset[0]);
         Int YUVLutB_0 = applyColourRemappingInfoLut1D(YUVMat_0, postLut[0], postLutInputPrecision);
-        YUVOut[COMPONENT_Y][x] = (YUVLutB_0 + scaleOut_round) >> scaleShiftOut_neg; // scaling output
+        YUVOut[COMPONENT_Y][x] = std::min(maxOutputValue, (YUVLutB_0 + scaleOut_round) >> scaleShiftOut_neg);
 
         if( computeChroma )
         {
           Int YUVMat_1 = applyColourRemappingInfoMatrix(criSEI.m_colourRemapCoeffs[1], postOffsetShift, YUVPre_0, YUVPre_1, YUVPre_2, matrixOutputOffset[1]);
           Int YUVLutB_1 = applyColourRemappingInfoLut1D(YUVMat_1, postLut[1], postLutInputPrecision);
-          YUVOut[COMPONENT_Cb][xc] = (YUVLutB_1 + scaleOut_round) >> scaleShiftOut_neg; // scaling output
+          YUVOut[COMPONENT_Cb][xc] = std::min(maxOutputValue, (YUVLutB_1 + scaleOut_round) >> scaleShiftOut_neg);
 
           Int YUVMat_2 = applyColourRemappingInfoMatrix(criSEI.m_colourRemapCoeffs[2], postOffsetShift, YUVPre_0, YUVPre_1, YUVPre_2, matrixOutputOffset[2]);
           Int YUVLutB_2 = applyColourRemappingInfoLut1D(YUVMat_2, postLut[2], postLutInputPrecision);
-          YUVOut[COMPONENT_Cr][xc] = (YUVLutB_2 + scaleOut_round) >> scaleShiftOut_neg; // scaling output
+          YUVOut[COMPONENT_Cr][xc] = std::min(maxOutputValue, (YUVLutB_2 + scaleOut_round) >> scaleShiftOut_neg);
         }
       }
 

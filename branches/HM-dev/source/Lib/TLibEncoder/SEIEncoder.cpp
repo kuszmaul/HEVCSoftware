@@ -522,8 +522,8 @@ Bool SEIEncoder::initSEIColourRemappingInfo(SEIColourRemappingInfo* seiColourRem
       readTokenValueAndValidate(seiColourRemappingInfo->m_colourRemapInputBitDepth, failed, fic, "colour_remap_input_bit_depth",            Int(8), Int(16) );
       readTokenValueAndValidate(seiColourRemappingInfo->m_colourRemapBitDepth,      failed, fic, "colour_remap_bit_depth",                  Int(8), Int(16) );
 
-      const Int maximumInputValue    = (1<<seiColourRemappingInfo->m_colourRemapInputBitDepth)-1;
-      const Int maximumRemappedValue = (1<<seiColourRemappingInfo->m_colourRemapBitDepth)-1;
+      const Int maximumInputValue    = (1 << (((seiColourRemappingInfo->m_colourRemapInputBitDepth + 7) >> 3) << 3)) - 1;
+      const Int maximumRemappedValue = (1 << (((seiColourRemappingInfo->m_colourRemapBitDepth      + 7) >> 3) << 3)) - 1;
 
       for( Int c=0 ; c<3 ; c++ )
       {
