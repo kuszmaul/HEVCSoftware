@@ -208,6 +208,8 @@
 #define SCM_FIX_DC_FILT_TICKET_1417                      1 ///< Fix for Ticket #1417
 #define SCM_FIX_DELTA_QP_SIGN_TICKET_1421                1 ///< Fix for Ticket #1421
 #define SCM_FIX_PLT_CHROMA_ADJ_TICKET_1422               1 ///< Fix for Ticket #1422
+#define SCM_FIX_PLT_DELTA_QP_TICKET_1373                 1 ///< Fix for Ticket #1373
+
 //------------------------------------------------
 // Derived macros
 //------------------------------------------------
