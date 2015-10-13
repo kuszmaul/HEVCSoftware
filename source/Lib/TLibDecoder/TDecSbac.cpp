@@ -892,10 +892,12 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
       codeChromaQpAdj = false;
     }
 
+#if !SCM_FIX_DELTA_QP_SIGN_TICKET_1421
     for (Int comp = compBegin; comp < compBegin + uiNumComp; comp++)
     {
       uiMaxVal[comp] = pcCU->xCalcMaxVals(pcCU, ComponentID(comp));
     }
+#endif
   }
 #endif
 
