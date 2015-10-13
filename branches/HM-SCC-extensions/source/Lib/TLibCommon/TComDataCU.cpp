@@ -2194,7 +2194,13 @@ Void TComDataCU::setQPSubCUs( Int qp, UInt absPartIdx, UInt depth, Bool &foundNo
     }
     else
     {
+#if SCM_FIX_PLT_DELTA_QP_TICKET_1373
+      if(getCbf( absPartIdx, COMPONENT_Y ) || (numValidComp>COMPONENT_Cb && getCbf( absPartIdx, COMPONENT_Cb )) || (numValidComp>COMPONENT_Cr && getCbf( absPartIdx, COMPONENT_Cr) ) 
+        || (getPLTModeFlag(absPartIdx) && getPLTEscape(COMPONENT_Y, absPartIdx))
+        )
+#else
       if(getCbf( absPartIdx, COMPONENT_Y ) || (numValidComp>COMPONENT_Cb && getCbf( absPartIdx, COMPONENT_Cb )) || (numValidComp>COMPONENT_Cr && getCbf( absPartIdx, COMPONENT_Cr) ) )
+#endif
       {
         foundNonZeroCbf = true;
       }
