@@ -99,7 +99,11 @@ Void TEncEntropy::encodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool b
     }
 
     // Note: the condition is log2CbSize < MaxTbLog2SizeY in 7.3.8.5 of JCTVC-T1005-v2
+#if SCM_FIX_DELTA_QP_SIGN_TICKET_1421
+    if( !pcCU->isIntra( uiAbsPartIdx ) || pcCU->getWidth(uiAbsPartIdx) == 64 )
+#else
     if( !pcCU->isIntra( uiAbsPartIdx ) || pcCU->getWidth(uiAbsPartIdx) == 64 || pcCU->isIntraBC( uiAbsPartIdx ) )
+#endif
     {
       return;
     }
@@ -199,6 +203,7 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
 
   if ( pcCU->getSlice()->isIntra() )
   {
+#if !SCM_FIX_DELTA_QP_SIGN_TICKET_1421
     if ( pcCU->isIntra( uiAbsPartIdx ) )
     {
       encodePLTModeInfo( pcCU, uiAbsPartIdx );
@@ -210,6 +215,7 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
         }
       }
     }
+#endif
 
     return;
   }
