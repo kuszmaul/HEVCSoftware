@@ -206,7 +206,8 @@
 #define SCM_IBC_BUGFIX_TICKET_1418                       1 ///< Fix for Ticket #1418
 #define SCM_FIX_PLT_PRED_TICKET_1420                     1 ///< Fix for Ticket #1420
 #define SCM_FIX_DC_FILT_TICKET_1417                      1 ///< Fix for Ticket #1417
-#define SCM_FIX_DELTA_QP_SIGN_TICKET_1421       1
+#define SCM_FIX_DELTA_QP_SIGN_TICKET_1421                1 ///< Fix for Ticket #1421
+#define SCM_FIX_PLT_CHROMA_ADJ_TICKET_1422               1 ///< Fix for Ticket #1422
 //------------------------------------------------
 // Derived macros
 //------------------------------------------------

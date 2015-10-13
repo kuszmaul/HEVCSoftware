@@ -3266,6 +3266,9 @@ Void TEncCu::xCheckPLTMode(TComDataCU *&rpcBestCU, TComDataCU *&rpcTempCU, Bool 
   rpcTempCU->setPredModeSubParts( MODE_INTRA, 0, uiDepth );
   rpcTempCU->setTrIdxSubParts ( 0, 0, uiDepth );
   rpcTempCU->setPLTModeFlagSubParts(true, 0, rpcTempCU->getDepth(0));
+#if SCM_FIX_PLT_CHROMA_ADJ_TICKET_1422
+  rpcTempCU->setChromaQpAdjSubParts( rpcTempCU->getCUTransquantBypass(0) ? 0 : m_cuChromaQpOffsetIdxPlus1, 0, uiDepth );
+#endif
 
 #if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   UInt testedModes=m_pcPredSearch->PLTSearch(rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth],
