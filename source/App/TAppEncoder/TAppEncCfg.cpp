@@ -2196,6 +2196,27 @@ Void TAppEncCfg::xCheckParameter()
     {
       m_maxDecPicBuffering[m_GOPList[i].m_temporalId] = m_GOPList[i].m_numRefPics + 1;
     }
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+        UInt highestTId = 0;
+        UInt MaxDpbSize = 0;
+
+        if (highestTId < m_GOPList[i].m_temporalId)
+        {
+            highestTId = m_GOPList[i].m_temporalId;
+        }
+        if (!m_useIntraBlockCopy) {
+            MaxDpbSize = 6;
+        } 
+        else
+        {
+            MaxDpbSize = 7;
+        }    
+        m_maxDecPicBuffering[highestTId] = MaxDpbSize;
+        if (m_maxDecPicBuffering[highestTId] > MaxDpbSize)
+        {
+            m_maxDecPicBuffering[highestTId] = MaxDpbSize;
+        }
+#endif
     Int highestDecodingNumberWithLowerPOC = 0;
     for(Int j=0; j<m_iGOPSize; j++)
     {

@@ -77,6 +77,7 @@ private:
   Void xSetPredFromSPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT], const TComPPS *pcPPS, const TComSPS *pcSPS);
   Void xSetPredDefault(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT], const TComSPS *pcSPS);
 #endif
+
 public:
   TDecSlice();
   virtual ~TDecSlice();
@@ -85,7 +86,11 @@ public:
   Void  create            ();
   Void  destroy           ();
 
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+  Void  decompressSlice   ( TComInputBitstream** ppcSubstreams,   TComPic* pcPic, TComPic* pcPicAfterILF, TDecSbac* pcSbacDecoder );
+#else
   Void  decompressSlice   ( TComInputBitstream** ppcSubstreams,   TComPic* pcPic, TDecSbac* pcSbacDecoder );
+#endif
 };
 
 //! \}

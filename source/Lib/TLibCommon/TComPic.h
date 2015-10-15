@@ -83,10 +83,19 @@ private:
   SEIMessages  m_SEIs; ///< Any SEI messages that have been received.  If !NULL we own the object.
 
   TComHash              m_hashMap;
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+  Bool                                    m_bCurPic;
+    Bool                                    m_bInDPB;
+#endif
 
 public:
   TComPic();
   virtual ~TComPic();
+
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+    Void                    copyPicInfo(const TComPic& sComPic);
+    Void                    swapPicYuvPointer(TComPic* sPic);
+#endif
 
   Void          create( const TComSPS &sps, const TComPPS &pps,
                         UInt uiPLTMaxSize, UInt uiPLTMaxPredSize, const Bool bIsVirtual /*= false*/ );
@@ -164,6 +173,14 @@ public:
   
   Void          addPictureToHashMapForInter();
   TComHash*     getHashMap() { return &m_hashMap; }
+
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+  Bool                    getCurrentPicFlag()                    { return m_bCurPic; } 
+  Void                    setCurrentPicFlag(Bool b)        { m_bCurPic = b; }
+    Bool                    getCurrPicInDPBFlag()                    { return m_bInDPB; } 
+  Void                    setCurrPicInDPBFlag(Bool b)        { m_bInDPB = b; }
+#endif
+
 
   /* field coding parameters*/
 

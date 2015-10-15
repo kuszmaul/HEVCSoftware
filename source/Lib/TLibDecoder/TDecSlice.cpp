@@ -103,8 +103,13 @@ Void TDecSlice::xSetPredDefault(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE
 }
 #endif
 
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcPic, TComPic* pcPicAfterILF, TDecSbac* pcSbacDecoder)
+{
+#else
 Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcPic, TDecSbac* pcSbacDecoder)
 {
+#endif
   TComSlice* pcSlice                 = pcPic->getSlice(pcPic->getCurrSliceIdx());
 
   const Int  startCtuTsAddr          = pcSlice->getSliceSegmentCurStartCtuTsAddr();
