@@ -328,7 +328,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
 
   TComList<TComPic*>::iterator iterPic   = pcListPic->begin();
   Int numPicsNotYetDisplayed = 0;
-#ifndef SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+#if !SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
   Int dpbFullness = 0;
 #endif
   const TComSPS* activeSPS = &(pcListPic->front()->getPicSym()->getSPS());
