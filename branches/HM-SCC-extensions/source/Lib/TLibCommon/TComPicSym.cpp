@@ -69,7 +69,6 @@ TComPicSym::TComPicSym()
 #endif
 {}
 
-
 Void TComPicSym::create  ( const TComSPS &sps, const TComPPS &pps, UInt uiMaxDepth
   , UInt uiPLTMaxSize, UInt uiPLTMaxPredSize
   )

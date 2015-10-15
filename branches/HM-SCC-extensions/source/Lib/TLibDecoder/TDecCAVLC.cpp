@@ -886,6 +886,27 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
               TComSPSSCC &screenExtension = pcSPS->getSpsScreenExtension();
               READ_FLAG( uiCode, "intra_block_copy_enabled_flag" );           screenExtension.setUseIntraBlockCopy( uiCode != 0 );
               READ_FLAG( uiCode, "palette_mode_enabled_flag" );               screenExtension.setUsePLTMode( uiCode != 0 );
+
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+                            UInt MaxDPBSize = 0;
+                            if (!screenExtension.getUseIntraBlockCopy()) {
+                                MaxDPBSize = 6;
+                            } 
+                            else {
+                                MaxDPBSize = 7;
+                            }
+                            
+                            for(UInt ij=0; ij <= pcSPS->getMaxTLayers()-1; ij++)
+                            {
+                                if (pcSPS->getMaxDecPicBuffering(ij) > MaxDPBSize)
+                                {
+                                    std::cerr <<"Bitstream compliance Error m_uiMaxDecPicBuffering[" << ij << "]" << pcSPS->getMaxDecPicBuffering(ij) << "shall not be bigger than MaxDPBSize -1 and smaller than 0" << std::endl;
+                                    assert(false);
+                                    exit(1);
+                                }
+                            }
+#endif
+
               if ( screenExtension.getUsePLTMode() )//decode only when palette mode is enabled
               {
                 READ_UVLC( uiCode, "palette_max_size" );                      screenExtension.setPLTMaxSize( uiCode );

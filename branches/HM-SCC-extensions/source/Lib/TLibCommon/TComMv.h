@@ -88,7 +88,7 @@ public:
   Int   getHor    () const { return m_iHor;          }
   Int   getVer    () const { return m_iVer;          }
   Int   getAbsHor () const { return abs( m_iHor );   }
-  Int   getAbsVer () const { return abs( m_iVer );   }
+  Int   getAbsVer () const { return abs( m_iVer );   }  
 
   // ------------------------------------------------------------------------------------------------------------------
   // operations
