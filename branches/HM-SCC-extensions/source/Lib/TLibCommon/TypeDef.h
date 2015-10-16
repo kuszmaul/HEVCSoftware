@@ -173,7 +173,6 @@
 
 #define SCM_S0043_PLT_DELTA_QP                           0 ///< JCTVC-S0043: delta qp signalling for palette mode
 #define SCM_U0095_FAST_INTRA_ACT                         0 ///< JCTVC-U0095, fast intra ACT search
-#define SCM_FIX_DELTA_QP_SIGN_TICKET_1421                1 ///< Fix for Ticket #1421
 #define SCM_FIX_PLT_CHROMA_ADJ_TICKET_1422               1 ///< Fix for Ticket #1422
 #define SCM_FIX_PLT_DELTA_QP_TICKET_1373                 1 ///< Fix for Ticket #1373
 #define SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC     0 ///< JCTVC-U0181: storage of both versions of the current decoded picture into the DPB, treating pictures with in-loop filtering on/off differently, and increase the value of maxDpbPicBuf equal to 7 for profiles supporting IBC

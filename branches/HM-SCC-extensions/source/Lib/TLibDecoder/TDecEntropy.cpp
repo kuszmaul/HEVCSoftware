@@ -74,11 +74,7 @@ Void TDecEntropy::decodeCUTransquantBypassFlag(TComDataCU* pcCU, UInt uiAbsPartI
 Void TDecEntropy::decodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool& bCodeDQP, Bool& isChromaQpAdjCoded )
 {
   // Note: the condition is log2CbSize < MaxTbLog2SizeY in 7.3.8.5 of JCTVC-T1005-v2
-#if SCM_FIX_DELTA_QP_SIGN_TICKET_1421
   if( pcCU->getSlice()->getSPS()->getSpsScreenExtension().getUsePLTMode() && pcCU->isIntra( uiAbsPartIdx ) && (pcCU->getSlice()->getSPS()->getMaxCUWidth() >> uiDepth) < 64 )
-#else
-  if( pcCU->isIntra( uiAbsPartIdx ) && pcCU->getSlice()->getSPS()->getMaxCUWidth()>>uiDepth < 64 && !pcCU->isIntraBC( uiAbsPartIdx ) )
-#endif
   {
     m_pcEntropyDecoderIf->parsePLTModeFlag( pcCU, uiAbsPartIdx, uiDepth );
     if ( pcCU->getPLTModeFlag( uiAbsPartIdx ) )
