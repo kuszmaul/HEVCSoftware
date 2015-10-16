@@ -1306,11 +1306,7 @@ Void TComDataCU::getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPred, Int& n
   }
   
   //left
-#if SCM_IBC_MVP_ENC_ONLY_BUGFIX
   TComDataCU* pcTempLeftCU = getPULeft( uiTempPartIdx, uiPartIdxLB);
-#else
-  TComDataCU* pcTempLeftCU = getPULeft( uiTempPartIdx, uiPartIdxLB, false, false);
-#endif
   uiLeft       = ( pcTempLeftCU ) ? pcTempLeftCU->isIntraBC( uiTempPartIdx ) : 0;
 
   if(uiLeft)
@@ -1324,11 +1320,7 @@ Void TComDataCU::getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPred, Int& n
   }
 
   //above
-#if SCM_IBC_MVP_ENC_ONLY_BUGFIX
   TComDataCU* pcTempAboveCU = getPUAbove( uiTempPartIdx, uiPartIdxRT);
-#else
-  TComDataCU* pcTempAboveCU = getPUAbove( uiTempPartIdx, uiPartIdxRT, false, false, false);
-#endif
   uiAbove       = ( pcTempAboveCU ) ? pcTempAboveCU->isIntraBC( uiTempPartIdx ) : 0;
 
   if(uiAbove)
@@ -1397,11 +1389,7 @@ Void TComDataCU::getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPred, Int& n
   }
 
   // Below Left predictor search
-#if SCM_IBC_MVP_ENC_ONLY_BUGFIX
   TComDataCU* pcTempBelowLeftCU = getPUBelowLeft( uiTempPartIdx, uiPartIdxLB);
-#else
-  TComDataCU* pcTempBelowLeftCU = getPUBelowLeft( uiTempPartIdx, uiPartIdxLB, false);
-#endif
   UInt uiBelowLeft = ( pcTempBelowLeftCU ) ? pcTempBelowLeftCU->isIntraBC( uiTempPartIdx ) : 0;
   if( uiBelowLeft)
   {
@@ -1414,11 +1402,7 @@ Void TComDataCU::getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPred, Int& n
   }
 
   // Above Right predictor search
-#if SCM_IBC_MVP_ENC_ONLY_BUGFIX
   TComDataCU* pcTempAboveRightCU = getPUAboveRight(uiTempPartIdx, uiPartIdxRT);
-#else
-  TComDataCU* pcTempAboveRightCU = getPUAboveRight(uiTempPartIdx, uiPartIdxRT, false);
-#endif
   UInt uiAboveRight = ( pcTempAboveRightCU ) ? pcTempAboveRightCU->isIntraBC( uiTempPartIdx ) : 0;
   if( uiAboveRight)
   {
@@ -1431,11 +1415,7 @@ Void TComDataCU::getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPred, Int& n
   }
 
   // Above Left predictor search
-#if SCM_IBC_MVP_ENC_ONLY_BUGFIX
   TComDataCU* pcTempAboveLeftCU = getPUAboveLeft(uiTempPartIdx, uiPartIdxLT);
-#else
-  TComDataCU* pcTempAboveLeftCU = getPUAboveLeft(uiTempPartIdx, uiPartIdxLT, false);
-#endif
   UInt uiAboveLeft = ( pcTempAboveLeftCU ) ? pcTempAboveLeftCU->isIntraBC( uiTempPartIdx ) : 0;
   if( uiAboveLeft)
   {
