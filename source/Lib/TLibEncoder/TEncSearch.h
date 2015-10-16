@@ -447,7 +447,6 @@ public:
       return false;
     }
 #endif 
-#if SCM_T0056_IBC_VALIDATE_TILES
     const UInt curTileIdx = pcCU->getPic()->getPicSym()->getTileIdxMap( pcCU->getCtuRsAddr() );
     TComTile* curTile = pcCU->getPic()->getPicSym()->getTComTile( curTileIdx );
 
@@ -462,7 +461,6 @@ public:
     {
       return false;
     }
-#endif
 
     TComSlice *pcSlice = pcCU->getSlice();
     if( pcSlice->getSliceMode() )

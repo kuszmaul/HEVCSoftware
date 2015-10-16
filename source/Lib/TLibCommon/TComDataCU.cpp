@@ -1499,7 +1499,6 @@ Bool TComDataCU::getDerivedBV(UInt uiAbsPartIdx, const TComMv& currentMv, TComMv
     return false;
 #endif
 
-#if SCM_T0056_IBC_VALIDATE_TILES
   const UInt curTileIdx = getPic()->getPicSym()->getTileIdxMap( getCtuRsAddr() );
   TComTile* curTile = getPic()->getPicSym()->getTComTile( curTileIdx );
 
@@ -1513,7 +1512,6 @@ Bool TComDataCU::getDerivedBV(UInt uiAbsPartIdx, const TComMv& currentMv, TComMv
   {
     return false;
   }
-#endif
 
   TComMvField mv1;
   pRefCU->getMvField(pRefCU, uiAbsPartIdxDerived, REF_PIC_LIST_INTRABC, mv1);
