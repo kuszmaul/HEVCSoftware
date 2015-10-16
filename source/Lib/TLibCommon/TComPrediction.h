@@ -64,7 +64,6 @@ typedef enum PRED_BUF_E
   NUM_PRED_BUF=2
 } PRED_BUF;
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
 struct pltInfoStruct{
   UInt position;
   UChar pltMode;
@@ -78,7 +77,6 @@ struct pltInfoStruct{
   UInt       escape;
   UInt       usedForCopy;
 };
-#endif
 
 static const UInt MAX_INTRA_FILTER_DEPTHS=5;
 
@@ -93,7 +91,6 @@ protected:
   UInt*     m_puiScanOrder;
   Pel*      m_piYuvExt[MAX_NUM_COMPONENT][NUM_PRED_BUF];
   Int       m_iYuvExtSize;
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   UInt      m_indError[32*32][MAX_PLT_SIZE+1];
   pltInfoStruct m_pltInfo[32*32];
   UInt      m_pltNoElements;
@@ -122,7 +119,6 @@ protected:
   TCoeff*    m_RunRD;
   Pel*       m_LevelRD[MAX_NUM_COMPONENT];
   pltInfoStruct m_pltInfoStoreRD[32*32];
-#endif
 
   TComYuv   m_acYuvPred[NUM_REF_PIC_LIST_01];
   TComYuv   m_cYuvPredTemp;
@@ -154,9 +150,7 @@ public:
   virtual ~TComPrediction();
 
   Void    initTempBuff(ChromaFormat chromaFormatIDC);
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   Void    initTBCTable(UInt bitDepth);
-#endif
 
   ChromaFormat getChromaFormat() const { return m_cYuvPredTemp.getChromaFormat(); }
 
@@ -187,25 +181,19 @@ public:
 
   static Bool UseDPCMForFirstPassIntraEstimation(TComTU &rTu, const UInt uiDirMode);
   Void  derivePLTLossy(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3],  UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize, TComRdCost *pcCost );
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   Void  derivePLTLossyIterative( TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3],  UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize, TComRdCost *pcCost);
   UInt  findCandidatePLTPredictors(UInt pltIndBest[], TComDataCU* pcCU, Pel *Palette[3], Pel* pPred[3], UInt uiPLTSizeTemp, UInt maxNoPredInd);
-#endif
   Void  derivePLTLossyForcePrediction(TComDataCU *pcCU, Pel *Palette[3], Pel *pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize, TComRdCost *pcCost);
   Void  derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize, Bool forcePLTPrediction);
   Bool  calLeftRun(TComDataCU* pcCU, Pel* pValue, UChar * pSPoint, UInt uiStartPos, UInt uiTotal, UInt &uiRun, UChar* pEscapeFlag);
   Bool  calAboveRun(TComDataCU* pcCU, Pel* pValue, UChar * pSPoint, UInt uiWidth, UInt uiStartPos, UInt uiTotal, UInt &uiRun, UChar* pEscapeFlag);
   Void  calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalette[3], Pel* pValue, Pel*paPixelValue[3], Pel*paRecoValue[3],
                       UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiStartPos );
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   Double calcPixelPredRD(TComDataCU* pcCU, Pel pOrg[3], TComRdCost *pcCost, UInt *error);
   UInt getTruncBinBits(UInt uiSymbol, UInt uiMaxSymbol);
   UInt getEpExGolombNumBins(UInt uiSymbol, UInt uiCount);
-#endif
   Void  preCalcPLTIndex(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiPLTSize);
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   Void preCalcPLTIndexRD(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiPLTSize, TComRdCost *pcCost, UInt calcErrorBits);
-#endif
 
   Void  reorderPLT(TComDataCU* pcCU, Pel *Palette[3], UInt uiNumComp);
   Void  setPLTErrLimit ( Int iPLTErrLimit ) {  m_iPLTErrLimit = iPLTErrLimit;  }

@@ -591,9 +591,7 @@ public:
 
   //==== Tool list ========
   Void      setBitDepth( const ChannelType chType, Int internalBitDepthForChannel ) { m_bitDepth[chType] = internalBitDepthForChannel; }
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   Int       getBitDepth(const ChannelType chType) { return m_bitDepth[chType]; }
-#endif
   Void      setUseASR                       ( Bool  b )     { m_bUseASR     = b; }
   Void      setUseHADME                     ( Bool  b )     { m_bUseHADME   = b; }
   Void      setUseRDOQ                      ( Bool  b )     { m_useRDOQ    = b; }

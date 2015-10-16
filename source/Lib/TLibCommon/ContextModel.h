@@ -86,18 +86,14 @@ public:
   static Void buildNextStateTable();
   static Int getEntropyBitsTrm( Int val ) { return m_entropyBits[126 ^ val]; }
 #endif
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   Void saveState()                       { m_ucStateSaved = m_ucState; }
   Void returnState()                     { m_ucState = m_ucStateSaved;}
-#endif
   Void setBinsCoded(UInt val)   { m_binsCoded = val;  }
   UInt getBinsCoded()           { return m_binsCoded;   }
 
 private:
   UChar         m_ucState;                                                                  ///< internal state variable
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   UChar         m_ucStateSaved;
-#endif
 
   static const  UInt  m_totalStates = (1 << CONTEXT_STATE_BITS) * 2; //*2 for MPS = [0|1]
   static const  UChar m_aucNextStateMPS[m_totalStates];

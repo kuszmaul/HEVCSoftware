@@ -163,7 +163,6 @@ TEncSearch::TEncSearch()
 
   m_paOriginalLevel  = (Pel*)xMalloc(Pel , MAX_CU_SIZE * MAX_CU_SIZE);
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   UInt group=0, k=0, j, uiTotal=32*32;
 
   while (k<uiTotal)
@@ -191,7 +190,6 @@ TEncSearch::TEncSearch()
       break;
     }
   }
-#endif
 
   for(Int i=0; i<MAX_NUM_COMPONENT; i++)
   {
@@ -201,7 +199,6 @@ TEncSearch::TEncSearch()
   m_paBestRun    = (TCoeff*)xMalloc(TCoeff , MAX_CU_SIZE * MAX_CU_SIZE);
   m_paBestEscapeFlag = (UChar*)xMalloc(UChar , MAX_CU_SIZE * MAX_CU_SIZE);
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   for(Int i=0; i<MAX_NUM_COMPONENT; i++)
   {
     m_paLevelStoreRD[i]  = (Pel*)xMalloc(Pel , MAX_CU_SIZE * MAX_CU_SIZE);
@@ -209,7 +206,7 @@ TEncSearch::TEncSearch()
   m_paSPointStoreRD = (UChar*)xMalloc(UChar , MAX_CU_SIZE * MAX_CU_SIZE);
   m_paRunStoreRD    = (TCoeff*)xMalloc(TCoeff , MAX_CU_SIZE * MAX_CU_SIZE);
   m_paEscapeFlagStoreRD = (UChar*)xMalloc(UChar , MAX_CU_SIZE * MAX_CU_SIZE);
-#endif
+
   for (Int i=0; i<MAX_NUM_REF_LIST_ADAPT_SR; i++)
   {
     memset (m_aaiAdaptSR[i], 0, MAX_IDX_ADAPT_SR * sizeof (Int));
@@ -309,8 +306,7 @@ Void TEncSearch::destroy()
   if (m_paBestSPoint)     { xFree(m_paBestSPoint); m_paBestSPoint=NULL; }
   if (m_paBestRun)        { xFree(m_paBestRun);    m_paBestRun=NULL;    }
   if (m_paBestEscapeFlag) { xFree(m_paBestEscapeFlag);    m_paBestEscapeFlag=NULL;    }
-  
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+
   for(Int i=0; i<MAX_NUM_COMPONENT; i++)
   {
     if (m_paLevelStoreRD[i])      { xFree(m_paLevelStoreRD[i]);  m_paLevelStoreRD[i]=NULL;  }
@@ -318,12 +314,8 @@ Void TEncSearch::destroy()
   if (m_paSPointStoreRD)     { xFree(m_paSPointStoreRD); m_paSPointStoreRD=NULL; }
   if (m_paRunStoreRD)        { xFree(m_paRunStoreRD);    m_paRunStoreRD=NULL;    }
   if (m_paEscapeFlagStoreRD) { xFree(m_paEscapeFlagStoreRD);    m_paEscapeFlagStoreRD=NULL;    }
-#endif
-  
-  m_isInitialized = false;
-  
 
-  
+  m_isInitialized = false;
 }
 
 TEncSearch::~TEncSearch()
@@ -393,9 +385,7 @@ Void TEncSearch::init(TEncCfg*      pcEncCfg,
 
   const ChromaFormat cform=pcEncCfg->getChromaFormatIdc();
   initTempBuff(cform);
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   initTBCTable(pcEncCfg->getBitDepth(ChannelType(0)));
-#endif
   m_pTempPel = new Pel[maxCUWidth*maxCUHeight];
 
   const UInt uiNumLayersToAllocate = pcEncCfg->getQuadtreeTULog2MaxSize()-pcEncCfg->getQuadtreeTULog2MinSize()+1;
@@ -4569,12 +4559,7 @@ Void TEncSearch::xEncPCM (TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* pOrg, Pel* p
   }
 }
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
-UInt TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv *& rpcResiBestYuv, TComYuv*& rpcRecoYuv, Bool forcePLTPrediction,
-  UInt uiIterNumber, UInt *pltSizeCurrIter)
-#else
-Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv *& rpcResiBestYuv, TComYuv*& rpcRecoYuv, Bool forcePLTPrediction)
-#endif
+UInt TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv *& rpcResiBestYuv, TComYuv*& rpcRecoYuv, Bool forcePLTPrediction, UInt uiIterNumber, UInt *pltSizeCurrIter)
 {
   UInt  uiDepth      = pcCU->getDepth(0);
   Distortion  uiDistortion = 0;
@@ -4584,10 +4569,8 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
   Pel *pPixelValue[3];
   UInt uiScaleX = pcCU->getPic()->getComponentScaleX(COMPONENT_Cb);
   UInt uiScaleY = pcCU->getPic()->getComponentScaleY(COMPONENT_Cb);
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   UInt testMode=0;
   UInt uiPLTIdx = 0;
-#endif
   for (UInt ch = 0; ch < 3; ch++)
   {
     paOrig[ch] = pcOrgYuv->getAddr((ComponentID)ch, 0);
@@ -4597,26 +4580,8 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
   pRun = pcCU->getRun(COMPONENT_Y);
   paSPoint[0] = pcCU->getSPoint(COMPONENT_Y);
   UChar* pEscapeFlag = pcCU->getEscapeFlag(COMPONENT_Y);
-#if !SCM_U0096_PLT_ENCODER_IMPROVEMENT
-  Int iPLTErrLimit = g_uhPLTQuant[Int(pcCU->getQP(0))];
-  setPLTErrLimit(iPLTErrLimit);
-#endif
- 
   UInt uiPLTSize = 1;
-#if !SCM_U0096_PLT_ENCODER_IMPROVEMENT
-  if( pcCU->getCUTransquantBypass(0) )
-  {
-    derivePLTLossless(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), pcCU->getHeight(0), uiPLTSize, forcePLTPrediction);
-  }
-  else if( forcePLTPrediction )
-  {
-    derivePLTLossyForcePrediction(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), pcCU->getHeight(0), uiPLTSize, m_pcRdCost);
-  }
-  else
-  {
-    derivePLTLossy(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), pcCU->getHeight(0), uiPLTSize, m_pcRdCost);
-  }
-#else
+
   if (uiIterNumber < MAX_PLT_ITER)
   {
     if( pcCU->getCUTransquantBypass(0) )
@@ -4645,12 +4610,10 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
     derivePLTLossyIterative(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), pcCU->getHeight(0), uiPLTSize, m_pcRdCost);
   }
   *pltSizeCurrIter=uiPLTSize;
-#endif
 
   pcCU->setPLTSizeSubParts(0, uiPLTSize, 0, pcCU->getDepth(0));
   pcCU->setPLTSizeSubParts(1, uiPLTSize, 0, pcCU->getDepth(0));
   pcCU->setPLTSizeSubParts(2, uiPLTSize, 0, pcCU->getDepth(0));
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   reorderPLT(pcCU, paPalette, 3);
 
   if (uiIterNumber==0)
@@ -4687,20 +4650,10 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
       return(0);
     }
   }
-#else
-  reorderPLT(pcCU, paPalette, 3);
-#endif
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   UInt calcErroBits = uiIterNumber < MAX_PLT_ITER ? 1 : 0;
   preCalcPLTIndexRD(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), uiPLTSize, m_pcRdCost, calcErroBits);
-#else
-  preCalcPLTIndex(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), uiPLTSize);
-#endif
 
-#if !SCM_U0096_PLT_ENCODER_IMPROVEMENT
-  UInt uiPLTIdx = 0;
-#endif
   for (UInt ch = 0; ch < 3; ch++)
   {
     for ( uiPLTIdx = 0; uiPLTIdx < pcCU->getSlice()->getSPS()->getSpsScreenExtension().getPLTMaxSize(); uiPLTIdx++)
@@ -4725,7 +4678,6 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
     deriveRunAndCalcBits( pcCU, pcOrgYuv, rpcRecoYuv, uiBits, false, PLT_SCAN_VERTRAV );
   }
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   UInt errorOrig, errorNew;
   if (uiPLTSize > 2)
   {
@@ -4757,7 +4709,6 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
 
     preCalcRDMerge(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), uiPLTSize, m_pcRdCost, &errorOrig, &errorNew, calcErroBits);
   }
-#endif
 
   pcCU->setPLTScanRotationModeFlagSubParts( m_bBestScanRotationMode, 0, uiDepth );
   for (UInt ch = 0; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
@@ -4775,52 +4726,49 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
   memcpy(pRun,        m_paBestRun,    sizeof(TCoeff) * uiWidth * uiHeight);
   memcpy(pEscapeFlag, m_paBestEscapeFlag,  sizeof(UChar) * uiWidth * uiHeight);
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   if (uiPLTSize > 2 )
   {
-      UInt uiBitsRD;
+    UInt uiBitsRD;
 
-      m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST]);
-      m_pcEntropyCoder->resetBits();
-      xEncIntraHeader(pcCU, uiDepth, 0, true, false);
-      uiBitsRD = m_pcEntropyCoder->getNumberOfWrittenBits();
+    m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST]);
+    m_pcEntropyCoder->resetBits();
+    xEncIntraHeader(pcCU, uiDepth, 0, true, false);
+    uiBitsRD = m_pcEntropyCoder->getNumberOfWrittenBits();
 
-      Double rdOrig, rdNew;
+    Double rdOrig, rdNew;
 
-      rdOrig = errorOrig + m_pcRdCost->getLambda()*(Double)uiBits;
-      rdNew = errorNew + m_pcRdCost->getLambda()*(Double)uiBitsRD;
+    rdOrig = errorOrig + m_pcRdCost->getLambda()*(Double)uiBits;
+    rdNew = errorNew + m_pcRdCost->getLambda()*(Double)uiBitsRD;
 
-      if (rdNew <= rdOrig)
+    if (rdNew <= rdOrig)
+    {
+      uiBits = uiBitsRD;
+      m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[uiDepth][CI_TEMP_BEST]);
+    }
+    else
+    {
+      for (UInt ch = 0; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
       {
-        uiBits = uiBitsRD;
-        m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[uiDepth][CI_TEMP_BEST]);
-      }
-      else
-      {
-        for (UInt ch = 0; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
+        if (ch == 0)
         {
-          if (ch == 0)
-          {
-            memcpy(pPixelValue[ch], m_paLevelStoreRD[ch], sizeof(Pel)* uiWidth * uiHeight);
-          }
-          else
-          {
-            memcpy(pPixelValue[ch], m_paLevelStoreRD[ch], sizeof(Pel)* (uiWidth >> uiScaleX) * (uiHeight >> uiScaleY));
-          }
+          memcpy(pPixelValue[ch], m_paLevelStoreRD[ch], sizeof(Pel)* uiWidth * uiHeight);
         }
-        memcpy(paSPoint[0], m_paSPointStoreRD, sizeof(UChar)* uiWidth * uiHeight);
-        memcpy(pRun, m_paRunStoreRD, sizeof(TCoeff)* uiWidth * uiHeight);
-        memcpy(pEscapeFlag, m_paEscapeFlagStoreRD, sizeof(UChar)* uiWidth * uiHeight);
-        memcpy(m_pltInfoBest, m_pltInfoStoreRD, sizeof(m_pltInfo));
+        else
+        {
+          memcpy(pPixelValue[ch], m_paLevelStoreRD[ch], sizeof(Pel)* (uiWidth >> uiScaleX) * (uiHeight >> uiScaleY));
+        }
       }
-
+      memcpy(paSPoint[0], m_paSPointStoreRD, sizeof(UChar)* uiWidth * uiHeight);
+      memcpy(pRun, m_paRunStoreRD, sizeof(TCoeff)* uiWidth * uiHeight);
+      memcpy(pEscapeFlag, m_paEscapeFlagStoreRD, sizeof(UChar)* uiWidth * uiHeight);
+      memcpy(m_pltInfoBest, m_pltInfoStoreRD, sizeof(m_pltInfo));
+    }
 
     if (uiIterNumber<MAX_PLT_ITER) //after cabac loading fix
     {
       testMode = preCalcRD(pcCU, paPalette, paOrig, pcCU->getWidth(0), pcCU->getHeight(0), uiPLTSize, m_pcRdCost, uiIterNumber);
     }
   }
-#endif
 
   for (UInt ch = 0; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
   {
@@ -4904,9 +4852,7 @@ Void TEncSearch::PLTSearch(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPre
   pcCU->getTotalDistortion() = uiDistortion;
   pcCU->copyToPic(uiDepth);
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
-  return(testMode);
-#endif
+  return (testMode);
 }
 
 Void TEncSearch::deriveRunAndCalcBits(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* pcRecoYuv, UInt& uiMinBits, Bool bReset, PLTScanMode pltScanMode)
@@ -4941,10 +4887,8 @@ Void TEncSearch::deriveRunAndCalcBits(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComY
   pcCU->setPLTScanRotationModeFlagSubParts(pltScanMode, 0, uiDepth );
   if (pltScanMode == PLT_SCAN_VERTRAV)
   {    
-    rotationScan(m_cIndexBlock, uiWidth, uiHeight, false);  
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
+    rotationScan(m_cIndexBlock, uiWidth, uiHeight, false);
     rotationScan(m_cPosBlock, uiWidth, uiHeight, false);
-#endif 
   }
 
   m_puiScanOrder = g_scanOrder[SCAN_UNGROUPED][SCAN_TRAV][g_aucConvertToBit[uiWidth]+2][g_aucConvertToBit[uiHeight]+2];
@@ -4959,13 +4903,11 @@ Void TEncSearch::deriveRunAndCalcBits(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComY
   {
     m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[uiDepth][CI_TEMP_BEST]);
     m_bBestScanRotationMode = pltScanMode;
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
      memcpy(m_pltInfoBest, m_pltInfo, sizeof(m_pltInfo));
      m_pltNoElementsBest = m_pltNoElements;
 
      memcpy(m_cPosBlockRD, m_cPosBlock, sizeof(m_cPosBlock));
      memcpy(m_cIndexBlockRD, m_cIndexBlock, sizeof(m_cIndexBlock));
-#endif
     for (UInt ch = 0; ch < pcCU->getPic()->getNumberValidComponents(); ch++)
     {
       if ( ch == 0 )
@@ -4990,7 +4932,6 @@ Void TEncSearch::deriveRunAndCalcBits(TComDataCU* pcCU, TComYuv* pcOrgYuv, TComY
   }
 }
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
 UInt TEncSearch::preCalcRD(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiPLTSize, TComRdCost *pcCost, UInt uiIterNumber)
 {
   UInt uiTotal = uiHeight * uiWidth;
@@ -5912,8 +5853,7 @@ Void TEncSearch::preCalcRDMerge(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3],
   }
 
   *errorNew = UInt(errNew);
-}   
-#endif
+}
 
 Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  Pel* pValue, UChar* pSPoint,
   Pel** paPixelValue, Pel ** paRecoValue, TCoeff* pRun,
@@ -5926,7 +5866,6 @@ Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  
   Pel *pcIndexBlock = m_cIndexBlock;
 
   UChar *pEscapeFlag  = pcCU->getEscapeFlag(COMPONENT_Y);
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   UInt noElements=0;
   UInt64 allBitsCopy, allBitsIndex, indexBits, runBitsIndex, runBitsCopy;
 
@@ -5938,7 +5877,6 @@ Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  
 
   m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_CURR_BEST]);
   m_pcRDGoOnSbacCoder->saveRestorePltCtx(1);
-#endif
 
   //Test Run
   while (uiIdx < uiTotal)
@@ -5951,11 +5889,7 @@ Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  
 
     if(RunValid)
     {
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
       dAveBitsPerPix[PLT_RUN_LEFT] = xGetRunBits(pcCU, pValue, uiStartPos, (uiRun + 1), PLT_RUN_LEFT, &allBitsIndex, &indexBits, &runBitsIndex);
-#else
-      dAveBitsPerPix[PLT_RUN_LEFT] = xGetRunBits(pcCU, pValue, uiStartPos, (uiRun + 1), PLT_RUN_LEFT);
-#endif
     }
     else
     {
@@ -5967,11 +5901,7 @@ Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  
 
     if(CopyValid)
     {
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
       dAveBitsPerPix[PLT_RUN_ABOVE] = xGetRunBits(pcCU, pValue, uiStartPos, uiCopyRun, PLT_RUN_ABOVE, &allBitsCopy, &indexBits, &runBitsCopy);
-#else
-      dAveBitsPerPix[PLT_RUN_ABOVE] = xGetRunBits(pcCU, pValue, uiStartPos, uiCopyRun, PLT_RUN_ABOVE);
-#endif
     }
     else
     {
@@ -5990,7 +5920,6 @@ Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  
 
         pEscapeFlag[uiTraIdx] = ( pcIndexBlock[uiTraIdx] < 0 );
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
         Double error=0;
         m_pltInfo[noElements].index    = 0;
         m_pltInfo[noElements].position = uiIdx;
@@ -5999,7 +5928,6 @@ Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  
         m_pltInfo[noElements].bitsRun  = runBitsCopy;
         m_pltInfo[noElements].bitsInd  = 0;
         m_pltInfo[noElements].bitsAll  = allBitsCopy;
-#endif
 
         if( pEscapeFlag[uiTraIdx] )
         {
@@ -6024,10 +5952,8 @@ Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  
 
           iTemp--;
         }
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
         m_pltInfo[noElements].error = error;
         noElements++;
-#endif
       }
       else
       {
@@ -6036,7 +5962,6 @@ Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  
 
         pEscapeFlag[uiTraIdx] = ( pcIndexBlock[uiTraIdx] < 0 );
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
         Double error=0;
         m_pltInfo[noElements].position = uiIdx;
         m_pltInfo[noElements].pltMode  = pSPoint[uiTraIdx];
@@ -6068,7 +5993,6 @@ Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  
             }
           }
         }
-#endif
 
         if( pEscapeFlag[uiTraIdx] )
         {
@@ -6093,29 +6017,17 @@ Void TEncSearch::xDeriveRun(TComDataCU* pcCU, Pel* pOrg[3],  Pel *pPalette[3],  
           uiIdx++;
           iTemp--;
         }
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
         m_pltInfo[noElements].error=error;
         noElements++;
-#endif
       }
     }
   }
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   m_pltNoElements = noElements;
-#endif
-
   assert (uiIdx == uiTotal);
 }
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
 Double TEncSearch::xGetRunBits(TComDataCU* pcCU, Pel *pValue, UInt uiStartPos, UInt uiRun, PLTRunMode cPltRunMode, UInt64 *allBits, UInt64 *indexBits, UInt64 *runBits)
-#else
-Double TEncSearch::xGetRunBits(TComDataCU* pcCU, Pel *pValue, UInt uiStartPos, UInt uiRun, PLTRunMode cPltRunMode)
-#endif
 {
-#if!SCM_U0096_PLT_ENCODER_IMPROVEMENT
-  UInt uiDepth      = pcCU->getDepth(0);
-#endif
   UInt uiWidth      = pcCU->getWidth(0);
   UInt uiHeight = pcCU->getHeight(0);
   UInt uiTotal = uiWidth * uiHeight;
@@ -6131,19 +6043,12 @@ Double TEncSearch::xGetRunBits(TComDataCU* pcCU, Pel *pValue, UInt uiStartPos, U
   UInt   uiTraIdx    = m_puiScanOrder[uiStartPos];
   UInt   uiRealLevel = pValue[uiTraIdx];
   UChar* pEscapeFlag = pcCU->getEscapeFlag(COMPONENT_Y);
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   m_pcRDGoOnSbacCoder->saveRestorePltCtx(0);
-#else
-  m_pcRDGoOnSbacCoder->load(m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST]);
-#endif
   m_pcEntropyCoder->resetBits();
 
   m_pcRDGoOnSbacCoder->encodeSPoint(pcCU, 0, uiStartPos, uiWidth, pSPoint, m_puiScanOrder);
 
-
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   UInt64 sPointBits=m_pcRDGoOnSbacCoder->getNumPartialBits();
-#endif
 
   assert(uiRun >= 1);
   switch(cPltRunMode)
@@ -6155,25 +6060,18 @@ Double TEncSearch::xGetRunBits(TComDataCU* pcCU, Pel *pValue, UInt uiStartPos, U
     }
 
     siCurLevel = m_pcRDGoOnSbacCoder->writePLTIndex(uiStartPos, pValue, uiIndexMaxSize, pSPoint, uiWidth, pEscapeFlag);
-
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
     *indexBits = m_pcRDGoOnSbacCoder->getNumPartialBits() - sPointBits;
-#endif
     if( pEscapeFlag[uiTraIdx] )
     {
       pValue[uiTraIdx] = uiRealLevel;
     }
     m_pcRDGoOnSbacCoder->encodeRun((uiRun - 1), PLT_RUN_LEFT, siCurLevel, uiTotal - uiStartPos - 1);
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
-    * runBits = m_pcRDGoOnSbacCoder->getNumPartialBits() - sPointBits - (*indexBits);
-#endif
+    *runBits = m_pcRDGoOnSbacCoder->getNumPartialBits() - sPointBits - (*indexBits);
 
     break;
   case PLT_RUN_ABOVE:
     m_pcRDGoOnSbacCoder->encodeRun((uiRun - 1), PLT_RUN_ABOVE, siCurLevel, uiTotal - uiStartPos - 1);
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
-    * runBits = m_pcRDGoOnSbacCoder->getNumPartialBits() - sPointBits;
-#endif
+    *runBits = m_pcRDGoOnSbacCoder->getNumPartialBits() - sPointBits;
 
     break;
   default:
@@ -6181,10 +6079,8 @@ Double TEncSearch::xGetRunBits(TComDataCU* pcCU, Pel *pValue, UInt uiStartPos, U
   }
 
   UInt uiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   *allBits=m_pcRDGoOnSbacCoder->getNumPartialBits();
-#endif
-  Double dCostPerPixel = uiBits * 1.0 / uiRun;  
+  Double dCostPerPixel = uiBits * 1.0 / uiRun;
   return dCostPerPixel;
 }
 

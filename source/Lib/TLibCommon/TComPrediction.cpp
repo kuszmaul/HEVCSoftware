@@ -72,13 +72,9 @@ const UChar TComPrediction::m_aucIntraFilter[MAX_NUM_CHANNEL_TYPE][MAX_INTRA_FIL
 // ====================================================================================================================
 
 TComPrediction::TComPrediction()
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
 : m_truncBinBits(NULL)
 , m_escapeNumBins(NULL)
 , m_pLumaRecBuffer(0)
-#else
-: m_pLumaRecBuffer(0)
-#endif
 , m_iLumaRecStride(0)
 {
   for(UInt ch=0; ch<MAX_NUM_COMPONENT; ch++)
@@ -130,7 +126,6 @@ Void TComPrediction::destroy()
     m_filteredBlockTmp[i].destroy();
   }
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   if (m_truncBinBits)
   {
     for (UInt i = 0; i < m_SymbolSize; i++)
@@ -150,7 +145,6 @@ Void TComPrediction::destroy()
     delete[] m_escapeNumBins;
     m_escapeNumBins = NULL;
   }
-#endif
 }
 
 Void TComPrediction::initTempBuff(ChromaFormat chromaFormatIDC)
@@ -192,9 +186,7 @@ Void TComPrediction::initTempBuff(ChromaFormat chromaFormatIDC)
 
     m_cYuvPredTemp.create( MAX_CU_SIZE, MAX_CU_SIZE, chromaFormatIDC );
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
     m_prevQP=-1;
-#endif
   }
 
 
@@ -208,8 +200,6 @@ Void TComPrediction::initTempBuff(ChromaFormat chromaFormatIDC)
   }
 }
 
-
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
 Void TComPrediction::initTBCTable(UInt bitDepth)
 {
   m_MaxSymbolSize= (1 << bitDepth) + 1; //num of uiSymbol, max = 256, so size 257
@@ -239,7 +229,6 @@ Void TComPrediction::initTBCTable(UInt bitDepth)
   }
 }
 
-#endif
 // ====================================================================================================================
 // Public member functions
 // ====================================================================================================================
@@ -917,7 +906,6 @@ Bool TComPrediction::UseDPCMForFirstPassIntraEstimation(TComTU &rTu, const UInt 
           (uiDirMode==HOR_IDX || uiDirMode==VER_IDX);
 }
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
 Void TComPrediction::preCalcPLTIndexRD(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiPLTSize, TComRdCost *pcCost, UInt calcErroBits)
 {
   Bool bLossless = pcCU->getCUTransquantBypass(0);
@@ -1014,7 +1002,6 @@ Void TComPrediction::preCalcPLTIndexRD(TComDataCU* pcCU, Pel *Palette[3], Pel* p
   pcCU->setPLTEscapeSubParts(2, useEscapeFlag,0, pcCU->getDepth(0));
 
 }
-#endif
 
 Void TComPrediction::preCalcPLTIndex(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiPLTSize)
 {
@@ -1204,7 +1191,6 @@ Void  TComPrediction::reorderPLT(TComDataCU* pcCU, Pel *pPalette[3], UInt uiNumC
   }
 }
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
 UInt  TComPrediction::findCandidatePLTPredictors(UInt pltIndBest[], TComDataCU* pcCU, Pel *Palette[3], Pel* pPred[3], UInt uiPLTSizeTemp, UInt maxNoPredInd)
 {
   UInt uiAbsError=0, uiMinError;
@@ -1249,7 +1235,6 @@ UInt  TComPrediction::findCandidatePLTPredictors(UInt pltIndBest[], TComDataCU* 
 
   return(maxPredCheck);
 }
-#endif
 
 Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3],  UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize, TComRdCost *pcCost )
 {
@@ -1428,10 +1413,8 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
     }
   }
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   Int pltIndPred[MAX_PLT_SIZE];
   memset(pltIndPred, 0, MAX_PLT_SIZE*sizeof(Int));
-#endif
 
   uiPLTSize = 0;
   Pel *pPred[3]  = { pcCU->getLastPLTInLcuFinal(0), pcCU->getLastPLTInLcuFinal(1), pcCU->getLastPLTInLcuFinal(2) };
@@ -1483,9 +1466,7 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
           Palette[1][uiPLTSize] = pPred[1][best];
           Palette[2][uiPLTSize] = pPred[2][best];
         }
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
         pltIndPred[uiPLTSize]=best;
-#endif
       }
 
       Bool bDuplicate = false;
@@ -1512,7 +1493,6 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
     }
   }
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   UInt pltPredSamples[MAX_PLT_SIZE][4];
   memset(pltPredSamples, 0, 4*MAX_PLT_SIZE*sizeof(UInt));
   Int iErrorLimitSqr = 3 * getPLTErrLimit()*getPLTErrLimit();
@@ -1698,9 +1678,6 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
   }
 
   uiPLTSize=uiPLTSizeTemp;
-#endif
-
-
 
   delete[] psList;
   delete[] pListSort;
@@ -1709,7 +1686,6 @@ Void  TComPrediction::derivePLTLossy( TComDataCU* pcCU, Pel *Palette[3], Pel* pS
   delete[] psInitial;
 }
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
 Void  TComPrediction::derivePLTLossyIterative(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3],  UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize, TComRdCost *pcCost)
 {
   UInt uiPos, uiPLTIdx = 0, uiBestIdx;
@@ -1917,8 +1893,6 @@ Void  TComPrediction::derivePLTLossyIterative(TComDataCU* pcCU, Pel *Palette[3],
     
   }
 }
-#endif
-
 
 Void TComPrediction::derivePLTLossless(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiStride, UInt &uiPLTSize, Bool forcePLTPrediction)
 {
@@ -2208,9 +2182,6 @@ Void TComPrediction::calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalett
   }
 }
 
-
-
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
 UInt TComPrediction::getTruncBinBits(UInt uiSymbol, UInt uiMaxSymbol)
 {
   UInt uiIdxCodeBit = 0;
@@ -2330,7 +2301,6 @@ Double TComPrediction::calcPixelPredRD(TComDataCU* pcCU, Pel pOrg[3], TComRdCost
   rdCost += (*error);
   return (rdCost);
 }
-#endif
 
 Bool TComPrediction::calLeftRun(TComDataCU* pcCU, Pel* pValue, UChar* pSPoint, UInt uiStartPos, UInt uiTotal, UInt &uiRun, UChar* pEscapeFlag)
 {
@@ -2671,8 +2641,6 @@ Void TComPrediction::derivePLTLossyForcePrediction(TComDataCU *pcCU, Pel *Palett
     }
   }
 
-
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   UInt pltPredSamples[MAX_PLT_SIZE][4];
   memset(pltPredSamples, 0, 4*MAX_PLT_SIZE*sizeof(UInt));
   Int iErrorLimitSqr = 3 * getPLTErrLimit()*getPLTErrLimit();
@@ -2843,8 +2811,6 @@ Void TComPrediction::derivePLTLossyForcePrediction(TComDataCU *pcCU, Pel *Palett
   }
 
   uiPLTSize=uiPLTSizeTemp;
-#endif
-
 
   delete[] psList;
   delete[] pListSort;
