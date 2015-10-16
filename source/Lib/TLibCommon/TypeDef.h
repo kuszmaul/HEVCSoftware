@@ -173,7 +173,6 @@
 
 #define SCM_S0043_PLT_DELTA_QP                           0 ///< JCTVC-S0043: delta qp signalling for palette mode
 #define SCM_U0095_FAST_INTRA_ACT                         0 ///< JCTVC-U0095, fast intra ACT search
-#define SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS   1 ///< JCTVC-U0084, allow signal palette predictor initializers at SPS
 #define SCM_U0036_ZERO_PALETTE_SIZE                      1 ///< JCTVC-U0036, add bitstream conformance requirements when maximum palette size is 0
 #define SCM_U0133_REORDER                                1 ///< JCTVC-U0133: change the positions of palette scanRotationModeFlag and palette delta qp and chroma qp offset
 #define SCM_AMVR_UNIFICATION                             1 ///< JCTVC-U0081/0107 : AMVR unification
