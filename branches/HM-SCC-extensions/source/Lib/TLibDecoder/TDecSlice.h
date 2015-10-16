@@ -72,11 +72,8 @@ private:
   PaletteInfoBuffer m_entropyCodingSyncPaletteState;
 
   Void xSetPredFromPPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT], const TComPPS *pcPPS, const TComSPS *pcSPS);
-
-#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
   Void xSetPredFromSPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT], const TComPPS *pcPPS, const TComSPS *pcSPS);
   Void xSetPredDefault(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT], const TComSPS *pcSPS);
-#endif
 
 public:
   TDecSlice();

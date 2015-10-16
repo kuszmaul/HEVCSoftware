@@ -424,9 +424,7 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
                 ppsScreenExtension.setActQpOffset( COMPONENT_Cr, -3 );
               }
               READ_FLAG( uiCode, "palette_predictor_initializer_flag" );
-#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
               ppsScreenExtension.setUsePalettePredictor(uiCode);
-#endif
               if ( uiCode )
               {
                 READ_FLAG( uiCode, "monochrome_palette_flag" );
@@ -918,8 +916,6 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if SCM_U0036_ZERO_PALETTE_SIZE
                 assert(screenExtension.getPLTMaxSize() != 0 || screenExtension.getPLTMaxPredSize() == 0);
 #endif
-
-#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
                 READ_FLAG( uiCode, "sps_palette_predictor_initializer_flag" );
                 screenExtension.setUsePalettePredictor(uiCode);
 #if SCM_U0036_ZERO_PALETTE_SIZE
@@ -955,7 +951,6 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
                 {
                   screenExtension.setNumPLTPred(0);
                 }
-#endif
               }
               READ_CODE( 2, uiCode, "motion_vector_resolution_control_idc" ); screenExtension.setMotionVectorResolutionControlIdc( uiCode );
               READ_FLAG( uiCode, "intra_boundary_filter_disabled_flag" );     screenExtension.setDisableIntraBoundaryFilter( uiCode != 0 );

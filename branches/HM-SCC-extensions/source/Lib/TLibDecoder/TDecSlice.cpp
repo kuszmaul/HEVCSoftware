@@ -79,7 +79,6 @@ Void TDecSlice::xSetPredFromPPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE
   }
 }
 
-#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
 Void TDecSlice::xSetPredFromSPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE], UChar lastPLTSize[MAX_NUM_COMPONENT], const TComPPS *pcPPS, const TComSPS *pcSPS)
 {
   UInt num = std::min(pcSPS->getSpsScreenExtension().getNumPLTPred(), pcSPS->getSpsScreenExtension().getPLTMaxPredSize());
@@ -101,7 +100,6 @@ Void TDecSlice::xSetPredDefault(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE
     memset(lastPLT[i],0, pcSPS->getSpsScreenExtension().getPLTMaxSize()*sizeof(Pel));
   }
 }
-#endif
 
 #if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
 Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcPic, TComPic* pcPicAfterILF, TDecSbac* pcSbacDecoder)
@@ -146,7 +144,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
   {
     memset(lastPLT[comp], 0, sizeof(Pel) * pcSlice->getSPS()->getSpsScreenExtension().getPLTMaxPredSize());
   }
-#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
   if (pcSlice->getPPS()->getPpsScreenExtension().getUsePalettePredictor())
   {
     xSetPredFromPPS(lastPLT, lastPLTSize, pcSlice->getPPS(), pcSlice->getSPS());
@@ -159,9 +156,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic* pcP
   {
     xSetPredDefault(lastPLT, lastPLTSize, pcSlice->getSPS());
   }
-#else
-  xSetPredFromPPS(lastPLT, lastPLTSize, pcSlice->getPPS(), pcSlice->getSPS());
-#endif
 
   // The first CTU of the slice is the first coded substream, but the global substream number, as calculated by getSubstreamForCtuAddr may be higher.
   // This calculates the common offset for all substreams in this slice.

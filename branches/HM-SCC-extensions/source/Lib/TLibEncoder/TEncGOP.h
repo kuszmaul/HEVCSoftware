@@ -170,10 +170,7 @@ public:
   Int   getPalettePredictorBitDepth( ChannelType type ) const   { return m_palettePredictorBitDepth[type]; }
   Void  setPalettePredictorBitDepth( ChannelType type, Int u ) { m_palettePredictorBitDepth[type] = u;    }
   TComPPS* getPPS();
-
-#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
   TComSPS* getSPS();
-#endif
 protected:
   TEncRateCtrl* getRateCtrl()       { return m_pcRateCtrl;  }
 

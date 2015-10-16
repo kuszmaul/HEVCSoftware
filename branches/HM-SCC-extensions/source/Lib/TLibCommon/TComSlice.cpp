@@ -1843,9 +1843,7 @@ TComSPSSCC::TComSPSSCC()
 , m_uiPLTMaxPredSize          ( 64)
 , m_motionVectorResolutionControlIdc(0)
 , m_disableIntraBoundaryFilter(false)
-#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
-, m_uiNumPLTPred               (0) 
-#endif
+, m_uiNumPLTPred               (0)
 {}
 
 TComSPS::TComSPS()
@@ -1940,9 +1938,7 @@ TComPPSSCC::TComPPSSCC()
 , m_actCbQpOffset                    (-5)
 , m_actCrQpOffset                    (-3)
 , m_uiNumPLTPred                     (0) // Implies palette pred in PPS deactivated
-#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
 , m_usePalettePredictor              (false)
-#endif
 #if SCM_U0083_U0079_IBC_SIGNAL_PPS
 , m_useIntraBlockCopyPps             (false)
 #endif
