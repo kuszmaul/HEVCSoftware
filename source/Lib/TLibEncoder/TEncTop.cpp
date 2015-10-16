@@ -955,12 +955,6 @@ Void TEncTop::xInitPPS()
   }
   m_cPPS.getPpsScreenExtension().setUseColourTrans( m_useColourTrans );
 
-#if !SCM_U0180_IBC_RPLC
-  if ( getUseIntraBlockCopy() && m_iGOPSize > 1 )
-  {
-    m_cPPS.setListsModificationPresentFlag( true );
-  }
-#endif
    m_cPPS.getPpsScreenExtension().setUseIntraBlockCopy(m_cSPS.getSpsScreenExtension().getUseIntraBlockCopy());
 }
 

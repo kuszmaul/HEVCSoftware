@@ -533,52 +533,6 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
 
   ::memset(m_bIsUsedAsLongTerm, 0, sizeof(m_bIsUsedAsLongTerm));
 
-#if !SCM_U0180_IBC_RPLC
-  if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && getPPS()->getListsModificationPresentFlag() && !checkNumPocTotalCurr )
-  {
-    // checkNumPocTotalCurr is false at encoder side and true at decoder side
-    Bool needRPLM = false;
-    if ( rpsCurrList0[m_aiNumRefIdx[REF_PIC_LIST_0]-1]->getPOC() != getPOC() )
-    {
-      // the last reference picture is not the current picture
-      needRPLM = true;
-    }
-
-    if ( needRPLM )
-    {
-      m_RefPicListModification.setRefPicListModificationFlagL0( true );
-      for ( Int rIdx = 0; rIdx < m_aiNumRefIdx[REF_PIC_LIST_0]-1; rIdx++ )
-      {
-        m_RefPicListModification.setRefPicSetIdxL0( rIdx, rIdx );
-      }
-      m_RefPicListModification.setRefPicSetIdxL0( m_aiNumRefIdx[REF_PIC_LIST_0]-1, numPicTotalCurr-1 );
-    }
-    else
-    {
-      m_RefPicListModification.setRefPicListModificationFlagL0( false );
-    }
-
-    // make sure the current picture is not in the list1
-    needRPLM = false;
-    if ( m_aiNumRefIdx[REF_PIC_LIST_1] >= numPicTotalCurr )
-    {
-      needRPLM = true;
-    }
-    if ( needRPLM )
-    {
-      m_RefPicListModification.setRefPicListModificationFlagL1( true );
-      for ( Int rIdx = 0; rIdx < m_aiNumRefIdx[REF_PIC_LIST_1]; rIdx++ )
-      {
-        m_RefPicListModification.setRefPicSetIdxL1( rIdx, rIdx % (numPicTotalCurr-1) );
-      }
-    }
-    else
-    {
-      m_RefPicListModification.setRefPicListModificationFlagL1( false );
-    }
-  }
-#endif //#if !SCM_U0180_IBC_RPLC
-
   for (Int rIdx = 0; rIdx < m_aiNumRefIdx[REF_PIC_LIST_0]; rIdx ++)
   {
     cIdx = m_RefPicListModification.getRefPicListModificationFlagL0() ? m_RefPicListModification.getRefPicSetIdxL0(rIdx) : rIdx % numPicTotalCurr;
@@ -587,7 +541,6 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
     m_bIsUsedAsLongTerm[REF_PIC_LIST_0][rIdx] = ( cIdx >= NumPicStCurr0 + NumPicStCurr1 );
   }
 
-#if SCM_U0180_IBC_RPLC
   if( getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() &&
       !m_RefPicListModification.getRefPicListModificationFlagL0() && numPicTotalCurr > m_aiNumRefIdx[REF_PIC_LIST_0] )
    {
@@ -598,7 +551,6 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
 #endif
      m_bIsUsedAsLongTerm[REF_PIC_LIST_0][m_aiNumRefIdx[REF_PIC_LIST_0] - 1] = true;
    }
-#endif
 
   if ( m_eSliceType != B_SLICE )
   {
