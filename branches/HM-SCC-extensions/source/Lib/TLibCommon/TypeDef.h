@@ -172,7 +172,6 @@
 //------------------------------------------------
 
 #define SCM_S0043_PLT_DELTA_QP                           0 ///< JCTVC-S0043: delta qp signalling for palette mode
-#define SCM_U0106_ACT_TU_SIG                             1 ///< JCTVC-U0106, control ACT at the TU level
 #define SCM_U0052_ESCAPE_PIXEL_CODING                    1 ///< JCTVC-U0052, avoid QP dependence for coding the value of escape pixels
 #define SCM_U0096_PLT_ENCODER_IMPROVEMENT                1 ///< JCTVC-U0096, palette encoder improvement: using square error to derive and assign palette index, pruning indices and merge consecutive runs
 #define SCM_U0086_SIM_NUM_INDEX_MAPPING                  1 ///< JCTVC-U0086, simplification of mapping of numPLTIndices
@@ -722,14 +721,12 @@ enum NalUnitType
   NAL_UNIT_INVALID,
 };
 
-#if SCM_U0106_ACT_TU_SIG
 enum ACTRDTestTypes
 {
   ACT_TWO_CLR            = 0,  //two color space
   ACT_TRAN_CLR           = 1,  //transformed color space
   ACT_ORG_CLR            = 2   //original color space
 };
-#endif
 
 // ====================================================================================================================
 // Type definition
@@ -870,14 +867,12 @@ struct TComSEIMasteringDisplay
   UShort    whitePoint[2];
 };
 
-#if SCM_U0106_ACT_TU_SIG
 struct TComACTTURDCost
 {
   Double tmpRDCostCSCEnabled;
   Double tmpRDCostCSCDisabled;
   UInt   uiIsCSCEnabled;        //0 - original; 1 - transform; 2 - neutral
 };
-#endif
 
 enum PLTRunMode
 {
