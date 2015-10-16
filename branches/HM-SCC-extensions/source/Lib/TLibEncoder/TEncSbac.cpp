@@ -730,11 +730,7 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
       uiIdx += uiRun;
       uiIdx++;
     }
-#if SCM_U0176_RICE_PARAM_DERIVATION_CLEAN_UP
     UInt uiCurrParam = 3 + ((uiIndexMaxSize) >> 3);
-#else
-    UInt uiCurrParam = 2 + uiIndexMaxSize / 6;
-#endif
     UInt uiMappedValue;
     assert(uiNumIndices);
     assert(uiNumIndices > 0);
