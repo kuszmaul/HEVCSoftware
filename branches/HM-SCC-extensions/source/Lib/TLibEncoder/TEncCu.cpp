@@ -1377,9 +1377,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
           if( (     rpcTempCU->getCbf(uiBlkIdx, COMPONENT_Y)
                 || (rpcTempCU->getCbf(uiBlkIdx, COMPONENT_Cb) && (numberValidComponents > COMPONENT_Cb))
                 || (rpcTempCU->getCbf(uiBlkIdx, COMPONENT_Cr) && (numberValidComponents > COMPONENT_Cr)) ) 
-#if SCM_FIX_PLT_DELTA_QP_TICKET_1373
                 || ( rpcTempCU->getPLTModeFlag(uiBlkIdx) && rpcTempCU->getPLTEscape(COMPONENT_Y, uiBlkIdx) )
-#endif
                 )
           {
             hasResidual = true;
@@ -3131,11 +3129,7 @@ Void TEncCu::xCheckDQP( TComDataCU* pcCU )
   const TComPPS &pps = *(pcCU->getSlice()->getPPS());
   if ( pps.getUseDQP() && uiDepth <= pps.getMaxCuDQPDepth() )
   {
-#if SCM_FIX_PLT_DELTA_QP_TICKET_1373
     if( pcCU->getQtRootCbf(0) || ( pcCU->getPLTModeFlag(0) && pcCU->getPLTEscape(COMPONENT_Y, 0) ) )
-#else
-    if ( pcCU->getQtRootCbf( 0) )
-#endif
     {
       m_pcEntropyCoder->resetBits();
       m_pcEntropyCoder->encodeQP( pcCU, 0, false );
