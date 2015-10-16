@@ -317,17 +317,10 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
                 }
                 WRITE_UVLC( ppsScreenExtension.getNumPLTPred()-1, "num_palette_entries_minus1" );
 
-#if SCM_U0087_SWAP_ESC_ORDER
-                for ( int k=0; k<(ppsScreenExtension.getMonochromePaletteFlag() ? 1 : 3); k++ )
+                for ( Int k=0; k < (ppsScreenExtension.getMonochromePaletteFlag() ? 1 : 3); k++ )
                 {
-                  for ( int j=0; j<ppsScreenExtension.getNumPLTPred(); j++ )
+                  for ( Int j=0; j<ppsScreenExtension.getNumPLTPred(); j++ )
                   {
-#else
-                for ( int j=0; j<ppsScreenExtension.getNumPLTPred(); j++ )
-                {
-                  for ( int k=0; k<(ppsScreenExtension.getMonochromePaletteFlag() ? 1 : 3); k++ )
-                  {
-#endif 
                     xWriteCode( ppsScreenExtension.getPLTPred( k )[j], ppsScreenExtension.getPalettePredictorBitDepth( toChannelType( ComponentID( k ) ) ) );
                   }
                 }
@@ -679,17 +672,10 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
                 if( spsScreenExtension.getNumPLTPred() )
                 {
                   WRITE_UVLC( spsScreenExtension.getNumPLTPred()-1,                                      "sps_num_palette_entries_minus1" );
-#if SCM_U0087_SWAP_ESC_ORDER
-                  for ( int k=0; k<(pcSPS->getChromaFormatIdc() == CHROMA_400 ? 1 : 3); k++ )
+                  for ( Int k=0; k < (pcSPS->getChromaFormatIdc() == CHROMA_400 ? 1 : 3); k++ )
                   {
-                    for ( int j=0; j<spsScreenExtension.getNumPLTPred(); j++ )
+                    for ( Int j=0; j<spsScreenExtension.getNumPLTPred(); j++ )
                     {
-#else
-                  for ( int j=0; j<spsScreenExtension.getNumPLTPred(); j++ )
-                  {
-                    for ( int k=0; k<(pcSPS->getChromaFormatIdc() == CHROMA_400 ? 1 : 3); k++ )
-                    {
-#endif 
                       xWriteCode( spsScreenExtension.getPLTPred( k )[j], pcSPS->getBitDepth( toChannelType( ComponentID( k ) ) ));
                     }
                   }

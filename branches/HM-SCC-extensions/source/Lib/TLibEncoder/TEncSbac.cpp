@@ -789,88 +789,85 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
     }
   }
   assert(uiIdx == uiTotal);
-#if SCM_U0087_SWAP_ESC_ORDER
   for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
-#endif
-  for( uiIdx = 0; uiIdx < uiTotal; uiIdx ++ )
   {
-    UInt uiTraIdx = m_puiScanOrder[uiIdx];
-    if( pEscapeFlag[uiTraIdx] )
+    for( uiIdx = 0; uiIdx < uiTotal; uiIdx ++ )
     {
-      UInt uiY, uiX;
-      uiY = uiTraIdx/width;
-      uiX = uiTraIdx%width;
-      UInt uiXC, uiYC, uiTraIdxC;
-      if(!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx))
+      UInt uiTraIdx = m_puiScanOrder[uiIdx];
+      if( pEscapeFlag[uiTraIdx] )
       {
-        uiXC = (uiX>>uiScaleX);
-        uiYC = (uiY>>uiScaleY);
-        uiTraIdxC = uiYC * (width>>uiScaleX) + uiXC;
-      }
-      else
-      {
-        uiXC = (uiX>>uiScaleY);
-        uiYC = (uiY>>uiScaleX);
-        uiTraIdxC = uiYC * (height>>uiScaleY) + uiXC;
-      }
-#if !SCM_U0087_SWAP_ESC_ORDER_FIX
-      if(   pcCU->getPic()->getChromaFormat() == CHROMA_444 ||
-          ( pcCU->getPic()->getChromaFormat() == CHROMA_420 && ((uiX&1) == 0) && ((uiY&1) == 0)) ||
-          ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiY&1) == 0))) )
-        )
-      {
-#if !SCM_U0087_SWAP_ESC_ORDER
-        for ( UInt comp = compBegin; comp < compBegin + uiNumComp; comp++ )
-#endif
+        UInt uiY, uiX;
+        uiY = uiTraIdx/width;
+        uiX = uiTraIdx%width;
+        UInt uiXC, uiYC, uiTraIdxC;
+        if(!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx))
         {
-#endif
-          if ( comp == compBegin )
-          {
-            if ( isLossless )
-            {
-              m_pcBinIf->encodeBinsEP( (UInt)pPixelValue[comp][uiTraIdx], pcCU->getSlice()->getSPS()->getBitDepth( comp > 0 ? CHANNEL_TYPE_CHROMA : CHANNEL_TYPE_LUMA ) );
-            }
-            else
-            {
-              xWriteEpExGolomb( (UInt)pPixelValue[comp][uiTraIdx], 3 );
-            }
-          }
-          else
-          {
-#if SCM_U0087_SWAP_ESC_ORDER_FIX
-            if(   pcCU->getPic()->getChromaFormat() == CHROMA_444 ||
-              ( pcCU->getPic()->getChromaFormat() == CHROMA_420 && ((uiX&1) == 0) && ((uiY&1) == 0)) ||
-              ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiY&1) == 0))) )
-              )
-            {
-#endif
-            if ( isLossless )
-            {
-              m_pcBinIf->encodeBinsEP( (UInt)pPixelValue[comp][uiTraIdxC], pcCU->getSlice()->getSPS()->getBitDepth( comp > 0 ? CHANNEL_TYPE_CHROMA : CHANNEL_TYPE_LUMA ) );
-            }
-            else
-            {
-              xWriteEpExGolomb( (UInt)pPixelValue[comp][uiTraIdxC], 3 );
-            }
-#if SCM_U0087_SWAP_ESC_ORDER_FIX
-          }
-#endif
-          }
-#if !SCM_U0087_SWAP_ESC_ORDER_FIX
-        }
-      }
-      else
-      {
-        if ( isLossless )
-        {
-          m_pcBinIf->encodeBinsEP( (UInt)pPixelValue[compBegin][uiTraIdx], pcCU->getSlice()->getSPS()->getBitDepth( compBegin > 0 ? CHANNEL_TYPE_CHROMA : CHANNEL_TYPE_LUMA ) );
+          uiXC = (uiX>>uiScaleX);
+          uiYC = (uiY>>uiScaleY);
+          uiTraIdxC = uiYC * (width>>uiScaleX) + uiXC;
         }
         else
         {
-          xWriteEpExGolomb( (UInt)pPixelValue[compBegin][uiTraIdx], 3 );
+          uiXC = (uiX>>uiScaleY);
+          uiYC = (uiY>>uiScaleX);
+          uiTraIdxC = uiYC * (height>>uiScaleY) + uiXC;
         }
+  #if !SCM_U0087_SWAP_ESC_ORDER_FIX
+        if(   pcCU->getPic()->getChromaFormat() == CHROMA_444 ||
+            ( pcCU->getPic()->getChromaFormat() == CHROMA_420 && ((uiX&1) == 0) && ((uiY&1) == 0)) ||
+            ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiY&1) == 0))) )
+          )
+        {
+          {
+  #endif
+            if ( comp == compBegin )
+            {
+              if ( isLossless )
+              {
+                m_pcBinIf->encodeBinsEP( (UInt)pPixelValue[comp][uiTraIdx], pcCU->getSlice()->getSPS()->getBitDepth( comp > 0 ? CHANNEL_TYPE_CHROMA : CHANNEL_TYPE_LUMA ) );
+              }
+              else
+              {
+                xWriteEpExGolomb( (UInt)pPixelValue[comp][uiTraIdx], 3 );
+              }
+            }
+            else
+            {
+  #if SCM_U0087_SWAP_ESC_ORDER_FIX
+              if(   pcCU->getPic()->getChromaFormat() == CHROMA_444 ||
+                ( pcCU->getPic()->getChromaFormat() == CHROMA_420 && ((uiX&1) == 0) && ((uiY&1) == 0)) ||
+                ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx) && ((uiY&1) == 0))) )
+                )
+              {
+  #endif
+              if ( isLossless )
+              {
+                m_pcBinIf->encodeBinsEP( (UInt)pPixelValue[comp][uiTraIdxC], pcCU->getSlice()->getSPS()->getBitDepth( comp > 0 ? CHANNEL_TYPE_CHROMA : CHANNEL_TYPE_LUMA ) );
+              }
+              else
+              {
+                xWriteEpExGolomb( (UInt)pPixelValue[comp][uiTraIdxC], 3 );
+              }
+  #if SCM_U0087_SWAP_ESC_ORDER_FIX
+            }
+  #endif
+            }
+  #if !SCM_U0087_SWAP_ESC_ORDER_FIX
+          }
+        }
+        else
+        {
+          if ( isLossless )
+          {
+            m_pcBinIf->encodeBinsEP( (UInt)pPixelValue[compBegin][uiTraIdx], pcCU->getSlice()->getSPS()->getBitDepth( compBegin > 0 ? CHANNEL_TYPE_CHROMA : CHANNEL_TYPE_LUMA ) );
+          }
+          else
+          {
+            xWriteEpExGolomb( (UInt)pPixelValue[compBegin][uiTraIdx], 3 );
+          }
+        }
+  #endif
       }
-#endif
     }
   }
 }
