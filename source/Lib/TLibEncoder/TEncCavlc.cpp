@@ -309,20 +309,23 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
               WRITE_FLAG( (ppsScreenExtension.getNumPLTPred() ? 1 : 0), "palette_predictor_initializer_flag" );
               if ( ppsScreenExtension.getNumPLTPred() )
               {
-                //printf("PPS %u: %u palette entries\n", pcPPS->getPPSId(), pcPPS->getNumPLTPred());
+                WRITE_FLAG( ppsScreenExtension.getMonochromePaletteFlag(), "monochrome_palette_flag" );
                 WRITE_UVLC( ppsScreenExtension.getPalettePredictorBitDepth( CHANNEL_TYPE_LUMA )  -8, "luma_bit_depth_entry_minus8" );
-                WRITE_UVLC( ppsScreenExtension.getPalettePredictorBitDepth( CHANNEL_TYPE_CHROMA )-8, "chroma_bit_depth_entry_minus8" );
+                if ( !ppsScreenExtension.getMonochromePaletteFlag() )
+                {
+                  WRITE_UVLC( ppsScreenExtension.getPalettePredictorBitDepth( CHANNEL_TYPE_CHROMA ) - 8, "chroma_bit_depth_entry_minus8" );
+                }
                 WRITE_UVLC( ppsScreenExtension.getNumPLTPred()-1, "num_palette_entries_minus1" );
 
 #if SCM_U0087_SWAP_ESC_ORDER
-                for ( int k=0; k<MAX_NUM_COMPONENT; k++ )
+                for ( int k=0; k<ppsScreenExtension.getMonochromePaletteFlag() ? 1 : 3; k++ )
                 {
                   for ( int j=0; j<ppsScreenExtension.getNumPLTPred(); j++ )
                   {
 #else
                 for ( int j=0; j<ppsScreenExtension.getNumPLTPred(); j++ )
                 {
-                  for ( int k=0; k<MAX_NUM_COMPONENT; k++ )
+                  for ( int k=0; k<ppsScreenExtension.getMonochromePaletteFlag() ? 1 : 3; k++ )
                   {
 #endif 
                     xWriteCode( ppsScreenExtension.getPLTPred( k )[j], ppsScreenExtension.getPalettePredictorBitDepth( toChannelType( ComponentID( k ) ) ) );

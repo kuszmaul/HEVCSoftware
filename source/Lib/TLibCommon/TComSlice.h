@@ -1167,6 +1167,7 @@ private:
   UInt             m_uiNumPLTPred;
   Pel              m_aiPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE];
   Int              m_palettePredictorBitDepth[MAX_NUM_CHANNEL_TYPE];
+  Bool             m_monochromePaletteFlag;
 #if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
   Bool             m_usePalettePredictor;
 #endif
@@ -1202,6 +1203,8 @@ public:
   Bool     getUsePalettePredictor()              const { return m_usePalettePredictor; }
   Void     setUsePalettePredictor(Bool num)            { m_usePalettePredictor = num; }
 #endif
+  Bool     getMonochromePaletteFlag()            const { return m_monochromePaletteFlag; }
+  Void     setMonochromePaletteFlag( Bool b )          { m_monochromePaletteFlag = b; }
 #if SCM_U0083_U0079_IBC_SIGNAL_PPS
   Bool                   getUseIntraBlockCopy()         const                                            { return m_useIntraBlockCopyPps;  }
   Void                   setUseIntraBlockCopy(Bool value)                                                { m_useIntraBlockCopyPps = value; }
