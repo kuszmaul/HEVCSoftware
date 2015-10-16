@@ -1290,23 +1290,19 @@ Void TComDataCU::getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPred, Int& n
   if( MvPred[0] != TComMv() ) 
   {
     nbPred++;
-#if SCM_GET_DERIVED_BV_BUGFIX
-    if( getDerivedBV( uiAbsPartIdx, MvPred[nbPred-1], MvPred[nbPred], uiWidth, uiHeight) )
-#else
-    if( getDerivedBV( uiAbsPartIdx, MvPred[nbPred-1], MvPred[nbPred]) )
-#endif
+    if ( getDerivedBV( uiAbsPartIdx, MvPred[nbPred - 1], MvPred[nbPred], uiWidth, uiHeight ) )
+    {
       nbPred++;
+    }
   }
   MvPred[nbPred] = getLastIntraBCMv(1);
   if( MvPred[nbPred] != TComMv() ) 
   {
     nbPred++;
-#if SCM_GET_DERIVED_BV_BUGFIX
-    if( getDerivedBV( uiAbsPartIdx, MvPred[nbPred-1], MvPred[nbPred], uiWidth, uiHeight) )
-#else
-    if( getDerivedBV( uiAbsPartIdx, MvPred[nbPred-1], MvPred[nbPred]) )
-#endif
+    if ( getDerivedBV( uiAbsPartIdx, MvPred[nbPred - 1], MvPred[nbPred], uiWidth, uiHeight ) )
+    {
       nbPred++;
+    }
   }
   
   //left
@@ -1321,12 +1317,10 @@ Void TComDataCU::getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPred, Int& n
   {
     pcCUMvField = pcTempLeftCU->getCUMvField( REF_PIC_LIST_INTRABC );
     MvPred[nbPred++] = pcCUMvField->getMv(uiTempPartIdx);
-#if SCM_GET_DERIVED_BV_BUGFIX
-    if( getDerivedBV( uiAbsPartIdx, MvPred[nbPred-1], MvPred[nbPred], uiWidth, uiHeight) )
-#else
-    if( getDerivedBV( uiAbsPartIdx, MvPred[nbPred-1], MvPred[nbPred]) )
-#endif
+    if ( getDerivedBV( uiAbsPartIdx, MvPred[nbPred - 1], MvPred[nbPred], uiWidth, uiHeight ) )
+    {
       nbPred++;
+    }
   }
 
   //above
@@ -1341,12 +1335,10 @@ Void TComDataCU::getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPred, Int& n
   {
     pcCUMvField = pcTempAboveCU->getCUMvField( REF_PIC_LIST_INTRABC );
     MvPred[nbPred++] = pcCUMvField->getMv(uiTempPartIdx);
-#if SCM_GET_DERIVED_BV_BUGFIX
-    if( getDerivedBV( uiAbsPartIdx, MvPred[nbPred-1], MvPred[nbPred], uiWidth, uiHeight) )
-#else
-    if( getDerivedBV( uiAbsPartIdx, MvPred[nbPred-1], MvPred[nbPred]) )
-#endif
+    if ( getDerivedBV( uiAbsPartIdx, MvPred[nbPred - 1], MvPred[nbPred], uiWidth, uiHeight ) )
+    {
       nbPred++;
+    }
   }
 
   if ( getSlice()->isOnlyCurrentPictureAsReference() )
@@ -1397,11 +1389,7 @@ Void TComDataCU::getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPred, Int& n
     if( isColAvail )
     {
       MvPred[nbPred++] = cMvCol;
-#if SCM_GET_DERIVED_BV_BUGFIX
       if ( getDerivedBV( uiAbsPartIdx, MvPred[nbPred-1], MvPred[nbPred], uiWidth, uiHeight) )
-#else
-      if ( getDerivedBV( uiAbsPartIdx, MvPred[nbPred-1], MvPred[nbPred] ) )
-#endif
       {
         nbPred++;
       }
@@ -1419,12 +1407,10 @@ Void TComDataCU::getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPred, Int& n
   {
     pcCUMvField = pcTempBelowLeftCU->getCUMvField( REF_PIC_LIST_INTRABC );
     MvPred[nbPred++] = pcCUMvField->getMv(uiTempPartIdx);
-#if SCM_GET_DERIVED_BV_BUGFIX
-    if( getDerivedBV( uiAbsPartIdx, MvPred[nbPred-1], MvPred[nbPred], uiWidth, uiHeight) )
-#else
-    if( getDerivedBV( uiAbsPartIdx, MvPred[nbPred-1], MvPred[nbPred]) )
-#endif
+    if ( getDerivedBV( uiAbsPartIdx, MvPred[nbPred - 1], MvPred[nbPred], uiWidth, uiHeight ) )
+    {
       nbPred++;
+    }
   }
 
   // Above Right predictor search
@@ -1438,12 +1424,10 @@ Void TComDataCU::getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPred, Int& n
   {
     pcCUMvField = pcTempAboveRightCU->getCUMvField( REF_PIC_LIST_INTRABC );
     MvPred[nbPred++] = pcCUMvField->getMv(uiTempPartIdx);
-#if SCM_GET_DERIVED_BV_BUGFIX
-    if( getDerivedBV( uiAbsPartIdx, MvPred[nbPred-1], MvPred[nbPred], uiWidth, uiHeight) )
-#else
-    if( getDerivedBV( uiAbsPartIdx, MvPred[nbPred-1], MvPred[nbPred]) )
-#endif
+    if ( getDerivedBV( uiAbsPartIdx, MvPred[nbPred-1], MvPred[nbPred], uiWidth, uiHeight) )
+    {
       nbPred++;
+    }
   }
 
   // Above Left predictor search
@@ -1457,20 +1441,14 @@ Void TComDataCU::getIntraBCMVPsEncOnly(UInt uiAbsPartIdx, TComMv* MvPred, Int& n
   {
     pcCUMvField = pcTempAboveLeftCU->getCUMvField( REF_PIC_LIST_INTRABC );
     MvPred[nbPred++] = pcCUMvField->getMv(uiTempPartIdx);
-#if SCM_GET_DERIVED_BV_BUGFIX
-    if( getDerivedBV( uiAbsPartIdx, MvPred[nbPred-1], MvPred[nbPred], uiWidth, uiHeight) )
-#else
-    if( getDerivedBV( uiAbsPartIdx, MvPred[nbPred-1], MvPred[nbPred]) )
-#endif
+    if ( getDerivedBV( uiAbsPartIdx, MvPred[nbPred - 1], MvPred[nbPred], uiWidth, uiHeight ) )
+    {
       nbPred++;
+    }
   }
 }
 
-#if SCM_GET_DERIVED_BV_BUGFIX
 Bool TComDataCU::getDerivedBV(UInt uiAbsPartIdx, const TComMv& currentMv, TComMv& derivedMv, UInt width, UInt height)
-#else
-Bool TComDataCU::getDerivedBV(UInt uiAbsPartIdx, const TComMv& currentMv, TComMv& derivedMv)
-#endif
 {
   const Int  iCTUWidth        = getSlice()->getSPS()->getMaxCUWidth();
   const Int  iCTUHeight       = getSlice()->getSPS()->getMaxCUHeight();
@@ -1478,11 +1456,7 @@ Bool TComDataCU::getDerivedBV(UInt uiAbsPartIdx, const TComMv& currentMv, TComMv
   Int   cuPelY            = getCUPelY() + (uiAbsPartIdx? g_auiRasterToPelY[ g_auiZscanToRaster[ uiAbsPartIdx ] ] : 0);
   Int iRX = cuPelX + (currentMv.getHor()>>2);
   Int iRY = cuPelY + (currentMv.getVer()>>2);
-#if SCM_GET_DERIVED_BV_BUGFIX
   if( iRX < 0 || iRY < 0 || (iRX + width) > getSlice()->getSPS()->getPicWidthInLumaSamples() || (iRY + height) > getSlice()->getSPS()->getPicHeightInLumaSamples() )
-#else
-  if( iRX < 0 || iRY < 0 || iRX >= getSlice()->getSPS()->getPicWidthInLumaSamples() || iRY >= getSlice()->getSPS()->getPicHeightInLumaSamples() )
-#endif
   {
     return false;
   }
@@ -1494,10 +1468,10 @@ Bool TComDataCU::getDerivedBV(UInt uiAbsPartIdx, const TComMv& currentMv, TComMv
   UInt uiAbsPartIdxDerived = g_auiRasterToZscan[((iRelCUPelY>>2) <<4) + (iRelCUPelX>>2)];
   TComDataCU *pRefCU = getPic()->getCtu(iRefCtbAddr);
 
-#if SCM_GET_DERIVED_BV_BUGFIX
-  if(pRefCU->getSlice() == NULL)
+  if ( pRefCU->getSlice() == NULL )
+  {
     return false;
-#endif
+  }
 
   const UInt curTileIdx = getPic()->getPicSym()->getTileIdxMap( getCtuRsAddr() );
   TComTile* curTile = getPic()->getPicSym()->getTComTile( curTileIdx );
