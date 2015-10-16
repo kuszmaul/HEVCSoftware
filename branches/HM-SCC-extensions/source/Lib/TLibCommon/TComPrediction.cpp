@@ -632,12 +632,6 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
   {
     isIntraBC = true;
   }
-  else if ( pcCU->getSlice()->getUseIntegerMv() )
-  {
-#if !SCM_AMVR_UNIFICATION
-    cMv <<= 2;
-#endif 
-  }
   pcCU->clipMv(cMv);
 
   for (UInt comp=COMPONENT_Y; comp<pcYuvPred->getNumberValidComponents(); comp++)

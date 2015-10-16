@@ -6487,12 +6487,10 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
 
         cMvBi[1] = cMvPredBi[1][bestBiPRefIdxL1];
         iRefIdxBi[1] = bestBiPRefIdxL1;
-#if SCM_AMVR_UNIFICATION
         if( pcCU->getSlice()->getUseIntegerMv() )
         {
-          cMvBi[1] = (cMvBi[1]>>2)<<2;          
+          cMvBi[1] = (cMvBi[1]>>2)<<2;
         }
-#endif
         pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMv( cMvBi[1], ePartSize, uiPartAddr, 0, iPartIdx );
         pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( iRefIdxBi[1], ePartSize, uiPartAddr, 0, iPartIdx );
         TComYuv* pcYuvPred = &m_acYuvPred[REF_PIC_LIST_1];
@@ -6671,32 +6669,24 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
       pcCU->getCUMvField(REF_PIC_LIST_1)->setAllMv( cMvBi[1], ePartSize, uiPartAddr, 0, iPartIdx );
       pcCU->getCUMvField(REF_PIC_LIST_1)->setAllRefIdx( iRefIdxBi[1], ePartSize, uiPartAddr, 0, iPartIdx );
 
-#if SCM_AMVR_UNIFICATION
       if( pcCU->getSlice()->getUseIntegerMv() )
-      {       
-        TempMv = (cMvBi[0]>>2) - (cMvPredBi[0][iRefIdxBi[0]]>>2);        
+      {
+        TempMv = (cMvBi[0]>>2) - (cMvPredBi[0][iRefIdxBi[0]]>>2);
       }
       else
       {
         TempMv = cMvBi[0] - cMvPredBi[0][iRefIdxBi[0]];
       }
-#else
-      TempMv = cMvBi[0] - cMvPredBi[0][iRefIdxBi[0]];
-#endif 
       pcCU->getCUMvField(REF_PIC_LIST_0)->setAllMvd    ( TempMv,                 ePartSize, uiPartAddr, 0, iPartIdx );
 
-#if SCM_AMVR_UNIFICATION
       if( pcCU->getSlice()->getUseIntegerMv() )
-      {     
+      {
         TempMv = (cMvBi[1]>>2) - (cMvPredBi[1][iRefIdxBi[1]]>>2);
       }
       else
       {
         TempMv = cMvBi[1] - cMvPredBi[1][iRefIdxBi[1]];
       }
-#else
-      TempMv = cMvBi[1] - cMvPredBi[1][iRefIdxBi[1]];
-#endif 
       pcCU->getCUMvField(REF_PIC_LIST_1)->setAllMvd    ( TempMv,                 ePartSize, uiPartAddr, 0, iPartIdx );
 
       pcCU->setInterDirSubParts( 3, uiPartAddr, iPartIdx, pcCU->getDepth(0) );
@@ -6713,18 +6703,15 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
       uiLastMode = 0;
       pcCU->getCUMvField(REF_PIC_LIST_0)->setAllMv( cMv[0], ePartSize, uiPartAddr, 0, iPartIdx );
       pcCU->getCUMvField(REF_PIC_LIST_0)->setAllRefIdx( iRefIdx[0], ePartSize, uiPartAddr, 0, iPartIdx );
-#if SCM_AMVR_UNIFICATION
+
       if( pcCU->getSlice()->getUseIntegerMv() )
-      {        
+      {
         TempMv = (cMv[0]>>2) - (cMvPred[0][iRefIdx[0]]>>2);
       }
       else
       {
         TempMv = cMv[0] - cMvPred[0][iRefIdx[0]];
       }
-#else
-      TempMv = cMv[0] - cMvPred[0][iRefIdx[0]];
-#endif 
       pcCU->getCUMvField(REF_PIC_LIST_0)->setAllMvd    ( TempMv,                 ePartSize, uiPartAddr, 0, iPartIdx );
 
       pcCU->setInterDirSubParts( 1, uiPartAddr, iPartIdx, pcCU->getDepth(0) );
@@ -6739,18 +6726,15 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
       uiLastMode = 1;
       pcCU->getCUMvField(REF_PIC_LIST_1)->setAllMv( cMv[1], ePartSize, uiPartAddr, 0, iPartIdx );
       pcCU->getCUMvField(REF_PIC_LIST_1)->setAllRefIdx( iRefIdx[1], ePartSize, uiPartAddr, 0, iPartIdx );
-#if SCM_AMVR_UNIFICATION
+
       if( pcCU->getSlice()->getUseIntegerMv() )
-      {        
-        TempMv = (cMv[1]>>2) - (cMvPred[1][iRefIdx[1]]>>2);        
+      {
+        TempMv = (cMv[1]>>2) - (cMvPred[1][iRefIdx[1]]>>2);
       }
       else
       {
         TempMv = cMv[1] - cMvPred[1][iRefIdx[1]];
-      }      
-#else
-      TempMv = cMv[1] - cMvPred[1][iRefIdx[1]];
-#endif 
+      }
       pcCU->getCUMvField(REF_PIC_LIST_1)->setAllMvd    ( TempMv,                 ePartSize, uiPartAddr, 0, iPartIdx );
 
       pcCU->setInterDirSubParts( 2, uiPartAddr, iPartIdx, pcCU->getDepth(0) );
@@ -6798,9 +6782,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
 
       // find Merge result
       Distortion uiMRGCost = std::numeric_limits<Distortion>::max();
-#if SCM_AMVR_UNIFICATION
       pcCU->setMergeFlagSubParts( true, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
-#endif
       xMergeEstimation( pcCU, pcOrgYuv, iPartIdx, uiMRGInterDir, cMRGMvField, uiMRGIndex, uiMRGCost, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand);
 
       if ( uiMRGCost < uiMECost )
@@ -7616,7 +7598,6 @@ Bool TEncSearch::predMixedIntraBCInterSearch( TComDataCU * pcCU,
 
             m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass( uiPartAddr ) );
             m_pcRdCost->setPredictor( mvPred[iMvpIdx] );
-#if SCM_AMVR_UNIFICATION 
             if( pcCU->getSlice()->getUseIntegerMv() )
             {
               pcCU->getCUMvField( eRefPicList )->setAllMv( (cMv>>2)<<2, ePartSize, uiPartAddr, 0, iPartIdx );
@@ -7625,9 +7606,6 @@ Bool TEncSearch::predMixedIntraBCInterSearch( TComDataCU * pcCU,
             {
               pcCU->getCUMvField( eRefPicList )->setAllMv( cMv, ePartSize, uiPartAddr, 0, iPartIdx );
             }
-#else
-            pcCU->getCUMvField( eRefPicList )->setAllMv( cMv, ePartSize, uiPartAddr, 0, iPartIdx );
-#endif 
             pcCU->getCUMvField( eRefPicList )->setAllRefIdx( iRefIdx, ePartSize, uiPartAddr, 0, iPartIdx );
             pcCU->setInterDirSubParts( 1 + iRefList, uiPartAddr, iPartIdx, uiDepth );
 
@@ -7677,9 +7655,7 @@ Bool TEncSearch::predMixedIntraBCInterSearch( TComDataCU * pcCU,
 
         // find Merge result
         Distortion uiMRGCost = std::numeric_limits<Distortion>::max();
-#if SCM_AMVR_UNIFICATION
         pcCU->setMergeFlagSubParts( true, uiPartAddr, iPartIdx, uiDepth );
-#endif
 
 #if SCM_T0227_INTER_SEARCH_YUV==1
         xMergeEstimation( pcCU, pcOrgYuv, iPartIdx, uiMRGInterDir, cMRGMvField[iCombo], uiMRGIndex, uiMRGCost, cMvFieldNeighbours[iCombo], uhInterDirNeighbours[iCombo], numValidMergeCand[iCombo], 1 );
@@ -7713,18 +7689,14 @@ Bool TEncSearch::predMixedIntraBCInterSearch( TComDataCU * pcCU,
           Int iRefListOpt = iBestInterDir[iCombo];
           Int iRefIdxOpt = iBestRefIdx[iCombo];
           RefPicList  eRefPicListOpt = (iRefListOpt ? REF_PIC_LIST_1 : REF_PIC_LIST_0);
-#if SCM_AMVR_UNIFICATION
           if( pcCU->getSlice()->getUseIntegerMv() )
-          {            
-            pcCU->getCUMvField( eRefPicListOpt )->setAllMv( (iMvCandList[iPartIdx + 2*iRefIdxOpt + 4*iRefListOpt]>>2)<<2, ePartSize, uiPartAddr, 0, iPartIdx );            
+          {
+            pcCU->getCUMvField( eRefPicListOpt )->setAllMv( (iMvCandList[iPartIdx + 2*iRefIdxOpt + 4*iRefListOpt]>>2)<<2, ePartSize, uiPartAddr, 0, iPartIdx );
           }
           else
           {
             pcCU->getCUMvField( eRefPicListOpt )->setAllMv( iMvCandList[iPartIdx + 2*iRefIdxOpt + 4*iRefListOpt], ePartSize, uiPartAddr, 0, iPartIdx );
           }
-#else
-          pcCU->getCUMvField( eRefPicListOpt )->setAllMv( iMvCandList[iPartIdx + 2*iRefIdxOpt + 4*iRefListOpt], ePartSize, uiPartAddr, 0, iPartIdx );
-#endif 
           pcCU->getCUMvField( eRefPicListOpt )->setAllRefIdx( iRefIdxOpt, ePartSize, uiPartAddr, 0, iPartIdx );
           pcCU->getCUMvField( (RefPicList)(1-iRefListOpt) )->setAllRefIdx( -1, ePartSize, uiPartAddr, 0, iPartIdx );
           pcCU->setInterDirSubParts( 1 + iRefListOpt, uiPartAddr, iPartIdx, uiDepth );
@@ -7800,9 +7772,8 @@ Bool TEncSearch::predMixedIntraBCInterSearch( TComDataCU * pcCU,
       Int iRefListOpt = iBestInterDir[0];
       Int iRefIdxOpt = iBestRefIdx[0];
       RefPicList  eRefPicListOpt = (iRefListOpt ? REF_PIC_LIST_1 : REF_PIC_LIST_0);
-#if SCM_AMVR_UNIFICATION            
       if( pcCU->getSlice()->getUseIntegerMv() )
-      {            
+      {
         cMvd.setHor( (iMvCandList[1 + 2*iRefIdxOpt + 4*iRefListOpt].getHor() >> 2) - (cMvPredCand[0][1].getHor()>>2) );
         cMvd.setVer( (iMvCandList[1 + 2*iRefIdxOpt + 4*iRefListOpt].getVer() >> 2) - (cMvPredCand[0][1].getVer()>>2) );
         pcCU->getCUMvField( eRefPicListOpt )->setAllMv( (iMvCandList[1 + 2*iRefIdxOpt + 4*iRefListOpt]>>2)<<2, ePartSize, uiPartAddr, 0, iPartIdx );
@@ -7813,11 +7784,6 @@ Bool TEncSearch::predMixedIntraBCInterSearch( TComDataCU * pcCU,
         cMvd.setVer( iMvCandList[1 + 2*iRefIdxOpt + 4*iRefListOpt].getVer() - cMvPredCand[0][1].getVer() );
         pcCU->getCUMvField( eRefPicListOpt )->setAllMv( iMvCandList[1 + 2*iRefIdxOpt + 4*iRefListOpt], ePartSize, uiPartAddr, 0, iPartIdx );
       }
-#else
-      cMvd.setHor( iMvCandList[1 + 2*iRefIdxOpt + 4*iRefListOpt].getHor() - cMvPredCand[0][1].getHor() );
-      cMvd.setVer( iMvCandList[1 + 2*iRefIdxOpt + 4*iRefListOpt].getVer() - cMvPredCand[0][1].getVer() );
-      pcCU->getCUMvField( eRefPicListOpt )->setAllMv( iMvCandList[1 + 2*iRefIdxOpt + 4*iRefListOpt], ePartSize, uiPartAddr, 0, iPartIdx );
-#endif 
       pcCU->getCUMvField( eRefPicListOpt )->setAllMvd( cMvd, ePartSize, uiPartAddr, 0, iPartIdx );
       pcCU->getCUMvField( eRefPicListOpt )->setAllRefIdx( iRefIdxOpt, ePartSize, uiPartAddr, 0, iPartIdx );
       pcCU->getCUMvField( (RefPicList)(1-iRefListOpt) )->setAllRefIdx( -1, ePartSize, uiPartAddr, 0, iPartIdx );
@@ -7855,9 +7821,8 @@ Bool TEncSearch::predMixedIntraBCInterSearch( TComDataCU * pcCU,
       Int iRefListOpt = iBestInterDir[1];
       Int iRefIdxOpt = iBestRefIdx[1];
       RefPicList  eRefPicListOpt = (iRefListOpt ? REF_PIC_LIST_1 : REF_PIC_LIST_0);
-#if SCM_AMVR_UNIFICATION            
       if( pcCU->getSlice()->getUseIntegerMv() )
-      {            
+      {
         cMvd.setHor( (iMvCandList[2*iRefIdxOpt + 4*iRefListOpt].getHor()>>2) - (cMvPredCand[1][0].getHor()>>2) );
         cMvd.setVer( (iMvCandList[2*iRefIdxOpt + 4*iRefListOpt].getVer()>>2) - (cMvPredCand[1][0].getVer()>>2) );
         pcCU->getCUMvField( eRefPicListOpt )->setAllMv( (iMvCandList[2*iRefIdxOpt + 4*iRefListOpt]>>2)<<2, ePartSize, uiPartAddr, 0, iPartIdx );
@@ -7867,12 +7832,7 @@ Bool TEncSearch::predMixedIntraBCInterSearch( TComDataCU * pcCU,
         cMvd.setHor( iMvCandList[2*iRefIdxOpt + 4*iRefListOpt].getHor() - cMvPredCand[1][0].getHor() );
         cMvd.setVer( iMvCandList[2*iRefIdxOpt + 4*iRefListOpt].getVer() - cMvPredCand[1][0].getVer() );
         pcCU->getCUMvField( eRefPicListOpt )->setAllMv( iMvCandList[2*iRefIdxOpt + 4*iRefListOpt], ePartSize, uiPartAddr, 0, iPartIdx );
-      }      
-#else
-      cMvd.setHor( iMvCandList[2*iRefIdxOpt + 4*iRefListOpt].getHor() - cMvPredCand[1][0].getHor() );
-      cMvd.setVer( iMvCandList[2*iRefIdxOpt + 4*iRefListOpt].getVer() - cMvPredCand[1][0].getVer() );
-      pcCU->getCUMvField( eRefPicListOpt )->setAllMv( iMvCandList[2*iRefIdxOpt + 4*iRefListOpt], ePartSize, uiPartAddr, 0, iPartIdx );
-#endif 
+      }
       pcCU->getCUMvField( eRefPicListOpt )->setAllMvd( cMvd, ePartSize, uiPartAddr, 0, iPartIdx );
       pcCU->getCUMvField( eRefPicListOpt )->setAllRefIdx( iRefIdxOpt, ePartSize, uiPartAddr, 0, iPartIdx );
       pcCU->getCUMvField( (RefPicList)(1-iRefListOpt) )->setAllRefIdx( -1, ePartSize, uiPartAddr, 0, iPartIdx );
@@ -8197,13 +8157,7 @@ Bool TEncSearch::xHashInterEstimation( TComDataCU* pcCU, Int width, Int height, 
             bestRefIndex = iRefIdx;
             bestMv.set( (*it).x - currBlockHash.x, (*it).y - currBlockHash.y );
             bestMv <<= 2;
-#if !SCM_AMVR_UNIFICATION
-            if ( pcCU->getSlice()->getUseIntegerMv() )
-            {
-              bestMv >>= 2;
-            }
-#endif 
-#if SCM_AMVR_UNIFICATION
+
             if( pcCU->getSlice()->getUseIntegerMv() )
             {
               bestMvd.set( (bestMv.getHor()>>2) - (currAMVPInfo.m_acMvCand[currMVPIdx].getHor()>>2), (bestMv.getVer()>>2) - (currAMVPInfo.m_acMvCand[currMVPIdx].getVer()>>2) );
@@ -8212,9 +8166,6 @@ Bool TEncSearch::xHashInterEstimation( TComDataCU* pcCU, Int width, Int height, 
             {
                bestMvd.set( bestMv.getHor() - currAMVPInfo.m_acMvCand[currMVPIdx].getHor(), bestMv.getVer() - currAMVPInfo.m_acMvCand[currMVPIdx].getVer() );
             }
-#else
-            bestMvd.set( bestMv.getHor() - currAMVPInfo.m_acMvCand[currMVPIdx].getHor(), bestMv.getVer() - currAMVPInfo.m_acMvCand[currMVPIdx].getVer() );
-#endif
             bestMVPIndex = currMVPIdx;
           }
         }
@@ -9720,10 +9671,10 @@ Void TEncSearch::xCopyAMVPInfo (AMVPInfo* pSrc, AMVPInfo* pDst)
 Void TEncSearch::xCheckBestMVP ( TComDataCU* pcCU, RefPicList eRefPicList, TComMv cMv, TComMv& rcMvPred, Int& riMVPIdx, UInt& ruiBits, Distortion& ruiCost )
 {
   AMVPInfo* pcAMVPInfo = pcCU->getCUMvField(eRefPicList)->getAMVPInfo();
-#if SCM_AMVR_UNIFICATION
-  if(!pcCU->getSlice()->getUseIntegerMv() )  
-#endif
-  assert(pcAMVPInfo->m_acMvCand[riMVPIdx] == rcMvPred);
+  if ( !pcCU->getSlice()->getUseIntegerMv() )
+  {
+    assert( pcAMVPInfo->m_acMvCand[riMVPIdx] == rcMvPred );
+  }
 
   if (pcAMVPInfo->iN < 2)
   {
@@ -9787,12 +9738,6 @@ Distortion TEncSearch::xGetTemplateCost( TComDataCU* pcCU,
   Distortion uiCost = std::numeric_limits<Distortion>::max();
 
   TComPicYuv* pcPicYuvRef = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec();
-#if !SCM_AMVR_UNIFICATION
-  if ( pcCU->getSlice()->getUseIntegerMv() )
-  {
-    cMvCand <<= 2;
-  }
-#endif
   pcCU->clipMv( cMvCand );
 
   // prediction pattern
@@ -9889,9 +9834,6 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
 
   if ( pcCU->getSlice()->getUseIntegerMv() )
   {
-#if !SCM_AMVR_UNIFICATION
-    m_pcRdCost->setCostScale( 0 );
-#endif 
     m_bSkipFracME = true;
   }
 
@@ -9922,14 +9864,10 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   xPatternSearchFracDIF( bIsLosslessCoded, pcCU, pcPatternKey, piRefY, iRefStride, &rcMv, cMvHalf, cMvQter, ruiCost );
 
   m_pcRdCost->setCostScale( 0 );
-#if !SCM_AMVR_UNIFICATION
-  if ( !pcCU->getSlice()->getUseIntegerMv() )
-#endif 
-  {
-    rcMv <<= 2;
-    rcMv += (cMvHalf <<= 1);
-    rcMv +=  cMvQter;
-  }
+
+  rcMv <<= 2;
+  rcMv += (cMvHalf <<= 1);
+  rcMv +=  cMvQter;
 
   UInt uiMvBits = m_pcRdCost->getBits( rcMv.getHor(), rcMv.getVer() );
 
@@ -10074,12 +10012,6 @@ Void TEncSearch::xTZSearch( TComDataCU*  pcCU,
   TZ_SEARCH_CONFIGURATION
 
   UInt uiSearchRange = m_iSearchRange;
-#if !SCM_AMVR_UNIFICATION
-  if ( pcCU->getSlice()->getUseIntegerMv() )
-  {
-    rcMv <<= 2;
-  }
-#endif 
   pcCU->clipMv( rcMv );
   rcMv >>= 2;
   // init TZSearchStruct
@@ -10313,12 +10245,6 @@ Void TEncSearch::xTZSearchSelective( TComDataCU*   pcCU,
   Int   iBestY                  = 0;
   Int   iDist                   = 0;
 
-#if !SCM_AMVR_UNIFICATION
-  if ( pcCU->getSlice()->getUseIntegerMv() )
-  {
-    rcMv <<= 2;
-  }
-#endif 
   pcCU->clipMv( rcMv );
   rcMv >>= 2;
   // init TZSearchStruct
@@ -10495,19 +10421,6 @@ Void TEncSearch::xPatternSearchFracDIF(
                           pcPatternKey->getROIYHeight(),
                           iRefStride,
                           pcPatternKey->getBitDepthY());
-
-#if !SCM_AMVR_UNIFICATION
-  if ( pcCU->getSlice()->getUseIntegerMv() )
-  {
-    TComMv baseRefMv( 0, 0 );
-    rcMvHalf.setZero();
-    m_pcRdCost->setCostScale( 0 );
-    xExtDIFUpSamplingH( &cPatternRoi );
-    rcMvQter = *pcMvInt;    // for mv-cost
-    ruiCost = xPatternRefinement( pcPatternKey, baseRefMv, 1, rcMvQter, !bIsLosslessCoded );
-    return;
-  }
-#endif 
 
   if ( m_bSkipFracME )
   {
