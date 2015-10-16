@@ -736,30 +736,9 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
     UInt uiCurrParam = 2 + uiIndexMaxSize / 6;
 #endif
     UInt uiMappedValue;
-#if ! SCM_U0086_SIM_NUM_INDEX_MAPPING 
-    Bool bUsePLTSharingMode = false;
-#endif
     assert(uiNumIndices);
-#if SCM_U0086_SIM_NUM_INDEX_MAPPING 
     assert(uiNumIndices > 0);
-    uiMappedValue = uiNumIndices-1;    
-#else
-    UInt uiInterval = bUsePLTSharingMode ? 8 : 32;
-    UInt uiZeroPosition = bUsePLTSharingMode ? 3 : uiIndexMaxSize;
-
-    if (uiNumIndices >= uiZeroPosition)
-    {
-      Int iNumResPos = uiZeroPosition - 1;
-      UInt uiValue = uiNumIndices - uiZeroPosition;
-      uiMappedValue = uiValue < iNumResPos * (uiInterval - 1) ?
-        uiValue / (uiInterval - 1) * uiInterval + uiValue % (uiInterval - 1) : uiValue + iNumResPos;
-    }
-    else
-    {
-      UInt uiValue = uiZeroPosition - uiNumIndices;
-      uiMappedValue = uiValue * uiInterval - 1;
-    }
-#endif
+    uiMappedValue = uiNumIndices-1;
     xWriteCoefRemainExGolomb(uiMappedValue, uiCurrParam, false, MAX_NUM_CHANNEL_TYPE);
 
     while (!lIdxPosList.empty())

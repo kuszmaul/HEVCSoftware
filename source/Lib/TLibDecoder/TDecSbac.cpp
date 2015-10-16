@@ -810,28 +810,8 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
 #else
     UInt uiCurrParam = 2 + uiIndexMaxSize / 6;
 #endif
-    xReadCoefRemainExGolomb(uiNumIndices, uiCurrParam, false, MAX_NUM_CHANNEL_TYPE
-      RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-#if SCM_U0086_SIM_NUM_INDEX_MAPPING 
+    xReadCoefRemainExGolomb(uiNumIndices, uiCurrParam, false, MAX_NUM_CHANNEL_TYPE RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
     uiNumIndices++;
-#else
-    Bool bUsePLTSharingMode = false;
-    UInt uiInterval = bUsePLTSharingMode ? 8 : 32;
-    UInt uiZeroPosition = bUsePLTSharingMode ? 3 : uiIndexMaxSize;
-    Int iNumResPos = uiZeroPosition - 1;
-    if (uiNumIndices >= iNumResPos * uiInterval)
-    {
-      uiNumIndices = uiNumIndices - iNumResPos + uiZeroPosition;
-    }
-    else if (uiNumIndices % uiInterval == uiInterval - 1)
-    {
-      uiNumIndices = uiZeroPosition - (uiNumIndices + 1) / uiInterval;
-    }
-    else
-    {
-      uiNumIndices = uiNumIndices / uiInterval * (uiInterval - 1) + uiNumIndices % uiInterval + uiZeroPosition;
-    }
-#endif
     iNumCopyIndexRuns = uiNumIndices;
     while (uiNumIndices--)
     {
@@ -839,8 +819,7 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
       uiAdjust = 1;
       lParsedIdxList.push_back(uiSymbol);
     }
-    m_pcTDecBinIf->decodeBin(lastRunType, m_SPointSCModel.get(0, 0, 0)
-                             RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
+    m_pcTDecBinIf->decodeBin(lastRunType, m_SPointSCModel.get(0, 0, 0) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
 #if SCM_U0133_REORDER
     parseScanRotationModeFlag(pcCU, uiAbsPartIdx, uiDepth);
 #endif
