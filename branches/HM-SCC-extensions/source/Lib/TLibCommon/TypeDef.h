@@ -172,7 +172,6 @@
 //------------------------------------------------
 
 #define SCM_S0043_PLT_DELTA_QP                           0 ///< JCTVC-S0043: delta qp signalling for palette mode
-#define SCM_U0104_DIS_WP_IBC                             1 ///< JCTVC-U0104, disable weighted prediction for IBC
 #define SCM_U0106_ACT_TU_SIG                             1 ///< JCTVC-U0106, control ACT at the TU level
 #define SCM_U0052_ESCAPE_PIXEL_CODING                    1 ///< JCTVC-U0052, avoid QP dependence for coding the value of escape pixels
 #define SCM_U0096_PLT_ENCODER_IMPROVEMENT                1 ///< JCTVC-U0096, palette encoder improvement: using square error to derive and assign palette index, pruning indices and merge consecutive runs

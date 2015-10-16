@@ -1477,18 +1477,14 @@ Void TEncCavlc::xCodePredWeightTable( TComSlice* pcSlice )
           }
           bDenomCoded = true;
         }
-#if SCM_U0104_DIS_WP_IBC
         if( pcSlice->getRefPic((RefPicList)eRefPicList, iRefIdx)->getPOC() == pcSlice->getPOC() )
         {
           assert( !wp[COMPONENT_Y].bPresentFlag );
         }
         else
         {
-#endif
-        WRITE_FLAG( wp[COMPONENT_Y].bPresentFlag, iNumRef==0?"luma_weight_l0_flag[i]":"luma_weight_l1_flag[i]" );
-#if SCM_U0104_DIS_WP_IBC
+          WRITE_FLAG( wp[COMPONENT_Y].bPresentFlag, iNumRef==0?"luma_weight_l0_flag[i]":"luma_weight_l1_flag[i]" );
         }
-#endif
         uiTotalSignalledWeightFlags += wp[COMPONENT_Y].bPresentFlag;
       }
       if (bChroma)
@@ -1497,18 +1493,14 @@ Void TEncCavlc::xCodePredWeightTable( TComSlice* pcSlice )
         {
           pcSlice->getWpScaling(eRefPicList, iRefIdx, wp);
           assert(wp[COMPONENT_Cb].bPresentFlag == wp[COMPONENT_Cr].bPresentFlag); // check the channel-type settings are consistent across components.
-#if SCM_U0104_DIS_WP_IBC
           if( pcSlice->getRefPic((RefPicList)eRefPicList, iRefIdx)->getPOC() == pcSlice->getPOC() )
           {
             assert( !wp[COMPONENT_Cb].bPresentFlag );
           }
           else
           {
-#endif
-          WRITE_FLAG( wp[COMPONENT_Cb].bPresentFlag, iNumRef==0?"chroma_weight_l0_flag[i]":"chroma_weight_l1_flag[i]" );
-#if SCM_U0104_DIS_WP_IBC
+            WRITE_FLAG( wp[COMPONENT_Cb].bPresentFlag, iNumRef==0?"chroma_weight_l0_flag[i]":"chroma_weight_l1_flag[i]" );
           }
-#endif
           uiTotalSignalledWeightFlags += 2*wp[COMPONENT_Cb].bPresentFlag;
         }
       }

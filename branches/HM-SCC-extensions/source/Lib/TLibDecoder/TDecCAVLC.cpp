@@ -1496,9 +1496,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
     }
     if ( (pps->getUseWP() && pcSlice->getSliceType()==P_SLICE) || (pps->getWPBiPred() && pcSlice->getSliceType()==B_SLICE) )
     {
-#if SCM_U0104_DIS_WP_IBC
       pcSlice->setRefPOCListSliceHeader();
-#endif
       xParsePredWeightTable(pcSlice, sps);
       pcSlice->initWpScaling(sps);
     }
@@ -2064,18 +2062,14 @@ Void TDecCavlc::xParsePredWeightTable( TComSlice* pcSlice, const TComSPS *sps )
       }
 
       UInt  uiCode;
-#if SCM_U0104_DIS_WP_IBC
       if( pcSlice->getRefPOC(eRefPicList, iRefIdx) == pcSlice->getPOC() )
       {
         uiCode = 0;
       }
       else
       {
-#endif
-      READ_FLAG( uiCode, iNumRef==0?"luma_weight_l0_flag[i]":"luma_weight_l1_flag[i]" );
-#if SCM_U0104_DIS_WP_IBC
+        READ_FLAG( uiCode, iNumRef==0?"luma_weight_l0_flag[i]":"luma_weight_l1_flag[i]" );
       }
-#endif
       wp[COMPONENT_Y].bPresentFlag = ( uiCode == 1 );
       uiTotalSignalledWeightFlags += wp[COMPONENT_Y].bPresentFlag;
     }
@@ -2085,18 +2079,14 @@ Void TDecCavlc::xParsePredWeightTable( TComSlice* pcSlice, const TComSPS *sps )
       for ( Int iRefIdx=0 ; iRefIdx<pcSlice->getNumRefIdx(eRefPicList) ; iRefIdx++ )
       {
         pcSlice->getWpScaling(eRefPicList, iRefIdx, wp);
-#if SCM_U0104_DIS_WP_IBC
         if( pcSlice->getRefPOC(eRefPicList, iRefIdx) == pcSlice->getPOC() )
         {
           uiCode = 0;
         }
         else
         {
-#endif
-        READ_FLAG( uiCode, iNumRef==0?"chroma_weight_l0_flag[i]":"chroma_weight_l1_flag[i]" );
-#if SCM_U0104_DIS_WP_IBC
+          READ_FLAG( uiCode, iNumRef==0?"chroma_weight_l0_flag[i]":"chroma_weight_l1_flag[i]" );
         }
-#endif
         for(Int j=1; j<numValidComp; j++)
         {
           wp[j].bPresentFlag = ( uiCode == 1 );

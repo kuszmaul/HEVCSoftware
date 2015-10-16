@@ -215,64 +215,60 @@ Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *const slice, const Int
       slice->getWpAcDcParam(currWeightACDCParam);
       slice->getRefPic(eRefPicList, refIdxTemp)->getSlice(0)->getWpAcDcParam(refWeightACDCParam);
 
-#if SCM_U0104_DIS_WP_IBC
 #if SCM_U0083_U0079_IBC_SIGNAL_PPS
       if( !slice->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() || (slice->getRefPic((RefPicList)refList, refIdxTemp)->getPOC() != slice->getPOC()) )
 #else
       if( !slice->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() || (slice->getRefPic((RefPicList)refList, refIdxTemp)->getPOC() != slice->getPOC()) )
 #endif
       {
-#endif
-      for ( Int comp = 0; comp < numComp; comp++ )
-      {
-        const ComponentID compID        = ComponentID(comp);
-        const Int         bitDepth      = slice->getSPS()->getBitDepth(toChannelType(compID));
-        const Int         range         = bUseHighPrecisionWeighting ? (1<<bitDepth)/2 : 128;
-        const Int         realLog2Denom = log2Denom + (bUseHighPrecisionWeighting ? RExt__PREDICTION_WEIGHTING_ANALYSIS_DC_PRECISION : (bitDepth - 8));
-        const Int         realOffset    = ((Int)1<<(realLog2Denom-1));
-
-        // current frame
-        const Int64 currDC = currWeightACDCParam[comp].iDC;
-        const Int64 currAC = currWeightACDCParam[comp].iAC;
-        // reference frame
-        const Int64 refDC  = refWeightACDCParam[comp].iDC;
-        const Int64 refAC  = refWeightACDCParam[comp].iAC;
-
-        // calculating iWeight and iOffset params
-        const Double dWeight = (refAC==0) ? (Double)1.0 : Clip3( -16.0, 15.0, ((Double)currAC / (Double)refAC) );
-        const Int weight     = (Int)( 0.5 + dWeight * (Double)(1<<log2Denom) );
-        const Int offset     = (Int)( ((currDC<<log2Denom) - ((Int64)weight * refDC) + (Int64)realOffset) >> realLog2Denom );
-
-        Int clippedOffset;
-        if(isChroma(compID)) // Chroma offset range limination
+        for ( Int comp = 0; comp < numComp; comp++ )
         {
-          const Int pred        = ( range - ( ( range*weight)>>(log2Denom) ) );
-          const Int deltaOffset = Clip3( -4*range, 4*range-1, (offset - pred) ); // signed 10bit
+          const ComponentID compID        = ComponentID(comp);
+          const Int         bitDepth      = slice->getSPS()->getBitDepth(toChannelType(compID));
+          const Int         range         = bUseHighPrecisionWeighting ? (1<<bitDepth)/2 : 128;
+          const Int         realLog2Denom = log2Denom + (bUseHighPrecisionWeighting ? RExt__PREDICTION_WEIGHTING_ANALYSIS_DC_PRECISION : (bitDepth - 8));
+          const Int         realOffset    = ((Int)1<<(realLog2Denom-1));
 
-          clippedOffset = Clip3( -range, range-1, (deltaOffset + pred) );  // signed 8bit
+          // current frame
+          const Int64 currDC = currWeightACDCParam[comp].iDC;
+          const Int64 currAC = currWeightACDCParam[comp].iAC;
+          // reference frame
+          const Int64 refDC  = refWeightACDCParam[comp].iDC;
+          const Int64 refAC  = refWeightACDCParam[comp].iAC;
+
+          // calculating iWeight and iOffset params
+          const Double dWeight = (refAC==0) ? (Double)1.0 : Clip3( -16.0, 15.0, ((Double)currAC / (Double)refAC) );
+          const Int weight     = (Int)( 0.5 + dWeight * (Double)(1<<log2Denom) );
+          const Int offset     = (Int)( ((currDC<<log2Denom) - ((Int64)weight * refDC) + (Int64)realOffset) >> realLog2Denom );
+
+          Int clippedOffset;
+          if(isChroma(compID)) // Chroma offset range limination
+          {
+            const Int pred        = ( range - ( ( range*weight)>>(log2Denom) ) );
+            const Int deltaOffset = Clip3( -4*range, 4*range-1, (offset - pred) ); // signed 10bit
+
+            clippedOffset = Clip3( -range, range-1, (deltaOffset + pred) );  // signed 8bit
+          }
+          else // Luma offset range limitation
+          {
+            clippedOffset = Clip3( -range, range-1, offset);
+          }
+
+          // Weighting factor limitation
+          const Int defaultWeight = (1<<log2Denom);
+          const Int deltaWeight   = (defaultWeight - weight);
+
+          if(deltaWeight >= range || deltaWeight < -range)
+          {
+            return false;
+          }
+
+          m_wp[refList][refIdxTemp][comp].bPresentFlag      = true;
+          m_wp[refList][refIdxTemp][comp].iWeight           = weight;
+          m_wp[refList][refIdxTemp][comp].iOffset           = clippedOffset;
+          m_wp[refList][refIdxTemp][comp].uiLog2WeightDenom = log2Denom;
         }
-        else // Luma offset range limitation
-        {
-          clippedOffset = Clip3( -range, range-1, offset);
-        }
-
-        // Weighting factor limitation
-        const Int defaultWeight = (1<<log2Denom);
-        const Int deltaWeight   = (defaultWeight - weight);
-
-        if(deltaWeight >= range || deltaWeight < -range)
-        {
-          return false;
-        }
-
-        m_wp[refList][refIdxTemp][comp].bPresentFlag      = true;
-        m_wp[refList][refIdxTemp][comp].iWeight           = weight;
-        m_wp[refList][refIdxTemp][comp].iOffset           = clippedOffset;
-        m_wp[refList][refIdxTemp][comp].uiLog2WeightDenom = log2Denom;
       }
-#if SCM_U0104_DIS_WP_IBC
-      }
-#endif
     }
   }
   return true;
@@ -295,7 +291,6 @@ Bool WeightPredAnalysis::xSelectWP(TComSlice *const slice, const Int log2Denom)
 
     for ( Int iRefIdxTemp = 0; iRefIdxTemp < slice->getNumRefIdx(eRefPicList); iRefIdxTemp++ )
     {
-#if SCM_U0104_DIS_WP_IBC
 #if SCM_U0083_U0079_IBC_SIGNAL_PPS
       if( slice->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() && (slice->getRefPic((RefPicList)iRefList, iRefIdxTemp)->getPOC() == slice->getPOC()) )
 #else
@@ -312,39 +307,36 @@ Bool WeightPredAnalysis::xSelectWP(TComSlice *const slice, const Int log2Denom)
       }
       else
       {
-#endif
-      Int64 iSADWP = 0, iSADnoWP = 0;
+        Int64 iSADWP = 0, iSADnoWP = 0;
 
-      for(Int comp=0; comp<pPic->getNumberValidComponents(); comp++)
-      {
-        const ComponentID  compID     = ComponentID(comp);
-              Pel         *pOrg       = pPic->getAddr(compID);
-              Pel         *pRef       = slice->getRefPic(eRefPicList, iRefIdxTemp)->getPicYuvRec()->getAddr(compID);
-        const Int          iOrgStride = pPic->getStride(compID);
-        const Int          iRefStride = slice->getRefPic(eRefPicList, iRefIdxTemp)->getPicYuvRec()->getStride(compID);
-        const Int          iWidth     = pPic->getWidth(compID);
-        const Int          iHeight    = pPic->getHeight(compID);
-        const Int          bitDepth   = slice->getSPS()->getBitDepth(toChannelType(compID));
-
-        // calculate SAD costs with/without wp for luma
-        iSADWP   += xCalcSADvalueWP(bitDepth, pOrg, pRef, iWidth, iHeight, iOrgStride, iRefStride, log2Denom, m_wp[iRefList][iRefIdxTemp][compID].iWeight, m_wp[iRefList][iRefIdxTemp][compID].iOffset, useHighPrecisionPredictionWeighting);
-        iSADnoWP += xCalcSADvalueWP(bitDepth, pOrg, pRef, iWidth, iHeight, iOrgStride, iRefStride, log2Denom, iDefaultWeight, 0, useHighPrecisionPredictionWeighting);
-      }
-
-      const Double dRatio = ((Double)iSADWP / (Double)iSADnoWP);
-      if(dRatio >= (Double)DTHRESH)
-      {
         for(Int comp=0; comp<pPic->getNumberValidComponents(); comp++)
         {
-          m_wp[iRefList][iRefIdxTemp][comp].bPresentFlag      = false;
-          m_wp[iRefList][iRefIdxTemp][comp].iOffset           = 0;
-          m_wp[iRefList][iRefIdxTemp][comp].iWeight           = iDefaultWeight;
-          m_wp[iRefList][iRefIdxTemp][comp].uiLog2WeightDenom = log2Denom;
+          const ComponentID  compID     = ComponentID(comp);
+                Pel         *pOrg       = pPic->getAddr(compID);
+                Pel         *pRef       = slice->getRefPic(eRefPicList, iRefIdxTemp)->getPicYuvRec()->getAddr(compID);
+          const Int          iOrgStride = pPic->getStride(compID);
+          const Int          iRefStride = slice->getRefPic(eRefPicList, iRefIdxTemp)->getPicYuvRec()->getStride(compID);
+          const Int          iWidth     = pPic->getWidth(compID);
+          const Int          iHeight    = pPic->getHeight(compID);
+          const Int          bitDepth   = slice->getSPS()->getBitDepth(toChannelType(compID));
+
+          // calculate SAD costs with/without wp for luma
+          iSADWP   += xCalcSADvalueWP(bitDepth, pOrg, pRef, iWidth, iHeight, iOrgStride, iRefStride, log2Denom, m_wp[iRefList][iRefIdxTemp][compID].iWeight, m_wp[iRefList][iRefIdxTemp][compID].iOffset, useHighPrecisionPredictionWeighting);
+          iSADnoWP += xCalcSADvalueWP(bitDepth, pOrg, pRef, iWidth, iHeight, iOrgStride, iRefStride, log2Denom, iDefaultWeight, 0, useHighPrecisionPredictionWeighting);
+        }
+
+        const Double dRatio = ((Double)iSADWP / (Double)iSADnoWP);
+        if(dRatio >= (Double)DTHRESH)
+        {
+          for(Int comp=0; comp<pPic->getNumberValidComponents(); comp++)
+          {
+            m_wp[iRefList][iRefIdxTemp][comp].bPresentFlag      = false;
+            m_wp[iRefList][iRefIdxTemp][comp].iOffset           = 0;
+            m_wp[iRefList][iRefIdxTemp][comp].iWeight           = iDefaultWeight;
+            m_wp[iRefList][iRefIdxTemp][comp].uiLog2WeightDenom = log2Denom;
+          }
         }
       }
-#if SCM_U0104_DIS_WP_IBC
-      }
-#endif
     }
   }
 
