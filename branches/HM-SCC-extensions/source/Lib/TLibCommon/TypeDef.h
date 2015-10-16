@@ -173,7 +173,6 @@
 
 #define SCM_S0043_PLT_DELTA_QP                           0 ///< JCTVC-S0043: delta qp signalling for palette mode
 #define SCM_U0095_FAST_INTRA_ACT                         0 ///< JCTVC-U0095, fast intra ACT search
-#define SCM_U0087_SWAP_ESC_ORDER_FIX                     1 ///< Bug fix for JCTVC-U0087 in non-444 format
 #define SCM_U0096_PLT_ENCODER_IMPROVEMENT_FIX            1 ///< Bug fixes for JCTVC-U0096.
 #define SCM_CLEANUPS                                     1 ///< Miscellaneous cleanups. No change to CTC.
 #define SCM_TICKET_1411                                  1 ///< Fix for Ticket #1411
