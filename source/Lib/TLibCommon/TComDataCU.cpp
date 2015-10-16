@@ -3854,12 +3854,10 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int ctuRsAddr, Int uiPartUn
     return false;
   }
 
-#if SCM_FIX_TICKET_1401
   if ( getSlice()->getPPS()->getConstrainedIntraPred() && (getSlice()->getRefPic(eRefPicList, riRefIdx)->getPOC() == getSlice()->getPOC()) )
   {
     return false;
   }
-#endif
 
   eColRefPicList = getSlice()->getCheckLDC() ? eRefPicList : RefPicList(getSlice()->getColFromL0Flag());
 

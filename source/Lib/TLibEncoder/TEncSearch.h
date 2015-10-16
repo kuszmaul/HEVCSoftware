@@ -388,38 +388,18 @@ public:
                                   TComMv&       rcMvSrchRngLT,
                                   TComMv&       rcMvSrchRngRB );
 
-#if SCM_FIX_TICKET_1401
   Bool xCIPIBCSearchPruning(    TComDataCU*   pcCU,
                                 Int           refPixlX,
                                 Int           refPixlY,
                                 Int           roiWidth,
                                 Int           roiHeight);
-#else
-  Bool xCIPIntraSearchPruning(    TComDataCU*   pcCU,
-                                  Int           relX,
-                                  Int           relY,
-                                  Int           roiWidth,
-                                  Int           roiHeight);
-#endif
 
-#if SCM_FIX_TICKET_1401
   Bool isValidIntraBCSearchArea(  TComDataCU*   pcCU,
                                   Int           predX,
                                   Int           predY,
                                   Int           roiWidth,
                                   Int           roiHeight,
                                   Int           uiPartOffset)
-#else
-  Bool isValidIntraBCSearchArea(  TComDataCU*   pcCU,
-                                  Int           iPartIdx,
-                                  Int           predX,
-                                  Int           ROIStartX,
-                                  Int           predY,
-                                  Int           ROIStartY,
-                                  Int           roiWidth,
-                                  Int           roiHeight,
-                                  Int           uiPartOffset)
-#endif
   {
 #if SCM_IBC_CR_INTERPOLATION_ENABLE
     const Int  cuPelX        = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[ uiPartOffset ] ];
@@ -473,87 +453,8 @@ public:
       if (refCtu < startCtu) return false;
     }
 
-#if SCM_FIX_TICKET_1401
     return (!pcCU->getSlice()->getPPS()->getConstrainedIntraPred()) ||
             xCIPIBCSearchPruning(pcCU, cuPelX + predX, cuPelY + predY, roiWidth, roiHeight);
-#else
-    // check boundary
-    if ( pcCU->getWidth( 0 ) == 8 && pcCU->getPartitionSize( 0 ) != SIZE_2Nx2N && pcCU->getSlice()->getPic()->getPicYuvOrg()->getChromaFormat() != CHROMA_444 )
-    {
-      if ( pcCU->getSlice()->getPic()->getPicYuvOrg()->getChromaFormat() == CHROMA_420 )
-      {
-        if ( (pcCU->getPartitionSize( 0 ) == SIZE_NxN && iPartIdx == 3) ||
-             (pcCU->getPartitionSize( 0 ) == SIZE_2NxN && iPartIdx == 1) ||
-             (pcCU->getPartitionSize( 0 ) == SIZE_Nx2N && iPartIdx == 1) )
-        {
-          Int cuStartX = pcCU->getCUPelX();
-          Int cuStartY = pcCU->getCUPelY();
-          Int refStartX = cuStartX + predX;
-          Int refStartY = cuStartY + predY;
-          Int refEndX = refStartX + 8 - 1;
-          Int refEndY = refStartY + 8 - 1;
-          if ( refStartX < 0 || refStartY < 0 ||
-               refEndX >= pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples() ||
-               refEndY >= pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples() )
-          {
-            return false;
-          }
-        }
-      }
-      else if ( pcCU->getSlice()->getPic()->getPicYuvOrg()->getChromaFormat() == CHROMA_422 )
-      {
-        if ( pcCU->getPartitionSize( 0 ) == SIZE_Nx2N && iPartIdx == 1 )
-        {
-          Int cuStartX = pcCU->getCUPelX();
-          Int cuStartY = pcCU->getCUPelY();
-          Int refStartX = cuStartX + predX;
-          Int refStartY = cuStartY + predY;
-          Int refEndX = refStartX + 8 - 1;
-          Int refEndY = refStartY + 8 - 1;
-          if ( refStartX < 0 || refStartY < 0 ||
-               refEndX >= pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples() ||
-               refEndY >= pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples() )
-          {
-            return false;
-          }
-        }
-        else if ( pcCU->getPartitionSize( 0 ) == SIZE_NxN && iPartIdx == 1 )
-        {
-          Int cuStartX = pcCU->getCUPelX();
-          Int cuStartY = pcCU->getCUPelY();
-          Int refStartX = cuStartX + predX;
-          Int refStartY = cuStartY + predY;
-          Int refEndX = refStartX + 8 - 1;
-          Int refEndY = refStartY + 4 - 1;
-          if ( refStartX < 0 || refStartY < 0 ||
-               refEndX >= pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples() ||
-               refEndY >= pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples() )
-          {
-            return false;
-          }
-        }
-        else if ( pcCU->getPartitionSize( 0 ) == SIZE_NxN && iPartIdx == 3 )
-        {
-          Int cuStartX = pcCU->getCUPelX();
-          Int cuStartY = pcCU->getCUPelY();
-          Int refStartX = cuStartX + predX;
-          Int refStartY = cuStartY + 4 + predY;
-          Int refEndX = refStartX + 8 - 1;
-          Int refEndY = refStartY + 4 - 1;
-          if ( refStartX < 0 || refStartY < 0 ||
-               refEndX >= pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples() ||
-               refEndY >= pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples() )
-          {
-            return false;
-          }
-        }
-      }
-    }
-
-    return (!pcCU->getSlice()->getPPS()->getConstrainedIntraPred())        ||
-           (pcCU->getSlice()->getSliceType() == I_SLICE)                   ||
-           xCIPIntraSearchPruning(pcCU, predX + ROIStartX, predY + ROIStartY, roiWidth, roiHeight);
-#endif
   }
 
   Void xIntraBCSearchMVCandUpdate(Distortion uiSad, Int x, Int y, Distortion* uiSadBestCand, TComMv* cMVCand);
