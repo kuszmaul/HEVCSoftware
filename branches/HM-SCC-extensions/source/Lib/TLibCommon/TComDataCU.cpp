@@ -3540,7 +3540,7 @@ UInt TComDataCU::getCtxEscapeFlag(UInt uiAbsPartIdx, UInt uiIdx, Pel *pEscapeFla
   return uiTop;
 }
 
-#if !SCM_U0052_ESCAPE_PIXEL_CODING || SCM_U0096_PLT_ENCODER_IMPROVEMENT
+#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
 Int TComDataCU::xCalcMaxVals(TComDataCU *pcCU, ComponentID compID)
 {
   Bool bLossless = pcCU->getCUTransquantBypass(0);

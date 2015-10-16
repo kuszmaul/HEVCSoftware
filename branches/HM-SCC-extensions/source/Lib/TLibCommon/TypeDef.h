@@ -172,7 +172,6 @@
 //------------------------------------------------
 
 #define SCM_S0043_PLT_DELTA_QP                           0 ///< JCTVC-S0043: delta qp signalling for palette mode
-#define SCM_U0052_ESCAPE_PIXEL_CODING                    1 ///< JCTVC-U0052, avoid QP dependence for coding the value of escape pixels
 #define SCM_U0096_PLT_ENCODER_IMPROVEMENT                1 ///< JCTVC-U0096, palette encoder improvement: using square error to derive and assign palette index, pruning indices and merge consecutive runs
 #define SCM_U0086_SIM_NUM_INDEX_MAPPING                  1 ///< JCTVC-U0086, simplification of mapping of numPLTIndices
 #define SCM_U0176_RICE_PARAM_DERIVATION_CLEAN_UP         1 ///< JCTVC-U0176, using shift operation to derive the riceParam for numPLTIndices
