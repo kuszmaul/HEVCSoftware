@@ -1163,18 +1163,14 @@ private:
   Int              m_palettePredictorBitDepth[MAX_NUM_CHANNEL_TYPE];
   Bool             m_monochromePaletteFlag;
   Bool             m_usePalettePredictor;
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
   Bool             m_useIntraBlockCopyPps;
-#endif
 public:
   TComPPSSCC();
 
   Bool settingsDifferFromDefaults() const
   {
     return getUseColourTrans()
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
         || getUseIntraBlockCopy()
-#endif
         || getNumPLTPred() > 0;
   }
 
@@ -1195,10 +1191,8 @@ public:
   Void     setUsePalettePredictor(Bool num)            { m_usePalettePredictor = num; }
   Bool     getMonochromePaletteFlag()            const { return m_monochromePaletteFlag; }
   Void     setMonochromePaletteFlag( Bool b )          { m_monochromePaletteFlag = b; }
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
-  Bool                   getUseIntraBlockCopy()         const                                            { return m_useIntraBlockCopyPps;  }
-  Void                   setUseIntraBlockCopy(Bool value)                                                { m_useIntraBlockCopyPps = value; }
-#endif
+  Bool     getUseIntraBlockCopy()               const  { return m_useIntraBlockCopyPps;  }
+  Void     setUseIntraBlockCopy(Bool value)            { m_useIntraBlockCopyPps = value; }
 };
 
 /// PPS class
