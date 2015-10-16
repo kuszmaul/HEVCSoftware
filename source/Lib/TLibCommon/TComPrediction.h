@@ -113,9 +113,7 @@ protected:
   Int       m_invQuantScales[3];
   Int       m_iQPper[3];
   UShort**  m_truncBinBits; //ZF two dimensions related with input bitdepth
-#if SCM_U0052_ESCAPE_PIXEL_CODING
   UShort*   m_escapeNumBins; // number of binarization bins fpr escape pixels
-#endif
   UInt      m_MaxSymbolSize;
   UInt      m_SymbolSize;
 
@@ -202,9 +200,7 @@ public:
 #if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   Double calcPixelPredRD(TComDataCU* pcCU, Pel pOrg[3], TComRdCost *pcCost, UInt *error);
   UInt getTruncBinBits(UInt uiSymbol, UInt uiMaxSymbol);
-#if SCM_U0052_ESCAPE_PIXEL_CODING
   UInt getEpExGolombNumBins(UInt uiSymbol, UInt uiCount);
-#endif
 #endif
   Void  preCalcPLTIndex(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiPLTSize);
 #if SCM_U0096_PLT_ENCODER_IMPROVEMENT

@@ -74,9 +74,7 @@ const UChar TComPrediction::m_aucIntraFilter[MAX_NUM_CHANNEL_TYPE][MAX_INTRA_FIL
 TComPrediction::TComPrediction()
 #if SCM_U0096_PLT_ENCODER_IMPROVEMENT
 : m_truncBinBits(NULL)
-#if SCM_U0052_ESCAPE_PIXEL_CODING
 , m_escapeNumBins(NULL)
-#endif
 , m_pLumaRecBuffer(0)
 #else
 : m_pLumaRecBuffer(0)
@@ -147,13 +145,11 @@ Void TComPrediction::destroy()
     m_truncBinBits = NULL;
   }
 
-#if SCM_U0052_ESCAPE_PIXEL_CODING
   if( m_escapeNumBins )
-  {    
+  {
     delete[] m_escapeNumBins;
     m_escapeNumBins = NULL;
   }
-#endif
 #endif
 }
 
@@ -233,8 +229,7 @@ Void TComPrediction::initTBCTable(UInt bitDepth)
       m_truncBinBits[j][i] = getTruncBinBits(j, i);
     }
   }
-  
-#if SCM_U0052_ESCAPE_PIXEL_CODING
+
   m_escapeNumBins = new UShort[m_SymbolSize];
   memset(m_escapeNumBins, 0, sizeof(UShort)*m_SymbolSize);
 
@@ -242,7 +237,6 @@ Void TComPrediction::initTBCTable(UInt bitDepth)
   {
     m_escapeNumBins[i] = getEpExGolombNumBins(i, 3);
   }
-#endif
 }
 
 #endif
@@ -2164,13 +2158,6 @@ Void TComPrediction::calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalett
     uiScanIdxC = uiYC * (uiStrideOrg>>uiScaleY) + uiXC;
     uiYIdxRasterC = uiXC * (uiStrideOrg>>uiScaleX) + uiYC;
   }
-#if !SCM_U0052_ESCAPE_PIXEL_CODING
-  UInt uiMaxVal[3];
-  for (UInt ch = 0; ch < MAX_NUM_COMPONENT; ch++)
-  {
-    uiMaxVal[ch] = pcCU->xCalcMaxVals(pcCU, ComponentID(ch));
-  }
-#endif
 
   if (bLossless)
   {
@@ -2201,11 +2188,7 @@ Void TComPrediction::calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalett
     {
       if( ch == 0 )
       {
-#if SCM_U0052_ESCAPE_PIXEL_CODING
         paPixelValue[ch][uiScanIdx] = Pel(max<Int>( 0, ((pOrg[ch][uiYIdxRaster] * quantiserScale[ch] + rightShiftOffset[ch]) >> quantiserRightShift[ch]) ));
-#else
-        paPixelValue[ch][uiScanIdx] = Pel(Clip3<Int>( 0, uiMaxVal[ch], ((pOrg[ch][uiYIdxRaster] * quantiserScale[ch] + rightShiftOffset[ch]) >> quantiserRightShift[ch]) ));
-#endif
         paRecoValue[ch][uiYIdxRaster] = (((paPixelValue[ch][uiScanIdx]*g_invQuantScales[iQPrem[ch]])<<iQPper[ch]) + iAdd[ch])>>InvquantiserRightShift[ch];
         paRecoValue[ch][uiYIdxRaster] = Pel(ClipBD<Int>(paRecoValue[ch][uiYIdxRaster], bitDepths.recon[ch? 1:0]));
       }
@@ -2216,12 +2199,7 @@ Void TComPrediction::calcPixelPred(TComDataCU* pcCU, Pel* pOrg [3], Pel *pPalett
             ( pcCU->getPic()->getChromaFormat() == CHROMA_422 && ((!pcCU->getPLTScanRotationModeFlag(0) && ((uiX&1) == 0)) || (pcCU->getPLTScanRotationModeFlag(0) && ((uiY&1) == 0))) )
           )
         {
-
-#if SCM_U0052_ESCAPE_PIXEL_CODING
           paPixelValue[ch][uiScanIdxC] = Pel(max<Int>( 0, ((pOrg[ch][uiYIdxRasterC] * quantiserScale[ch] + rightShiftOffset[ch]) >> quantiserRightShift[ch]) ));
-#else
-          paPixelValue[ch][uiScanIdxC] = Pel(Clip3<Int>( 0, uiMaxVal[ch], ((pOrg[ch][uiYIdxRasterC] * quantiserScale[ch] + rightShiftOffset[ch]) >> quantiserRightShift[ch]) ));
-#endif
           paRecoValue[ch][uiYIdxRasterC] = (((paPixelValue[ch][uiScanIdxC]*g_invQuantScales[iQPrem[ch]])<<iQPper[ch]) + iAdd[ch])>>InvquantiserRightShift[ch];
           paRecoValue[ch][uiYIdxRasterC] = Pel(ClipBD<Int>(paRecoValue[ch][uiYIdxRasterC], bitDepths.recon[ch? 1:0]));
         }
@@ -2270,7 +2248,6 @@ UInt TComPrediction::getTruncBinBits(UInt uiSymbol, UInt uiMaxSymbol)
   return uiIdxCodeBit;
 }
 
-#if SCM_U0052_ESCAPE_PIXEL_CODING
 UInt TComPrediction::getEpExGolombNumBins(UInt uiSymbol, UInt uiCount)
 {
   //UInt bins = 0;
@@ -2293,7 +2270,6 @@ UInt TComPrediction::getEpExGolombNumBins(UInt uiSymbol, UInt uiCount)
 
   return numBins;
 }
-#endif
 
 Double TComPrediction::calcPixelPredRD(TComDataCU* pcCU, Pel pOrg[3], TComRdCost *pcCost, UInt *error)
 {
@@ -2346,11 +2322,7 @@ Double TComPrediction::calcPixelPredRD(TComDataCU* pcCU, Pel pOrg[3], TComRdCost
 
       Int iTemp = pOrg[ch] - paRecoValue[ch];
       rdError += (iTemp * iTemp) >> (DISTORTION_PRECISION_ADJUSTMENT(bitDepths.recon[comp] - 8) << 1);
-#if SCM_U0052_ESCAPE_PIXEL_CODING
       rdCost += pcCost->getLambda() * m_escapeNumBins[paPixelValue[ch]];
-#else
-      rdCost += pcCost->getLambda() * m_truncBinBits[paPixelValue[ch]][m_uiMaxVal[ch] + 1];
-#endif
     }
   }
 

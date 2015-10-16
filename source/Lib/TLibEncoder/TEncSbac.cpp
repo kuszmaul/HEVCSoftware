@@ -640,20 +640,7 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   }
 
   UInt uiPLTSizePrev;
-#if SCM_U0052_ESCAPE_PIXEL_CODING
   Bool isLossless = pcCU->getCUTransquantBypass( uiAbsPartIdx );
-#else
-  //the bit depth depends on QP
-  //calculate the bitLen needed to represent the quantized escape values
-  UInt uiMaxVal[3];
-
-#if !SCM_S0043_PLT_DELTA_QP
-  for (Int comp = compBegin; comp < compBegin + uiNumComp; comp++)
-  {
-    uiMaxVal[comp] = pcCU->xCalcMaxVals(pcCU, ComponentID(comp));
-  }
-#endif
-#endif
 
   {
     pcCU->getPLTPred( pcCU, uiAbsPartIdx, compBegin, uiPLTSizePrev );
@@ -910,8 +897,6 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
 #endif
           if ( comp == compBegin )
           {
-
-#if SCM_U0052_ESCAPE_PIXEL_CODING
             if ( isLossless )
             {
               m_pcBinIf->encodeBinsEP( (UInt)pPixelValue[comp][uiTraIdx], pcCU->getSlice()->getSPS()->getBitDepth( comp > 0 ? CHANNEL_TYPE_CHROMA : CHANNEL_TYPE_LUMA ) );
@@ -920,9 +905,6 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
             {
               xWriteEpExGolomb( (UInt)pPixelValue[comp][uiTraIdx], 3 );
             }
-#else
-            xWriteTruncBinCode( (UInt)pPixelValue[comp][uiTraIdx], uiMaxVal[comp] + 1 );
-#endif
           }
           else
           {
@@ -933,7 +915,6 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
               )
             {
 #endif
-#if SCM_U0052_ESCAPE_PIXEL_CODING
             if ( isLossless )
             {
               m_pcBinIf->encodeBinsEP( (UInt)pPixelValue[comp][uiTraIdxC], pcCU->getSlice()->getSPS()->getBitDepth( comp > 0 ? CHANNEL_TYPE_CHROMA : CHANNEL_TYPE_LUMA ) );
@@ -942,9 +923,6 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
             {
               xWriteEpExGolomb( (UInt)pPixelValue[comp][uiTraIdxC], 3 );
             }
-#else
-            xWriteTruncBinCode( (UInt)pPixelValue[comp][uiTraIdxC], uiMaxVal[comp] + 1 );
-#endif
 #if SCM_U0087_SWAP_ESC_ORDER_FIX
           }
 #endif
@@ -954,7 +932,6 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
       }
       else
       {
-#if SCM_U0052_ESCAPE_PIXEL_CODING
         if ( isLossless )
         {
           m_pcBinIf->encodeBinsEP( (UInt)pPixelValue[compBegin][uiTraIdx], pcCU->getSlice()->getSPS()->getBitDepth( compBegin > 0 ? CHANNEL_TYPE_CHROMA : CHANNEL_TYPE_LUMA ) );
@@ -963,9 +940,6 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
         {
           xWriteEpExGolomb( (UInt)pPixelValue[compBegin][uiTraIdx], 3 );
         }
-#else
-        xWriteTruncBinCode( (UInt)pPixelValue[compBegin][uiTraIdx], uiMaxVal[compBegin] + 1 );
-#endif
       }
 #endif
     }

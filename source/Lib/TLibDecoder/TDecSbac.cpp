@@ -660,20 +660,7 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
 
   UInt uiPLTSizePrev;
   Pel *pPalettePrev[3];
-#if SCM_U0052_ESCAPE_PIXEL_CODING
   Bool isLossless = pcCU->getCUTransquantBypass( uiAbsPartIdx );
-#else
-  //the bit length is dependent on QP
-  //calculate the bitLen needed to represent the quantized escape values
-  UInt uiMaxVal[3];
-
-#if !SCM_S0043_PLT_DELTA_QP
-  for (Int comp = compBegin; comp < compBegin + uiNumComp; comp++)
-  {
-    uiMaxVal[comp] = pcCU->xCalcMaxVals(pcCU, ComponentID(comp));
-  }
-#endif
-#endif
 
   for (UInt comp = compBegin; comp < compBegin + uiNumComp; comp++)
   {
@@ -1039,7 +1026,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
 #endif
           if(comp == compBegin)
           {
-#if SCM_U0052_ESCAPE_PIXEL_CODING
             if ( isLossless )
             {
               m_pcTDecBinIf->decodeBinsEP( uiSymbol, pcCU->getSlice()->getSPS()->getBitDepth( comp > 0 ? CHANNEL_TYPE_CHROMA : CHANNEL_TYPE_LUMA ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG( STATS__CABAC_DICTIONARY_BITS ) );
@@ -1048,9 +1034,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
             {
               xReadEpExGolomb( uiSymbol, 3 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG( STATS__CABAC_DICTIONARY_BITS ) );
             }
-#else
-            xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-#endif
             pPixelValue[comp][uiTraIdx] = uiSymbol;
           }
           else
@@ -1062,7 +1045,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
               )
             {
 #endif
-#if SCM_U0052_ESCAPE_PIXEL_CODING
             if ( isLossless )
             {
               m_pcTDecBinIf->decodeBinsEP( uiSymbol, pcCU->getSlice()->getSPS()->getBitDepth( comp > 0 ? CHANNEL_TYPE_CHROMA : CHANNEL_TYPE_LUMA ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG( STATS__CABAC_DICTIONARY_BITS ) );
@@ -1071,9 +1053,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
             {
               xReadEpExGolomb( uiSymbol, 3 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG( STATS__CABAC_DICTIONARY_BITS ) );
             }
-#else
-            xReadTruncBinCode(uiSymbol, uiMaxVal[comp] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-#endif
             pPixelValue[comp][uiTraIdxC] = uiSymbol;
 #if SCM_U0087_SWAP_ESC_ORDER_FIX
           }
@@ -1084,7 +1063,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
       }
       else
       {
-#if SCM_U0052_ESCAPE_PIXEL_CODING
         if ( isLossless )
         {
           m_pcTDecBinIf->decodeBinsEP( uiSymbol, pcCU->getSlice()->getSPS()->getBitDepth( compBegin > 0 ? CHANNEL_TYPE_CHROMA : CHANNEL_TYPE_LUMA ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG( STATS__CABAC_DICTIONARY_BITS ) );
@@ -1093,9 +1071,6 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
         {
           xReadEpExGolomb( uiSymbol, 3 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG( STATS__CABAC_DICTIONARY_BITS ) );
         }
-#else 
-        xReadTruncBinCode(uiSymbol, uiMaxVal[compBegin] + 1 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-#endif
         pPixelValue[compBegin][uiTraIdx] = uiSymbol;
       }
 #endif
