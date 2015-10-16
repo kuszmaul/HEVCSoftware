@@ -183,11 +183,7 @@ protected:
   Void  xCheckRDCostHashInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool& isPerfectMatch DEBUG_STRING_FN_DECLARE(sDebug) );
 
   Void  xCheckIntraPCM      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   UInt  xCheckPLTMode       ( TComDataCU *&rpcBestCU, TComDataCU*& rpcTempCU, Bool forcePLTPrediction, UInt uiIterNumber, UInt *pltSize);
-#else
-  Void  xCheckPLTMode       ( TComDataCU *&rpcBestCU, TComDataCU*& rpcTempCU, Bool forcePLTPrediction );
-#endif
   Void  xCopyAMVPInfo       ( AMVPInfo* pSrc, AMVPInfo* pDst );
   Void  xCopyYuv2Pic        (TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsPartIdx, UInt uiDepth, UInt uiSrcDepth, TComDataCU* pcCU );
   Void  xCopyYuv2Tmp        ( UInt uhPartUnitIdx, UInt uiDepth );

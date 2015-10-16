@@ -69,11 +69,9 @@ public:
   Void  encodeBinEP       ( UInt  binValue                            );
   Void  encodeBinsEP      ( UInt  binValues, Int numBins              );
   Void  encodeBinTrm      ( UInt  binValue                            );
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   UInt64  getNumPartialBits () {return 0;};
   Void storeNumPartialBits (){};
   Void restoreNumPartialBits (){};
-#endif
   Void  align             ();
   Void  encodeAlignedBinsEP( UInt  binValues, Int numBins             );
 
@@ -104,10 +102,7 @@ private:
 #if FAST_BIT_EST
   UInt64 m_fracBits;
 #endif
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   UInt64 m_fracBitsStored;
-#endif
-
 };
 
 //! \}

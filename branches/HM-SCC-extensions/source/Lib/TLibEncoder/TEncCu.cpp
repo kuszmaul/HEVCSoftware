@@ -1090,7 +1090,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
           }
           if ( rpcBestCU->getSlice()->getSPS()->getSpsScreenExtension().getUsePLTMode() )
           {
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT //Change PLT QP dependent error limit
+            //Change PLT QP dependent error limit
             Int iQP_PLT=Int(rpcBestCU->getQP(0));
             Int iQPrem = iQP_PLT % 6;
             Int iQPper = iQP_PLT / 6;
@@ -1138,23 +1138,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
                 rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
               }
             }
-#else
-            xCheckPLTMode( rpcBestCU, rpcTempCU, false );
-            rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-
-            Bool forcePLTPrediction = false;
-            for( UChar ch = 0; ch < numValidComp; ch++ )
-            {
-              forcePLTPrediction = forcePLTPrediction || ( rpcTempCU->getLastPLTInLcuSizeFinal( ch ) > 0 );
-            }
-            if( forcePLTPrediction )
-            {
-              xCheckPLTMode( rpcBestCU, rpcTempCU, true );
-              rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
-            }
-#endif
-
-          } 
+          }
         }
       }
     }
@@ -3120,19 +3104,8 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
   xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(a) DEBUG_STRING_PASS_INTO(b));
 }
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
 UInt TEncCu::xCheckPLTMode(TComDataCU *&rpcBestCU, TComDataCU *&rpcTempCU, Bool forcePLTPrediction, UInt uiIterNumber, UInt *pltSize)
-#else
-Void TEncCu::xCheckPLTMode(TComDataCU *&rpcBestCU, TComDataCU *&rpcTempCU, Bool forcePLTPrediction)
-#endif
 {
-  // Note: the condition is log2CbSize < MaxTbLog2SizeY in 7.3.8.5 of JCTVC-T1005-v2
-#if !SCM_U0096_PLT_ENCODER_IMPROVEMENT
-  if( rpcTempCU->getWidth(0) == 64)
-  {
-    return;
-  }
-#endif
   UInt uiDepth = rpcTempCU->getDepth( 0 );
 
   rpcTempCU->setSkipFlagSubParts( false, 0, uiDepth );
@@ -3146,22 +3119,15 @@ Void TEncCu::xCheckPLTMode(TComDataCU *&rpcBestCU, TComDataCU *&rpcTempCU, Bool 
   rpcTempCU->setChromaQpAdjSubParts( rpcTempCU->getCUTransquantBypass(0) ? 0 : m_cuChromaQpOffsetIdxPlus1, 0, uiDepth );
 #endif
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   UInt testedModes=m_pcPredSearch->PLTSearch(rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth],
     m_ppcResiYuvBest[uiDepth], m_ppcRecoYuvTemp[uiDepth], forcePLTPrediction, uiIterNumber, pltSize);
-#else
-  m_pcPredSearch->PLTSearch(rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth],
-    m_ppcResiYuvBest[uiDepth], m_ppcRecoYuvTemp[uiDepth], forcePLTPrediction);
-#endif
 
   xCheckDQP( rpcTempCU );
   DEBUG_STRING_NEW(a)
   DEBUG_STRING_NEW(b)
   xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth DEBUG_STRING_PASS_INTO(a) DEBUG_STRING_PASS_INTO(b));
 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
-  return(testedModes);
-#endif
+  return (testedModes);
 }
 
 

@@ -418,9 +418,7 @@ public:
   Pel           getLastPLTInLcuFinal         (UChar ucCh, UInt uiPLTIdx)              { return m_piLastPLTInLcuFinal[ucCh][uiPLTIdx];    }
   Void          setLastPLTInLcuFinal         (UChar ucCh, Pel uiValue, UInt uiPLTIdx) { m_piLastPLTInLcuFinal[ucCh][uiPLTIdx] = uiValue; }
   Void          saveLastPLTInLcuFinal( TComDataCU *pcSrc, UInt uiAbsPartIdx, UInt numValidComp );
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT
   Int           xCalcMaxVals(TComDataCU *pcCU, ComponentID compID);
-#endif
   Bool          getPLTScanRotationModeFlag (UInt uiIdx )             { return m_pbPLTScanRotationModeFlag[uiIdx]; }
   Bool*         getPLTScanRotationModeFlag ()                        { return m_pbPLTScanRotationModeFlag;        }
   Void          setPLTScanRotationModeFlagSubParts (Bool bPLTScanRotationModeFlag, UInt uiAbsPartIdx, UInt uiDepth);
