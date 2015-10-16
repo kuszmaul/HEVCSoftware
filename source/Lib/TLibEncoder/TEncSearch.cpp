@@ -4937,14 +4937,9 @@ UInt TEncSearch::preCalcRD(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt
   UInt uiTotal = uiHeight * uiWidth;
   Bool bEscape = 0;
   UInt uiPLTSizeTemp=uiPLTSize, uiPLTSizeBest=uiPLTSize;
-  UInt pltIdxRemove1=0, pltIdxRemove2=0, pltIdxReplacement1 = MAX_PLT_SIZE-1, 
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT_FIX
-    pltIdxMapping1[MAX_PLT_SIZE] = { 0 }, pltIdxMapping2[MAX_PLT_SIZE] = { 0 }, removedIndices[MAX_PLT_SIZE] = { 0 }, removedIndicesBest[MAX_PLT_SIZE] = { 0 };
-#else
-       pltIdxMapping1[MAX_PLT_SIZE], pltIdxMapping2[MAX_PLT_SIZE], removedIndices[MAX_PLT_SIZE], removedIndicesBest[MAX_PLT_SIZE];
-#endif
-       
-  
+  UInt pltIdxRemove1=0, pltIdxRemove2=0, pltIdxReplacement1 = MAX_PLT_SIZE-1,
+       pltIdxMapping1[MAX_PLT_SIZE] = { 0 }, pltIdxMapping2[MAX_PLT_SIZE] = { 0 }, removedIndices[MAX_PLT_SIZE] = { 0 }, removedIndicesBest[MAX_PLT_SIZE] = { 0 };
+
   UInt64 error = 0;
   Double rdCostNew, rdCostOrig, rdCostDiff = MAX_DOUBLE;
   Int64  iBits=0, runBits=0;

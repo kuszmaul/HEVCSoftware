@@ -952,13 +952,11 @@ Void TComPrediction::preCalcPLTIndexRD(TComDataCU* pcCU, Pel *Palette[3], Pel* p
         if (pcCU->getCUTransquantBypass(0))
         {
           errorTemp = 0;
-#if SCM_U0096_PLT_ENCODER_IMPROVEMENT_FIX
 #if SCM_CLEANUPS
           UInt uiNumTotalBits = pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA) + (pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_CHROMA)<<1);
           rdCost += pcCost->getLambda() * uiNumTotalBits;
 #else
           rdCost = pcCost->getLambda() * 24;
-#endif 
 #endif
           if (uiMinError > iErrorLimit)
           {
