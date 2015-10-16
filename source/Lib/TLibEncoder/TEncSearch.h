@@ -387,7 +387,6 @@ public:
                                   Int           roiHeight,
                                   Int           uiPartOffset)
   {
-#if SCM_IBC_CR_INTERPOLATION_ENABLE
     const Int  cuPelX        = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[ uiPartOffset ] ];
     const Int  cuPelY        = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[ uiPartOffset ] ];
 
@@ -398,21 +397,6 @@ public:
 
     const Int uiMaxCuWidth   = pcCU->getSlice()->getSPS()->getMaxCUWidth();
     const Int uiMaxCuHeight  = pcCU->getSlice()->getSPS()->getMaxCUHeight();
-#else
-    const Int uiMaxCuWidth   = pcCU->getSlice()->getSPS()->getMaxCUWidth();
-    const Int uiMaxCuHeight  = pcCU->getSlice()->getSPS()->getMaxCUHeight();
-    const Int  cuPelX        = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[ uiPartOffset ] ];
-    const Int  cuPelY        = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[ uiPartOffset ] ];
-    Int uiRefCuX             = (cuPelX + predX + roiWidth  - 1)/uiMaxCuWidth;
-    Int uiRefCuY             = (cuPelY + predY + roiHeight - 1)/uiMaxCuHeight;
-    Int uiCuPelX             = (cuPelX / uiMaxCuWidth);
-    Int uiCuPelY             = (cuPelY / uiMaxCuHeight);
-    
-    if(((Int)(uiRefCuX - uiCuPelX) > (Int)((uiCuPelY - uiRefCuY))))
-    {
-      return false;
-    }
-#endif 
     const UInt curTileIdx = pcCU->getPic()->getPicSym()->getTileIdxMap( pcCU->getCtuRsAddr() );
     TComTile* curTile = pcCU->getPic()->getPicSym()->getTComTile( curTileIdx );
 
@@ -450,12 +434,10 @@ public:
                                     Int         iRoiHeight,
                                     Int         cuPelX,
                                     Int         cuPelY,
-                                    Distortion* uiSadBestCand, 
-                                    TComMv*     cMVCand, 
-                                    UInt        uiPartAddr
-#if SCM_IBC_CR_INTERPOLATION_ENABLE
-                                    ,Int         iPartIdx
-#endif 
+                                    Distortion* uiSadBestCand,
+                                    TComMv*     cMVCand,
+                                    UInt        uiPartAddr,
+                                    Int         iPartIdx
                                     );
 
   Void xIntraPatternSearch      ( TComDataCU*  pcCU,
