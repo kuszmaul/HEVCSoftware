@@ -670,44 +670,6 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
   if (uiDictMaxSize > 0)
   {
     m_pcBinIf->encodeBinEP(uiSignalEscape);
-
-#if SCM_S0043_PLT_DELTA_QP && !SCM_U0133_REORDER
-    if( uiSignalEscape )
-    {
-      if( pcCU->getSlice()->getPPS()->getUseDQP() && bCodeDQP && *bCodeDQP )
-      {
-        codeDeltaQP( pcCU, uiAbsPartIdx );
-        *bCodeDQP = false;
-      }
-
-      if( pcCU->getSlice()->getUseChromaQpAdj() && codeChromaQpAdj && *codeChromaQpAdj )
-      {
-        codeChromaQpAdjustment( pcCU, uiAbsPartIdx );
-        *codeChromaQpAdj = false;
-      }
-
-      for (Int comp = compBegin; comp < compBegin + uiNumComp; comp++)
-      {
-        uiMaxVal[comp] = pcCU->xCalcMaxVals(pcCU, ComponentID(comp));
-      }
-    }
-#endif
-
-#if !SCM_U0133_REORDER
-    if (uiDictMaxSize + uiSignalEscape > 1)
-    {
-      codeScanRotationModeFlag(pcCU, uiAbsPartIdx);
-    }
-    else
-    {
-      assert(!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx));
-      assert(!uiSignalEscape);
-    }
-  }
-  else
-  {
-    assert(!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx));
-#endif 
   }
   Int iLastRunPos = -1;
   UInt lastRunType = 0;
@@ -744,18 +706,14 @@ Void TEncSbac::codePLTModeSyntax(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiNum
       lParsedIdxList.push_back(writePLTIndex(uiIdx, pLevel, uiIndexMaxSize, pSPoint, width, pEscapeFlag));
     }
     m_pcBinIf->encodeBin(lastRunType, m_SPointSCModel.get(0, 0, 0));
-#if SCM_U0133_REORDER
     codeScanRotationModeFlag(pcCU, uiAbsPartIdx);
-#endif
   }
-#if SCM_U0133_REORDER
   else
   {
     assert(!pcCU->getPLTScanRotationModeFlag(uiAbsPartIdx));
   }
-#endif
 
-#if SCM_S0043_PLT_DELTA_QP && SCM_U0133_REORDER
+#if SCM_S0043_PLT_DELTA_QP
   if( uiSignalEscape )
   {
     if( pcCU->getSlice()->getPPS()->getUseDQP() && bCodeDQP && *bCodeDQP )
