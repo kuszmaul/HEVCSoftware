@@ -439,14 +439,14 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
                 READ_UVLC( uiCode, "num_palette_entries_minus1" ); uiCode++;
                 ppsScreenExtension.setNumPLTPred( uiCode );
 #if SCM_U0087_SWAP_ESC_ORDER
-                for ( int k=0; k<ppsScreenExtension.getMonochromePaletteFlag() ? 1 : 3; k++ )
+                for ( int k=0; k<(ppsScreenExtension.getMonochromePaletteFlag() ? 1 : 3); k++ )
                 {
                   for ( int j=0; j<ppsScreenExtension.getNumPLTPred(); j++ )
                   {
 #else
                 for ( int j=0; j<ppsScreenExtension.getNumPLTPred(); j++ )
                 {
-                  for ( int k=0; k<ppsScreenExtension.getMonochromePaletteFlag() ? 1 : 3; k++ )
+                  for ( int k=0; k<(ppsScreenExtension.getMonochromePaletteFlag() ? 1 : 3); k++ )
                   {
 #endif 
   #if RExt__DECODER_DEBUG_BIT_STATISTICS

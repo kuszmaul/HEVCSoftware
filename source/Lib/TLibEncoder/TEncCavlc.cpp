@@ -318,14 +318,14 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
                 WRITE_UVLC( ppsScreenExtension.getNumPLTPred()-1, "num_palette_entries_minus1" );
 
 #if SCM_U0087_SWAP_ESC_ORDER
-                for ( int k=0; k<ppsScreenExtension.getMonochromePaletteFlag() ? 1 : 3; k++ )
+                for ( int k=0; k<(ppsScreenExtension.getMonochromePaletteFlag() ? 1 : 3); k++ )
                 {
                   for ( int j=0; j<ppsScreenExtension.getNumPLTPred(); j++ )
                   {
 #else
                 for ( int j=0; j<ppsScreenExtension.getNumPLTPred(); j++ )
                 {
-                  for ( int k=0; k<ppsScreenExtension.getMonochromePaletteFlag() ? 1 : 3; k++ )
+                  for ( int k=0; k<(ppsScreenExtension.getMonochromePaletteFlag() ? 1 : 3); k++ )
                   {
 #endif 
                     xWriteCode( ppsScreenExtension.getPLTPred( k )[j], ppsScreenExtension.getPalettePredictorBitDepth( toChannelType( ComponentID( k ) ) ) );
