@@ -723,14 +723,6 @@ Void TComPrediction::xPredInterBlk(const ComponentID compID, TComDataCU *cu, TCo
 
   Int     xFrac  = mv->getHor() & ((1<<shiftHor)-1);
   Int     yFrac  = mv->getVer() & ((1<<shiftVer)-1);
-
-#if !SCM_IBC_CR_INTERPOLATION_ENABLE 
-  if ( isIntraBC )
-  {
-    xFrac = yFrac = 0;
-  }
-#endif 
-
   UInt    cxWidth  = width  >> refPic->getComponentScaleX(compID);
   UInt    cxHeight = height >> refPic->getComponentScaleY(compID);
 
