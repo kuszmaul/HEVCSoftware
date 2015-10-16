@@ -2223,12 +2223,15 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
           }
 
           Double rdCost1 = rpcTempCU->getTotalCost();
-          if( rdCost1 < m_ppcBestCU[uhDepth]->tmpInterRDCost )
+          if ( rpcBestCU->getSlice()->getPPS()->getPpsScreenExtension().getUseColourTrans() )
           {
-            m_ppcBestCU[uhDepth]->tmpInterRDCost   = rdCost1;
-            m_ppcBestCU[uhDepth]->bInterCSCEnabled = true;
-            m_ppcTempCU[uhDepth]->tmpInterRDCost   = rdCost1;
-            m_ppcTempCU[uhDepth]->bInterCSCEnabled = true;
+            if ( rdCost1 < m_ppcBestCU[uhDepth]->tmpInterRDCost )
+            {
+              m_ppcBestCU[uhDepth]->tmpInterRDCost = rdCost1;
+              m_ppcBestCU[uhDepth]->bInterCSCEnabled = true;
+              m_ppcTempCU[uhDepth]->tmpInterRDCost = rdCost1;
+              m_ppcTempCU[uhDepth]->bInterCSCEnabled = true;
+            }
           }
 
           Int orgQP = rpcTempCU->getQP( 0 );
@@ -2237,7 +2240,8 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 
           xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth DEBUG_STRING_PASS_INTO(bestStr) DEBUG_STRING_PASS_INTO(tmpStr));
 
-          Bool bParentUseCSC = ( (uhDepth != 0) && (m_ppcBestCU[uhDepth -1]->bInterCSCEnabled) );
+          Bool bParentUseCSC = ( rpcBestCU->getSlice()->getPPS()->getPpsScreenExtension().getUseColourTrans()
+                                 && (uhDepth != 0) && (m_ppcBestCU[uhDepth -1]->bInterCSCEnabled) );
           bParentUseCSC = bParentUseCSC || rpcBestCU->getQtRootCbf(0) == 0 || rpcBestCU->getMergeFlag( 0 );
           if(rpcBestCU->getSlice()->getPPS()->getPpsScreenExtension().getUseColourTrans() && !uiNoResidual && rpcTempCUPre->getQtRootCbf(0) && !bParentUseCSC && (!bTransquantBypassFlag || sps.getBitDepth( CHANNEL_TYPE_LUMA ) == sps.getBitDepth( CHANNEL_TYPE_CHROMA )) )
           {
@@ -2465,26 +2469,29 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
   xCheckDQP( rpcTempCU );
 
-  if(!i)
+  if ( bEnableTrans )
   {
-    Double rdCost1 = rpcTempCU->getTotalCost();
-    if(rdCost1 < m_ppcBestCU[uhDepth]->tmpInterRDCost )
+    if ( !i )
     {
-      m_ppcBestCU[uhDepth]->tmpInterRDCost   = rdCost1;
-      m_ppcBestCU[uhDepth]->bInterCSCEnabled = true;
-      m_ppcTempCU[uhDepth]->tmpInterRDCost   = rdCost1;
-      m_ppcTempCU[uhDepth]->bInterCSCEnabled = true;
+      Double rdCost1 = rpcTempCU->getTotalCost();
+      if ( rdCost1 < m_ppcBestCU[uhDepth]->tmpInterRDCost )
+      {
+        m_ppcBestCU[uhDepth]->tmpInterRDCost = rdCost1;
+        m_ppcBestCU[uhDepth]->bInterCSCEnabled = true;
+        m_ppcTempCU[uhDepth]->tmpInterRDCost = rdCost1;
+        m_ppcTempCU[uhDepth]->bInterCSCEnabled = true;
+      }
     }
-  }
-  else
-  {
-    Double rdCost = rpcTempCU->getTotalCost();
-    if( rdCost < m_ppcBestCU[uhDepth]->tmpInterRDCost )
+    else
     {
-      m_ppcBestCU[uhDepth]->tmpInterRDCost   = rdCost;
-      m_ppcBestCU[uhDepth]->bInterCSCEnabled = false;
-      m_ppcTempCU[uhDepth]->tmpInterRDCost   = rdCost;
-      m_ppcTempCU[uhDepth]->bInterCSCEnabled = false;
+      Double rdCost = rpcTempCU->getTotalCost();
+      if ( rdCost < m_ppcBestCU[uhDepth]->tmpInterRDCost )
+      {
+        m_ppcBestCU[uhDepth]->tmpInterRDCost = rdCost;
+        m_ppcBestCU[uhDepth]->bInterCSCEnabled = false;
+        m_ppcTempCU[uhDepth]->tmpInterRDCost = rdCost;
+        m_ppcTempCU[uhDepth]->bInterCSCEnabled = false;
+      }
     }
   }
   rpcTempCUPre = rpcTempCU;
@@ -2824,24 +2831,27 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
       DebugInterPredResiReco(sTest, *(m_ppcPredYuvTemp[uiDepth]), *(m_ppcResiYuvBest[uiDepth]), *(m_ppcRecoYuvTemp[uiDepth]), DebugStringGetPredModeMask(rpcTempCU->getPredictionMode(0)));
 #endif
 
-      if(!i)
+      if ( bEnableTrans )
       {
-        if( rdCost < m_ppcBestCU[uiDepth]->tmpIntraBCRDCost )
+        if ( !i )
         {
-          m_ppcBestCU[uiDepth]->tmpIntraBCRDCost   = rdCost;
-          m_ppcBestCU[uiDepth]->bIntraBCCSCEnabled = true;
-          m_ppcTempCU[uiDepth]->tmpIntraBCRDCost   = rdCost;
-          m_ppcTempCU[uiDepth]->bIntraBCCSCEnabled = true;
+          if ( rdCost < m_ppcBestCU[uiDepth]->tmpIntraBCRDCost )
+          {
+            m_ppcBestCU[uiDepth]->tmpIntraBCRDCost = rdCost;
+            m_ppcBestCU[uiDepth]->bIntraBCCSCEnabled = true;
+            m_ppcTempCU[uiDepth]->tmpIntraBCRDCost = rdCost;
+            m_ppcTempCU[uiDepth]->bIntraBCCSCEnabled = true;
+          }
         }
-      }
-      else
-      {
-        if( rdCost < m_ppcBestCU[uiDepth]->tmpIntraBCRDCost )
+        else
         {
-          m_ppcBestCU[uiDepth]->tmpIntraBCRDCost   = rdCost;
-          m_ppcBestCU[uiDepth]->bIntraBCCSCEnabled = false;
-          m_ppcTempCU[uiDepth]->tmpIntraBCRDCost   = rdCost;
-          m_ppcTempCU[uiDepth]->bIntraBCCSCEnabled = false;
+          if ( rdCost < m_ppcBestCU[uiDepth]->tmpIntraBCRDCost )
+          {
+            m_ppcBestCU[uiDepth]->tmpIntraBCRDCost = rdCost;
+            m_ppcBestCU[uiDepth]->bIntraBCCSCEnabled = false;
+            m_ppcTempCU[uiDepth]->tmpIntraBCRDCost = rdCost;
+            m_ppcTempCU[uiDepth]->bIntraBCCSCEnabled = false;
+          }
         }
       }
       xCheckDQP( rpcTempCU );
@@ -2990,24 +3000,27 @@ Void TEncCu::xCheckRDCostIntraBCMixed( TComDataCU *&rpcBestCU,
 #if DEBUG_STRING
       DebugInterPredResiReco(sTest, *(m_ppcPredYuvTemp[uiDepth]), *(m_ppcResiYuvBest[uiDepth]), *(m_ppcRecoYuvTemp[uiDepth]), DebugStringGetPredModeMask(rpcTempCU->getPredictionMode(0)));
 #endif
-      if(!i)
+      if ( bEnableTrans )
       {
-        if( rdCost < m_ppcBestCU[uiDepth]->tmpIntraBCRDCost )
+        if ( !i )
         {
-          m_ppcBestCU[uiDepth]->tmpIntraBCRDCost   = rdCost;
-          m_ppcBestCU[uiDepth]->bIntraBCCSCEnabled = true;
-          m_ppcTempCU[uiDepth]->tmpIntraBCRDCost   = rdCost;
-          m_ppcTempCU[uiDepth]->bIntraBCCSCEnabled = true;
+          if ( rdCost < m_ppcBestCU[uiDepth]->tmpIntraBCRDCost )
+          {
+            m_ppcBestCU[uiDepth]->tmpIntraBCRDCost = rdCost;
+            m_ppcBestCU[uiDepth]->bIntraBCCSCEnabled = true;
+            m_ppcTempCU[uiDepth]->tmpIntraBCRDCost = rdCost;
+            m_ppcTempCU[uiDepth]->bIntraBCCSCEnabled = true;
+          }
         }
-      }
-      else
-      {
-        if( rdCost < m_ppcBestCU[uiDepth]->tmpIntraBCRDCost )
+        else
         {
-          m_ppcBestCU[uiDepth]->tmpIntraBCRDCost   = rdCost;
-          m_ppcBestCU[uiDepth]->bIntraBCCSCEnabled = false;
-          m_ppcTempCU[uiDepth]->tmpIntraBCRDCost   = rdCost;
-          m_ppcTempCU[uiDepth]->bIntraBCCSCEnabled = false;
+          if ( rdCost < m_ppcBestCU[uiDepth]->tmpIntraBCRDCost )
+          {
+            m_ppcBestCU[uiDepth]->tmpIntraBCRDCost = rdCost;
+            m_ppcBestCU[uiDepth]->bIntraBCCSCEnabled = false;
+            m_ppcTempCU[uiDepth]->tmpIntraBCRDCost = rdCost;
+            m_ppcTempCU[uiDepth]->bIntraBCCSCEnabled = false;
+          }
         }
       }
       xCheckDQP( rpcTempCU );
