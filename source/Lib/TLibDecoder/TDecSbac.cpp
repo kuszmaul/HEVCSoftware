@@ -746,44 +746,11 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
     if (paletteEscapeValPresentFlag)
     {
       uiSignalEscape = 1;
-
-#if SCM_S0043_PLT_DELTA_QP  && !SCM_U0133_REORDER
-      if( pcCU->getSlice()->getPPS()->getUseDQP() && bCodeDQP )
-      {
-        parseDeltaQP( pcCU, uiAbsPartIdx, pcCU->getDepth( uiAbsPartIdx ) );
-        bCodeDQP = false;
-      }
-
-      if( pcCU->getSlice()->getUseChromaQpAdj() && codeChromaQpAdj )
-      {
-        parseChromaQpAdjustment( pcCU, uiAbsPartIdx, pcCU->getDepth( uiAbsPartIdx ) );
-        codeChromaQpAdj = false;
-      }
-
-      for (Int comp = compBegin; comp < compBegin + uiNumComp; comp++)
-      {
-        uiMaxVal[comp] = pcCU->xCalcMaxVals(pcCU, ComponentID(comp));
-      }
-#endif
     }
     else
     {
       uiSignalEscape = 0;
     }
-#if !SCM_U0133_REORDER
-    if (uiDictMaxSize + uiSignalEscape > 1)
-    {
-      parseScanRotationModeFlag(pcCU, uiAbsPartIdx, uiDepth);
-    }
-    else
-    {
-      pcCU->setPLTScanRotationModeFlagSubParts(false, uiAbsPartIdx, uiDepth);
-    }
-  }
-  else
-  {
-    pcCU->setPLTScanRotationModeFlagSubParts(false, uiAbsPartIdx, uiDepth);
-#endif
   }
 
   UInt uiDictIdxBitsExteneded = uiDictIdxBits;
@@ -816,19 +783,15 @@ Void TDecSbac::parsePLTModeSyntax(TComDataCU *pcCU, UInt uiAbsPartIdx, UInt uiDe
       lParsedIdxList.push_back(uiSymbol);
     }
     m_pcTDecBinIf->decodeBin(lastRunType, m_SPointSCModel.get(0, 0, 0) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_DICTIONARY_BITS));
-#if SCM_U0133_REORDER
     parseScanRotationModeFlag(pcCU, uiAbsPartIdx, uiDepth);
-#endif
     uiAdjust = 0;
   }
-#if SCM_U0133_REORDER
   else
   {
     pcCU->setPLTScanRotationModeFlagSubParts(false, uiAbsPartIdx, uiDepth);
   }
-#endif
 
-#if SCM_S0043_PLT_DELTA_QP && SCM_U0133_REORDER
+#if SCM_S0043_PLT_DELTA_QP
   if ( uiSignalEscape )
   {
     if( pcCU->getSlice()->getPPS()->getUseDQP() && bCodeDQP )
