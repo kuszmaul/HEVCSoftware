@@ -429,22 +429,26 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
 #endif
               if ( uiCode )
               {
+                READ_FLAG( uiCode, "monochrome_palette_flag" );
+                ppsScreenExtension.setMonochromePaletteFlag( uiCode != 0 );
                 READ_UVLC( uiCode, "luma_bit_depth_entry_minus8" );
                 ppsScreenExtension.setPalettePredictorBitDepth( CHANNEL_TYPE_LUMA, uiCode+8 );
-                READ_UVLC( uiCode, "chroma_bit_depth_entry_minus8" );
-                ppsScreenExtension.setPalettePredictorBitDepth( CHANNEL_TYPE_CHROMA, uiCode+8 );
+                if ( !ppsScreenExtension.getMonochromePaletteFlag() )
+                {
+                  READ_UVLC( uiCode, "chroma_bit_depth_entry_minus8" );
+                  ppsScreenExtension.setPalettePredictorBitDepth( CHANNEL_TYPE_CHROMA, uiCode + 8 );
+                }
                 READ_UVLC( uiCode, "num_palette_entries_minus1" ); uiCode++;
-                //printf("PPS %u: receiving %u entries\n", pcPPS->getPPSId(), uiCode);
                 ppsScreenExtension.setNumPLTPred( uiCode );
 #if SCM_U0087_SWAP_ESC_ORDER
-                for ( int k=0; k<3; k++ )
+                for ( int k=0; k<ppsScreenExtension.getMonochromePaletteFlag() ? 1 : 3; k++ )
                 {
                   for ( int j=0; j<ppsScreenExtension.getNumPLTPred(); j++ )
                   {
 #else
                 for ( int j=0; j<ppsScreenExtension.getNumPLTPred(); j++ )
                 {
-                  for ( int k=0; k<3; k++ )
+                  for ( int k=0; k<ppsScreenExtension.getMonochromePaletteFlag() ? 1 : 3; k++ )
                   {
 #endif 
   #if RExt__DECODER_DEBUG_BIT_STATISTICS

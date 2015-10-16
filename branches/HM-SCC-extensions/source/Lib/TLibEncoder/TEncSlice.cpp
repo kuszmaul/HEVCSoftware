@@ -676,6 +676,7 @@ Void TEncSlice::xSetPredFromPPS(Pel lastPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE
   {
     pcPPS->getPpsScreenExtension().setPalettePredictorBitDepth( ChannelType( ch ), pcSPS->getBitDepth( ChannelType( ch ) ) );
   }
+  pcPPS->getPpsScreenExtension().setMonochromePaletteFlag( pcSPS->getChromaFormatIdc() == CHROMA_400 ? true : false );
 }
 
 #if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
@@ -1015,6 +1016,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
 #endif
         numPreds = std::min(lastPLTSize[0], (UChar)pcSlice->getSPS()->getSpsScreenExtension().getPLTMaxPredSize());
         pcPPS->getPpsScreenExtension().setNumPLTPred(numPreds);
+        pcPPS->getPpsScreenExtension().setMonochromePaletteFlag( pcSPS->getChromaFormatIdc() == CHROMA_400 ? true : false );
         //printf("PPS %u: %u palette entries from CTU %u/%u (%u analysed)\n", pcPPS->getPPSId(), numPreds, srcCtu, numCtus, count );
         for ( int i=0; i<3; i++ )
         {
@@ -1103,6 +1105,7 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
       }
       numPredsPOC = std::min(lastPLTSize[0], (UChar)pcSlice->getSPS()->getSpsScreenExtension().getPLTMaxPredSize());
       pcPPS->getPpsScreenExtension().setNumPLTPred(numPredsPOC);
+      pcPPS->getPpsScreenExtension().setMonochromePaletteFlag( pcSPS->getChromaFormatIdc() == CHROMA_400 ? true : false );
       //printf("PPS %u: %u palette entries from CTU %u/%u (%u analysed)\n", pcPPS->getPPSId(), numPreds, srcCtu, numCtus, count );
       for ( int i=0; i<3; i++ )
       {
