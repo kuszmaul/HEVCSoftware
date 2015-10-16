@@ -933,11 +933,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   m_uiSliceIdx++;
 
 #if !SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
   if ( pcSlice->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
-#else
-  if ( pcSlice->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
-#endif
   {
     pcSlice->getPic()->setIsLongTerm( false );
   }

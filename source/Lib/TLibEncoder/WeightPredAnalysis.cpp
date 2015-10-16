@@ -215,11 +215,7 @@ Bool WeightPredAnalysis::xUpdatingWPParameters(TComSlice *const slice, const Int
       slice->getWpAcDcParam(currWeightACDCParam);
       slice->getRefPic(eRefPicList, refIdxTemp)->getSlice(0)->getWpAcDcParam(refWeightACDCParam);
 
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
       if( !slice->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() || (slice->getRefPic((RefPicList)refList, refIdxTemp)->getPOC() != slice->getPOC()) )
-#else
-      if( !slice->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() || (slice->getRefPic((RefPicList)refList, refIdxTemp)->getPOC() != slice->getPOC()) )
-#endif
       {
         for ( Int comp = 0; comp < numComp; comp++ )
         {
@@ -291,11 +287,7 @@ Bool WeightPredAnalysis::xSelectWP(TComSlice *const slice, const Int log2Denom)
 
     for ( Int iRefIdxTemp = 0; iRefIdxTemp < slice->getNumRefIdx(eRefPicList); iRefIdxTemp++ )
     {
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
       if( slice->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() && (slice->getRefPic((RefPicList)iRefList, iRefIdxTemp)->getPOC() == slice->getPOC()) )
-#else
-      if( slice->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && (slice->getRefPic((RefPicList)iRefList, iRefIdxTemp)->getPOC() == slice->getPOC()) )
-#endif
       {
         for(Int comp=0; comp<pPic->getNumberValidComponents(); comp++)
         {

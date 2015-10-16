@@ -442,11 +442,7 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
   TComPic*  rpsCurrList1[MAX_NUM_REF+1];
   Int numPicTotalCurr = NumPicStCurr0 + NumPicStCurr1 + NumPicLtCurr;
 
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
   if ( getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
-#else
-  if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
-#endif
   {
     numPicTotalCurr++;
   }
@@ -458,11 +454,7 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
     // - Otherwise, when the current picture contains a P or B slice, the value of NumPocTotalCurr shall not be equal to 0.
     if (getRapPicFlag())
     {
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
       if ( getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
-#else
-      if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
-#endif
       {
         assert( numPicTotalCurr == 1 );
       }
@@ -501,11 +493,7 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
   {
     rpsCurrList0[cIdx] = RefPicSetLtCurr[i];
   }
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
   if ( getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
-#else
-  if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
-#endif
   {
 #if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
       rpsCurrList0[cIdx++] = getCurPicLongTerm();
@@ -531,11 +519,7 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
     {
       rpsCurrList1[cIdx] = RefPicSetLtCurr[i];
     }
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
     if ( getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
-#else
-    if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
-#endif
     {
 #if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
             rpsCurrList1[cIdx++] = getCurPicLongTerm();
@@ -604,12 +588,8 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
   }
 
 #if SCM_U0180_IBC_RPLC
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
   if( getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() &&
-#else
-  if( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && 
-#endif
-    !m_RefPicListModification.getRefPicListModificationFlagL0() && numPicTotalCurr > m_aiNumRefIdx[REF_PIC_LIST_0] )
+      !m_RefPicListModification.getRefPicListModificationFlagL0() && numPicTotalCurr > m_aiNumRefIdx[REF_PIC_LIST_0] )
    {
 #if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
          m_apcRefPicList[REF_PIC_LIST_0][m_aiNumRefIdx[REF_PIC_LIST_0] - 1] = getCurPicLongTerm(); 
@@ -682,22 +662,14 @@ Void TComSlice::setRefPOCListSliceHeader()
   Int  rpsPOCCurrList1[MAX_NUM_REF+1];
   Int  numPicTotalCurr = NumPicStCurr0 + NumPicStCurr1 + NumPicLtCurr;
 
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
   if ( getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
-#else
-  if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
-#endif
   {
     numPicTotalCurr++;
   }
 
   if (getRapPicFlag())
   {
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
     if ( getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
-#else
-    if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
-#endif
     {
       assert( numPicTotalCurr == 1 );
     }
@@ -726,11 +698,7 @@ Void TComSlice::setRefPOCListSliceHeader()
   {
     rpsPOCCurrList0[cIdx] = RefPicPOCSetLtCurr[i];
   }
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
   if ( getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
-#else
-  if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
-#endif
   {
     rpsPOCCurrList0[cIdx++] = getPOC();
   }
@@ -751,11 +719,7 @@ Void TComSlice::setRefPOCListSliceHeader()
     {
       rpsPOCCurrList1[cIdx] = RefPicPOCSetLtCurr[i];
     }
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
     if ( getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
-#else
-    if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
-#endif
     {
       rpsPOCCurrList1[cIdx++] = getPOC();
     }
@@ -798,11 +762,7 @@ Int TComSlice::getNumRpsCurrTempList() const
       numRpsCurrTempList++;
     }
   }
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
   if ( getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
-#else
-  if ( getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() )
-#endif
   {
     numRpsCurrTempList++;
   }
@@ -1939,9 +1899,7 @@ TComPPSSCC::TComPPSSCC()
 , m_actCrQpOffset                    (-3)
 , m_uiNumPLTPred                     (0) // Implies palette pred in PPS deactivated
 , m_usePalettePredictor              (false)
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
 , m_useIntraBlockCopyPps             (false)
-#endif
 {
   for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
   {

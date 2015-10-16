@@ -607,13 +607,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
       rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
 
       // do inter modes, SKIP and 2Nx2N
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
       if ( ( !rpcBestCU->getSlice()->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() && rpcBestCU->getSlice()->getSliceType() != I_SLICE ) ||
            ( rpcBestCU->getSlice()->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() && !rpcBestCU->getSlice()->isOnlyCurrentPictureAsReference() ) )
-#else
-      if ( ( !rpcBestCU->getSlice()->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && rpcBestCU->getSlice()->getSliceType() != I_SLICE ) ||
-           ( rpcBestCU->getSlice()->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && !rpcBestCU->getSlice()->isOnlyCurrentPictureAsReference() ) )
-#endif
       {
         if ( m_pcEncCfg->getUseHashBasedME() )
         {
@@ -671,13 +666,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
         rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
 
         // do inter modes, NxN, 2NxN, and Nx2N
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
         if ( ( !rpcBestCU->getSlice()->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() && rpcBestCU->getSlice()->getSliceType() != I_SLICE ) ||
              ( rpcBestCU->getSlice()->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() && !rpcBestCU->getSlice()->isOnlyCurrentPictureAsReference() ) )
-#else
-        if ( ( !rpcBestCU->getSlice()->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && rpcBestCU->getSlice()->getSliceType() != I_SLICE ) ||
-             ( rpcBestCU->getSlice()->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && !rpcBestCU->getSlice()->isOnlyCurrentPictureAsReference() ) )
-#endif
         {
           // 2Nx2N, NxN
 
@@ -827,13 +817,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
         Double intraCost = MAX_DOUBLE;
         Double dIntraBcCostPred = 0.0;
 
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
         if ( ( !rpcBestCU->getSlice()->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() && rpcBestCU->getSlice()->getSliceType() == I_SLICE ) ||
              ( rpcBestCU->getSlice()->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() && rpcBestCU->getSlice()->isOnlyCurrentPictureAsReference() ) ||
-#else
-        if ( ( !rpcBestCU->getSlice()->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && rpcBestCU->getSlice()->getSliceType() == I_SLICE ) ||
-             ( rpcBestCU->getSlice()->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && rpcBestCU->getSlice()->isOnlyCurrentPictureAsReference() ) ||
-#endif
              !rpcBestCU->isSkipped(0) ) // avoid very complex intra if it is unlikely
         {
 #if SCM_S0067_MAX_CAND_SIZE
@@ -984,11 +969,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
         Bool bUse1DSearchFor8x8        = false;
         Bool bSkipIntraBlockCopySearch = false;
 
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
         if (rpcTempCU->getSlice()->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy())
-#else
-        if (rpcTempCU->getSlice()->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy())
-#endif
         {
           xCheckRDCostIntraBCMerge2Nx2N( rpcBestCU, rpcTempCU );
           rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
@@ -1000,11 +981,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
           {
             bSkipIntraBlockCopySearch = ((rpcTempCU->getWidth(0) > 16) || (intraCost < std::max(32*m_pcRdCost->getLambda(), 48.0)));
 
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
             if (rpcTempCU->getSlice()->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() &&
-#else
-            if (rpcTempCU->getSlice()->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() &&
-#endif
                 !bSkipIntraBlockCopySearch &&
                 rpcTempCU->getWidth(0) == 8 &&
                 !m_ppcBestCU[uiDepth -1]->isIntraBC(0) )
@@ -1013,11 +990,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
             }
           }
 
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
           if (rpcTempCU->getSlice()->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy())
-#else
-          if (rpcTempCU->getSlice()->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy())
-#endif
           {
             if (!bSkipIntraBlockCopySearch)
             {
@@ -1038,13 +1011,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
                     xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, true, SIZE_Nx2N, adIntraBcCost[SIZE_Nx2N], false, (iMVCandList[SIZE_Nx2N]+8) DEBUG_STRING_PASS_INTO(sDebug));
                     rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
                     intraCost = std::min( intraCost, adIntraBcCost[SIZE_Nx2N] );
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
+
                     if ( ( !rpcBestCU->getSlice()->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() && rpcBestCU->getSlice()->getSliceType() != I_SLICE ) ||
                          ( rpcBestCU->getSlice()->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() && !rpcBestCU->getSlice()->isOnlyCurrentPictureAsReference() ) )
-#else
-                    if ( ( !rpcBestCU->getSlice()->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && rpcBestCU->getSlice()->getSliceType() != I_SLICE ) ||
-                         ( rpcBestCU->getSlice()->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && !rpcBestCU->getSlice()->isOnlyCurrentPictureAsReference() ) )
-#endif
                     {
                       xCheckRDCostIntraBCMixed( rpcBestCU, rpcTempCU, SIZE_Nx2N, adIntraBcCost[SIZE_Nx2N] DEBUG_STRING_PASS_INTO(sDebug), iMVCandList[SIZE_Nx2N]);
                       rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
@@ -1057,13 +1026,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, const 
                     xCheckRDCostIntraBC( rpcBestCU, rpcTempCU, ( bUse1DSearchFor8x8 || intraCost < dTH3 ), SIZE_2NxN, adIntraBcCost[SIZE_2NxN], false, (iMVCandList[SIZE_2NxN]+8) DEBUG_STRING_PASS_INTO(sDebug));
                     rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
                     intraCost = std::min( intraCost, adIntraBcCost[SIZE_2NxN] );
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
+
                     if ( ( !rpcBestCU->getSlice()->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() && rpcBestCU->getSlice()->getSliceType() != I_SLICE ) ||
                          ( rpcBestCU->getSlice()->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() && !rpcBestCU->getSlice()->isOnlyCurrentPictureAsReference() ) )
-#else
-                    if ( ( !rpcBestCU->getSlice()->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && rpcBestCU->getSlice()->getSliceType() != I_SLICE ) ||
-                         ( rpcBestCU->getSlice()->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && !rpcBestCU->getSlice()->isOnlyCurrentPictureAsReference() ) )
-#endif
                     {
                       xCheckRDCostIntraBCMixed( rpcBestCU, rpcTempCU, SIZE_2NxN, adIntraBcCost[SIZE_2NxN] DEBUG_STRING_PASS_INTO(sDebug), iMVCandList[SIZE_2NxN]);
                       rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );

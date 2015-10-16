@@ -6377,11 +6377,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
       RefPicList  eRefPicList = ( iRefList ? REF_PIC_LIST_1 : REF_PIC_LIST_0 );
 
       Int refPicNumber = pcCU->getSlice()->getNumRefIdx( eRefPicList );
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
       if ( pcCU->getSlice()->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() && eRefPicList == REF_PIC_LIST_0 )
-#else
-      if ( pcCU->getSlice()->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && eRefPicList == REF_PIC_LIST_0 )
-#endif
       {
         refPicNumber--;
       }
@@ -6569,11 +6565,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
 
         iRefStart = 0;
         iRefEnd   = pcCU->getSlice()->getNumRefIdx(eRefPicList)-1;
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
         if ( pcCU->getSlice()->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() && eRefPicList == REF_PIC_LIST_0 )
-#else
-        if ( pcCU->getSlice()->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && eRefPicList == REF_PIC_LIST_0 )
-#endif
         {
           iRefEnd--;
         }
@@ -8014,11 +8006,7 @@ Bool TEncSearch::xHashInterEstimation( TComDataCU* pcCU, Int width, Int height, 
   {
     RefPicList eRefPicList = (iRefList==0) ? REF_PIC_LIST_0 : REF_PIC_LIST_1;
     Int refPicNumber = pcCU->getSlice()->getNumRefIdx( eRefPicList );
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
     if ( pcCU->getSlice()->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() && eRefPicList == REF_PIC_LIST_0 )
-#else
-    if ( pcCU->getSlice()->getSPS()->getSpsScreenExtension().getUseIntraBlockCopy() && eRefPicList == REF_PIC_LIST_0 )
-#endif
     {
       refPicNumber--;
     }

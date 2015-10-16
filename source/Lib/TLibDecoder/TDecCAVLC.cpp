@@ -402,10 +402,8 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
           case PPS_EXT__SCC:
             {
               TComPPSSCC &ppsScreenExtension = pcPPS->getPpsScreenExtension();
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
               READ_FLAG( uiCode, "curr_pic_as_ref_enabled_pps_flag" );
               pcPPS->getPpsScreenExtension().setUseIntraBlockCopy( uiCode != 0 );
-#endif
               READ_FLAG( uiCode, "adaptive_colour_trans_flag" );           ppsScreenExtension.setUseColourTrans( uiCode != 0 );
               if ( ppsScreenExtension.getUseColourTrans() )
               {
@@ -1347,9 +1345,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice* pcSlice, ParameterSetManager *param
     }
     // }
     pcSlice->setSPS( sps );
-#if SCM_U0083_U0079_IBC_SIGNAL_PPS
     pcSlice->setPPS( pps );
-#endif
     TComRefPicListModification* refPicListModification = pcSlice->getRefPicListModification();
     if(!pcSlice->isIntra())
     {
