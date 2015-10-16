@@ -637,7 +637,6 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
   }
 }
 
-#if SCM_U0104_DIS_WP_IBC
 Void TComSlice::setRefPOCListSliceHeader()
 {
   assert(m_eSliceType != I_SLICE);
@@ -783,7 +782,6 @@ Void TComSlice::setRefPOCListSliceHeader()
     }
   }
 }
-#endif
 
 Int TComSlice::getNumRpsCurrTempList() const
 {
