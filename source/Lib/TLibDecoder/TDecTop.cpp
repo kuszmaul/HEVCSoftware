@@ -509,10 +509,8 @@ Void TDecTop::xActivateParameterSets()
     }
 #endif
 
-#if SCM_U0036_ZERO_PALETTE_SIZE
     assert(sps->getSpsScreenExtension().getPLTMaxSize() != 0 || pps->getPpsScreenExtension().getUsePalettePredictor() == false);
     assert(sps->getSpsScreenExtension().getUsePLTMode() != 0 || pps->getPpsScreenExtension().getUsePalettePredictor() == false);
-#endif
 
     // NOTE: globals were set up here originally. You can now use:
     // g_uiMaxCUDepth = sps->getMaxTotalCUDepth();
