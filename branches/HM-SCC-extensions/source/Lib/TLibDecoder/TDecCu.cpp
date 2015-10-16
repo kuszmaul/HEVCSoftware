@@ -448,15 +448,13 @@ Void TDecCu::xDecompressCU( TComDataCU* pCtu, UInt uiAbsPartIdx,  UInt uiDepth )
 
 Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
 {
-
-#if SCM_T0048_IBC_VALIDATE_SLICES
   Int numParts = pcCU->getNumPartitions();
   for (Int iPartIdx = 0; iPartIdx < numParts; iPartIdx++)
   {
     UInt uiPartAddr;
     Int  iWidth, iHeight;
     pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iWidth, iHeight );
-    for (int refList = 0; refList < 2; refList++)
+    for (Int refList = 0; refList < 2; refList++)
     {
       RefPicList eRefPicList = RefPicList(refList);
       Int        iRefIdx     = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );
@@ -478,7 +476,6 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
       }
     }
   }
-#endif
 
   // inter prediction
   m_pcPrediction->motionCompensation( pcCU, m_ppcYuvReco[uiDepth] );
