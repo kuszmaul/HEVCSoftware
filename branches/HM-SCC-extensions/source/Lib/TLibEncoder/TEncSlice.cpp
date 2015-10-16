@@ -846,19 +846,11 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
               (m_numIDRs && m_numFrames > SCM_T0048_PLT_PRED_IN_PPS_REFRESH) ||
               m_numFrames > 5*m_pcCfg->getFrameRate();
   }
-#if SCM_U0114_LOWDELAY_PALETTE_INITIALIZER_GENERATE
 #if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
   if( pcSlice->getSPS()->getSpsScreenExtension().getUsePLTMode() && (m_pcCfg->getPalettePredInPPSEnabled()||m_pcCfg->getPalettePredInSPSEnabled()) && refresh && !pcSlice->getSliceIdx() && !pcPic->getPOC() )
 #else
   if( pcSlice->getSPS()->getSpsScreenExtension().getUsePLTMode() && m_pcCfg->getPalettePredInPPSEnabled() && refresh && !pcSlice->getSliceIdx() && !pcPic->getPOC())
 #endif
-#else
-#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
-  if( pcSlice->getSPS()->getSpsScreenExtension().getUsePLTMode() && (m_pcCfg->getPalettePredInPPSEnabled()||m_pcCfg->getPalettePredInSPSEnabled()) && refresh )
-#else
-  if( pcSlice->getSPS()->getSpsScreenExtension().getUsePLTMode() && m_pcCfg->getPalettePredInPPSEnabled() && refresh )
-#endif
-#endif 
   {
     // for every CTU in image
     Int  srcCtu = -1;
@@ -1070,7 +1062,6 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
     m_dPicRdCost     = 0;
     m_uiPicDist      = 0;
   }
-#if SCM_U0114_LOWDELAY_PALETTE_INITIALIZER_GENERATE
   if ( pcSlice->getSPS()->getSpsScreenExtension().getUsePLTMode() && m_pcCfg->getPalettePredInPPSEnabled() && (pcPic->getPOC()||pcSlice->getSliceIdx()) && refresh )
   {
     UInt numPredsPOC=0;
@@ -1116,7 +1107,6 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
     }
     xSetPredFromPPS(lastPLT,lastPLTSize,pcSlice);
   }
-#endif
 
   // for every CTU in the slice segment (may terminate sooner if there is a byte limit on the slice-segment)
 
@@ -1359,7 +1349,6 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
     }
   }
 
-#if SCM_U0114_LOWDELAY_PALETTE_INITIALIZER_GENERATE
   if(m_pcCfg->getPalettePredInPPSEnabled() && pcSlice->getSPS()->getSpsScreenExtension().getUsePLTMode())
   {
     m_pcGOPEncoder->setNumPLTPred( lastPLTSize[COMPONENT_Y] );
@@ -1368,7 +1357,6 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
       memcpy( m_pcGOPEncoder->getPLTPred(comp),lastPLT[ comp ],  sizeof( Pel )*m_pcGOPEncoder->getNumPLTPred() );
     }
   }
-#endif
 
   // stop use of temporary bit counter object.
   m_pppcRDSbacCoder[0][CI_CURR_BEST]->setBitstream(NULL);
