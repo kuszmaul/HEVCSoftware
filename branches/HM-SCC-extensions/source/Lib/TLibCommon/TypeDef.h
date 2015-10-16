@@ -172,7 +172,6 @@
 //------------------------------------------------
 
 #define SCM_S0043_PLT_DELTA_QP                           0 ///< JCTVC-S0043: delta qp signalling for palette mode
-#define SCM_U0078_BIPRED_RESTRICTION                     1 ///< JCTVC-U0078, restrict 8x8 Bi-pred when IBC is enabled and AMVR is disabled
 #define SCM_U0095_FAST_INTRA_ACT                         0 ///< JCTVC-U0095, fast intra ACT search
 #define SCM_U0114_LOWDELAY_PALETTE_INITIALIZER_GENERATE  1 ///< JCTVC-U0114, generate the palette predictor initializer with low delay
 #define SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS   1 ///< JCTVC-U0084, allow signal palette predictor initializers at SPS

@@ -515,9 +515,7 @@ public:
   Bool          isInter            ( UInt uiPartIdx )  const { return m_pePredMode[ uiPartIdx ] == MODE_INTER;                                              }
   Bool          isSkipped          ( UInt uiPartIdx );                                                     ///< returns true, if the partiton is skipped
   Bool          isBipredRestriction( UInt puIdx );
-#if SCM_U0078_BIPRED_RESTRICTION
   Void          xRestrictBipredMergeCand( UInt puIdx, TComMvField* mvFieldNeighbours, UChar* interDirNeighbours, Int numValidMergeCand );
-#endif 
   Bool          hasAssociatedACTFlag ( UInt uiAbsPartIdx );
 
   // -------------------------------------------------------------------------------------------------------------------
