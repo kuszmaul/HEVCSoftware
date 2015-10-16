@@ -1161,7 +1161,6 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
       }
     }
 
-#if SCM_T0056_IBC_VALIDATE_TILES
     if( ctuRsAddr == firstCtuRsAddrOfTile && ctuRsAddr != 0)
     {
       if( m_pcCfg->getUseHashBasedIntraBCSearch() )
@@ -1169,7 +1168,6 @@ Void TEncSlice::compressSlice( TComPic* pcPic, const Bool bCompressEntireSlice, 
         m_pcPredSearch->xClearIntraBCHashTable();
       }
     }
-#endif
 
     for (UChar comp = 0; comp < MAX_NUM_COMPONENT; comp++)
     {

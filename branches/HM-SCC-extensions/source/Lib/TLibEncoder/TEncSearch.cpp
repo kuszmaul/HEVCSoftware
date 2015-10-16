@@ -8513,7 +8513,6 @@ Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, UInt 
   const Int iPicWidth  = pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples();
   const Int iPicHeight = pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples();
 
-#if SCM_T0056_IBC_VALIDATE_TILES
   const UInt curTileIdx = pcCU->getPic()->getPicSym()->getTileIdxMap( pcCU->getCtuRsAddr() );
   TComTile* curTile = pcCU->getPic()->getPicSym()->getTComTile( curTileIdx );
 
@@ -8522,7 +8521,6 @@ Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, UInt 
 
   const Int tileAreaLeft   = tileAreaRight - curTile->getTileWidthInCtus() * lcuWidth;
   const Int tileAreaTop    = tileAreaBottom - curTile->getTileHeightInCtus() * lcuHeight;
-#endif
 
   if((pcCU->getWidth(0) == 16) && (pcCU->getPartitionSize(0) == SIZE_2Nx2N) && m_pcEncCfg->getUseIntraBCFullFrameSearch())
   {
@@ -8567,7 +8565,6 @@ Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, UInt 
     srBottom = iPicHeight%lcuHeight - cuPelY % lcuHeight - iRoiHeight;
   }
 
-#if SCM_T0056_IBC_VALIDATE_TILES
   if( cuPelX + srRight + iRoiWidth > tileAreaRight)
   {
     srRight = tileAreaRight%lcuWidth - cuPelX %lcuWidth - iRoiWidth;
@@ -8584,7 +8581,6 @@ Void TEncSearch::xSetIntraSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, UInt 
   {
     srTop = tileAreaTop - cuPelY;
   }
-#endif
 
   rcMvSrchRngLT.setHor( srLeft );
   rcMvSrchRngLT.setVer( srTop );
@@ -8904,7 +8900,6 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
   const Int chromaROIStartYInPixels = iRelCUPelY + iRoiHeight - chromaROIHeightInPixels;
 #endif
 
-#if SCM_T0056_IBC_VALIDATE_TILES
   const UInt curTileIdx = pcCU->getPic()->getPicSym()->getTileIdxMap( pcCU->getCtuRsAddr() );
   TComTile* curTile = pcCU->getPic()->getPicSym()->getTComTile( curTileIdx );
 
@@ -8913,7 +8908,6 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
 
   const Int tileAreaLeft   = tileAreaRight - curTile->getTileWidthInCtus() * lcuWidth;
   const Int tileAreaTop    = tileAreaBottom - curTile->getTileHeightInCtus() * lcuHeight;
-#endif
 
   if (m_pcEncCfg->getUseIntraBlockCopyFastSearch())
   {
@@ -8945,7 +8939,6 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
       {
         srBottom = iPicHeight%lcuHeight - cuPelY % lcuHeight - iRoiHeight;
       }
-#if SCM_T0056_IBC_VALIDATE_TILES
       if( cuPelX + srRight + iRoiWidth > tileAreaRight)
       {
         srRight = tileAreaRight%lcuWidth - cuPelX %lcuWidth - iRoiWidth;
@@ -8962,7 +8955,6 @@ Void TEncSearch::xIntraPatternSearch( TComDataCU  *pcCU,
       {
         srTop = tileAreaTop - cuPelY;
       }
-#endif
     }
 
     if(iRoiWidth>8 || iRoiHeight>8)
@@ -9656,7 +9648,6 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
 
   xIntraBCSearchMVCandUpdate(uiIntraBCECost, rcMv.getHor(), rcMv.getVer(), uiSadBestCand, cMVCand);
 
-#if SCM_T0056_IBC_VALIDATE_TILES
   const Int        iRelCUPelX    = cuPelX % uiMaxCuWidth;
   const Int        iRelCUPelY    = cuPelY % uiMaxCuHeight;
   const ChromaFormat format = pcCU->getPic()->getChromaFormat();
@@ -9665,7 +9656,6 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
 #if !SCM_FIX_TICKET_1401
   const Int chromaROIStartXInPixels = iRelCUPelX + iRoiWidth  - chromaROIWidthInPixels;
   const Int chromaROIStartYInPixels = iRelCUPelY + iRoiHeight - chromaROIHeightInPixels;
-#endif
 #endif
 
   while(HashLinklist)
@@ -9708,7 +9698,6 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
       continue;
     }
 #endif 
-#if SCM_T0056_IBC_VALIDATE_TILES
     Int xPred = iTempX - cuPelX;
     Int yPred = iTempY - cuPelY;
 
@@ -9722,7 +9711,6 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
       HashLinklist = HashLinklist->next;
       continue;
     }
-#endif
 
     uiSad = 0;//m_pcRdCost->getCost( iTempX - cuPelX, iTempY - cuPelY);
 
@@ -9782,8 +9770,6 @@ Void TEncSearch::xIntraBCHashTableUpdate(TComDataCU* pcCU, Bool isRec)
                       : pcSym->getCtuTsToRsAddrMap(pcCU->getSlice()->getSliceSegmentCurStartCtuTsAddr());
   UInt       refY     = pcSym->getCtu(startCtu)->getCUPelY();
 
-
-#if SCM_T0056_IBC_VALIDATE_TILES
   const UInt lcuWidth = pcCU->getSlice()->getSPS()->getMaxCUWidth();
   const UInt lcuHeight = pcCU->getSlice()->getSPS()->getMaxCUHeight();
 
@@ -9809,17 +9795,6 @@ Void TEncSearch::xIntraBCHashTableUpdate(TComDataCU* pcCU, Bool isRec)
     }
     for(Int i = i_start; i < uiMaxCuWidth; i++)
     {
-#else
-  for(int j = 0; j < uiMaxCuHeight; j++)
-  {
-    iTempY = cuPelY - iRoiHeight + 1  + j;
-    if ( pcCU->getSlice()->getSliceMode() && iTempY < refY )
-    {
-      continue;
-    }
-    for(int i = 0; i < uiMaxCuWidth; i++)
-    {
-#endif
       iTempX = cuPelX - iRoiWidth + 1 + i;
 
       if((iTempX < 0) || (iTempY < 0) || ((iTempX + iRoiWidth) >= iPicWidth) || ((iTempY + iRoiHeight) >= iPicHeight))
