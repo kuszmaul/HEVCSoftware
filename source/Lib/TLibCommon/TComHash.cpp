@@ -228,7 +228,7 @@ Void TComHash::addToHashMapByRow( TComPicYuv* pPicYuv, Int picWidth, Int picHeig
     for ( Int yPos = 0; yPos < picHeight; yPos++ )
     {
       TComHash::getPixelsIn1DCharArrayByRow( pPicYuv, p, width, xPos, yPos, bitDepths, bIncludeChroma );
-      isSameValueRow[yPos] = isRowSameValue( p, width );
+      isSameValueRow[yPos] = isRowSameValue( p, width, bIncludeChroma );
       hashValue3Row[yPos] = TComHash::getCRCValue3( p, length );
       hashValue4Row[yPos] = TComHash::getCRCValue4( p, length );
     }
