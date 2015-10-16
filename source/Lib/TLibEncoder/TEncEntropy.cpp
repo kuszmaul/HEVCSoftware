@@ -408,12 +408,10 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, Bool& codeChromaQpAdj, TComT
 
     if ( bHaveACodedBlock )
     {
-#if SCM_U0106_ACT_TU_SIG
       if ( pcCU->getSlice()->getPPS()->getPpsScreenExtension().getUseColourTrans() && pcCU->hasAssociatedACTFlag(uiAbsPartIdx) )
       {
         m_pcEntropyCoderIf->codeColourTransformFlag( pcCU, uiAbsPartIdx );
       }
-#endif
 
       // dQP: only for CTU once
       if ( pcCU->getSlice()->getPPS()->getUseDQP() )
@@ -730,12 +728,6 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       return;
     }
   }
-#if !SCM_U0106_ACT_TU_SIG
-  if ( pcCU->hasAssociatedACTFlag( uiAbsPartIdx, uiDepth ) )
-  {
-    m_pcEntropyCoderIf->codeColourTransformFlag( pcCU, uiAbsPartIdx );
-  }
-#endif
 
   TComTURecurse tuRecurse(pcCU, uiAbsPartIdx, uiDepth);
 #if ENVIRONMENT_VARIABLE_DEBUG_AND_TEST

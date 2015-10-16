@@ -99,19 +99,10 @@ QpParam::QpParam(const Int           qpy,
   rem=baseQp%6;
 }
 
-#if SCM_U0106_ACT_TU_SIG
 QpParam::QpParam(const TComDataCU &cu, const ComponentID compID, UInt uiAbsPartIdx)
-#else
-QpParam::QpParam(const TComDataCU &cu, const ComponentID compID)
-#endif
 {
   Int chromaQpOffset = 0;
-
-#if SCM_U0106_ACT_TU_SIG
   Bool cuACTFlag = cu.getColourTransform(uiAbsPartIdx);
-#else
-  Bool cuACTFlag = cu.getColourTransform(0);
-#endif
 
   if( !cuACTFlag )
   {
@@ -1738,12 +1729,8 @@ Void TComTrQuant::invRecurTransformNxN( const ComponentID compID,
           Pel           *pResi       = rpcResidual + uiAddr;
           TCoeff        *pcCoeff     = pcCU->getCoeff(compID) + rTu.getCoefficientOffset(compID);
 
-#if SCM_U0106_ACT_TU_SIG
     assert(!pcCU->getColourTransform(absPartIdxTU));
     const QpParam cQP(*pcCU, compID, absPartIdxTU);
-#else
-    const QpParam cQP(*pcCU, compID);
-#endif
 
     if(pcCU->getCbf(absPartIdxTU, compID, uiTrMode) != 0)
     {
@@ -1808,11 +1795,7 @@ Void TComTrQuant::invRecurTransformACTNxN( TComYuv *pResidual, TComTU &rTu )
       Pel                 *pResi       = rpcResidual + uiAddr;
       TCoeff              *rpcCoeff    = pcCU->getCoeff(compID) + rTu.getCoefficientOffset(compID);
 
-#if SCM_U0106_ACT_TU_SIG
       QpParam cQP(*pcCU, compID, absPartIdxTU);
-#else
-      QpParam cQP(*pcCU, compID);
-#endif
 
       if ( pcCU->getCbf( absPartIdxTU, compID, uiTrMode ) != 0 )
       {
@@ -1836,11 +1819,7 @@ Void TComTrQuant::invRecurTransformACTNxN( TComYuv *pResidual, TComTU &rTu )
       }
     }
 
-#if SCM_U0106_ACT_TU_SIG
     if( pcCU->getColourTransform(absPartIdxTU) && ( pcCU->getCbf(absPartIdxTU,COMPONENT_Y, uiTrMode) || pcCU->getCbf(absPartIdxTU,COMPONENT_Cb, uiTrMode) || pcCU->getCbf(absPartIdxTU,COMPONENT_Cr, uiTrMode) ) )
-#else
-    if( pcCU->getCbf(absPartIdxTU,COMPONENT_Y) || pcCU->getCbf(absPartIdxTU,COMPONENT_Cb) || pcCU->getCbf(absPartIdxTU,COMPONENT_Cr) )
-#endif
     {
       pResidual->convert(extendedPrecision, rect.x0, rect.y0, rect.width, false, pcCU->getSlice()->getSPS()->getBitDepths(), pcCU->isLosslessCoded(absPartIdxTU));
     }

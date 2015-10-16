@@ -89,11 +89,7 @@ struct QpParam
           const Int           chromaQPOffset,
           const ChromaFormat  chFmt );
 
-#if SCM_U0106_ACT_TU_SIG
   QpParam(const TComDataCU   &cu, const ComponentID compID, UInt uiAbsPartIdx);
-#else
-  QpParam(const TComDataCU   &cu, const ComponentID compID);
-#endif
 
 }; // END STRUCT DEFINITION QpParam
 
