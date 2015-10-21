@@ -113,12 +113,14 @@ public:
   Bool          getCheckLTMSBPresent     () { return m_bCheckLTMSB;}
 
   TComPicSym*   getPicSym()           { return  &m_picSym;    }
+  const TComPicSym* getPicSym() const { return  &m_picSym;    }
   TComSlice*    getSlice(Int i)       { return  m_picSym.getSlice(i);  }
   Int           getPOC() const        { return  m_picSym.getSlice(m_uiCurrSliceIdx)->getPOC();  }
   TComDataCU*   getCtu( UInt ctuRsAddr )           { return  m_picSym.getCtu( ctuRsAddr ); }
   const TComDataCU* getCtu( UInt ctuRsAddr ) const { return  m_picSym.getCtu( ctuRsAddr ); }
 
   TComPicYuv*   getPicYuvOrg()        { return  m_apcPicYuv[PIC_YUV_ORG]; }
+  const TComPicYuv* getPicYuvOrg() const { return  m_apcPicYuv[PIC_YUV_ORG]; }
   TComPicYuv*   getPicYuvRec()        { return  m_apcPicYuv[PIC_YUV_REC]; }
   TComPicYuv*   getPicYuvCSC()        { return  m_apcPicYuvCSC; }
   Void          allocateCSCBuffer( Int iWidth, Int iHeight, ChromaFormat chromaFormatIDC, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth )
@@ -173,6 +175,7 @@ public:
   
   Void          addPictureToHashMapForInter();
   TComHash*     getHashMap() { return &m_hashMap; }
+  const TComHash* getHashMap() const { return &m_hashMap; }
 
 #if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
   Bool                    getCurrentPicFlag()                    { return m_bCurPic; } 

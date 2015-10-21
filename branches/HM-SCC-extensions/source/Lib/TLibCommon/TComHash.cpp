@@ -175,7 +175,25 @@ Int TComHash::count( UInt hashValue )
   }
 }
 
+const Int TComHash::count( UInt hashValue ) const
+{
+  if ( m_pLookupTable[hashValue] == NULL )
+  {
+    return 0;
+  }
+  else
+  {
+    return static_cast<Int>( m_pLookupTable[hashValue]->size() );
+  }
+}
+
 MapIterator TComHash::getFirstIterator( UInt hashValue )
+{
+  assert( count( hashValue ) > 0 );
+  return m_pLookupTable[hashValue]->begin();
+}
+
+const MapIterator TComHash::getFirstIterator( UInt hashValue ) const
 {
   assert( count( hashValue ) > 0 );
   return m_pLookupTable[hashValue]->begin();
@@ -314,7 +332,7 @@ Bool TComHash::isRowSameValue( UChar* p, Int width, Bool includeAllComponent )
 }
 
 
-Void TComHash::getPixelsIn1DCharArrayByRow( TComPicYuv* pPicYuv, UChar* pPixelsIn1D, Int width, Int xStart, Int yStart, const BitDepths& bitDepths, Bool includeAllComponent )
+Void TComHash::getPixelsIn1DCharArrayByRow( const TComPicYuv* const pPicYuv, UChar* pPixelsIn1D, Int width, Int xStart, Int yStart, const BitDepths& bitDepths, Bool includeAllComponent )
 {
   if ( pPicYuv->getChromaFormat() != CHROMA_444 )
   {
@@ -329,7 +347,7 @@ Void TComHash::getPixelsIn1DCharArrayByRow( TComPicYuv* pPicYuv, UChar* pPixelsI
     {
       ComponentID compID = ComponentID( id );
       stride[id] = pPicYuv->getStride( compID );
-      pPel[id] = pPicYuv->getAddr( compID );
+      pPel[id] = const_cast<Pel*>( pPicYuv->getAddr( compID ) );
       pPel[id] += (yStart >> pPicYuv->getComponentScaleX( compID )) * stride[id] + (xStart >> pPicYuv->getComponentScaleX( compID ));
     }
 
@@ -354,7 +372,7 @@ Void TComHash::getPixelsIn1DCharArrayByRow( TComPicYuv* pPicYuv, UChar* pPixelsI
     {
       ComponentID compID = ComponentID( id );
       stride[id] = pPicYuv->getStride( compID );
-      pPel[id] = pPicYuv->getAddr( compID );
+      pPel[id] = const_cast<Pel*>( pPicYuv->getAddr( compID ) );
       pPel[id] += (yStart >> pPicYuv->getComponentScaleX( compID )) * stride[id] + (xStart >> pPicYuv->getComponentScaleX( compID ));
     }
 
@@ -430,7 +448,7 @@ Bool TComHash::isVerticalPerfect( TComPicYuv* pPicYuv, Int width, Int height, In
   return true;
 }
 
-Bool TComHash::getBlockHashValue( TComPicYuv* pPicYuv, Int width, Int height, Int xStart, Int yStart, const BitDepths bitDepths, UInt& hashValue1, UInt& hashValue2 )
+Bool TComHash::getBlockHashValue( const TComPicYuv* const pPicYuv, Int width, Int height, Int xStart, Int yStart, const BitDepths bitDepths, UInt& hashValue1, UInt& hashValue2 )
 {
   Int addValue = m_blockSizeToIndex[width][height];
   assert( addValue >= 0 );

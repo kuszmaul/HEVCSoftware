@@ -187,6 +187,12 @@ Void TEncTop::init(Bool isFieldCoding)
   xInitSPS();
   xInitVPS();
 
+#if U0132_TARGET_BITS_SATURATION
+  if (m_RCCpbSaturationEnabled)
+  {
+    m_cRateCtrl.initHrdParam(m_cSPS.getVuiParameters()->getHrdParameters(), m_iFrameRate, m_RCInitialCpbFullness);
+  }
+#endif
   m_cRdCost.setCostMode(m_costMode);
 
   // initialize PPS
@@ -217,7 +223,7 @@ Void TEncTop::init(Bool isFieldCoding)
                   );
 
   // initialize encoder search class
-  m_cSearch.init( this, &m_cTrQuant, m_iSearchRange, m_bipredSearchRange, m_iFastSearch, m_maxCUWidth, m_maxCUHeight, m_maxTotalCUDepth, &m_cEntropyCoder, &m_cRdCost, getRDSbacCoder(), getRDGoOnSbacCoder() );
+  m_cSearch.init( this, &m_cTrQuant, m_iSearchRange, m_bipredSearchRange, m_motionEstimationSearchMethod, m_maxCUWidth, m_maxCUHeight, m_maxTotalCUDepth, &m_cEntropyCoder, &m_cRdCost, getRDSbacCoder(), getRDGoOnSbacCoder() );
 
   m_iMaxRefPicNum = 0;
 
@@ -252,7 +258,7 @@ Void TEncTop::xInitScalingLists()
   else if(getUseScalingListId() == SCALING_LIST_FILE_READ)
   {
     m_cSPS.getScalingList().setDefaultScalingList ();
-    if(m_cSPS.getScalingList().xParseScalingList(getScalingListFile()))
+    if(m_cSPS.getScalingList().xParseScalingList(getScalingListFileName()))
     {
       Bool bParsedScalingList=false; // Use of boolean so that assertion outputs useful string
       assert(bParsedScalingList);
@@ -674,7 +680,12 @@ Void TEncTop::xInitSPS()
     m_cSPS.setLtRefPicPocLsbSps(k, 0);
     m_cSPS.setUsedByCurrPicLtSPSFlag(k, 0);
   }
+
+#if U0132_TARGET_BITS_SATURATION
+  if( getPictureTimingSEIEnabled() || getDecodingUnitInfoSEIEnabled() || getCpbSaturationEnabled() )
+#else
   if( getPictureTimingSEIEnabled() || getDecodingUnitInfoSEIEnabled() )
+#endif
   {
     xInitHrdParameters();
   }
@@ -705,13 +716,34 @@ Void TEncTop::xInitSPS()
   m_cSPS.getSpsScreenExtension().setMotionVectorResolutionControlIdc( m_motionVectorResolutionControlIdc );
 }
 
+#if U0132_TARGET_BITS_SATURATION
+// calculate scale value of bitrate and initial delay
+Int calcScale(Int x)
+{
+  UInt iMask = 0xffffffff;
+  Int ScaleValue = 32;
+
+  while ((x&iMask) != 0)
+  {
+    ScaleValue--;
+    iMask = (iMask >> 1);
+  }
+
+  return ScaleValue;
+}
+#endif
 Void TEncTop::xInitHrdParameters()
 {
   Bool useSubCpbParams = (getSliceMode() > 0) || (getSliceSegmentMode() > 0);
   Int  bitRate         = getTargetBitrate();
   Bool isRandomAccess  = getIntraPeriod() > 0;
+# if U0132_TARGET_BITS_SATURATION
+  Int cpbSize          = getCpbSize();
 
+  if( !getVuiParametersPresentFlag() && !getCpbSaturationEnabled() )
+#else
   if( !getVuiParametersPresentFlag() )
+#endif
   {
     return;
   }
@@ -746,7 +778,6 @@ Void TEncTop::xInitHrdParameters()
   Bool rateCnt = ( bitRate > 0 );
   hrd->setNalHrdParametersPresentFlag( rateCnt );
   hrd->setVclHrdParametersPresentFlag( rateCnt );
-
   hrd->setSubPicCpbParamsPresentFlag( useSubCpbParams );
 
   if( hrd->getSubPicCpbParamsPresentFlag() )
@@ -761,8 +792,29 @@ Void TEncTop::xInitHrdParameters()
     hrd->setSubPicCpbParamsInPicTimingSEIFlag( false );
   }
 
+#if U0132_TARGET_BITS_SATURATION
+  if (calcScale(bitRate) <= 6)
+  {
+    hrd->setBitRateScale(0);
+  }
+  else
+  {
+    hrd->setBitRateScale(calcScale(bitRate) - 6);
+  }
+
+  if (calcScale(cpbSize) <= 4)
+  {
+    hrd->setCpbSizeScale(0);
+  }
+  else
+  {
+    hrd->setCpbSizeScale(calcScale(cpbSize) - 4);
+  }
+#else
   hrd->setBitRateScale( 4 );                                       // in units of 2^( 6 + 4 ) = 1,024 bps
   hrd->setCpbSizeScale( 6 );                                       // in units of 2^( 4 + 6 ) = 1,024 bit
+#endif
+
   hrd->setDuCpbSizeScale( 6 );                                     // in units of 2^( 4 + 6 ) = 1,024 bit
 
   hrd->setInitialCpbRemovalDelayLengthMinus1(15);                  // assuming 0.5 sec, log2( 90,000 * 0.5 ) = 16-bit
@@ -794,7 +846,12 @@ Void TEncTop::xInitHrdParameters()
     // BitRate[ i ] = ( bit_rate_value_minus1[ i ] + 1 ) * 2^( 6 + bit_rate_scale )
     bitrateValue = bitRate / (1 << (6 + hrd->getBitRateScale()) );      // bitRate is in bits, so it needs to be scaled down
     // CpbSize[ i ] = ( cpb_size_value_minus1[ i ] + 1 ) * 2^( 4 + cpb_size_scale )
+#if U0132_TARGET_BITS_SATURATION
+    cpbSizeValue = cpbSize / (1 << (4 + hrd->getCpbSizeScale()) );      // using bitRate results in 1 second CPB size
+#else
     cpbSizeValue = bitRate / (1 << (4 + hrd->getCpbSizeScale()) );      // using bitRate results in 1 second CPB size
+#endif
+
 
     // DU CPB size could be smaller (i.e. bitrateValue / number of DUs), but we don't know 
     // in how many DUs the slice segment settings will result 
@@ -872,7 +929,7 @@ Void TEncTop::xInitPPS()
   m_cPPS.getPpsScreenExtension().setActQpOffset(COMPONENT_Cb, m_actCbQpOffset );
   m_cPPS.getPpsScreenExtension().setActQpOffset(COMPONENT_Cr, m_actCrQpOffset );
 
-  m_cPPS.setEntropyCodingSyncEnabledFlag( m_iWaveFrontSynchro > 0 );
+  m_cPPS.setEntropyCodingSyncEnabledFlag( m_entropyCodingSyncEnabledFlag );
   m_cPPS.setTilesEnabledFlag( (m_iNumColumnsMinus1 > 0 || m_iNumRowsMinus1 > 0) );
   m_cPPS.setUseWP( m_useWeightedPred );
   m_cPPS.setWPBiPred( m_useWeightedBiPred );

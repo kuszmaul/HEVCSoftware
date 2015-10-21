@@ -41,6 +41,7 @@
 #include <algorithm>
 #include <iostream>
 #include <assert.h>
+#include <limits>
 
 #if _MSC_VER > 1000
 // disable "signed and unsigned mismatch"
@@ -64,7 +65,7 @@ inline Int64 abs (Int64 x) { return _abs64(x); };
 // Version information
 // ====================================================================================================================
 
-#define NV_VERSION        "16.6_SCM5.4"                 ///< Current software version
+#define NV_VERSION        "16.7_SCM5.4"                 ///< Current software version
 
 // ====================================================================================================================
 // Platform information
@@ -127,7 +128,6 @@ static const Int MAX_QP =                                          51;
 static const Int NOT_VALID =                                       -1;
 
 static const Int AMVP_MAX_NUM_CANDS =                               2; ///< AMVP: advanced motion vector prediction - max number of final candidates
-static const Int AMVP_MAX_NUM_CANDS_MEM =                           3; ///< AMVP: advanced motion vector prediction - max number of candidates
 static const Int AMVP_DECIMATION_FACTOR =                           4;
 static const Int MRG_MAX_NUM_CANDS =                                5; ///< MERGE
 

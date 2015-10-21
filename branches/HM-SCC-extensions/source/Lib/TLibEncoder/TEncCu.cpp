@@ -2158,7 +2158,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
         {
           *earlyDetectionSkipMode = true;
         }
-        else if(m_pcEncCfg->getFastSearch() != SELECTIVE)
+        else if(m_pcEncCfg->getMotionEstimationSearchMethod() != MESEARCH_SELECTIVE)
         {
           Int absoulte_MV=0;
           for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
@@ -2233,7 +2233,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
   UChar  uiColourTransform = 0;
   Bool   bRGB              = m_pcEncCfg->getRGBFormatFlag();
-  Char   orgQP             = rpcTempCU->getQP( 0 );
+  SChar  orgQP             = rpcTempCU->getQP( 0 );
   Bool   bTransquantBypassFlag = rpcTempCU->getCUTransquantBypass(0);
   const TComSPS &sps=*(rpcTempCU->getSlice()->getSPS());
   if ( bTransquantBypassFlag && (sps.getBitDepth( CHANNEL_TYPE_LUMA ) != sps.getBitDepth( CHANNEL_TYPE_CHROMA )) )
@@ -2570,7 +2570,7 @@ Void TEncCu::xCheckRDCostIntraBC( TComDataCU *&rpcBestCU,
     UChar  uiColourTransform = 0;
     Bool   bRGB              = m_pcEncCfg->getRGBFormatFlag();
     Double dCostFst          = MAX_DOUBLE;
-    Char   orgQP             = rpcTempCU->getQP( 0 );
+    SChar   orgQP            = rpcTempCU->getQP( 0 );
     Bool   bTransquantBypassFlag = rpcTempCU->getCUTransquantBypass(0);
     if ( bTransquantBypassFlag && (sps.getBitDepth( CHANNEL_TYPE_LUMA ) != sps.getBitDepth( CHANNEL_TYPE_CHROMA )) )
     {
@@ -2737,7 +2737,7 @@ Void TEncCu::xCheckRDCostIntraBCMixed( TComDataCU *&rpcBestCU,
     UChar  uiColourTransform = 0;
     Bool   bRGB              = m_pcEncCfg->getRGBFormatFlag();
     Double dCostFst          = MAX_DOUBLE;
-    Char   orgQP             = rpcTempCU->getQP( 0 );
+    SChar   orgQP            = rpcTempCU->getQP( 0 );
     Bool   bTransquantBypassFlag = rpcTempCU->getCUTransquantBypass(0);
     const TComSPS &sps       = *(rpcTempCU->getSlice()->getSPS());
     if ( bTransquantBypassFlag && (sps.getBitDepth( CHANNEL_TYPE_LUMA ) != sps.getBitDepth( CHANNEL_TYPE_CHROMA )) )
@@ -2878,7 +2878,7 @@ Void TEncCu::xCheckRDCostHashInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
     Bool   bEnableTrans      = rpcBestCU->getSlice()->getPPS()->getPpsScreenExtension().getUseColourTrans();
     UChar  uiColourTransform = 0;
     Bool   bRGB              = m_pcEncCfg->getRGBFormatFlag();
-    Char   orgQP             = rpcTempCU->getQP( 0 );
+    SChar   orgQP            = rpcTempCU->getQP( 0 );
     Bool   bTransquantBypassFlag = rpcTempCU->getCUTransquantBypass(0);
     const TComSPS &sps=*(rpcTempCU->getSlice()->getSPS());
     if ( bTransquantBypassFlag && (sps.getBitDepth( CHANNEL_TYPE_LUMA ) != sps.getBitDepth( CHANNEL_TYPE_CHROMA )) )

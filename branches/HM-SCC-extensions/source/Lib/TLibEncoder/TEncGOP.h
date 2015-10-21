@@ -190,6 +190,8 @@ protected:
   Double xCalculateRVM();
   Bool xGetUseIntegerMv( TComSlice* pcSlice );
 
+  Void xWriteAccessUnitDelimiter (AccessUnit &accessUnit, TComSlice *slice);
+
   Void xCreateIRAPLeadingSEIMessages (SEIMessages& seiMessages, const TComSPS *sps, const TComPPS *pps);
   Void xCreatePerPictureSEIMessages (Int picInGOP, SEIMessages& seiMessages, SEIMessages& nestedSeiMessages, TComSlice *slice);
   Void xCreatePictureTimingSEI  (Int IRAPGOPid, SEIMessages& seiMessages, SEIMessages& nestedSeiMessages, SEIMessages& duInfoSeiMessages, TComSlice *slice, Bool isField, std::deque<DUData> &duData);
