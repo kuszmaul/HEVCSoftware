@@ -64,7 +64,7 @@ inline Int64 abs (Int64 x) { return _abs64(x); };
 // Version information
 // ====================================================================================================================
 
-#define NV_VERSION        "16.6_SCM5.3"                 ///< Current software version
+#define NV_VERSION        "16.6_SCM5.4"                 ///< Current software version
 
 // ====================================================================================================================
 // Platform information
