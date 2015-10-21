@@ -115,6 +115,19 @@ public:
     return  *this;
   }
 
+#if ME_ENABLE_ROUNDING_OF_MVS
+  //! shift right with rounding
+  Void divideByPowerOf2 (const Int i)
+  {
+    Int offset = (i == 0) ? 0 : 1 << (i - 1);
+    m_iHor += offset;
+    m_iVer += offset;
+
+    m_iHor >>= i;
+    m_iVer >>= i;
+  }
+#endif
+
   const TComMv& operator<<= (const Int i)
   {
     m_iHor <<= i;

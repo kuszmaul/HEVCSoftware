@@ -74,13 +74,6 @@ static const TComMv s_acMvRefineQ[9] =
   TComMv(  1,  1 )  // 8
 };
 
-static const UInt s_auiDFilter[9] =
-{
-  0, 1, 0,
-  2, 3, 2,
-  0, 1, 0
-};
-
 static Void offsetSubTUCBFs(TComTU &rTu, const ComponentID compID)
 {
         TComDataCU *pcCU              = rTu.getCU();
@@ -120,20 +113,17 @@ TEncSearch::TEncSearch()
 , m_pcEntropyCoder (NULL)
 , m_iSearchRange (0)
 , m_bipredSearchRange (0)
-, m_iFastSearch (0)
+, m_motionEstimationSearchMethod (MESEARCH_FULL)
 , m_pppcRDSbacCoder (NULL)
 , m_pcRDGoOnSbacCoder (NULL)
 , m_pTempPel (NULL)
-, m_puiDFilter (NULL)
 , m_isInitialized (false)
 {
   for (UInt ch=0; ch<MAX_NUM_COMPONENT; ch++)
   {
     m_ppcQTTempCoeff[ch]                           = NULL;
-    m_pcQTTempCoeff[ch]                            = NULL;
 #if ADAPTIVE_QP_SELECTION
     m_ppcQTTempArlCoeff[ch]                        = NULL;
-    m_pcQTTempArlCoeff[ch]                         = NULL;
 #endif
     m_puhQTTempCbf[ch]                             = NULL;
     m_phQTTempCrossComponentPredictionAlpha[ch]    = NULL;
@@ -243,11 +233,9 @@ Void TEncSearch::destroy()
 #endif
       }
       delete[] m_ppcQTTempCoeff[ch];
-      delete[] m_pcQTTempCoeff[ch];
       delete[] m_puhQTTempCbf[ch];
 #if ADAPTIVE_QP_SELECTION
       delete[] m_ppcQTTempArlCoeff[ch];
-      delete[] m_pcQTTempArlCoeff[ch];
 #endif
     }
 
@@ -329,31 +317,31 @@ TEncSearch::~TEncSearch()
 
 
 
-Void TEncSearch::init(TEncCfg*      pcEncCfg,
-                      TComTrQuant*  pcTrQuant,
-                      Int           iSearchRange,
-                      Int           bipredSearchRange,
-                      Int           iFastSearch,
-                      const UInt    maxCUWidth,
-                      const UInt    maxCUHeight,
-                      const UInt    maxTotalCUDepth,
-                      TEncEntropy*  pcEntropyCoder,
-                      TComRdCost*   pcRdCost,
-                      TEncSbac*** pppcRDSbacCoder,
-                      TEncSbac*   pcRDGoOnSbacCoder
+Void TEncSearch::init(TEncCfg*       pcEncCfg,
+                      TComTrQuant*   pcTrQuant,
+                      Int            iSearchRange,
+                      Int            bipredSearchRange,
+                      MESearchMethod motionEstimationSearchMethod,
+                      const UInt     maxCUWidth,
+                      const UInt     maxCUHeight,
+                      const UInt     maxTotalCUDepth,
+                      TEncEntropy*   pcEntropyCoder,
+                      TComRdCost*    pcRdCost,
+                      TEncSbac***    pppcRDSbacCoder,
+                      TEncSbac*      pcRDGoOnSbacCoder
                       )
 {
   assert (!m_isInitialized);
-  m_pcEncCfg             = pcEncCfg;
-  m_pcTrQuant            = pcTrQuant;
-  m_iSearchRange         = iSearchRange;
-  m_bipredSearchRange    = bipredSearchRange;
-  m_iFastSearch          = iFastSearch;
-  m_pcEntropyCoder       = pcEntropyCoder;
-  m_pcRdCost             = pcRdCost;
+  m_pcEncCfg                     = pcEncCfg;
+  m_pcTrQuant                    = pcTrQuant;
+  m_iSearchRange                 = iSearchRange;
+  m_bipredSearchRange            = bipredSearchRange;
+  m_motionEstimationSearchMethod = motionEstimationSearchMethod;
+  m_pcEntropyCoder               = pcEntropyCoder;
+  m_pcRdCost                     = pcRdCost;
 
-  m_pppcRDSbacCoder     = pppcRDSbacCoder;
-  m_pcRDGoOnSbacCoder   = pcRDGoOnSbacCoder;
+  m_pppcRDSbacCoder              = pppcRDSbacCoder;
+  m_pcRDGoOnSbacCoder            = pcRDGoOnSbacCoder;
 
   m_uiNumBVs = 0;
 
@@ -364,8 +352,6 @@ Void TEncSearch::init(TEncCfg*      pcEncCfg,
       m_aaiAdaptSR[iDir][iRefIdx] = iSearchRange;
     }
   }
-
-  m_puiDFilter = s_auiDFilter + 4;
 
   // initialize motion cost
   for( Int iNum = 0; iNum < AMVP_MAX_NUM_CANDS+1; iNum++)
@@ -395,10 +381,8 @@ Void TEncSearch::init(TEncCfg*      pcEncCfg,
     const UInt csx=::getComponentScaleX(ComponentID(ch), cform);
     const UInt csy=::getComponentScaleY(ComponentID(ch), cform);
     m_ppcQTTempCoeff[ch] = new TCoeff* [uiNumLayersToAllocate];
-    m_pcQTTempCoeff[ch]   = new TCoeff [(maxCUWidth*maxCUHeight)>>(csx+csy)   ];
 #if ADAPTIVE_QP_SELECTION
     m_ppcQTTempArlCoeff[ch]  = new TCoeff*[uiNumLayersToAllocate];
-    m_pcQTTempArlCoeff[ch]   = new TCoeff [(maxCUWidth*maxCUHeight)>>(csx+csy)   ];
 #endif
     m_puhQTTempCbf[ch] = new UChar  [uiNumPartitions];
 
@@ -410,7 +394,7 @@ Void TEncSearch::init(TEncCfg*      pcEncCfg,
 #endif
     }
 
-    m_phQTTempCrossComponentPredictionAlpha[ch]    = new Char  [uiNumPartitions];
+    m_phQTTempCrossComponentPredictionAlpha[ch]    = new SChar  [uiNumPartitions];
     m_pSharedPredTransformSkip[ch]                 = new Pel   [MAX_CU_SIZE*MAX_CU_SIZE];
     m_pcQTTempTUCoeff[ch]                          = new TCoeff[MAX_CU_SIZE*MAX_CU_SIZE];
 #if ADAPTIVE_QP_SELECTION
@@ -439,145 +423,118 @@ Void TEncSearch::init(TEncCfg*      pcEncCfg,
   m_isInitialized = true;
 }
 
-#define TZ_SEARCH_CONFIGURATION                                                                                 \
-const Int  iRaster                  = 5;  /* TZ soll von aussen ?ergeben werden */                            \
-const Bool bTestOtherPredictedMV    = 0;                                                                      \
-const Bool bTestZeroVector          = 1;                                                                      \
-const Bool bTestZeroVectorStart     = 0;                                                                      \
-const Bool bTestZeroVectorStop      = 0;                                                                      \
-const Bool bFirstSearchDiamond      = 1;  /* 1 = xTZ8PointDiamondSearch   0 = xTZ8PointSquareSearch */        \
-const Bool bFirstSearchStop         = m_pcEncCfg->getFastMEAssumingSmootherMVEnabled();                       \
-const UInt uiFirstSearchRounds      = 3;  /* first search stop X rounds after best match (must be >=1) */     \
-const Bool bEnableRasterSearch      = 1;                                                                      \
-const Bool bAlwaysRasterSearch      = 0;  /* ===== 1: BETTER but factor 2 slower ===== */                     \
-const Bool bRasterRefinementEnable  = 0;  /* enable either raster refinement or star refinement */            \
-const Bool bRasterRefinementDiamond = 0;  /* 1 = xTZ8PointDiamondSearch   0 = xTZ8PointSquareSearch */        \
-const Bool bStarRefinementEnable    = 1;  /* enable either star refinement or raster refinement */            \
-const Bool bStarRefinementDiamond   = 1;  /* 1 = xTZ8PointDiamondSearch   0 = xTZ8PointSquareSearch */        \
-const Bool bStarRefinementStop      = 0;                                                                      \
-const UInt uiStarRefinementRounds   = 2;  /* star refinement stop X rounds after best match (must be >=1) */  \
-
-#define SEL_SEARCH_CONFIGURATION                                                                                 \
-  const Bool bTestOtherPredictedMV    = 0;                                                                       \
-  const Bool bTestZeroVector          = 1;                                                                       \
-  const Bool bEnableRasterSearch      = 1;                                                                       \
-  const Bool bAlwaysRasterSearch      = 0;  /* ===== 1: BETTER but factor 15x slower ===== */                    \
-  const Bool bStarRefinementEnable    = 1;  /* enable either star refinement or raster refinement */             \
-  const Bool bStarRefinementDiamond   = 1;  /* 1 = xTZ8PointDiamondSearch   0 = xTZ8PointSquareSearch */         \
-  const Bool bStarRefinementStop      = 0;                                                                       \
-  const UInt uiStarRefinementRounds   = 2;  /* star refinement stop X rounds after best match (must be >=1) */   \
-  const UInt uiSearchRange            = m_iSearchRange;                                                          \
-  const Int  uiSearchRangeInitial     = m_iSearchRange >> 2;                                                     \
-  const Int  uiSearchStep             = 4;                                                                       \
-  const Int  iMVDistThresh            = 8;                                                                       \
-
-__inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchStruct& rcStruct, const Int iSearchX, const Int iSearchY, const UChar ucPointNr, const UInt uiDistance )
+__inline Void TEncSearch::xTZSearchHelp( const TComPattern* const pcPatternKey, IntTZSearchStruct& rcStruct, const Int iSearchX, const Int iSearchY, const UChar ucPointNr, const UInt uiDistance )
 {
   Distortion  uiSad = 0;
 
-  Pel*  piRefSrch;
-
-  piRefSrch = rcStruct.piRefY + iSearchY * rcStruct.iYStride + iSearchX;
+  const Pel* const  piRefSrch = rcStruct.piRefY + iSearchY * rcStruct.iYStride + iSearchX;
 
   //-- jclee for using the SAD function pointer
   m_pcRdCost->setDistParam( pcPatternKey, piRefSrch, rcStruct.iYStride,  m_cDistParam );
-
-  if(m_pcEncCfg->getFastSearch() != SELECTIVE)
-  {
-    // fast encoder decision: use subsampled SAD when rows > 8 for integer ME
-    if ( m_pcEncCfg->getUseFastEnc() )
-    {
-      if ( m_cDistParam.iRows > 8 )
-      {
-        m_cDistParam.iSubShift = 1;
-      }
-    }
-  }
 
   setDistParamComp(COMPONENT_Y);
 
   // distortion
   m_cDistParam.bitDepth = pcPatternKey->getBitDepthY();
-  if(m_pcEncCfg->getFastSearch() == SELECTIVE)
+  m_cDistParam.m_maximumDistortionForEarlyExit = rcStruct.uiBestSad;
+
+  if((m_pcEncCfg->getRestrictMESampling() == false) && m_pcEncCfg->getMotionEstimationSearchMethod() == MESEARCH_SELECTIVE)
   {
     Int isubShift = 0;
     // motion cost
-    Distortion uiBitCost = m_pcRdCost->getCost( iSearchX, iSearchY );
+    Distortion uiBitCost = m_pcRdCost->getCostOfVectorWithPredictor( iSearchX, iSearchY );
 
-    if ( m_cDistParam.iRows > 32 )
+    // Skip search if bit cost is already larger than best SAD
+    if (uiBitCost < rcStruct.uiBestSad)
     {
-      m_cDistParam.iSubShift = 4;
-    }
-    else if ( m_cDistParam.iRows > 16 )
-    {
-      m_cDistParam.iSubShift = 3;
-    }
-    else if ( m_cDistParam.iRows > 8 )
-    {
-      m_cDistParam.iSubShift = 2;
-    }
-    else
-    {
-      m_cDistParam.iSubShift = 1;
-    }
-
-    Distortion uiTempSad = m_cDistParam.DistFunc( &m_cDistParam );
-    if((uiTempSad + uiBitCost) < rcStruct.uiBestSad)
-    {
-      uiSad += uiTempSad >>  m_cDistParam.iSubShift;
-      while(m_cDistParam.iSubShift > 0)
+      if ( m_cDistParam.iRows > 32 )
       {
-        isubShift         = m_cDistParam.iSubShift -1;
-        m_cDistParam.pOrg = pcPatternKey->getROIY() + (pcPatternKey->getPatternLStride() << isubShift);
-        m_cDistParam.pCur = piRefSrch + (rcStruct.iYStride << isubShift);
-        uiTempSad = m_cDistParam.DistFunc( &m_cDistParam );
-        uiSad += uiTempSad >>  m_cDistParam.iSubShift;
-        if(((uiSad << isubShift) + uiBitCost) > rcStruct.uiBestSad)
-        {
-          break;
-        }
-
-        m_cDistParam.iSubShift--;
+        m_cDistParam.iSubShift = 4;
+      }
+      else if ( m_cDistParam.iRows > 16 )
+      {
+        m_cDistParam.iSubShift = 3;
+      }
+      else if ( m_cDistParam.iRows > 8 )
+      {
+        m_cDistParam.iSubShift = 2;
+      }
+      else
+      {
+        m_cDistParam.iSubShift = 1;
       }
 
-      if(m_cDistParam.iSubShift == 0)
+      Distortion uiTempSad = m_cDistParam.DistFunc( &m_cDistParam );
+      if((uiTempSad + uiBitCost) < rcStruct.uiBestSad)
       {
-        uiSad += uiBitCost;
-        if( uiSad < rcStruct.uiBestSad )
+        uiSad += uiTempSad >>  m_cDistParam.iSubShift;
+        while(m_cDistParam.iSubShift > 0)
         {
-          rcStruct.uiBestSad      = uiSad;
-          rcStruct.iBestX         = iSearchX;
-          rcStruct.iBestY         = iSearchY;
-          rcStruct.uiBestDistance = uiDistance;
-          rcStruct.uiBestRound    = 0;
-          rcStruct.ucPointNr      = ucPointNr;
+          isubShift         = m_cDistParam.iSubShift -1;
+          m_cDistParam.pOrg = pcPatternKey->getROIY() + (pcPatternKey->getPatternLStride() << isubShift);
+          m_cDistParam.pCur = piRefSrch + (rcStruct.iYStride << isubShift);
+          uiTempSad = m_cDistParam.DistFunc( &m_cDistParam );
+          uiSad += uiTempSad >>  m_cDistParam.iSubShift;
+          if(((uiSad << isubShift) + uiBitCost) > rcStruct.uiBestSad)
+          {
+            break;
+          }
+
+          m_cDistParam.iSubShift--;
+        }
+
+        if(m_cDistParam.iSubShift == 0)
+        {
+          uiSad += uiBitCost;
+          if( uiSad < rcStruct.uiBestSad )
+          {
+            rcStruct.uiBestSad      = uiSad;
+            rcStruct.iBestX         = iSearchX;
+            rcStruct.iBestY         = iSearchY;
+            rcStruct.uiBestDistance = uiDistance;
+            rcStruct.uiBestRound    = 0;
+            rcStruct.ucPointNr      = ucPointNr;
+            m_cDistParam.m_maximumDistortionForEarlyExit = uiSad;
+          }
         }
       }
     }
   }
   else
   {
+    // fast encoder decision: use subsampled SAD when rows > 8 for integer ME
+    if ( m_pcEncCfg->getFastInterSearchMode()==FASTINTERSEARCH_MODE1 || m_pcEncCfg->getFastInterSearchMode()==FASTINTERSEARCH_MODE3 )
+    {
+      if ( m_cDistParam.iRows > 8 )
+      {
+        m_cDistParam.iSubShift = 1;
+      }
+    }
+
     uiSad = m_cDistParam.DistFunc( &m_cDistParam );
 
-    // motion cost
-    uiSad += m_pcRdCost->getCost( iSearchX, iSearchY );
-
+    // only add motion cost if uiSad is smaller than best. Otherwise pointless
+    // to add motion cost.
     if( uiSad < rcStruct.uiBestSad )
     {
-      rcStruct.uiBestSad      = uiSad;
-      rcStruct.iBestX         = iSearchX;
-      rcStruct.iBestY         = iSearchY;
-      rcStruct.uiBestDistance = uiDistance;
-      rcStruct.uiBestRound    = 0;
-      rcStruct.ucPointNr      = ucPointNr;
+      // motion cost
+      uiSad += m_pcRdCost->getCostOfVectorWithPredictor( iSearchX, iSearchY );
+
+      if( uiSad < rcStruct.uiBestSad )
+      {
+        rcStruct.uiBestSad      = uiSad;
+        rcStruct.iBestX         = iSearchX;
+        rcStruct.iBestY         = iSearchY;
+        rcStruct.uiBestDistance = uiDistance;
+        rcStruct.uiBestRound    = 0;
+        rcStruct.ucPointNr      = ucPointNr;
+        m_cDistParam.m_maximumDistortionForEarlyExit = uiSad;
+      }
     }
   }
 }
 
-
-
-
-__inline Void TEncSearch::xTZ2PointSearch( TComPattern* pcPatternKey, IntTZSearchStruct& rcStruct, TComMv* pcMvSrchRngLT, TComMv* pcMvSrchRngRB )
+__inline Void TEncSearch::xTZ2PointSearch( const TComPattern* const pcPatternKey, IntTZSearchStruct& rcStruct, const TComMv* const pcMvSrchRngLT, const TComMv* const pcMvSrchRngRB )
 {
   Int   iSrchRngHorLeft   = pcMvSrchRngLT->getHor();
   Int   iSrchRngHorRight  = pcMvSrchRngRB->getHor();
@@ -710,12 +667,12 @@ __inline Void TEncSearch::xTZ2PointSearch( TComPattern* pcPatternKey, IntTZSearc
 
 
 
-__inline Void TEncSearch::xTZ8PointSquareSearch( TComPattern* pcPatternKey, IntTZSearchStruct& rcStruct, TComMv* pcMvSrchRngLT, TComMv* pcMvSrchRngRB, const Int iStartX, const Int iStartY, const Int iDist )
+__inline Void TEncSearch::xTZ8PointSquareSearch( const TComPattern* const pcPatternKey, IntTZSearchStruct& rcStruct, const TComMv* const pcMvSrchRngLT, const TComMv* const pcMvSrchRngRB, const Int iStartX, const Int iStartY, const Int iDist )
 {
-  Int   iSrchRngHorLeft   = pcMvSrchRngLT->getHor();
-  Int   iSrchRngHorRight  = pcMvSrchRngRB->getHor();
-  Int   iSrchRngVerTop    = pcMvSrchRngLT->getVer();
-  Int   iSrchRngVerBottom = pcMvSrchRngRB->getVer();
+  const Int   iSrchRngHorLeft   = pcMvSrchRngLT->getHor();
+  const Int   iSrchRngHorRight  = pcMvSrchRngRB->getHor();
+  const Int   iSrchRngVerTop    = pcMvSrchRngLT->getVer();
+  const Int   iSrchRngVerBottom = pcMvSrchRngRB->getVer();
 
   // 8 point search,                   //   1 2 3
   // search around the start point     //   4 0 5
@@ -767,12 +724,22 @@ __inline Void TEncSearch::xTZ8PointSquareSearch( TComPattern* pcPatternKey, IntT
 
 
 
-__inline Void TEncSearch::xTZ8PointDiamondSearch( TComPattern* pcPatternKey, IntTZSearchStruct& rcStruct, TComMv* pcMvSrchRngLT, TComMv* pcMvSrchRngRB, const Int iStartX, const Int iStartY, const Int iDist, Bool bSkipLeftDist2, Bool bSkipTopDist2 )
+
+__inline Void TEncSearch::xTZ8PointDiamondSearch( const TComPattern*const  pcPatternKey,
+                                                  IntTZSearchStruct& rcStruct,
+                                                  const TComMv*const  pcMvSrchRngLT,
+                                                  const TComMv*const  pcMvSrchRngRB,
+                                                  const Int iStartX,
+                                                  const Int iStartY,
+                                                  const Int iDist,
+                                                  const Bool bCheckCornersAtDist1,
+                                                  Bool bSkipLeftDist2,
+                                                  Bool bSkipTopDist2 )
 {
-  Int   iSrchRngHorLeft   = pcMvSrchRngLT->getHor();
-  Int   iSrchRngHorRight  = pcMvSrchRngRB->getHor();
-  Int   iSrchRngVerTop    = pcMvSrchRngLT->getVer();
-  Int   iSrchRngVerBottom = pcMvSrchRngRB->getVer();
+  const Int   iSrchRngHorLeft   = pcMvSrchRngLT->getHor();
+  const Int   iSrchRngHorRight  = pcMvSrchRngRB->getHor();
+  const Int   iSrchRngVerTop    = pcMvSrchRngLT->getVer();
+  const Int   iSrchRngVerBottom = pcMvSrchRngRB->getVer();
 
   // 8 point search,                   //   1 2 3
   // search around the start point     //   4 0 5
@@ -787,11 +754,26 @@ __inline Void TEncSearch::xTZ8PointDiamondSearch( TComPattern* pcPatternKey, Int
   if( bSkipLeftDist2 || bSkipTopDist2 )
     assert( iDist == 2 );
 
-  if ( iDist == 1 ) // iDist == 1
+  if ( iDist == 1 )
   {
     if ( iTop >= iSrchRngVerTop ) // check top
     {
-      xTZSearchHelp( pcPatternKey, rcStruct, iStartX, iTop, 2, iDist );
+      if (bCheckCornersAtDist1)
+      {
+        if ( iLeft >= iSrchRngHorLeft) // check top-left
+        {
+          xTZSearchHelp( pcPatternKey, rcStruct, iLeft, iTop, 1, iDist );
+        }
+        xTZSearchHelp( pcPatternKey, rcStruct, iStartX, iTop, 2, iDist );
+        if ( iRight <= iSrchRngHorRight ) // check middle right
+        {
+          xTZSearchHelp( pcPatternKey, rcStruct, iRight, iTop, 3, iDist );
+        }
+      }
+      else
+      {
+        xTZSearchHelp( pcPatternKey, rcStruct, iStartX, iTop, 2, iDist );
+      }
     }
     if ( iLeft >= iSrchRngHorLeft ) // check middle left
     {
@@ -803,10 +785,25 @@ __inline Void TEncSearch::xTZ8PointDiamondSearch( TComPattern* pcPatternKey, Int
     }
     if ( iBottom <= iSrchRngVerBottom ) // check bottom
     {
-      xTZSearchHelp( pcPatternKey, rcStruct, iStartX, iBottom, 7, iDist );
+      if (bCheckCornersAtDist1)
+      {
+        if ( iLeft >= iSrchRngHorLeft) // check top-left
+        {
+          xTZSearchHelp( pcPatternKey, rcStruct, iLeft, iBottom, 6, iDist );
+        }
+        xTZSearchHelp( pcPatternKey, rcStruct, iStartX, iBottom, 7, iDist );
+        if ( iRight <= iSrchRngHorRight ) // check middle right
+        {
+          xTZSearchHelp( pcPatternKey, rcStruct, iRight, iBottom, 8, iDist );
+        }
+      }
+      else
+      {
+        xTZSearchHelp( pcPatternKey, rcStruct, iStartX, iBottom, 7, iDist );
+      }
     }
   }
-  else // if (iDist != 1)
+  else
   {
     if ( iDist <= 8 )
     {
@@ -882,10 +879,10 @@ __inline Void TEncSearch::xTZ8PointDiamondSearch( TComPattern* pcPatternKey, Int
         xTZSearchHelp( pcPatternKey, rcStruct, iStartX, iBottom, 0, iDist );
         for ( Int index = 1; index < 4; index++ )
         {
-          Int iPosYT = iTop    + ((iDist>>2) * index);
-          Int iPosYB = iBottom - ((iDist>>2) * index);
-          Int iPosXL = iStartX - ((iDist>>2) * index);
-          Int iPosXR = iStartX + ((iDist>>2) * index);
+          const Int iPosYT = iTop    + ((iDist>>2) * index);
+          const Int iPosYB = iBottom - ((iDist>>2) * index);
+          const Int iPosXL = iStartX - ((iDist>>2) * index);
+          const Int iPosXR = iStartX + ((iDist>>2) * index);
           xTZSearchHelp( pcPatternKey, rcStruct, iPosXL, iPosYT, 0, iDist );
           xTZSearchHelp( pcPatternKey, rcStruct, iPosXR, iPosYT, 0, iDist );
           xTZSearchHelp( pcPatternKey, rcStruct, iPosXL, iPosYB, 0, iDist );
@@ -912,10 +909,10 @@ __inline Void TEncSearch::xTZ8PointDiamondSearch( TComPattern* pcPatternKey, Int
         }
         for ( Int index = 1; index < 4; index++ )
         {
-          Int iPosYT = iTop    + ((iDist>>2) * index);
-          Int iPosYB = iBottom - ((iDist>>2) * index);
-          Int iPosXL = iStartX - ((iDist>>2) * index);
-          Int iPosXR = iStartX + ((iDist>>2) * index);
+          const Int iPosYT = iTop    + ((iDist>>2) * index);
+          const Int iPosYB = iBottom - ((iDist>>2) * index);
+          const Int iPosXL = iStartX - ((iDist>>2) * index);
+          const Int iPosXR = iStartX + ((iDist>>2) * index);
 
           if ( iPosYT >= iSrchRngVerTop ) // check top
           {
@@ -944,12 +941,6 @@ __inline Void TEncSearch::xTZ8PointDiamondSearch( TComPattern* pcPatternKey, Int
     } // iDist <= 8
   } // iDist == 1
 }
-
-
-
-
-
-//<--
 
 Distortion TEncSearch::xPatternRefinement( TComPattern* pcPatternKey,
                                            TComMv baseRefMv,
@@ -996,12 +987,13 @@ Distortion TEncSearch::xPatternRefinement( TComPattern* pcPatternKey,
     m_cDistParam.pCur = piRefPos;
     m_cDistParam.bitDepth = pcPatternKey->getBitDepthY();
     uiDist = m_cDistParam.DistFunc( &m_cDistParam );
-    uiDist += m_pcRdCost->getCost( cMvTest.getHor(), cMvTest.getVer() );
+    uiDist += m_pcRdCost->getCostOfVectorWithPredictor( cMvTest.getHor(), cMvTest.getVer() );
 
     if ( uiDist < uiDistBest )
     {
       uiDistBest  = uiDist;
       uiDirecBest = i;
+      m_cDistParam.m_maximumDistortionForEarlyExit = uiDist;
     }
   }
 
@@ -2188,7 +2180,7 @@ TEncSearch::xStoreCrossComponentPredictionResult(       Pel    *pResiDst,
   }
 }
 
-Char
+SChar
 TEncSearch::xCalcCrossComponentPredictionAlpha(       TComTU &rTu,
                                                 const ComponentID compID,
                                                 const Pel*        piResiL,
@@ -2205,7 +2197,7 @@ TEncSearch::xCalcCrossComponentPredictionAlpha(       TComTU &rTu,
   const Int  absPartIdx = rTu.GetAbsPartIdxTU( compID );
   const Int diffBitDepth = pCU->getSlice()->getSPS()->getDifferentialLumaChromaBitDepth();
 
-  Char alpha = 0;
+  SChar alpha = 0;
   Int SSxy  = 0;
   Int SSxx  = 0;
 
@@ -2225,9 +2217,9 @@ TEncSearch::xCalcCrossComponentPredictionAlpha(       TComTU &rTu,
   if( SSxx != 0 )
   {
     Double dAlpha = SSxy / Double( SSxx );
-    alpha = Char(Clip3<Int>(-16, 16, (Int)(dAlpha * 16)));
+    alpha = SChar(Clip3<Int>(-16, 16, (Int)(dAlpha * 16)));
 
-    static const Char alphaQuant[17] = {0, 1, 1, 2, 2, 2, 4, 4, 4, 4, 4, 4, 8, 8, 8, 8, 8};
+    static const SChar alphaQuant[17] = {0, 1, 1, 2, 2, 2, 4, 4, 4, 4, 4, 4, 8, 8, 8, 8, 8};
 
     alpha = (alpha < 0) ? -alphaQuant[Int(-alpha)] : alphaQuant[Int(alpha)];
   }
@@ -2306,7 +2298,7 @@ TEncSearch::xRecurIntraChromaCodingQT(TComYuv*    pcOrgYuv,
         Distortion singleDistCTmp            = 0;
         Double     singleCostTmp             = 0;
         UInt       singleCbfCTmp             = 0;
-        Char       bestCrossCPredictionAlpha = 0;
+        SChar      bestCrossCPredictionAlpha = 0;
         Int        bestTransformSkipMode     = 0;
 
         const Bool checkCrossComponentPrediction =    (pcCU->getIntraDir(CHANNEL_TYPE_CHROMA, subTUAbsPartIdx) == DM_CHROMA_IDX)
@@ -2478,7 +2470,7 @@ TEncSearch::xRecurIntraCodingQTTUCSC( TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TCo
   Double              dSingleComponentCost[2][MAX_NUM_COMPONENT]              = {{MAX_DOUBLE, MAX_DOUBLE, MAX_DOUBLE}, {MAX_DOUBLE, MAX_DOUBLE, MAX_DOUBLE}};
   UInt                uiSingleComponentCbf[2][MAX_NUM_COMPONENT]              = {{0, 0, 0}, {0, 0, 0}};
   UInt                uiSingleComponentTransformMode[2][MAX_NUM_COMPONENT]    = {{0, 0, 0}, {0, 0, 0}};
-  Char                cSingleComponentPredictionAlpha[2][MAX_NUM_COMPONENT]   = {{0, 0, 0}, {0, 0, 0}};
+  SChar               cSingleComponentPredictionAlpha[2][MAX_NUM_COMPONENT]   = {{0, 0, 0}, {0, 0, 0}};
 
   UInt uiRelTrDepth = uiTrDepth;
   if( pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_NxN )
@@ -2572,7 +2564,7 @@ TEncSearch::xRecurIntraCodingQTTUCSC( TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TCo
         pcResiYuv->convert(extendedPrecision, rTu.getRect(COMPONENT_Y).x0, rTu.getRect(COMPONENT_Y).y0, rTu.getRect(COMPONENT_Y).width, true, pcCU->getSlice()->getSPS()->getBitDepths(), pcCU->isLosslessCoded(0));
       }
 
-      Char preCalcAlpha[MAX_NUM_COMPONENT] = {0, 0, 0};
+      SChar preCalcAlpha[MAX_NUM_COMPONENT] = {0, 0, 0};
 
       if( pcCU->getSlice()->getPPS()->getPpsRangeExtension().getCrossComponentPredictionEnabledFlag() && !m_pcEncCfg->getUseReconBasedCrossCPredictionEstimate() ) 
       {
@@ -2637,7 +2629,7 @@ TEncSearch::xRecurIntraCodingQTTUCSC( TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TCo
                                               && (pcCU->getIntraDir( toChannelType(compID), uiAbsPartIdx ) == DM_CHROMA_IDX)
                                               && (pcCU->getCbf(uiAbsPartIdx, COMPONENT_Y, uiTrDepth) != 0);
 
-        Char cCalcAlpha = 0;
+        SChar cCalcAlpha = 0;
         if ( bCheckCrossComponentPrediction && m_pcEncCfg->getUseReconBasedCrossCPredictionEstimate() )
         {
           cCalcAlpha = xCalcCrossComponentPredictionAlpha(rTu,
@@ -3028,7 +3020,7 @@ TEncSearch::xRecurIntraCodingQTCSC( TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TComY
   Double              dSingleComponentCost[MAX_NUM_COMPONENT]              = {MAX_DOUBLE, MAX_DOUBLE, MAX_DOUBLE};
   UInt                uiSingleComponentCbf[MAX_NUM_COMPONENT]              = {0, 0, 0};
   UInt                uiSingleComponentTransformMode[MAX_NUM_COMPONENT]    = {0, 0, 0};
-  Char                cSingleComponentPredictionAlpha[MAX_NUM_COMPONENT]  = {0, 0, 0};
+  SChar               cSingleComponentPredictionAlpha[MAX_NUM_COMPONENT]  = {0, 0, 0};
 
   if( bCheckFull )
   {
@@ -3077,7 +3069,7 @@ TEncSearch::xRecurIntraCodingQTCSC( TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TComY
     }
 
     pcResiYuv->convert(extendedPrecision, rTu.getRect(COMPONENT_Y).x0, rTu.getRect(COMPONENT_Y).y0, rTu.getRect(COMPONENT_Y).width, true, pcCU->getSlice()->getSPS()->getBitDepths(), pcCU->isLosslessCoded(0));
-    Char preCalcAlpha[MAX_NUM_COMPONENT] = {0, 0, 0};
+    SChar preCalcAlpha[MAX_NUM_COMPONENT] = {0, 0, 0};
 
     if( pcCU->getSlice()->getPPS()->getPpsRangeExtension().getCrossComponentPredictionEnabledFlag() && !m_pcEncCfg->getUseReconBasedCrossCPredictionEstimate() ) 
     {
@@ -3143,7 +3135,7 @@ TEncSearch::xRecurIntraCodingQTCSC( TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TComY
         && (pcCU->getIntraDir( toChannelType(compID), uiAbsPartIdx ) == DM_CHROMA_IDX)
         && (pcCU->getCbf(uiAbsPartIdx, COMPONENT_Y, uiTrDepth) != 0);
 
-      Char cCalcAlpha = 0;
+      SChar cCalcAlpha = 0;
       if ( bCheckCrossComponentPrediction && m_pcEncCfg->getUseReconBasedCrossCPredictionEstimate() )
       {
         cCalcAlpha = xCalcCrossComponentPredictionAlpha(rTu,
@@ -3922,7 +3914,7 @@ TEncSearch::estIntraPredChromaQT(TComDataCU* pcCU,
               const ComponentID compID = ComponentID(componentIndex);
               ::memcpy( m_puhQTTempCbf[compID], pcCU->getCbf( compID )+uiPartOffset, uiQPartNum * sizeof( UChar ) );
               ::memcpy( m_puhQTTempTransformSkipFlag[compID], pcCU->getTransformSkip( compID )+uiPartOffset, uiQPartNum * sizeof( UChar ) );
-              ::memcpy( m_phQTTempCrossComponentPredictionAlpha[compID], pcCU->getCrossComponentPredictionAlpha(compID)+uiPartOffset, uiQPartNum * sizeof( Char ) );
+              ::memcpy( m_phQTTempCrossComponentPredictionAlpha[compID], pcCU->getCrossComponentPredictionAlpha(compID)+uiPartOffset, uiQPartNum * sizeof( SChar ) );
             }
           }
         }
@@ -3935,7 +3927,7 @@ TEncSearch::estIntraPredChromaQT(TComDataCU* pcCU,
           const ComponentID compID = ComponentID(componentIndex);
           ::memcpy( pcCU->getCbf( compID )+uiPartOffset, m_puhQTTempCbf[compID], uiQPartNum * sizeof( UChar ) );
           ::memcpy( pcCU->getTransformSkip( compID )+uiPartOffset, m_puhQTTempTransformSkipFlag[compID], uiQPartNum * sizeof( UChar ) );
-          ::memcpy( pcCU->getCrossComponentPredictionAlpha(compID)+uiPartOffset, m_phQTTempCrossComponentPredictionAlpha[compID], uiQPartNum * sizeof( Char ) );
+          ::memcpy( pcCU->getCrossComponentPredictionAlpha(compID)+uiPartOffset, m_phQTTempCrossComponentPredictionAlpha[compID], uiQPartNum * sizeof( SChar ) );
         }
       }
 
@@ -4169,7 +4161,7 @@ TEncSearch::estIntraPredQTCT( TComDataCU*    pcCU,
           const ComponentID compID = ComponentID(component);
           ::memcpy( m_puhQTTempCbf[compID],                             pcCU->getCbf( compID  )                           + uiPartOffset, uiQPartNum * sizeof( UChar ) );
           ::memcpy( m_puhQTTempTransformSkipFlag[compID],               pcCU->getTransformSkip(compID)                    + uiPartOffset, uiQPartNum * sizeof( UChar ) );
-          ::memcpy( m_phQTTempCrossComponentPredictionAlpha[compID],    pcCU->getCrossComponentPredictionAlpha(compID)    + uiPartOffset, uiQPartNum * sizeof( Char  ) );
+          ::memcpy( m_phQTTempCrossComponentPredictionAlpha[compID],    pcCU->getCrossComponentPredictionAlpha(compID)    + uiPartOffset, uiQPartNum * sizeof( SChar ) );
         }
       }
     }
@@ -4223,7 +4215,7 @@ TEncSearch::estIntraPredQTCT( TComDataCU*    pcCU,
           const ComponentID compID = ComponentID(component);
           ::memcpy( m_puhQTTempCbf[compID],                             pcCU->getCbf( compID  )                           + uiPartOffset, uiQPartNum * sizeof( UChar ) );
           ::memcpy( m_puhQTTempTransformSkipFlag[compID],               pcCU->getTransformSkip(compID)                    + uiPartOffset, uiQPartNum * sizeof( UChar ) );
-          ::memcpy( m_phQTTempCrossComponentPredictionAlpha[compID],    pcCU->getCrossComponentPredictionAlpha(compID)    + uiPartOffset, uiQPartNum * sizeof( Char  ) );
+          ::memcpy( m_phQTTempCrossComponentPredictionAlpha[compID],    pcCU->getCrossComponentPredictionAlpha(compID)    + uiPartOffset, uiQPartNum * sizeof( SChar ) );
         }
       }
     }
@@ -4241,7 +4233,7 @@ TEncSearch::estIntraPredQTCT( TComDataCU*    pcCU,
       const ComponentID compID = ComponentID(component);
       ::memcpy( pcCU->getCbf( compID  )                           + uiPartOffset, m_puhQTTempCbf[compID],                             uiQPartNum * sizeof( UChar ) );
       ::memcpy( pcCU->getTransformSkip( compID  )                 + uiPartOffset, m_puhQTTempTransformSkipFlag[compID ],              uiQPartNum * sizeof( UChar ) );
-      ::memcpy( pcCU->getCrossComponentPredictionAlpha(compID)    + uiPartOffset, m_phQTTempCrossComponentPredictionAlpha[compID],    uiQPartNum * sizeof( Char  ) );
+      ::memcpy( pcCU->getCrossComponentPredictionAlpha(compID)    + uiPartOffset, m_phQTTempCrossComponentPredictionAlpha[compID],    uiQPartNum * sizeof( SChar ) );
     }
 
     if( !tuRecurseWithPU.IsLastSection() )
@@ -6082,9 +6074,9 @@ Double TEncSearch::xGetRunBits(TComDataCU* pcCU, Pel *pValue, UInt uiStartPos, U
 //!  Function for PCM mode estimation.
 Void TEncSearch::IPCMSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, TComYuv* pcRecoYuv )
 {
-  UInt        uiDepth      = pcCU->getDepth(0);
-  const UInt  uiDistortion = 0;
-  UInt        uiBits;
+  UInt              uiDepth      = pcCU->getDepth(0);
+  const Distortion  uiDistortion = 0;
+  UInt              uiBits;
 
   Double dCost;
 
@@ -6175,7 +6167,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
   ruiCost = std::numeric_limits<Distortion>::max();
   if ( iCostCalcType )
   {
-    m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass( uiAbsPartIdx ) );
+    m_pcRdCost->selectMotionLambda( true, 0, pcCU->getCUTransquantBypass( uiAbsPartIdx ) );
   }
   
   for( UInt uiMergeCand = 0; uiMergeCand < numValidMergeCand; ++uiMergeCand )
@@ -6406,7 +6398,7 @@ Bool TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
             uiCostTemp -= m_pcRdCost->getCost( uiBitsTempL0[pcCU->getSlice()->getList1IdxToList0Idx( iRefIdxTemp )] );
             /*correct the bit-rate part of the current ref*/
             m_pcRdCost->setPredictor  ( cMvPred[iRefList][iRefIdxTemp] );
-            uiBitsTemp += m_pcRdCost->getBits( cMvTemp[1][iRefIdxTemp].getHor(), cMvTemp[1][iRefIdxTemp].getVer() );
+            uiBitsTemp += m_pcRdCost->getBitsOfVectorWithPredictor( cMvTemp[1][iRefIdxTemp].getHor(), cMvTemp[1][iRefIdxTemp].getVer() );
             /*calculate the correct cost*/
             uiCostTemp += m_pcRdCost->getCost( uiBitsTemp );
           }
@@ -6453,7 +6445,7 @@ Bool TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
       }
     }
 
-    //  Bi-directional prediction
+    //  Bi-predictive Motion estimation
     if ( (pcCU->getSlice()->isInterB()) && (pcCU->isBipredRestriction(iPartIdx) == false) )
     {
 
@@ -6512,7 +6504,7 @@ Bool TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
       Int iNumIter = 4;
 
       // fast encoder setting: only one iteration
-      if ( m_pcEncCfg->getUseFastEnc() || pcCU->getSlice()->getMvdL1ZeroFlag())
+      if ( m_pcEncCfg->getFastInterSearchMode()==FASTINTERSEARCH_MODE1 || m_pcEncCfg->getFastInterSearchMode()==FASTINTERSEARCH_MODE2 || pcCU->getSlice()->getMvdL1ZeroFlag() )
       {
         iNumIter = 1;
       }
@@ -6521,7 +6513,7 @@ Bool TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
       {
         Int         iRefList    = iIter % 2;
 
-        if ( m_pcEncCfg->getUseFastEnc() )
+        if ( m_pcEncCfg->getFastInterSearchMode()==FASTINTERSEARCH_MODE1 || m_pcEncCfg->getFastInterSearchMode()==FASTINTERSEARCH_MODE2 )
         {
           if( uiCost[0] <= uiCost[1] )
           {
@@ -6740,7 +6732,7 @@ Bool TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
       UInt uiMEInterDir = 0;
       TComMvField cMEMvField[2];
 
-      m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
+      m_pcRdCost->selectMotionLambda( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
 
 #if AMP_MRG
       // calculate ME cost
@@ -6760,8 +6752,8 @@ Bool TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* 
 #endif
       // save ME result.
       uiMEInterDir = pcCU->getInterDir( uiPartAddr );
-      pcCU->getMvField( pcCU, uiPartAddr, REF_PIC_LIST_0, cMEMvField[0] );
-      pcCU->getMvField( pcCU, uiPartAddr, REF_PIC_LIST_1, cMEMvField[1] );
+      TComDataCU::getMvField( pcCU, uiPartAddr, REF_PIC_LIST_0, cMEMvField[0] );
+      TComDataCU::getMvField( pcCU, uiPartAddr, REF_PIC_LIST_1, cMEMvField[1] );
 
       // find Merge result
       Distortion uiMRGCost = std::numeric_limits<Distortion>::max();
@@ -7000,7 +6992,7 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
       return false;
     }
 
-    m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass( 0 ) );
+    m_pcRdCost->selectMotionLambda( true, 0, pcCU->getCUTransquantBypass( 0 ) );
     m_pcRdCost->setCostScale( 0 );
 
     UInt uiDepth = pcCU->getDepth( 0 );
@@ -7055,7 +7047,7 @@ Bool TEncSearch::predIntraBCSearch( TComDataCU * pcCU,
     for ( mvpIdxTemp=0; mvpIdxTemp<currAMVPInfo.iN; mvpIdxTemp++ )
     {
       m_pcRdCost->setPredictor( cMvPred[mvpIdxTemp] );
-      bitsAMVPTemp = m_pcRdCost->getBits( cMv.getHor(), cMv.getVer() );
+      bitsAMVPTemp = m_pcRdCost->getBitsOfVectorWithPredictor( cMv.getHor(), cMv.getVer() );
       if ( bitsAMVPTemp < bitsAMVPBest )
       {
         bitsAMVPBest = bitsAMVPTemp;
@@ -7277,7 +7269,7 @@ Bool TEncSearch::predMixedIntraBCInterSearch( TComDataCU * pcCU,
           iIBCValidFlag++;
           break;
         }
-        m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass( uiPartAddr ) );
+        m_pcRdCost->selectMotionLambda( true, 0, pcCU->getCUTransquantBypass( uiPartAddr ) );
         m_pcRdCost->setCostScale( 0 );
         //Pel*        piRefY      = pcCU->getPic()->getPicYuvRec()->getAddr( COMPONENT_Y, pcCU->getAddr(), pcCU->getZorderIdxInCU() + uiPartAddr );
         //Int         iRefStride  = pcCU->getPic()->getPicYuvRec()->getStride( COMPONENT_Y );
@@ -7296,7 +7288,7 @@ Bool TEncSearch::predMixedIntraBCInterSearch( TComDataCU * pcCU,
         // ibc merge
         // choose one MVP and compare with merge mode
 
-        m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass( 0 ) );
+        m_pcRdCost->selectMotionLambda( true, 0, pcCU->getCUTransquantBypass( 0 ) );
         m_pcRdCost->setCostScale( 0 );
 
 
@@ -7347,7 +7339,7 @@ Bool TEncSearch::predMixedIntraBCInterSearch( TComDataCU * pcCU,
         for ( mvpIdxTemp=0; mvpIdxTemp<AMVP_MAX_NUM_CANDS; mvpIdxTemp++ )
         {
           m_pcRdCost->setPredictor( bvPred[mvpIdxTemp] );
-          bitsAMVPTemp = m_pcRdCost->getBits( (cMv.getHor() >> 2), (cMv.getVer() >> 2) );
+          bitsAMVPTemp = m_pcRdCost->getBitsOfVectorWithPredictor( (cMv.getHor() >> 2), (cMv.getVer() >> 2) );
           if ( bitsAMVPTemp < bitsAMVPBest )
           {
             bitsAMVPBest = bitsAMVPTemp;
@@ -7493,9 +7485,9 @@ Bool TEncSearch::predMixedIntraBCInterSearch( TComDataCU * pcCU,
             mvPred[1] = pcCU->getCUMvField( eRefPicList )->getAMVPInfo()->m_acMvCand[1];
 
             m_pcRdCost->setPredictor( mvPred[0] );
-            uiTempCost0 = m_pcRdCost->getCost( cMv.getHor(), cMv.getVer() );
+            uiTempCost0 = m_pcRdCost->getCostOfVectorWithPredictor( cMv.getHor(), cMv.getVer() );
             m_pcRdCost->setPredictor( mvPred[1] );
-            uiTempCost1 = m_pcRdCost->getCost( cMv.getHor(), cMv.getVer() );
+            uiTempCost1 = m_pcRdCost->getCostOfVectorWithPredictor( cMv.getHor(), cMv.getVer() );
             if ( uiTempCost1 < uiTempCost0 )
             {
               iMvpIdx = 1;
@@ -7507,7 +7499,7 @@ Bool TEncSearch::predMixedIntraBCInterSearch( TComDataCU * pcCU,
 
             UInt uiBitsTemp = m_auiMVPIdxCost[iMvpIdx][AMVP_MAX_NUM_CANDS];
 
-            m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass( uiPartAddr ) );
+            m_pcRdCost->selectMotionLambda( true, 0, pcCU->getCUTransquantBypass( uiPartAddr ) );
             m_pcRdCost->setPredictor( mvPred[iMvpIdx] );
             if( pcCU->getSlice()->getUseIntegerMv() )
             {
@@ -7547,7 +7539,7 @@ Bool TEncSearch::predMixedIntraBCInterSearch( TComDataCU * pcCU,
 #endif
             pcCU->getCUMvField( eRefPicList )->setAllRefIdx( -1, ePartSize, uiPartAddr, 0, iPartIdx );
             //  m_pcRdCost->setCostScale  ( 2 );
-            uiCostInterTemp += m_pcRdCost->getCost( cMv.getHor(), cMv.getVer() );
+            uiCostInterTemp += m_pcRdCost->getCostOfVectorWithPredictor( cMv.getHor(), cMv.getVer() );
             uiCostInterTemp += m_pcRdCost->getCost( uiBitsTemp );
 
             if ( uiCostInterTemp < uiCostInterBest )
@@ -7881,7 +7873,7 @@ Bool TEncSearch::predInterHashSearch( TComDataCU* pcCU, TComYuv* pcOrg, TComYuv*
   return true;
 }
 
-Void TEncSearch::selectMatchesInter( TComDataCU* pcCU, const MapIterator& itBegin, Int count, list<BlockHash>& listBlockHash, const BlockHash& currBlockHash )
+Void TEncSearch::selectMatchesInter( const TComDataCU* const pcCU, const MapIterator& itBegin, Int count, list<BlockHash>& listBlockHash, const BlockHash& currBlockHash )
 {
   const Int maxReturnNumber = 5;
 
@@ -7915,9 +7907,9 @@ Void TEncSearch::selectMatchesInter( TComDataCU* pcCU, const MapIterator& itBegi
 }
 
 
-Int TEncSearch::xHashInterPredME( TComDataCU* pcCU, Int width, Int height, RefPicList currRefPicList, Int currRefPicIndex, TComMv bestMv[5] )
+Int TEncSearch::xHashInterPredME( const TComDataCU* const pcCU, Int width, Int height, RefPicList currRefPicList, Int currRefPicIndex, TComMv bestMv[5] )
 {
-  TComPic* pcPic = pcCU->getPic();
+  const TComPic* pcPic = pcCU->getPic();
   Int xPos = pcCU->getCUPelX();
   Int yPos = pcCU->getCUPelY();
   UInt hashValue1;
@@ -8021,7 +8013,7 @@ Bool TEncSearch::xHashInterEstimation( TComDataCU* pcCU, Int width, Int height, 
         Pel* pRefStart = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec()->getAddr( COMPONENT_Y );
         Int refStride = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec()->getStride( COMPONENT_Y );
 
-        m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass( 0 ) );
+        m_pcRdCost->selectMotionLambda( true, 0, pcCU->getCUTransquantBypass( 0 ) );
         m_pcRdCost->setCostScale( 2 );
         if ( pcCU->getSlice()->getUseIntegerMv() )
         {
@@ -8034,9 +8026,9 @@ Bool TEncSearch::xHashInterEstimation( TComDataCU* pcCU, Int width, Int height, 
           if ( currAMVPInfo.iN > 1 )
           {
             m_pcRdCost->setPredictor( currAMVPInfo.m_acMvCand[0] );
-            Int bitsMVP0 = m_pcRdCost->getBits( (*it).x - currBlockHash.x, (*it).y - currBlockHash.y );
+            Int bitsMVP0 = m_pcRdCost->getBitsOfVectorWithPredictor( (*it).x - currBlockHash.x, (*it).y - currBlockHash.y );
             m_pcRdCost->setPredictor( currAMVPInfo.m_acMvCand[1] );
-            Int bitsMVP1 = m_pcRdCost->getBits( (*it).x - currBlockHash.x, (*it).y - currBlockHash.y );
+            Int bitsMVP1 = m_pcRdCost->getBitsOfVectorWithPredictor( (*it).x - currBlockHash.x, (*it).y - currBlockHash.y );
             if ( bitsMVP1 < bitsMVP0 )
             {
               currMVPIdx = 1;
@@ -8046,7 +8038,7 @@ Bool TEncSearch::xHashInterEstimation( TComDataCU* pcCU, Int width, Int height, 
 
           Pel* pRef = pRefStart + (*it).y*refStride + (*it).x;
           Distortion currSad = getSAD( pRef, refStride, pCurr, currStride, width, height, pcCU->getSlice()->getSPS()->getBitDepths() );
-          Int bits = bitsOnRefIdx + m_pcRdCost->getBits( (*it).x - currBlockHash.x, (*it).y - currBlockHash.y );
+          Int bits = bitsOnRefIdx + m_pcRdCost->getBitsOfVectorWithPredictor( (*it).x - currBlockHash.x, (*it).y - currBlockHash.y );
           Distortion currCost = currSad + m_pcRdCost->getCost( bits );
 
           if ( !isPerfectMatch && pcCU->getPartitionSize( 0 ) == SIZE_2Nx2N )
@@ -8126,7 +8118,7 @@ Void TEncSearch::xIntraBlockCopyEstimation( TComDataCU *pcCU,
   // disable weighted prediction
   setWpScalingDistParam( pcCU, -1, REF_PIC_LIST_X );
 
-  m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
+  m_pcRdCost->selectMotionLambda( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
   m_pcRdCost->setPredictors(pcMvPred);
   m_pcRdCost->setCostScale  ( 0 );
 
@@ -9150,7 +9142,7 @@ Void TEncSearch::xIntraBCHashSearch( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iP
   // disable weighted prediction
   setWpScalingDistParam( pcCU, -1, REF_PIC_LIST_X );
 
-  m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
+  m_pcRdCost->selectMotionLambda( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
   m_pcRdCost->setPredictor(*pcMvPred);
   m_pcRdCost->setCostScale  ( 0 );
   m_pcRdCost->setDistParam( pcPatternKey, piRefY, iRefStride,  m_cDistParam );
@@ -9541,13 +9533,13 @@ Void TEncSearch::xCheckBestMVP ( TComDataCU* pcCU, RefPicList eRefPicList, TComM
     return;
   }
 
-  m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(0) );
+  m_pcRdCost->selectMotionLambda( true, 0, pcCU->getCUTransquantBypass(0) );
   m_pcRdCost->setCostScale ( 0    );
 
   Int iBestMVPIdx = riMVPIdx;
 
   m_pcRdCost->setPredictor( rcMvPred );
-  Int iOrgMvBits  = m_pcRdCost->getBits(cMv.getHor(), cMv.getVer());
+  Int iOrgMvBits  = m_pcRdCost->getBitsOfVectorWithPredictor(cMv.getHor(), cMv.getVer());
   iOrgMvBits += m_auiMVPIdxCost[riMVPIdx][AMVP_MAX_NUM_CANDS];
   Int iBestMvBits = iOrgMvBits;
 
@@ -9560,7 +9552,7 @@ Void TEncSearch::xCheckBestMVP ( TComDataCU* pcCU, RefPicList eRefPicList, TComM
 
     m_pcRdCost->setPredictor( pcAMVPInfo->m_acMvCand[iMVPIdx] );
 
-    Int iMvBits = m_pcRdCost->getBits(cMv.getHor(), cMv.getVer());
+    Int iMvBits = m_pcRdCost->getBitsOfVectorWithPredictor(cMv.getHor(), cMv.getVer());
     iMvBits += m_auiMVPIdxCost[iMVPIdx][AMVP_MAX_NUM_CANDS];
 
     if (iMvBits < iBestMvBits)
@@ -9618,11 +9610,9 @@ Distortion TEncSearch::xGetTemplateCost( TComDataCU* pcCU,
   // calc distortion
 
   uiCost = m_pcRdCost->getDistPart( pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA), pcTemplateCand->getAddr(COMPONENT_Y, uiPartAddr), pcTemplateCand->getStride(COMPONENT_Y), pcOrgYuv->getAddr(COMPONENT_Y, uiPartAddr), pcOrgYuv->getStride(COMPONENT_Y), iSizeX, iSizeY, COMPONENT_Y, DF_SAD );
-  uiCost = (UInt) m_pcRdCost->calcRdCost( m_auiMVPIdxCost[iMVPIdx][iMVPNum], uiCost, false, DF_SAD );
+  uiCost = (UInt) m_pcRdCost->calcRdCost( m_auiMVPIdxCost[iMVPIdx][iMVPNum], uiCost, DF_SAD );
   return uiCost;
 }
-
-
 
 
 Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPartIdx, RefPicList eRefPicList, TComMv* pcMvPred, Int iRefIdxPred, TComMv& rcMv, UInt& ruiBits, Distortion& ruiCost, Bool bBi  )
@@ -9648,7 +9638,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
 
   pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iRoiWidth, iRoiHeight );
 
-  if ( bBi )
+  if ( bBi ) // Bipredictive ME
   {
     TComYuv*  pcYuvOther = &m_acYuvPred[1-(Int)eRefPicList];
     pcYuv                = &m_cYuvPredTemp;
@@ -9659,6 +9649,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
 
     fWeight = 0.5;
   }
+  m_cDistParam.bIsBiPred = bBi;
 
   //  Search key pattern initialization
   pcPatternKey->initPattern( pcYuv->getAddr  ( COMPONENT_Y, uiPartAddr ),
@@ -9681,7 +9672,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
     xSetSearchRange   ( pcCU, cMvPred, iSrchRng, cMvSrchRngLT, cMvSrchRngRB );
   }
 
-  m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
+  m_pcRdCost->selectMotionLambda( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
 
   m_pcRdCost->setPredictor  ( *pcMvPred );
   m_pcRdCost->setCostScale  ( 2 );
@@ -9698,7 +9689,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   }
 
   //  Do integer search
-  if ( !m_iFastSearch || bBi )
+  if ( (m_motionEstimationSearchMethod==MESEARCH_FULL) || bBi )
   {
     xPatternSearch      ( pcPatternKey, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost );
   }
@@ -9717,7 +9708,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
     }
   }
 
-  m_pcRdCost->getMotionCost( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
+  m_pcRdCost->selectMotionLambda( true, 0, pcCU->getCUTransquantBypass(uiPartAddr) );
   m_pcRdCost->setCostScale ( 1 );
 
   const Bool bIsLosslessCoded = pcCU->getCUTransquantBypass(uiPartAddr) != 0;
@@ -9729,16 +9720,15 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   rcMv += (cMvHalf <<= 1);
   rcMv +=  cMvQter;
 
-  UInt uiMvBits = m_pcRdCost->getBits( rcMv.getHor(), rcMv.getVer() );
+  UInt uiMvBits = m_pcRdCost->getBitsOfVectorWithPredictor( rcMv.getHor(), rcMv.getVer() );
 
   ruiBits      += uiMvBits;
   ruiCost       = (Distortion)( floor( fWeight * ( (Double)ruiCost - (Double)m_pcRdCost->getCost( uiMvBits ) ) ) + (Double)m_pcRdCost->getCost( ruiBits ) );
 }
 
 
-
-
-Void TEncSearch::xSetSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int iSrchRng, TComMv& rcMvSrchRngLT, TComMv& rcMvSrchRngRB )
+Void TEncSearch::xSetSearchRange ( const TComDataCU* const pcCU, const TComMv& cMvPred, const Int iSrchRng,
+                                   TComMv& rcMvSrchRngLT, TComMv& rcMvSrchRngRB )
 {
   Int  iMvShift = 2;
   TComMv cTmpMvPred = cMvPred;
@@ -9752,14 +9742,23 @@ Void TEncSearch::xSetSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int iSrchR
   pcCU->clipMv        ( rcMvSrchRngLT );
   pcCU->clipMv        ( rcMvSrchRngRB );
 
+#if ME_ENABLE_ROUNDING_OF_MVS
+  rcMvSrchRngLT.divideByPowerOf2(iMvShift);
+  rcMvSrchRngRB.divideByPowerOf2(iMvShift);
+#else
   rcMvSrchRngLT >>= iMvShift;
   rcMvSrchRngRB >>= iMvShift;
+#endif
 }
 
 
-
-
-Void TEncSearch::xPatternSearch( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, TComMv* pcMvSrchRngLT, TComMv* pcMvSrchRngRB, TComMv& rcMv, Distortion& ruiSAD )
+Void TEncSearch::xPatternSearch( const TComPattern* const pcPatternKey,
+                                 const Pel*               piRefY,
+                                 const Int                iRefStride,
+                                 const TComMv* const      pcMvSrchRngLT,
+                                 const TComMv* const      pcMvSrchRngRB,
+                                 TComMv&      rcMv,
+                                 Distortion&  ruiSAD )
 {
   Int   iSrchRngHorLeft   = pcMvSrchRngLT->getHor();
   Int   iSrchRngHorRight  = pcMvSrchRngRB->getHor();
@@ -9771,13 +9770,11 @@ Void TEncSearch::xPatternSearch( TComPattern* pcPatternKey, Pel* piRefY, Int iRe
   Int         iBestX = 0;
   Int         iBestY = 0;
 
-  Pel*  piRefSrch;
-
   //-- jclee for using the SAD function pointer
   m_pcRdCost->setDistParam( pcPatternKey, piRefY, iRefStride,  m_cDistParam );
 
   // fast encoder decision: use subsampled SAD for integer ME
-  if ( m_pcEncCfg->getUseFastEnc() )
+  if ( m_pcEncCfg->getFastInterSearchMode()==FASTINTERSEARCH_MODE1 || m_pcEncCfg->getFastInterSearchMode()==FASTINTERSEARCH_MODE3 )
   {
     if ( m_cDistParam.iRows > 8 )
     {
@@ -9791,8 +9788,7 @@ Void TEncSearch::xPatternSearch( TComPattern* pcPatternKey, Pel* piRefY, Int iRe
     for ( Int x = iSrchRngHorLeft; x <= iSrchRngHorRight; x++ )
     {
       //  find min. distortion position
-      piRefSrch = piRefY + x;
-      m_cDistParam.pCur = piRefSrch;
+      m_cDistParam.pCur = piRefY + x;
 
       setDistParamComp(COMPONENT_Y);
 
@@ -9800,13 +9796,14 @@ Void TEncSearch::xPatternSearch( TComPattern* pcPatternKey, Pel* piRefY, Int iRe
       uiSad = m_cDistParam.DistFunc( &m_cDistParam );
 
       // motion cost
-      uiSad += m_pcRdCost->getCost( x, y );
+      uiSad += m_pcRdCost->getCostOfVectorWithPredictor( x, y );
 
       if ( uiSad < uiSadBest )
       {
         uiSadBest = uiSad;
         iBestX    = x;
         iBestY    = y;
+        m_cDistParam.m_maximumDistortionForEarlyExit = uiSad;
       }
     }
     piRefY += iRefStride;
@@ -9814,21 +9811,20 @@ Void TEncSearch::xPatternSearch( TComPattern* pcPatternKey, Pel* piRefY, Int iRe
 
   rcMv.set( iBestX, iBestY );
 
-  ruiSAD = uiSadBest - m_pcRdCost->getCost( iBestX, iBestY );
+  ruiSAD = uiSadBest - m_pcRdCost->getCostOfVectorWithPredictor( iBestX, iBestY );
   return;
 }
 
 
-
-Void TEncSearch::xPatternSearchFast( TComDataCU*   pcCU,
-                                     TComPattern*  pcPatternKey,
-                                     Pel*          piRefY,
-                                     Int           iRefStride,
-                                     TComMv*       pcMvSrchRngLT,
-                                     TComMv*       pcMvSrchRngRB,
-                                     TComMv       &rcMv,
-                                     Distortion   &ruiSAD,
-                                     const TComMv* pIntegerMv2Nx2NPred )
+Void TEncSearch::xPatternSearchFast( const TComDataCU* const  pcCU,
+                                     const TComPattern* const pcPatternKey,
+                                     const Pel* const         piRefY,
+                                     const Int                iRefStride,
+                                     const TComMv* const      pcMvSrchRngLT,
+                                     const TComMv* const      pcMvSrchRngRB,
+                                     TComMv&                  rcMv,
+                                     Distortion&              ruiSAD,
+                                     const TComMv* const      pIntegerMv2Nx2NPred )
 {
   assert (MD_LEFT < NUM_MV_PREDICTORS);
   pcCU->getMvPredLeft       ( m_acMvPredictors[MD_LEFT] );
@@ -9837,43 +9833,67 @@ Void TEncSearch::xPatternSearchFast( TComDataCU*   pcCU,
   assert (MD_ABOVE_RIGHT < NUM_MV_PREDICTORS);
   pcCU->getMvPredAboveRight ( m_acMvPredictors[MD_ABOVE_RIGHT] );
 
-  switch ( m_iFastSearch )
+  switch ( m_motionEstimationSearchMethod )
   {
-    case 1:
-      xTZSearch( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD, pIntegerMv2Nx2NPred );
+    case MESEARCH_DIAMOND:
+      xTZSearch( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD, pIntegerMv2Nx2NPred, false );
       break;
 
-    case 2:
+    case MESEARCH_SELECTIVE:
       xTZSearchSelective( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD, pIntegerMv2Nx2NPred );
       break;
+
+    case MESEARCH_DIAMOND_ENHANCED:
+      xTZSearch( pcCU, pcPatternKey, piRefY, iRefStride, pcMvSrchRngLT, pcMvSrchRngRB, rcMv, ruiSAD, pIntegerMv2Nx2NPred, true );
+      break;
+
+    case MESEARCH_FULL: // shouldn't get here.
     default:
       break;
   }
 }
 
 
-
-
-Void TEncSearch::xTZSearch( TComDataCU*  pcCU,
-                            TComPattern* pcPatternKey,
-                            Pel*         piRefY,
-                            Int          iRefStride,
-                            TComMv*      pcMvSrchRngLT,
-                            TComMv*      pcMvSrchRngRB,
-                            TComMv      &rcMv,
-                            Distortion  &ruiSAD,
-                            const TComMv* pIntegerMv2Nx2NPred )
+Void TEncSearch::xTZSearch( const TComDataCU* const pcCU,
+                            const TComPattern* const pcPatternKey,
+                            const Pel* const         piRefY,
+                            const Int                iRefStride,
+                            const TComMv* const      pcMvSrchRngLT,
+                            const TComMv* const      pcMvSrchRngRB,
+                            TComMv&                  rcMv,
+                            Distortion&              ruiSAD,
+                            const TComMv* const      pIntegerMv2Nx2NPred,
+                            const Bool               bExtendedSettings)
 {
-  Int   iSrchRngHorLeft   = pcMvSrchRngLT->getHor();
-  Int   iSrchRngHorRight  = pcMvSrchRngRB->getHor();
-  Int   iSrchRngVerTop    = pcMvSrchRngLT->getVer();
-  Int   iSrchRngVerBottom = pcMvSrchRngRB->getVer();
-
-  TZ_SEARCH_CONFIGURATION
+  const Bool bUseAdaptiveRaster                      = bExtendedSettings;
+  const Int  iRaster                                 = 5;
+  const Bool bTestOtherPredictedMV                   = bExtendedSettings;
+  const Bool bTestZeroVector                         = true;
+  const Bool bTestZeroVectorStart                    = bExtendedSettings;
+  const Bool bTestZeroVectorStop                     = false;
+  const Bool bFirstSearchDiamond                     = true;  // 1 = xTZ8PointDiamondSearch   0 = xTZ8PointSquareSearch
+  const Bool bFirstCornersForDiamondDist1            = bExtendedSettings;
+  const Bool bFirstSearchStop                        = m_pcEncCfg->getFastMEAssumingSmootherMVEnabled();
+  const UInt uiFirstSearchRounds                     = 3;     // first search stop X rounds after best match (must be >=1)
+  const Bool bEnableRasterSearch                     = true;
+  const Bool bAlwaysRasterSearch                     = bExtendedSettings;  // true: BETTER but factor 2 slower
+  const Bool bRasterRefinementEnable                 = false; // enable either raster refinement or star refinement
+  const Bool bRasterRefinementDiamond                = false; // 1 = xTZ8PointDiamondSearch   0 = xTZ8PointSquareSearch
+  const Bool bRasterRefinementCornersForDiamondDist1 = bExtendedSettings;
+  const Bool bStarRefinementEnable                   = true;  // enable either star refinement or raster refinement
+  const Bool bStarRefinementDiamond                  = true;  // 1 = xTZ8PointDiamondSearch   0 = xTZ8PointSquareSearch
+  const Bool bStarRefinementCornersForDiamondDist1   = bExtendedSettings;
+  const Bool bStarRefinementStop                     = false;
+  const UInt uiStarRefinementRounds                  = 2;  // star refinement stop X rounds after best match (must be >=1)
+  const Bool bNewZeroNeighbourhoodTest               = bExtendedSettings;
 
   UInt uiSearchRange = m_iSearchRange;
   pcCU->clipMv( rcMv );
+#if ME_ENABLE_ROUNDING_OF_MVS
+  rcMv.divideByPowerOf2(2);
+#else
   rcMv >>= 2;
+#endif
   // init TZSearchStruct
   IntTZSearchStruct cStruct;
   cStruct.iYStride    = iRefStride;
@@ -9890,24 +9910,51 @@ Void TEncSearch::xTZSearch( TComDataCU*  pcCU,
     {
       TComMv cMv = m_acMvPredictors[index];
       pcCU->clipMv( cMv );
+#if ME_ENABLE_ROUNDING_OF_MVS
+      cMv.divideByPowerOf2(2);
+#else
       cMv >>= 2;
-      xTZSearchHelp( pcPatternKey, cStruct, cMv.getHor(), cMv.getVer(), 0, 0 );
+#endif
+      if (cMv != rcMv && (cMv.getHor() != cStruct.iBestX && cMv.getVer() != cStruct.iBestY))
+      {
+        // only test cMV if not obviously previously tested.
+        xTZSearchHelp( pcPatternKey, cStruct, cMv.getHor(), cMv.getVer(), 0, 0 );
+      }
     }
   }
 
   // test whether zero Mv is better start point than Median predictor
   if ( bTestZeroVector )
   {
-    xTZSearchHelp( pcPatternKey, cStruct, 0, 0, 0, 0 );
+    if ((rcMv.getHor() != 0 || rcMv.getVer() != 0) &&
+        (0 != cStruct.iBestX || 0 != cStruct.iBestY))
+    {
+      // only test 0-vector if not obviously previously tested.
+      xTZSearchHelp( pcPatternKey, cStruct, 0, 0, 0, 0 );
+    }
   }
+
+  Int   iSrchRngHorLeft   = pcMvSrchRngLT->getHor();
+  Int   iSrchRngHorRight  = pcMvSrchRngRB->getHor();
+  Int   iSrchRngVerTop    = pcMvSrchRngLT->getVer();
+  Int   iSrchRngVerBottom = pcMvSrchRngRB->getVer();
 
   if (pIntegerMv2Nx2NPred != 0)
   {
     TComMv integerMv2Nx2NPred = *pIntegerMv2Nx2NPred;
     integerMv2Nx2NPred <<= 2;
     pcCU->clipMv( integerMv2Nx2NPred );
+#if ME_ENABLE_ROUNDING_OF_MVS
+    integerMv2Nx2NPred.divideByPowerOf2(2);
+#else
     integerMv2Nx2NPred >>= 2;
-    xTZSearchHelp(pcPatternKey, cStruct, integerMv2Nx2NPred.getHor(), integerMv2Nx2NPred.getVer(), 0, 0);
+#endif
+    if ((rcMv != integerMv2Nx2NPred) &&
+        (integerMv2Nx2NPred.getHor() != cStruct.iBestX || integerMv2Nx2NPred.getVer() != cStruct.iBestY))
+    {
+      // only test integerMv2Nx2NPred if not obviously previously tested.
+      xTZSearchHelp(pcPatternKey, cStruct, integerMv2Nx2NPred.getHor(), integerMv2Nx2NPred.getVer(), 0, 0);
+    }
 
     // reset search range
     TComMv cMvSrchRngLT;
@@ -9936,7 +9983,7 @@ Void TEncSearch::xTZSearch( TComDataCU*  pcCU,
     {
       // write out best match
       rcMv.set( cStruct.iBestX, cStruct.iBestY );
-      ruiSAD = cStruct.uiBestSad - m_pcRdCost->getCost( cStruct.iBestX, cStruct.iBestY );
+      ruiSAD = cStruct.uiBestSad - m_pcRdCost->getCostOfVectorWithPredictor( cStruct.iBestX, cStruct.iBestY );
       m_bSkipFracME = true;
 
       return;
@@ -9948,12 +9995,15 @@ Void TEncSearch::xTZSearch( TComDataCU*  pcCU,
   Int  iStartX = cStruct.iBestX;
   Int  iStartY = cStruct.iBestY;
 
-  // first search
+  const Bool bBestCandidateZero = (cStruct.iBestX == 0) && (cStruct.iBestY == 0);
+
+  // first search around best position up to now.
+  // The following works as a "subsampled/log" window search around the best candidate
   for ( iDist = 1; iDist <= (Int)uiSearchRange; iDist*=2 )
   {
     if ( bFirstSearchDiamond == 1 )
     {
-      xTZ8PointDiamondSearch ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, iDist );
+      xTZ8PointDiamondSearch ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, iDist, bFirstCornersForDiamondDist1 );
     }
     else
     {
@@ -9966,17 +10016,38 @@ Void TEncSearch::xTZSearch( TComDataCU*  pcCU,
     }
   }
 
-  // test whether zero Mv is a better start point than Median predictor
-  if ( bTestZeroVectorStart && ((cStruct.iBestX != 0) || (cStruct.iBestY != 0)) )
+  if (!bNewZeroNeighbourhoodTest)
   {
-    xTZSearchHelp( pcPatternKey, cStruct, 0, 0, 0, 0 );
-    if ( (cStruct.iBestX == 0) && (cStruct.iBestY == 0) )
+    // test whether zero Mv is a better start point than Median predictor
+    if ( bTestZeroVectorStart && ((cStruct.iBestX != 0) || (cStruct.iBestY != 0)) )
     {
-      // test its neighborhood
-      for ( iDist = 1; iDist <= (Int)uiSearchRange; iDist*=2 )
+      xTZSearchHelp( pcPatternKey, cStruct, 0, 0, 0, 0 );
+      if ( (cStruct.iBestX == 0) && (cStruct.iBestY == 0) )
       {
-        xTZ8PointDiamondSearch( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, 0, 0, iDist );
-        if ( bTestZeroVectorStop && (cStruct.uiBestRound > 0) ) // stop criterion
+        // test its neighborhood
+        for ( iDist = 1; iDist <= (Int)uiSearchRange; iDist*=2 )
+        {
+          xTZ8PointDiamondSearch( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, 0, 0, iDist, false );
+          if ( bTestZeroVectorStop && (cStruct.uiBestRound > 0) ) // stop criterion
+          {
+            break;
+          }
+        }
+      }
+    }
+  }
+  else
+  {
+    // Test also zero neighbourhood but with half the range
+    // It was reported that the original (above) search scheme using bTestZeroVectorStart did not
+    // make sense since one would have already checked the zero candidate earlier
+    // and thus the conditions for that test would have not been satisfied
+    if (bTestZeroVectorStart == true && bBestCandidateZero != true)
+    {
+      for ( iDist = 1; iDist <= ((Int)uiSearchRange >> 1); iDist*=2 )
+      {
+        xTZ8PointDiamondSearch( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, 0, 0, iDist, false );
+        if ( bTestZeroVectorStop && (cStruct.uiBestRound > 2) ) // stop criterion
         {
           break;
         }
@@ -9992,19 +10063,48 @@ Void TEncSearch::xTZSearch( TComDataCU*  pcCU,
   }
 
   // raster search if distance is too big
-  if ( bEnableRasterSearch && ( ((Int)(cStruct.uiBestDistance) > iRaster) || bAlwaysRasterSearch ) )
+  if (bUseAdaptiveRaster)
   {
-    cStruct.uiBestDistance = iRaster;
-    for ( iStartY = iSrchRngVerTop; iStartY <= iSrchRngVerBottom; iStartY += iRaster )
+    int iWindowSize = iRaster;
+    Int   iSrchRngRasterLeft   = iSrchRngHorLeft;
+    Int   iSrchRngRasterRight  = iSrchRngHorRight;
+    Int   iSrchRngRasterTop    = iSrchRngVerTop;
+    Int   iSrchRngRasterBottom = iSrchRngVerBottom;
+
+    if (!(bEnableRasterSearch && ( ((Int)(cStruct.uiBestDistance) > iRaster))))
     {
-      for ( iStartX = iSrchRngHorLeft; iStartX <= iSrchRngHorRight; iStartX += iRaster )
+      iWindowSize ++;
+      iSrchRngRasterLeft /= 2;
+      iSrchRngRasterRight /= 2;
+      iSrchRngRasterTop /= 2;
+      iSrchRngRasterBottom /= 2;
+    }
+    cStruct.uiBestDistance = iWindowSize;
+    for ( iStartY = iSrchRngRasterTop; iStartY <= iSrchRngRasterBottom; iStartY += iWindowSize )
+    {
+      for ( iStartX = iSrchRngRasterLeft; iStartX <= iSrchRngRasterRight; iStartX += iWindowSize )
       {
-        xTZSearchHelp( pcPatternKey, cStruct, iStartX, iStartY, 0, iRaster );
+        xTZSearchHelp( pcPatternKey, cStruct, iStartX, iStartY, 0, iWindowSize );
+      }
+    }
+  }
+  else
+  {
+    if ( bEnableRasterSearch && ( ((Int)(cStruct.uiBestDistance) > iRaster) || bAlwaysRasterSearch ) )
+    {
+      cStruct.uiBestDistance = iRaster;
+      for ( iStartY = iSrchRngVerTop; iStartY <= iSrchRngVerBottom; iStartY += iRaster )
+      {
+        for ( iStartX = iSrchRngHorLeft; iStartX <= iSrchRngHorRight; iStartX += iRaster )
+        {
+          xTZSearchHelp( pcPatternKey, cStruct, iStartX, iStartY, 0, iRaster );
+        }
       }
     }
   }
 
   // raster refinement
+
   if ( bRasterRefinementEnable && cStruct.uiBestDistance > 0 )
   {
     while ( cStruct.uiBestDistance > 0 )
@@ -10016,7 +10116,7 @@ Void TEncSearch::xTZSearch( TComDataCU*  pcCU,
         iDist = cStruct.uiBestDistance >>= 1;
         if ( bRasterRefinementDiamond == 1 )
         {
-          xTZ8PointDiamondSearch ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, iDist );
+          xTZ8PointDiamondSearch ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, iDist, bRasterRefinementCornersForDiamondDist1 );
         }
         else
         {
@@ -10036,7 +10136,7 @@ Void TEncSearch::xTZSearch( TComDataCU*  pcCU,
     }
   }
 
-  // start refinement
+  // star refinement
   if ( bStarRefinementEnable && cStruct.uiBestDistance > 0 )
   {
     while ( cStruct.uiBestDistance > 0 )
@@ -10049,7 +10149,7 @@ Void TEncSearch::xTZSearch( TComDataCU*  pcCU,
       {
         if ( bStarRefinementDiamond == 1 )
         {
-          xTZ8PointDiamondSearch ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, iDist );
+          xTZ8PointDiamondSearch ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, iDist, bStarRefinementCornersForDiamondDist1 );
         }
         else
         {
@@ -10075,21 +10175,32 @@ Void TEncSearch::xTZSearch( TComDataCU*  pcCU,
 
   // write out best match
   rcMv.set( cStruct.iBestX, cStruct.iBestY );
-  ruiSAD = cStruct.uiBestSad - m_pcRdCost->getCost( cStruct.iBestX, cStruct.iBestY );
+  ruiSAD = cStruct.uiBestSad - m_pcRdCost->getCostOfVectorWithPredictor( cStruct.iBestX, cStruct.iBestY );
 }
 
 
-Void TEncSearch::xTZSearchSelective( TComDataCU*   pcCU,
-                                     TComPattern*  pcPatternKey,
-                                     Pel*          piRefY,
-                                     Int           iRefStride,
-                                     TComMv*       pcMvSrchRngLT,
-                                     TComMv*       pcMvSrchRngRB,
-                                     TComMv       &rcMv,
-                                     Distortion   &ruiSAD,
-                                     const TComMv* pIntegerMv2Nx2NPred )
+Void TEncSearch::xTZSearchSelective( const TComDataCU* const   pcCU,
+                                     const TComPattern* const  pcPatternKey,
+                                     const Pel* const          piRefY,
+                                     const Int                 iRefStride,
+                                     const TComMv* const       pcMvSrchRngLT,
+                                     const TComMv* const       pcMvSrchRngRB,
+                                     TComMv                   &rcMv,
+                                     Distortion               &ruiSAD,
+                                     const TComMv* const       pIntegerMv2Nx2NPred )
 {
-  SEL_SEARCH_CONFIGURATION
+  const Bool bTestOtherPredictedMV    = true;
+  const Bool bTestZeroVector          = true;
+  const Bool bEnableRasterSearch      = true;
+  const Bool bAlwaysRasterSearch      = false;  // 1: BETTER but factor 15x slower
+  const Bool bStarRefinementEnable    = true;   // enable either star refinement or raster refinement
+  const Bool bStarRefinementDiamond   = true;   // 1 = xTZ8PointDiamondSearch   0 = xTZ8PointSquareSearch
+  const Bool bStarRefinementStop      = false;
+  const UInt uiStarRefinementRounds   = 2;  // star refinement stop X rounds after best match (must be >=1)
+  const UInt uiSearchRange            = m_iSearchRange;
+  const Int  uiSearchRangeInitial     = m_iSearchRange >> 2;
+  const Int  uiSearchStep             = 4;
+  const Int  iMVDistThresh            = 8;
 
   Int   iSrchRngHorLeft         = pcMvSrchRngLT->getHor();
   Int   iSrchRngHorRight        = pcMvSrchRngRB->getHor();
@@ -10106,7 +10217,11 @@ Void TEncSearch::xTZSearchSelective( TComDataCU*   pcCU,
   Int   iDist                   = 0;
 
   pcCU->clipMv( rcMv );
+#if ME_ENABLE_ROUNDING_OF_MVS
+  rcMv.divideByPowerOf2(2);
+#else
   rcMv >>= 2;
+#endif
   // init TZSearchStruct
   IntTZSearchStruct cStruct;
   cStruct.iYStride    = iRefStride;
@@ -10126,7 +10241,11 @@ Void TEncSearch::xTZSearchSelective( TComDataCU*   pcCU,
     {
       TComMv cMv = m_acMvPredictors[index];
       pcCU->clipMv( cMv );
+#if ME_ENABLE_ROUNDING_OF_MVS
+      cMv.divideByPowerOf2(2);
+#else
       cMv >>= 2;
+#endif
       xTZSearchHelp( pcPatternKey, cStruct, cMv.getHor(), cMv.getVer(), 0, 0 );
     }
   }
@@ -10142,7 +10261,11 @@ Void TEncSearch::xTZSearchSelective( TComDataCU*   pcCU,
     TComMv integerMv2Nx2NPred = *pIntegerMv2Nx2NPred;
     integerMv2Nx2NPred <<= 2;
     pcCU->clipMv( integerMv2Nx2NPred );
+#if ME_ENABLE_ROUNDING_OF_MVS
+    integerMv2Nx2NPred.divideByPowerOf2(2);
+#else
     integerMv2Nx2NPred >>= 2;
+#endif
     xTZSearchHelp(pcPatternKey, cStruct, integerMv2Nx2NPred.getHor(), integerMv2Nx2NPred.getVer(), 0, 0);
 
     // reset search range
@@ -10172,7 +10295,7 @@ Void TEncSearch::xTZSearchSelective( TComDataCU*   pcCU,
     {
       // write out best match
       rcMv.set( cStruct.iBestX, cStruct.iBestY );
-      ruiSAD = cStruct.uiBestSad - m_pcRdCost->getCost( cStruct.iBestX, cStruct.iBestY );
+      ruiSAD = cStruct.uiBestSad - m_pcRdCost->getCostOfVectorWithPredictor( cStruct.iBestX, cStruct.iBestY );
       m_bSkipFracME = true;
 
       return;
@@ -10194,8 +10317,8 @@ Void TEncSearch::xTZSearchSelective( TComDataCU*   pcCU,
     for ( iStartX = iFirstSrchRngHorLeft; iStartX <= iFirstSrchRngHorRight; iStartX += uiSearchStep )
     {
       xTZSearchHelp( pcPatternKey, cStruct, iStartX, iStartY, 0, 0 );
-      xTZ8PointDiamondSearch ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, 1 );
-      xTZ8PointDiamondSearch ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, 2, !bFirstHorScan, !bFirstVerScan );
+      xTZ8PointDiamondSearch ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, 1, false );
+      xTZ8PointDiamondSearch ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, 2, false, !bFirstHorScan, !bFirstVerScan );
       if( bFirstHorScan )
         bFirstHorScan = false;
     }
@@ -10230,7 +10353,7 @@ Void TEncSearch::xTZSearchSelective( TComDataCU*   pcCU,
       {
         if ( bStarRefinementDiamond == 1 )
         {
-          xTZ8PointDiamondSearch ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, iDist );
+          xTZ8PointDiamondSearch ( pcPatternKey, cStruct, pcMvSrchRngLT, pcMvSrchRngRB, iStartX, iStartY, iDist, false );
         }
         else
         {
@@ -10256,7 +10379,7 @@ Void TEncSearch::xTZSearchSelective( TComDataCU*   pcCU,
 
   // write out best match
   rcMv.set( cStruct.iBestX, cStruct.iBestY );
-  ruiSAD = cStruct.uiBestSad - m_pcRdCost->getCost( cStruct.iBestX, cStruct.iBestY );
+  ruiSAD = cStruct.uiBestSad - m_pcRdCost->getCostOfVectorWithPredictor( cStruct.iBestX, cStruct.iBestY );
 
 }
 
@@ -10457,7 +10580,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     {
       const ComponentID component = ComponentID(comp);
       ::memset( pcCU->getCbf( component ) , 0, uiQPartNum * sizeof(UChar) );
-      ::memset( pcCU->getCrossComponentPredictionAlpha(component), 0, ( uiQPartNum * sizeof(Char) ) );
+      ::memset( pcCU->getCrossComponentPredictionAlpha(component), 0, ( uiQPartNum * sizeof(SChar) ) );
     }
     static const UInt useTS[MAX_NUM_COMPONENT]={0,0,0};
     pcCU->setTransformSkipSubParts ( useTS, 0, pcCU->getDepth(0) );
@@ -10571,7 +10694,7 @@ Void TEncSearch::xEstimateInterResidualQTTUCSC( TComYuv        *pcResi,
   TCoeff     uiAbsSum[2][MAX_NUM_COMPONENT]                     = { {0,0,0}, {0,0,0} };
   UInt       uiBestTransformMode[2][MAX_NUM_COMPONENT]          = { {0,0,0}, {0,0,0} };
   UInt       bestExplicitRdpcmModeUnSplit[2][MAX_NUM_COMPONENT] = { {3,3,3}, {3,3,3} };
-  Char       bestCrossCPredictionAlpha[2][MAX_NUM_COMPONENT]    = { {0,0,0}, {0,0,0} };
+  SChar      bestCrossCPredictionAlpha[2][MAX_NUM_COMPONENT]    = { {0,0,0}, {0,0,0} };
 
   m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
 
@@ -10668,7 +10791,7 @@ Void TEncSearch::xEstimateInterResidualQTTUCSC( TComYuv        *pcResi,
                                                    && pcCU->getSlice()->getPPS()->getPpsRangeExtension().getCrossComponentPredictionEnabledFlag()
                                                    && (pcCU->getCbf(uiAbsPartIdx, COMPONENT_Y, uiTrMode) != 0);
 
-          Char preCalcAlpha = 0;
+          SChar preCalcAlpha = 0;
           const Pel *pLumaResi = m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix( COMPONENT_Y, rTu.getRect( COMPONENT_Y ).x0, rTu.getRect( COMPONENT_Y ).y0 );
 
           if (isCrossCPredictionAvailable)
@@ -11243,7 +11366,7 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
   UInt       uiBestTransformMode         [MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{0,0},{0,0},{0,0}};
   //  Stores the best explicit RDPCM mode for a TU encoded without split
   UInt       bestExplicitRdpcmModeUnSplit[MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{3,3}, {3,3}, {3,3}};
-  Char       bestCrossCPredictionAlpha   [MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{0,0},{0,0},{0,0}};
+  SChar      bestCrossCPredictionAlpha   [MAX_NUM_COMPONENT][2/*0 = top (or whole TU for non-4:2:2) sub-TU, 1 = bottom sub-TU*/] = {{0,0},{0,0},{0,0}};
 
   m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ uiDepth ][ CI_QT_TRAFO_ROOT ] );
 
@@ -11316,7 +11439,7 @@ Void TEncSearch::xEstimateInterResidualQT( TComYuv    *pcResi,
                                                          && pcCU->getSlice()->getPPS()->getPpsRangeExtension().getCrossComponentPredictionEnabledFlag()
                                                          && (pcCU->getCbf(subTUAbsPartIdx, COMPONENT_Y, uiTrMode) != 0);
 
-          Char preCalcAlpha = 0;
+          SChar preCalcAlpha = 0;
           const Pel *pLumaResi = m_pcQTTempTComYuv[uiQTTempAccessLayer].getAddrPix( COMPONENT_Y, rTu.getRect( COMPONENT_Y ).x0, rTu.getRect( COMPONENT_Y ).y0 );
 
           if (isCrossCPredictionAvailable)
