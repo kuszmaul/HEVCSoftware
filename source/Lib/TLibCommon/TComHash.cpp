@@ -175,7 +175,7 @@ Int TComHash::count( UInt hashValue )
   }
 }
 
-const Int TComHash::count( UInt hashValue ) const
+Int TComHash::count( UInt hashValue ) const
 {
   if ( m_pLookupTable[hashValue] == NULL )
   {
