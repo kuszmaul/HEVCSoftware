@@ -93,7 +93,7 @@ public:
   Void clearAll();
   Void addToTable( UInt hashValue, const BlockHash& blockHash );
   Int count( UInt hashValue );
-  const Int count( UInt hashValue ) const;
+  Int count( UInt hashValue ) const;
   MapIterator getFirstIterator( UInt hashValue );
   const MapIterator getFirstIterator( UInt hashValue ) const;
   Bool hasExactMatch( UInt hashValue1, UInt hashValue2 );
