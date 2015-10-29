@@ -119,7 +119,7 @@ private:
   TEncSampleAdaptiveOffset*  m_pcSAO;
   TEncRateCtrl*           m_pcRateCtrl;
   // indicate sequence first
-  Bool                    m_bSeqFirst;
+  UInt                    m_uiSeqOrder;
 
   // clean decoding refresh
   Bool                    m_bRefreshPending;
@@ -132,6 +132,15 @@ private:
   UInt                    m_totalCoded;
   Bool                    m_bufferingPeriodSEIPresentInAU;
   SEIEncoder              m_seiEncoder;
+
+  Bool                    m_hasLosslessPSNR[MAX_NUM_COMPONENT];
+  Double                  m_losslessPSNR[MAX_NUM_COMPONENT];
+#if SCM_U0114_LOWDELAY_PALETTE_INITIALIZER_GENERATE
+  Bool                    m_encodePPSPLT;
+  UInt                    m_uiNumPLTPred;
+  Pel                     m_aiPLT[MAX_NUM_COMPONENT][MAX_PLT_PRED_SIZE];
+  Int                     m_palettePredictorBitDepth[MAX_NUM_CHANNEL_TYPE];
+#endif
 
 public:
   TEncGOP();
@@ -157,6 +166,18 @@ public:
   NalUnitType getNalUnitType( Int pocCurr, Int lastIdr, Bool isField );
   Void arrangeLongtermPicturesInRPS(TComSlice *, TComList<TComPic*>& );
 
+#if SCM_U0114_LOWDELAY_PALETTE_INITIALIZER_GENERATE
+  UInt  getNumPLTPred()                     const { return m_uiNumPLTPred; }
+  Void  setNumPLTPred( UInt num )                   { m_uiNumPLTPred = num; }
+  Pel*  getPLTPred( UInt ch )                 const { return const_cast<Pel*>(m_aiPLT[ch]); }
+  Int   getPalettePredictorBitDepth( ChannelType type ) const   { return m_palettePredictorBitDepth[type]; }
+  Void  setPalettePredictorBitDepth( ChannelType type, Int u ) { m_palettePredictorBitDepth[type] = u;    }
+#endif
+  TComPPS* getPPS();
+
+#if SCM_U0084_PALLETE_PREDICTOR_INITIALIZATION_SPS
+  TComSPS* getSPS();
+#endif
 protected:
   TEncRateCtrl* getRateCtrl()       { return m_pcRateCtrl;  }
 
@@ -174,8 +195,7 @@ protected:
   UInt64 xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1, const BitDepths &bitDepths);
 
   Double xCalculateRVM();
-
-  Void xWriteAccessUnitDelimiter (AccessUnit &accessUnit, TComSlice *slice);
+  Bool xGetUseIntegerMv( TComSlice* pcSlice );
 
   Void xCreateIRAPLeadingSEIMessages (SEIMessages& seiMessages, const TComSPS *sps, const TComPPS *pps);
   Void xCreatePerPictureSEIMessages (Int picInGOP, SEIMessages& seiMessages, SEIMessages& nestedSeiMessages, TComSlice *slice);

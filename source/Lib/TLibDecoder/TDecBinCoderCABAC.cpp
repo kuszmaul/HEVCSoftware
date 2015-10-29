@@ -168,7 +168,7 @@ Void TDecBinCABAC::decodeBin( UInt& ruiBin, ContextModel &rcCtxModel )
 
   if (g_debugCounter >= debugCabacBinTargetLine)
   {
-    UChar breakPointThis;
+    Char breakPointThis;
     breakPointThis = 7;
   }
   if (g_debugCounter >= (debugCabacBinTargetLine + debugCabacBinWindow))

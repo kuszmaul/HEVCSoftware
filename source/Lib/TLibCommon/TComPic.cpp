@@ -55,18 +55,74 @@ TComPic::TComPic()
 , m_bNeededForOutput                      (false)
 , m_uiCurrSliceIdx                        (0)
 , m_bCheckLTMSB                           (false)
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+, m_bCurPic                                                                (false)
+, m_bInDPB                                                                (false)
+#endif
+
 {
   for(UInt i=0; i<NUM_PIC_YUV; i++)
   {
     m_apcPicYuv[i]      = NULL;
   }
+  m_apcPicYuvCSC = NULL;
 }
 
 TComPic::~TComPic()
 {
 }
 
-Void TComPic::create( const TComSPS &sps, const TComPPS &pps, const Bool bIsVirtual)
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+Void TComPic::copyPicInfo(const TComPic& sComPic)
+{
+    UInt i = 0;
+
+  m_uiTLayer = sComPic.m_uiTLayer;
+
+    m_bNeededForOutput = sComPic.m_bNeededForOutput;
+  m_bReconstructed = sComPic.m_bReconstructed;
+
+  m_uiCurrSliceIdx = sComPic.m_uiCurrSliceIdx;
+  m_bCheckLTMSB = sComPic.m_bCheckLTMSB;
+
+  m_isTop = sComPic.m_isTop;
+  m_isField = sComPic.m_isField;
+
+
+    for (i = 0; i < NUM_PIC_YUV; i++) {
+      if(sComPic.m_apcPicYuv[i] != NULL)
+        *m_apcPicYuv[i] = *(sComPic.m_apcPicYuv[i]);
+  }
+}
+#endif
+
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+Void TComPic::swapPicYuvPointer(TComPic* sPic)
+{
+        Pel* bufTemp = NULL;
+        for (UInt i = 0; i < NUM_PIC_YUV; i++) 
+        {
+            for(Int chan=0; chan<getNumberValidComponents(); chan++)
+            {
+
+                const ComponentID ch=ComponentID(chan);
+
+                if(m_apcPicYuv[i] != NULL && sPic->m_apcPicYuv[i] != NULL) 
+                {
+                    Pel* bufA = sPic->m_apcPicYuv[i]->getBuf(ch);
+                    Pel* bufB = m_apcPicYuv[i]->getBuf(ch);
+                    bufTemp = sPic->m_apcPicYuv[i]->getBuf(ch);    
+                    
+                    bufA = m_apcPicYuv[i]->getBuf(ch);
+                    bufB = bufTemp;
+                }
+            }
+        }
+}
+#endif
+
+Void TComPic::create( const TComSPS &sps, const TComPPS &pps,
+                      UInt uiPLTMaxSize, UInt uiPLTMaxPredSize, const Bool bIsVirtual )
 {
   const ChromaFormat chromaFormatIDC = sps.getChromaFormatIdc();
   const Int          iWidth          = sps.getPicWidthInLumaSamples();
@@ -75,7 +131,7 @@ Void TComPic::create( const TComSPS &sps, const TComPPS &pps, const Bool bIsVirt
   const UInt         uiMaxCuHeight   = sps.getMaxCUHeight();
   const UInt         uiMaxDepth      = sps.getMaxTotalCUDepth();
 
-  m_picSym.create( sps, pps, uiMaxDepth );
+  m_picSym.create( sps, pps, uiMaxDepth, uiPLTMaxSize, uiPLTMaxPredSize );
   if (!bIsVirtual)
   {
     m_apcPicYuv[PIC_YUV_ORG    ]   = new TComPicYuv;  m_apcPicYuv[PIC_YUV_ORG     ]->create( iWidth, iHeight, chromaFormatIDC, uiMaxCuWidth, uiMaxCuHeight, uiMaxDepth, true );
@@ -89,6 +145,7 @@ Void TComPic::create( const TComSPS &sps, const TComPPS &pps, const Bool bIsVirt
     deleteSEIs (m_SEIs);
   }
   m_bUsedByCurr = false;
+  m_hashMap.clearAll();
 }
 
 Void TComPic::destroy()
@@ -103,6 +160,14 @@ Void TComPic::destroy()
       delete m_apcPicYuv[i];
       m_apcPicYuv[i]  = NULL;
     }
+  }
+
+  m_hashMap.clearAll();
+  if (m_apcPicYuvCSC)
+  {
+    m_apcPicYuvCSC->destroy();
+    delete m_apcPicYuvCSC;
+    m_apcPicYuvCSC = NULL;
   }
 
   deleteSEIs(m_SEIs);
@@ -162,5 +227,16 @@ UInt TComPic::getSubstreamForCtuAddr(const UInt ctuAddr, const Bool bAddressInRa
   return subStrm;
 }
 
+Void TComPic::addPictureToHashMapForInter()
+{
+  Int picWidth = getSlice( 0 )->getSPS()->getPicWidthInLumaSamples();
+  Int picHeight = getSlice( 0 )->getSPS()->getPicHeightInLumaSamples();
+
+  m_hashMap.create();
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 8, 8, getSlice( 0 )->getSPS()->getBitDepths() );
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 16, 16, getSlice( 0 )->getSPS()->getBitDepths() );
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 32, 32, getSlice( 0 )->getSPS()->getBitDepths() );
+  m_hashMap.addToHashMapByRow( getPicYuvOrg(), picWidth, picHeight, 64, 64, getSlice( 0 )->getSPS()->getBitDepths() );
+}
 
 //! \}

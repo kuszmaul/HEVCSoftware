@@ -43,7 +43,7 @@
 
 #if ENC_DEC_TRACE
 
-Void  SyntaxElementWriter::xWriteCodeTr (UInt value, UInt  length, const TChar *pSymbolName)
+Void  SyntaxElementWriter::xWriteCodeTr (UInt value, UInt  length, const Char *pSymbolName)
 {
   xWriteCode (value,length);
   if( g_HLSTraceEnable )
@@ -60,7 +60,7 @@ Void  SyntaxElementWriter::xWriteCodeTr (UInt value, UInt  length, const TChar *
   }
 }
 
-Void  SyntaxElementWriter::xWriteUvlcTr (UInt value, const TChar *pSymbolName)
+Void  SyntaxElementWriter::xWriteUvlcTr (UInt value, const Char *pSymbolName)
 {
   xWriteUvlc (value);
   if( g_HLSTraceEnable )
@@ -70,7 +70,7 @@ Void  SyntaxElementWriter::xWriteUvlcTr (UInt value, const TChar *pSymbolName)
   }
 }
 
-Void  SyntaxElementWriter::xWriteSvlcTr (Int value, const TChar *pSymbolName)
+Void  SyntaxElementWriter::xWriteSvlcTr (Int value, const Char *pSymbolName)
 {
   xWriteSvlc(value);
   if( g_HLSTraceEnable )
@@ -80,7 +80,7 @@ Void  SyntaxElementWriter::xWriteSvlcTr (Int value, const TChar *pSymbolName)
   }
 }
 
-Void  SyntaxElementWriter::xWriteFlagTr(UInt value, const TChar *pSymbolName)
+Void  SyntaxElementWriter::xWriteFlagTr(UInt value, const Char *pSymbolName)
 {
   xWriteFlag(value);
   if( g_HLSTraceEnable )

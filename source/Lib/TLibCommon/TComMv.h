@@ -88,7 +88,7 @@ public:
   Int   getHor    () const { return m_iHor;          }
   Int   getVer    () const { return m_iVer;          }
   Int   getAbsHor () const { return abs( m_iHor );   }
-  Int   getAbsVer () const { return abs( m_iVer );   }
+  Int   getAbsVer () const { return abs( m_iVer );   }  
 
   // ------------------------------------------------------------------------------------------------------------------
   // operations
@@ -108,27 +108,12 @@ public:
     return  *this;
   }
 
-#if !ME_ENABLE_ROUNDING_OF_MVS
   const TComMv& operator>>= (const Int i)
   {
     m_iHor >>= i;
     m_iVer >>= i;
     return  *this;
   }
-#endif
-
-#if ME_ENABLE_ROUNDING_OF_MVS
-  //! shift right with rounding
-  Void divideByPowerOf2 (const Int i)
-  {
-    Int offset = (i == 0) ? 0 : 1 << (i - 1);
-    m_iHor += offset;
-    m_iVer += offset;
-
-    m_iHor >>= i;
-    m_iVer >>= i;
-  }
-#endif
 
   const TComMv& operator<<= (const Int i)
   {
@@ -156,6 +141,22 @@ public:
   {
     return (m_iHor!=rcMv.m_iHor || m_iVer!=rcMv.m_iVer);
   }
+
+#if SCM_AMVR_UNIFICATION
+   TComMv& operator>> (const Int i)
+  {
+    m_iHor >>= i;
+    m_iVer >>= i;
+    return  *this;
+  }
+
+   TComMv& operator<< (const Int i)
+  {
+    m_iHor <<= i;
+    m_iVer <<= i;
+    return  *this;
+  }
+#endif 
 
   const TComMv scaleMv( Int iScale ) const
   {
