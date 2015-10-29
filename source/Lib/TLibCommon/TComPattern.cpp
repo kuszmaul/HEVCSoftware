@@ -41,7 +41,8 @@
 #include "TComTU.h"
 #include "Debug.h"
 #include "TComPrediction.h"
-
+#include <cmath>
+#include <algorithm>
 //! \ingroup TLibCommon
 //! \{
 
@@ -65,11 +66,11 @@ Void fillReferenceSamples( const Int bitDepth,
                            const Int iPicStride );
 
 /// constrained intra prediction
-Bool  isAboveLeftAvailable  ( const TComDataCU* pcCU, UInt uiPartIdxLT );
-Int   isAboveAvailable      ( const TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT, Bool* bValidFlags );
-Int   isLeftAvailable       ( const TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, Bool* bValidFlags );
-Int   isAboveRightAvailable ( const TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT, Bool* bValidFlags );
-Int   isBelowLeftAvailable  ( const TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, Bool* bValidFlags );
+Bool  isAboveLeftAvailable  ( TComDataCU* pcCU, UInt uiPartIdxLT );
+Int   isAboveAvailable      ( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT, Bool* bValidFlags );
+Int   isLeftAvailable       ( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, Bool* bValidFlags );
+Int   isAboveRightAvailable ( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT, Bool* bValidFlags );
+Int   isBelowLeftAvailable  ( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, Bool* bValidFlags );
 
 
 // ====================================================================================================================
@@ -565,14 +566,14 @@ Bool TComPrediction::filteringIntraReferenceSamples(const ComponentID compID, UI
   return bFilter;
 }
 
-Bool isAboveLeftAvailable( const TComDataCU* pcCU, UInt uiPartIdxLT )
+Bool isAboveLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT )
 {
   Bool bAboveLeftFlag;
   UInt uiPartAboveLeft;
-  const TComDataCU* pcCUAboveLeft = pcCU->getPUAboveLeft( uiPartAboveLeft, uiPartIdxLT );
+  TComDataCU* pcCUAboveLeft = pcCU->getPUAboveLeft( uiPartAboveLeft, uiPartIdxLT );
   if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
   {
-    bAboveLeftFlag = ( pcCUAboveLeft && pcCUAboveLeft->isIntra( uiPartAboveLeft ) );
+    bAboveLeftFlag = ( pcCUAboveLeft && (pcCUAboveLeft->isConstrainedIntra( uiPartAboveLeft ) || pcCUAboveLeft->isIntraBC( uiPartAboveLeft )) );
   }
   else
   {
@@ -581,7 +582,7 @@ Bool isAboveLeftAvailable( const TComDataCU* pcCU, UInt uiPartIdxLT )
   return bAboveLeftFlag;
 }
 
-Int isAboveAvailable( const TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT, Bool *bValidFlags )
+Int isAboveAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT, Bool *bValidFlags )
 {
   const UInt uiRasterPartBegin = g_auiZscanToRaster[uiPartIdxLT];
   const UInt uiRasterPartEnd = g_auiZscanToRaster[uiPartIdxRT]+1;
@@ -592,10 +593,10 @@ Int isAboveAvailable( const TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT
   for ( UInt uiRasterPart = uiRasterPartBegin; uiRasterPart < uiRasterPartEnd; uiRasterPart += uiIdxStep )
   {
     UInt uiPartAbove;
-    const TComDataCU* pcCUAbove = pcCU->getPUAbove( uiPartAbove, g_auiRasterToZscan[uiRasterPart] );
+    TComDataCU* pcCUAbove = pcCU->getPUAbove( uiPartAbove, g_auiRasterToZscan[uiRasterPart] );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
-      if ( pcCUAbove && pcCUAbove->isIntra( uiPartAbove ) )
+      if ( pcCUAbove && (pcCUAbove->isConstrainedIntra( uiPartAbove ) || pcCUAbove->isIntraBC( uiPartAbove )) )
       {
         iNumIntra++;
         *pbValidFlags = true;
@@ -622,7 +623,7 @@ Int isAboveAvailable( const TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT
   return iNumIntra;
 }
 
-Int isLeftAvailable( const TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, Bool *bValidFlags )
+Int isLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, Bool *bValidFlags )
 {
   const UInt uiRasterPartBegin = g_auiZscanToRaster[uiPartIdxLT];
   const UInt uiRasterPartEnd = g_auiZscanToRaster[uiPartIdxLB]+1;
@@ -633,10 +634,10 @@ Int isLeftAvailable( const TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB,
   for ( UInt uiRasterPart = uiRasterPartBegin; uiRasterPart < uiRasterPartEnd; uiRasterPart += uiIdxStep )
   {
     UInt uiPartLeft;
-    const TComDataCU* pcCULeft = pcCU->getPULeft( uiPartLeft, g_auiRasterToZscan[uiRasterPart] );
+    TComDataCU* pcCULeft = pcCU->getPULeft( uiPartLeft, g_auiRasterToZscan[uiRasterPart] );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
-      if ( pcCULeft && pcCULeft->isIntra( uiPartLeft ) )
+      if ( pcCULeft && (pcCULeft->isConstrainedIntra( uiPartLeft ) || pcCULeft->isIntraBC( uiPartLeft )) )
       {
         iNumIntra++;
         *pbValidFlags = true;
@@ -664,7 +665,7 @@ Int isLeftAvailable( const TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB,
   return iNumIntra;
 }
 
-Int isAboveRightAvailable( const TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT, Bool *bValidFlags )
+Int isAboveRightAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT, Bool *bValidFlags )
 {
   const UInt uiNumUnitsInPU = g_auiZscanToRaster[uiPartIdxRT] - g_auiZscanToRaster[uiPartIdxLT] + 1;
   Bool *pbValidFlags = bValidFlags;
@@ -673,10 +674,10 @@ Int isAboveRightAvailable( const TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPart
   for ( UInt uiOffset = 1; uiOffset <= uiNumUnitsInPU; uiOffset++ )
   {
     UInt uiPartAboveRight;
-    const TComDataCU* pcCUAboveRight = pcCU->getPUAboveRight( uiPartAboveRight, uiPartIdxRT, uiOffset );
+    TComDataCU* pcCUAboveRight = pcCU->getPUAboveRight( uiPartAboveRight, uiPartIdxRT, uiOffset );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
-      if ( pcCUAboveRight && pcCUAboveRight->isIntra( uiPartAboveRight ) )
+      if ( pcCUAboveRight && (pcCUAboveRight->isConstrainedIntra( uiPartAboveRight ) || pcCUAboveRight->isIntraBC( uiPartAboveRight )) )
       {
         iNumIntra++;
         *pbValidFlags = true;
@@ -704,7 +705,7 @@ Int isAboveRightAvailable( const TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPart
   return iNumIntra;
 }
 
-Int isBelowLeftAvailable( const TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, Bool *bValidFlags )
+Int isBelowLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, Bool *bValidFlags )
 {
   const UInt uiNumUnitsInPU = (g_auiZscanToRaster[uiPartIdxLB] - g_auiZscanToRaster[uiPartIdxLT]) / pcCU->getPic()->getNumPartInCtuWidth() + 1;
   Bool *pbValidFlags = bValidFlags;
@@ -713,10 +714,10 @@ Int isBelowLeftAvailable( const TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartI
   for ( UInt uiOffset = 1; uiOffset <= uiNumUnitsInPU; uiOffset++ )
   {
     UInt uiPartBelowLeft;
-    const TComDataCU* pcCUBelowLeft = pcCU->getPUBelowLeft( uiPartBelowLeft, uiPartIdxLB, uiOffset );
+    TComDataCU* pcCUBelowLeft = pcCU->getPUBelowLeft( uiPartBelowLeft, uiPartIdxLB, uiOffset );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
-      if ( pcCUBelowLeft && pcCUBelowLeft->isIntra( uiPartBelowLeft ) )
+      if ( pcCUBelowLeft && (pcCUBelowLeft->isConstrainedIntra( uiPartBelowLeft ) || pcCUBelowLeft->isIntraBC( uiPartBelowLeft )) )
       {
         iNumIntra++;
         *pbValidFlags = true;

@@ -79,6 +79,12 @@ TDecTop::TDecTop()
   , m_pDecodedSEIOutputStream(NULL)
   , m_warningMessageSkipPicture(false)
   , m_prefixSEINALUs()
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+    , m_DPBFullness (0)
+    , m_pcPicBeforeILF(NULL)
+    , m_pcPicAfterILF(NULL)
+    , m_pcTwoVersionsOfCurrDecPicFlag (false)
+#endif
 {
 #if ENC_DEC_TRACE
   if (g_hTrace == NULL)
@@ -160,7 +166,7 @@ Void TDecTop::xGetNewPicBuffer ( const TComSPS &sps, const TComPPS &pps, TComPic
   {
     rpcPic = new TComPic();
 
-    rpcPic->create ( sps, pps, true);
+    rpcPic->create ( sps, pps, sps.getSpsScreenExtension().getPLTMaxSize(), sps.getSpsScreenExtension().getPLTMaxPredSize(), true);
 
     m_cListPic.pushBack( rpcPic );
 
@@ -197,7 +203,7 @@ Void TDecTop::xGetNewPicBuffer ( const TComSPS &sps, const TComPPS &pps, TComPic
     m_cListPic.pushBack( rpcPic );
   }
   rpcPic->destroy();
-  rpcPic->create ( sps, pps, true);
+  rpcPic->create ( sps, pps, sps.getSpsScreenExtension().getPLTMaxSize(), sps.getSpsScreenExtension().getPLTMaxPredSize(), true);
 }
 
 Void TDecTop::executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic)
@@ -208,7 +214,18 @@ Void TDecTop::executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic)
     return;
   }
 
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+    if (getTwoVersionsOfCurrDecPicFlag()) 
+    {
+
+        m_pcPicAfterILF->copyPicInfo(*m_pcPicBeforeILF);
+        xSwapPicPoiterExeptTComPicYuvRefType(&m_pcPicAfterILF, &m_pcPicBeforeILF);
+
+    }
+    TComPic*    pcPic = m_pcPicAfterILF;
+#else
   TComPic*   pcPic         = m_pcPic;
+#endif
 
   // Execute Deblock + Cleanup
 
@@ -285,7 +302,182 @@ Void TDecTop::xCreateLostPicture(Int iLostPoc)
     m_pocRandomAccess = iLostPoc;
   }
 }
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+Void TDecTop::xGetNewPicBufferInDPB  (const TComSPS &sps, const TComPPS &pps, TComPic*& rpcPic, const UInt temporalLayer) 
+{
+    UInt MaxDPBSize = 0;
+    if (!sps.getSpsScreenExtension().getUseIntraBlockCopy()) {
+        MaxDPBSize = 6;
+    } 
+    else {
+        MaxDPBSize = 7;
+    }
+    if (getDPBFullness() >= MaxDPBSize)
+  {
+        std::cerr << "ERROR: getDPBFullness reported a not allowed DPB fullness at this time instant" << std::endl;
+    assert(false);
+    exit(1);
+  }
+  rpcPic = new TComPic();
+    rpcPic->create ( sps, pps, sps.getSpsScreenExtension().getPLTMaxSize(), sps.getSpsScreenExtension().getPLTMaxPredSize(), true);
+    rpcPic->setCurrPicInDPBFlag(true);
+  m_cListPic.pushBack( rpcPic );
+}
+#endif
 
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+Void TDecTop::xRemovalOfPicturesFromDPBAndDecreaseDPBFullness(const TComSPS &sps)
+{
+  TComPic* pcPic;
+    UInt maxRefPicNum = 0;
+    TComList<TComPic*>::iterator iterPicTem = m_cListPic.begin();
+  TComList<TComPic*>::iterator iterPic   = m_cListPic.begin();
+  while (iterPic != m_cListPic.end())
+  {
+        iterPicTem = iterPic;
+    pcPic = *(iterPic++);
+
+        if (( pcPic->getReconMark() == false && pcPic->getOutputMark() == false) ||
+                ( pcPic->getSlice( 0 )->isReferenced() == false  && pcPic->getOutputMark() == false))
+        {
+            if(pcPic != NULL)
+            {
+                pcPic->destroy();
+                delete pcPic;
+                pcPic = NULL;
+            }
+
+            iterPic = m_cListPic.eraseElement(iterPicTem);
+            DPBFullnessDecrementedByOne();
+        }
+    }
+    maxRefPicNum = sps.getMaxDecPicBuffering(sps.getMaxTLayers()-1);
+    if (getDPBFullness() > (maxRefPicNum-1)) 
+    {
+        std::cerr <<"Error getDPBFullness > (m_iMaxRefPicNum-1)" << std::endl;
+        assert(false);
+        exit(1);
+    }
+}
+#endif
+
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+Void TDecTop::remCurPicBefILFFromDPBDecDPBFullnessByOne(TComList<TComPic*>* pcListPic)
+{
+  TComList<TComPic*>::iterator iterPic   = pcListPic->begin();
+
+  iterPic   = pcListPic->begin();
+  TComPic* pcPic = *(iterPic);
+    //Currently only support frame based coding
+  if (!pcPic->isField()) //Frame decoding  
+  {
+    while (iterPic != pcListPic->end())
+    {
+      pcPic = *(iterPic);
+
+      // removal a current picture after ILF which is marked as "used for long-term reference" from DPB
+            if ((pcPic->getCurrentPicFlag() == true) && (pcPic->getIsLongTerm() == true))
+      {
+        pcPic->setReconMark(false);
+
+        // mark it should be extended later
+        pcPic->getPicYuvRec()->setBorderExtension( false );
+                pcPic->setOutputMark(false);
+                pcPic->getSlice(0)->setReferenced(false);
+
+        
+                if(pcPic != NULL)
+                {
+                    pcPic->destroy();
+                    delete pcPic;
+                    pcPic = NULL;
+                }
+
+                TComList<TComPic*>::iterator tempIterPic = pcListPic->eraseElement(iterPic);       
+                DPBFullnessDecrementedByOne();
+                return;
+            }
+      
+      iterPic++;
+    }
+  }
+}
+
+Void TDecTop::markCurrentPictureAfterILFforShortTermRef(TComList<TComPic*>* pcListPic)
+{
+  TComList<TComPic*>::iterator iterPic   = pcListPic->begin();
+
+  iterPic   = pcListPic->begin();
+  TComPic* pcPic = *(iterPic);
+    //Currently only support frame based coding
+  if (!pcPic->isField()) //Frame decoding
+  {
+    while (iterPic != pcListPic->end())
+    {
+      pcPic = *(iterPic);
+            
+            if (pcPic->getCurrentPicFlag() == true ) 
+      {
+                pcPic->setIsLongTerm(false);
+                pcPic->getSlice(0)->setReferenced(true);
+                pcPic->setCurrentPicFlag(false); //last time to use the current picture flag
+                return;
+            }
+            iterPic++;
+        }
+  }
+}
+#endif
+
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+Void TDecTop::updateCurrentPictureFlag(TComList<TComPic*>* pcListPic)
+{
+  TComList<TComPic*>::iterator iterPic   = pcListPic->begin();
+
+  iterPic   = pcListPic->begin();
+  TComPic* pcPic = *(iterPic);
+    //Currently only support frame based coding
+  if (!pcPic->isField()) //Frame decoding
+  {
+    while (iterPic != pcListPic->end())
+    {
+      pcPic = *(iterPic);
+            
+            if (pcPic->getCurrentPicFlag() == true ) 
+      {
+                pcPic->setCurrentPicFlag(false); //last time to use the current picture flag
+                return;
+            }
+            iterPic++;
+        }
+  }
+}
+#endif
+
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+Void TDecTop::xSwapPicPoiterExeptTComPicYuvRefType(TComPic** picA, TComPic** picB)
+{
+    //to avoid deep copy constructor 
+    TComPic*    pcPicTemp = *picA;
+    *picA = *picB;
+    *picB = pcPicTemp;
+    
+    //because pointers of class TComPic are swaped to avoid deep constructor, pointers of buffers to store decoded pictures before ILF and after AIL should be swaped back, 
+    //and reference type etc. should be swaped back 
+    (*picA)->swapPicYuvPointer(*picB);
+    Bool tempRefType = (*picA)->getIsLongTerm();
+    (*picA)->setIsLongTerm((*picB)->getIsLongTerm());
+    (*picB)->setIsLongTerm(tempRefType);
+
+    Bool tempReferenced = (*picA)->getSlice(0)->isReferenced();
+    (*picA)->getSlice(0)->setReferenced((*picB)->getSlice(0)->isReferenced());
+    (*picB)->getSlice(0)->setReferenced(tempReferenced);
+
+    Bool tempUsedByCur = (*picA)->getUsedByCurr();
+    (*picA)->setUsedByCurr((*picB)->getUsedByCurr());
+    (*picB)->setUsedByCurr(tempUsedByCur);
+}
+#endif
 
 Void TDecTop::xActivateParameterSets()
 {
@@ -317,14 +509,48 @@ Void TDecTop::xActivateParameterSets()
     }
 #endif
 
+    assert(sps->getSpsScreenExtension().getPLTMaxSize() != 0 || pps->getPpsScreenExtension().getUsePalettePredictor() == false);
+    assert(sps->getSpsScreenExtension().getUsePLTMode() != 0 || pps->getPpsScreenExtension().getUsePalettePredictor() == false);
+
     // NOTE: globals were set up here originally. You can now use:
     // g_uiMaxCUDepth = sps->getMaxTotalCUDepth();
     // g_uiAddCUDepth = sps->getMaxTotalCUDepth() - sps->getLog2DiffMaxMinCodingBlockSize()
 
     //  Get a new picture buffer. This will also set up m_pcPic, and therefore give us a SPS and PPS pointer that we can use.
+#if !SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
     xGetNewPicBuffer (*(sps), *(pps), m_pcPic, m_apcSlicePilot->getTLayer());
+#endif
     m_apcSlicePilot->applyReferencePictureSet(m_cListPic, m_apcSlicePilot->getRPS());
 
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+        xRemovalOfPicturesFromDPBAndDecreaseDPBFullness(*(sps));
+        m_pcTwoVersionsOfCurrDecPicFlag = pps->getPpsScreenExtension().getUseIntraBlockCopy() && 
+            (sps->getUseSAO() || !pps->getPicDisableDeblockingFilterFlag() || pps->getDeblockingFilterOverrideEnabledFlag());
+        m_bIBC = pps->getPpsScreenExtension().getUseIntraBlockCopy();
+#endif
+
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+        xGetNewPicBufferInDPB (*(sps), *(pps), m_pcPicAfterILF, m_apcSlicePilot->getTLayer());
+        m_pcPicAfterILF->setIsLongTerm(false);
+        m_pcPicAfterILF->getSlice(0)->setReferenced(true);
+        m_pcPicAfterILF->setUsedByCurr(false);
+        m_pcPicAfterILF->setCurrentPicFlag(true);
+        DPBFullnessIncrementedByOne();
+
+        if (m_pcTwoVersionsOfCurrDecPicFlag == true) {
+            xGetNewPicBufferInDPB (*(sps), *(pps), m_pcPicBeforeILF, m_apcSlicePilot->getTLayer());
+            m_pcPicBeforeILF->setIsLongTerm(true);
+            m_pcPicBeforeILF->getSlice(0)->setReferenced(true);
+            m_pcPicBeforeILF->setUsedByCurr(true);
+            m_pcPicBeforeILF->setCurrentPicFlag(true);
+            DPBFullnessIncrementedByOne();
+            m_pcPic = m_pcPicBeforeILF;
+        } else if (pps->getPpsScreenExtension().getUseIntraBlockCopy()) {
+            m_pcPicAfterILF->setIsLongTerm(true);
+            m_pcPicAfterILF->setUsedByCurr(true);
+            m_pcPic = m_pcPicAfterILF;
+        }
+#endif
     // make the slice-pilot a real slice, and set up the slice-pilot for the next slice
     assert(m_pcPic->getNumAllocatedSlice() == (m_uiSliceIdx + 1));
     m_apcSlicePilot = m_pcPic->getPicSym()->swapSliceObject(m_apcSlicePilot, m_uiSliceIdx);
@@ -366,7 +592,7 @@ Void TDecTop::xActivateParameterSets()
     m_SEIs.clear();
 
     // Recursive structure
-    m_cCuDecoder.create ( sps->getMaxTotalCUDepth(), sps->getMaxCUWidth(), sps->getMaxCUHeight(), sps->getChromaFormatIdc() );
+    m_cCuDecoder.create ( sps->getMaxTotalCUDepth(), sps->getMaxCUWidth(), sps->getMaxCUHeight(), sps->getChromaFormatIdc(), sps->getSpsScreenExtension().getPLTMaxSize(), sps->getSpsScreenExtension().getPLTMaxPredSize() );
     m_cCuDecoder.init   ( &m_cEntropyDecoder, &m_cTrQuant, &m_cPrediction );
     m_cTrQuant.init     ( sps->getMaxTrSize() );
 
@@ -612,6 +838,14 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   if (!pcSlice->getDependentSliceSegmentFlag())
   {
     pcSlice->checkCRA(pcSlice->getRPS(), m_pocCRA, m_associatedIRAPType, m_cListPic );
+    pcSlice->setPic( m_pcPic );
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+        if (pcSlice->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy()) {
+            //it is set for the usage of getCurPicLongTerm in setRefPicList
+            pcSlice->setCurPicLongTerm( m_pcPic );
+        }
+#endif
+
     // Set reference list
     pcSlice->setRefPicList( m_cListPic, true );
 
@@ -689,10 +923,21 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   }
 
   //  Decode a picture
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+  m_cGopDecoder.decompressSlice(&(nalu.getBitstream()), m_pcPic, m_pcPicAfterILF);
+#else
   m_cGopDecoder.decompressSlice(&(nalu.getBitstream()), m_pcPic);
+#endif
 
   m_bFirstSliceInPicture = false;
   m_uiSliceIdx++;
+
+#if !SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+  if ( pcSlice->getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
+  {
+    pcSlice->getPic()->setIsLongTerm( false );
+  }
+#endif
 
   return false;
 }

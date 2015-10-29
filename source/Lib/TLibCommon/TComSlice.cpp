@@ -106,7 +106,13 @@ TComSlice::TComSlice()
 , m_temporalLayerNonReferenceFlag ( false )
 , m_LFCrossSliceBoundaryFlag      ( false )
 , m_enableTMVPFlag                ( true )
+, m_useIntegerMv                  ( false )
+, m_pcLastEncPic                  ( NULL )
 , m_encCABACTableIdx              (I_SLICE)
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+, m_pcCurPicLongTerm                            ( NULL )
+, m_pcTwoVersionsOfCurrDecPicFlag ( false )
+#endif
 {
   for(UInt i=0; i<NUM_REF_PIC_LIST_01; i++)
   {
@@ -117,6 +123,7 @@ TComSlice::TComSlice()
   {
     m_lambdas            [component] = 0.0;
     m_iSliceChromaQpDelta[component] = 0;
+    m_iSliceACTQpDelta   [component] = 0;
   }
 
   initEqualRef();
@@ -165,6 +172,7 @@ Void TComSlice::initSlice()
   for (UInt component = 0; component < MAX_NUM_COMPONENT; component++)
   {
     m_iSliceChromaQpDelta[component] = 0;
+    m_iSliceACTQpDelta   [component] = 0;
   }
 
   m_maxNumMergeCand = MRG_MAX_NUM_CANDS;
@@ -225,6 +233,32 @@ Void  TComSlice::sortPicList        (TComList<TComPic*>& rcListPic)
     rcListPic.insert (iterPicInsert, iterPicExtract, iterPicExtract_1);
     rcListPic.erase  (iterPicExtract);
   }
+}
+
+Bool TComSlice::isOnlyCurrentPictureAsReference()
+{
+  if ( m_eSliceType == I_SLICE )
+  {
+    return true;
+  }
+
+  for ( Int i=0; i < getNumRefIdx( REF_PIC_LIST_0 ); i++ )
+  {
+    if ( getRefPic( REF_PIC_LIST_0, i )->getPOC() != getPOC() )
+    {
+      return false;
+    }
+  }
+
+  for ( Int i=0; i < getNumRefIdx( REF_PIC_LIST_1 ); i++ )
+  {
+    if ( getRefPic( REF_PIC_LIST_1, i )->getPOC() != getPOC() )
+    {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 TComPic* TComSlice::xGetRefPic (TComList<TComPic*>& rcListPic, Int poc)
@@ -318,15 +352,36 @@ Void TComSlice::setList1IdxToList0Idx()
 
 Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTotalCurr )
 {
-  if ( m_eSliceType == I_SLICE)
+  if (!checkNumPocTotalCurr)
   {
-    ::memset( m_apcRefPicList, 0, sizeof (m_apcRefPicList));
-    ::memset( m_aiNumRefIdx,   0, sizeof ( m_aiNumRefIdx ));
-
-    if (!checkNumPocTotalCurr)
+    if (m_eSliceType == I_SLICE)
     {
+      ::memset( m_apcRefPicList, 0, sizeof (m_apcRefPicList));
+      ::memset( m_aiNumRefIdx,   0, sizeof ( m_aiNumRefIdx ));
+      if( m_pRPS->getNumberOfPictures() == 0 )
+      {
+        TComPic *pPrevPic = xGetRefPic(rcListPic, max(0, getPOC()-1));
+        if ( pPrevPic->getSlice( 0 )->getPOC() != max( 0, getPOC()-1 ) )
+        {
+          pPrevPic = xGetRefPic( rcListPic, getPOC() );
+        }
+        setLastEncPic(pPrevPic);
+      }
       return;
     }
+
+    if ( m_pRPS->getNumberOfPictures() == 0 )
+    {
+      TComPic *pPrevPic = xGetRefPic( rcListPic, max( 0, getPOC()-1 ) );
+      if ( pPrevPic->getSlice( 0 )->getPOC() != max( 0, getPOC()-1 ) )
+      {
+        pPrevPic = xGetRefPic( rcListPic, getPOC() );
+      }
+      setLastEncPic( pPrevPic );
+    }
+
+    m_aiNumRefIdx[REF_PIC_LIST_0] = getNumRefIdx(REF_PIC_LIST_0);
+    m_aiNumRefIdx[REF_PIC_LIST_1] = getNumRefIdx(REF_PIC_LIST_1);
   }
 
   TComPic*  pcRefPic= NULL;
@@ -387,6 +442,11 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
   TComPic*  rpsCurrList1[MAX_NUM_REF+1];
   Int numPicTotalCurr = NumPicStCurr0 + NumPicStCurr1 + NumPicLtCurr;
 
+  if ( getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
+  {
+    numPicTotalCurr++;
+  }
+
   if (checkNumPocTotalCurr)
   {
     // The variable NumPocTotalCurr is derived as specified in subclause 7.4.7.2. It is a requirement of bitstream conformance that the following applies to the value of NumPocTotalCurr:
@@ -394,17 +454,30 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
     // - Otherwise, when the current picture contains a P or B slice, the value of NumPocTotalCurr shall not be equal to 0.
     if (getRapPicFlag())
     {
-      assert(numPicTotalCurr == 0);
+      if ( getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
+      {
+        assert( numPicTotalCurr == 1 );
+      }
+      else
+      {
+        assert( numPicTotalCurr == 0 );
+      }
     }
 
     if (m_eSliceType == I_SLICE)
     {
+      ::memset( m_apcRefPicList, 0, sizeof (m_apcRefPicList));
+      ::memset( m_aiNumRefIdx,   0, sizeof ( m_aiNumRefIdx ));
+
       return;
     }
 
     assert(numPicTotalCurr > 0);
     // general tier and level limit:
     assert(numPicTotalCurr <= 8);
+
+    m_aiNumRefIdx[0] = getNumRefIdx(REF_PIC_LIST_0);
+    m_aiNumRefIdx[1] = getNumRefIdx(REF_PIC_LIST_1);
   }
 
   Int cIdx = 0;
@@ -419,6 +492,15 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
   for ( i=0; i<NumPicLtCurr;  i++, cIdx++)
   {
     rpsCurrList0[cIdx] = RefPicSetLtCurr[i];
+  }
+  if ( getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
+  {
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+      rpsCurrList0[cIdx++] = getCurPicLongTerm();
+#else
+    rpsCurrList0[cIdx++] = getPic();
+    getPic()->setIsLongTerm( true );
+#endif
   }
   assert(cIdx == numPicTotalCurr);
 
@@ -437,6 +519,15 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
     {
       rpsCurrList1[cIdx] = RefPicSetLtCurr[i];
     }
+    if ( getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
+    {
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+            rpsCurrList1[cIdx++] = getCurPicLongTerm();
+#else 
+      rpsCurrList1[cIdx++] = getPic();
+      getPic()->setIsLongTerm( true );
+#endif
+    }
     assert(cIdx == numPicTotalCurr);
   }
 
@@ -449,6 +540,18 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
     m_apcRefPicList[REF_PIC_LIST_0][rIdx] = rpsCurrList0[ cIdx ];
     m_bIsUsedAsLongTerm[REF_PIC_LIST_0][rIdx] = ( cIdx >= NumPicStCurr0 + NumPicStCurr1 );
   }
+
+  if( getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() &&
+      !m_RefPicListModification.getRefPicListModificationFlagL0() && numPicTotalCurr > m_aiNumRefIdx[REF_PIC_LIST_0] )
+   {
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+         m_apcRefPicList[REF_PIC_LIST_0][m_aiNumRefIdx[REF_PIC_LIST_0] - 1] = getCurPicLongTerm(); 
+#else
+     m_apcRefPicList[REF_PIC_LIST_0][m_aiNumRefIdx[REF_PIC_LIST_0] - 1] = getPic(); 
+#endif
+     m_bIsUsedAsLongTerm[REF_PIC_LIST_0][m_aiNumRefIdx[REF_PIC_LIST_0] - 1] = true;
+   }
+
   if ( m_eSliceType != B_SLICE )
   {
     m_aiNumRefIdx[REF_PIC_LIST_1] = 0;
@@ -466,11 +569,141 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTo
   }
 }
 
+Void TComSlice::setRefPOCListSliceHeader()
+{
+  assert(m_eSliceType != I_SLICE);
+
+  static const UInt MAX_NUM_NEGATIVE_PICTURES = 16;
+  Int  RefPicPOCSetStCurr0[MAX_NUM_NEGATIVE_PICTURES];
+  Int  RefPicPOCSetStCurr1[MAX_NUM_NEGATIVE_PICTURES];
+  Int  RefPicPOCSetLtCurr[MAX_NUM_NEGATIVE_PICTURES];
+  UInt NumPicStCurr0 = 0;
+  UInt NumPicStCurr1 = 0;
+  UInt NumPicLtCurr = 0;
+  Int  i;
+
+  for(i=0; i < m_pRPS->getNumberOfNegativePictures(); i++)
+  {
+    if(m_pRPS->getUsed(i))
+    { 
+      RefPicPOCSetStCurr0[NumPicStCurr0] = getPOC() + m_pRPS->getDeltaPOC(i);
+      NumPicStCurr0++;
+    }
+  }
+
+  for(; i < m_pRPS->getNumberOfNegativePictures() + m_pRPS->getNumberOfPositivePictures(); i++)
+  {
+    if(m_pRPS->getUsed(i))
+    {
+      RefPicPOCSetStCurr1[NumPicStCurr1] = getPOC() + m_pRPS->getDeltaPOC(i);
+      NumPicStCurr1++;
+    }
+  }
+
+  for(i = m_pRPS->getNumberOfNegativePictures() + m_pRPS->getNumberOfPositivePictures() + m_pRPS->getNumberOfLongtermPictures()-1; i > m_pRPS->getNumberOfNegativePictures() + m_pRPS->getNumberOfPositivePictures() - 1; i--)
+  {
+    if(m_pRPS->getUsed(i))
+    {
+      RefPicPOCSetLtCurr[NumPicLtCurr] = m_pRPS->getPOC(i);
+      NumPicLtCurr++;
+    }
+  }
+
+  // ref_pic_list_init
+  Int  rpsPOCCurrList0[MAX_NUM_REF+1];
+  Int  rpsPOCCurrList1[MAX_NUM_REF+1];
+  Int  numPicTotalCurr = NumPicStCurr0 + NumPicStCurr1 + NumPicLtCurr;
+
+  if ( getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
+  {
+    numPicTotalCurr++;
+  }
+
+  if (getRapPicFlag())
+  {
+    if ( getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
+    {
+      assert( numPicTotalCurr == 1 );
+    }
+    else
+    {
+      assert( numPicTotalCurr == 0 ); 
+    }
+  }
+
+  assert(numPicTotalCurr > 0);
+  assert(numPicTotalCurr <= 8);
+
+  m_aiNumRefIdx[0] = getNumRefIdx(REF_PIC_LIST_0);
+  m_aiNumRefIdx[1] = getNumRefIdx(REF_PIC_LIST_1);
+
+  Int cIdx = 0;
+  for ( i = 0; i < NumPicStCurr0; i++, cIdx++)
+  {
+    rpsPOCCurrList0[cIdx] = RefPicPOCSetStCurr0[i];
+  }
+  for ( i = 0; i < NumPicStCurr1; i++, cIdx++)
+  {
+    rpsPOCCurrList0[cIdx] = RefPicPOCSetStCurr1[i];
+  }
+  for ( i=0; i < NumPicLtCurr;  i++, cIdx++)
+  {
+    rpsPOCCurrList0[cIdx] = RefPicPOCSetLtCurr[i];
+  }
+  if ( getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
+  {
+    rpsPOCCurrList0[cIdx++] = getPOC();
+  }
+  assert(cIdx == numPicTotalCurr);
+
+  if (m_eSliceType==B_SLICE)
+  {
+    cIdx = 0;
+    for ( i = 0; i < NumPicStCurr1; i++, cIdx++)
+    {
+      rpsPOCCurrList1[cIdx] = RefPicPOCSetStCurr1[i];
+    }
+    for ( i = 0; i < NumPicStCurr0; i++, cIdx++)
+    {
+      rpsPOCCurrList1[cIdx] = RefPicPOCSetStCurr0[i];
+    }
+    for ( i = 0; i < NumPicLtCurr;  i++, cIdx++)
+    {
+      rpsPOCCurrList1[cIdx] = RefPicPOCSetLtCurr[i];
+    }
+    if ( getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
+    {
+      rpsPOCCurrList1[cIdx++] = getPOC();
+    }
+    assert(cIdx == numPicTotalCurr);
+  }
+
+  for (Int rIdx = 0; rIdx < m_aiNumRefIdx[REF_PIC_LIST_0]; rIdx ++)
+  {
+    cIdx = m_RefPicListModification.getRefPicListModificationFlagL0() ? m_RefPicListModification.getRefPicSetIdxL0(rIdx) : rIdx % numPicTotalCurr;
+    assert(cIdx >= 0 && cIdx < numPicTotalCurr);
+    m_aiRefPOCList[REF_PIC_LIST_0][rIdx] = rpsPOCCurrList0[cIdx];
+  }
+  if ( m_eSliceType != B_SLICE )
+  {
+    m_aiNumRefIdx[REF_PIC_LIST_1] = 0;
+  }
+  else
+  {
+    for (Int rIdx = 0; rIdx < m_aiNumRefIdx[REF_PIC_LIST_1]; rIdx ++)
+    {
+      cIdx = m_RefPicListModification.getRefPicListModificationFlagL1() ? m_RefPicListModification.getRefPicSetIdxL1(rIdx) : rIdx % numPicTotalCurr;
+      assert(cIdx >= 0 && cIdx < numPicTotalCurr);
+      m_aiRefPOCList[REF_PIC_LIST_1][rIdx] = rpsPOCCurrList1[cIdx];
+    }
+  }
+}
+
 Int TComSlice::getNumRpsCurrTempList() const
 {
   Int numRpsCurrTempList = 0;
 
-  if (m_eSliceType == I_SLICE)
+  if ( m_eSliceType == I_SLICE )
   {
     return 0;
   }
@@ -481,6 +714,11 @@ Int TComSlice::getNumRpsCurrTempList() const
       numRpsCurrTempList++;
     }
   }
+  if ( getPPS()->getPpsScreenExtension().getUseIntraBlockCopy() )
+  {
+    numRpsCurrTempList++;
+  }
+
   return numRpsCurrTempList;
 }
 
@@ -601,9 +839,11 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
     {
       rpcPic = *(iterPic);
       rpcPic->setCurrSliceIdx(0);
+
       if (rpcPic->getPOC() != pocCurr)
       {
         rpcPic->getSlice(0)->setReferenced(false);
+        rpcPic->getHashMap()->clearAll();
       }
       iterPic++;
     }
@@ -631,6 +871,7 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
           if (rpcPic->getPOC() != pocCurr && rpcPic->getPOC() != m_iLastIDR)
           {
             rpcPic->getSlice(0)->setReferenced(false);
+            rpcPic->getHashMap()->clearAll();
           }
           iterPic++;
         }
@@ -648,6 +889,7 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
           if (rpcPic->getPOC() != pocCurr && rpcPic->getPOC() != pocCRA)
           {
             rpcPic->getSlice(0)->setReferenced(false);
+            rpcPic->getHashMap()->clearAll();
           }
           iterPic++;
         }
@@ -769,8 +1011,9 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   m_enableTMVPFlag                = pSrc->m_enableTMVPFlag;
   m_maxNumMergeCand               = pSrc->m_maxNumMergeCand;
   m_encCABACTableIdx              = pSrc->m_encCABACTableIdx;
-}
 
+  m_RefPicListModification        = pSrc->m_RefPicListModification;
+}
 
 /** Function for setting the slice's temporal layer ID and corresponding temporal_layer_switching_point_flag.
  * \param uiTLayer Temporal layer ID of the current slice
@@ -1051,6 +1294,7 @@ Void TComSlice::applyReferencePictureSet( TComList<TComPic*>& rcListPic, const T
     if(rpcPic->getPicSym()->getSlice(0)->getPOC() != this->getPOC() && isReference == 0)
     {
       rpcPic->getSlice( 0 )->setReferenced( false );
+      rpcPic->getHashMap()->clearAll();
       rpcPic->setUsedByCurr(0);
       rpcPic->setIsLongTerm(0);
     }
@@ -1504,6 +1748,16 @@ TComSPSRExt::TComSPSRExt()
   }
 }
 
+TComSPSSCC::TComSPSSCC()
+: m_useIntraBlockCopy         (false)
+, m_usePaletteMode            (false)
+, m_uiPLTMaxSize              ( 31)
+, m_uiPLTMaxPredSize          ( 64)
+, m_motionVectorResolutionControlIdc(0)
+, m_disableIntraBoundaryFilter(false)
+, m_uiNumPLTPred               (0)
+{}
+
 TComSPS::TComSPS()
 : m_SPSId                     (  0)
 , m_VPSId                     (  0)
@@ -1549,7 +1803,7 @@ TComSPS::TComSPS()
 
   for ( Int i = 0; i < MAX_TLAYER; i++ )
   {
-    m_uiMaxLatencyIncreasePlus1[i] = 0;
+    m_uiMaxLatencyIncrease[i] = 0;
     m_uiMaxDecPicBuffering[i] = 1;
     m_numReorderPics[i]       = 0;
   }
@@ -1586,6 +1840,22 @@ TComPPSRExt::TComPPSRExt()
   for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
   {
     m_log2SaoOffsetScale[ch] = 0;
+  }
+}
+
+TComPPSSCC::TComPPSSCC()
+: m_useColourTrans                   (false)
+, m_useSliceACTOffset                (false)
+, m_actYQpOffset                     (-5)
+, m_actCbQpOffset                    (-5)
+, m_actCrQpOffset                    (-3)
+, m_uiNumPLTPred                     (0) // Implies palette pred in PPS deactivated
+, m_usePalettePredictor              (false)
+, m_useIntraBlockCopyPps             (false)
+{
+  for(Int ch=0; ch<MAX_NUM_CHANNEL_TYPE; ch++)
+  {
+    m_palettePredictorBitDepth[ch] = 8;
   }
 }
 
@@ -1912,13 +2182,13 @@ Void TComScalingList::outputScalingLists(std::ostream &os) const
   }
 }
 
-Bool TComScalingList::xParseScalingList(const std::string &fileName)
+Bool TComScalingList::xParseScalingList(Char* pchFile)
 {
   static const Int LINE_SIZE=1024;
   FILE *fp = NULL;
-  TChar line[LINE_SIZE];
+  Char line[LINE_SIZE];
 
-  if (fileName.empty())
+  if (pchFile == NULL)
   {
     fprintf(stderr, "Error: no scaling list file specified. Help on scaling lists being output\n");
     outputScalingListHelp(std::cout);
@@ -1927,9 +2197,9 @@ Bool TComScalingList::xParseScalingList(const std::string &fileName)
     exit (1);
     return true;
   }
-  else if ((fp = fopen(fileName.c_str(),"r")) == (FILE*)NULL)
+  else if ((fp = fopen(pchFile,"r")) == (FILE*)NULL)
   {
-    fprintf(stderr, "Error: cannot open scaling list file %s for reading\n", fileName.c_str());
+    fprintf(stderr, "Error: cannot open scaling list file %s for reading\n",pchFile);
     return true;
   }
 
@@ -1957,8 +2227,8 @@ Bool TComScalingList::xParseScalingList(const std::string &fileName)
           Bool bFound=false;
           while ((!feof(fp)) && (!bFound))
           {
-            TChar *ret = fgets(line, LINE_SIZE, fp);
-            TChar *findNamePosition= ret==NULL ? NULL : strstr(line, MatrixType[sizeIdc][listIdc]);
+            Char *ret = fgets(line, LINE_SIZE, fp);
+            Char *findNamePosition= ret==NULL ? NULL : strstr(line, MatrixType[sizeIdc][listIdc]);
             // This could be a match against the DC string as well, so verify it isn't
             if (findNamePosition!= NULL && (MatrixType_DC[sizeIdc][listIdc]==NULL || strstr(line, MatrixType_DC[sizeIdc][listIdc])==NULL))
             {
@@ -1967,7 +2237,7 @@ Bool TComScalingList::xParseScalingList(const std::string &fileName)
           }
           if (!bFound)
           {
-            fprintf(stderr, "Error: cannot find Matrix %s from scaling list file %s\n", MatrixType[sizeIdc][listIdc], fileName.c_str());
+            fprintf(stderr, "Error: cannot find Matrix %s from scaling list file %s\n", MatrixType[sizeIdc][listIdc], pchFile);
             return true;
           }
         }
@@ -1976,12 +2246,12 @@ Bool TComScalingList::xParseScalingList(const std::string &fileName)
           Int data;
           if (fscanf(fp, "%d,", &data)!=1)
           {
-            fprintf(stderr, "Error: cannot read value #%d for Matrix %s from scaling list file %s at file position %ld\n", i, MatrixType[sizeIdc][listIdc], fileName.c_str(), ftell(fp));
+            fprintf(stderr, "Error: cannot read value #%d for Matrix %s from scaling list file %s at file position %ld\n", i, MatrixType[sizeIdc][listIdc], pchFile, ftell(fp));
             return true;
           }
           if (data<0 || data>255)
           {
-            fprintf(stderr, "Error: QMatrix entry #%d of value %d for Matrix %s from scaling list file %s at file position %ld is out of range (0 to 255)\n", i, data, MatrixType[sizeIdc][listIdc], fileName.c_str(), ftell(fp));
+            fprintf(stderr, "Error: QMatrix entry #%d of value %d for Matrix %s from scaling list file %s at file position %ld is out of range (0 to 255)\n", i, data, MatrixType[sizeIdc][listIdc], pchFile, ftell(fp));
             return true;
           }
           src[i] = data;
@@ -1997,8 +2267,8 @@ Bool TComScalingList::xParseScalingList(const std::string &fileName)
             Bool bFound=false;
             while ((!feof(fp)) && (!bFound))
             {
-              TChar *ret = fgets(line, LINE_SIZE, fp);
-              TChar *findNamePosition= ret==NULL ? NULL : strstr(line, MatrixType_DC[sizeIdc][listIdc]);
+              Char *ret = fgets(line, LINE_SIZE, fp);
+              Char *findNamePosition= ret==NULL ? NULL : strstr(line, MatrixType_DC[sizeIdc][listIdc]);
               if (findNamePosition!= NULL)
               {
                 // This won't be a match against the non-DC string.
@@ -2007,19 +2277,19 @@ Bool TComScalingList::xParseScalingList(const std::string &fileName)
             }
             if (!bFound)
             {
-              fprintf(stderr, "Error: cannot find DC Matrix %s from scaling list file %s\n", MatrixType_DC[sizeIdc][listIdc], fileName.c_str());
+              fprintf(stderr, "Error: cannot find DC Matrix %s from scaling list file %s\n", MatrixType_DC[sizeIdc][listIdc], pchFile);
               return true;
             }
           }
           Int data;
           if (fscanf(fp, "%d,", &data)!=1)
           {
-            fprintf(stderr, "Error: cannot read DC %s from scaling list file %s at file position %ld\n", MatrixType_DC[sizeIdc][listIdc], fileName.c_str(), ftell(fp));
+            fprintf(stderr, "Error: cannot read DC %s from scaling list file %s at file position %ld\n", MatrixType_DC[sizeIdc][listIdc], pchFile, ftell(fp));
             return true;
           }
           if (data<0 || data>255)
           {
-            fprintf(stderr, "Error: DC value %d for Matrix %s from scaling list file %s at file position %ld is out of range (0 to 255)\n", data, MatrixType[sizeIdc][listIdc], fileName.c_str(), ftell(fp));
+            fprintf(stderr, "Error: DC value %d for Matrix %s from scaling list file %s at file position %ld is out of range (0 to 255)\n", data, MatrixType[sizeIdc][listIdc], pchFile, ftell(fp));
             return true;
           }
           //overwrite DC value when size of matrix is larger than 16x16

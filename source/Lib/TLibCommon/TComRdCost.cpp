@@ -40,6 +40,7 @@
 #include <limits>
 #include "TComRom.h"
 #include "TComRdCost.h"
+#include "TComTU.h"
 
 //! \ingroup TLibCommon
 //! \{
@@ -54,9 +55,10 @@ TComRdCost::~TComRdCost()
 }
 
 // Calculate RD functions
-Double TComRdCost::calcRdCost( Double numBits, Double distortion, DFunc eDFunc )
+Double TComRdCost::calcRdCost( UInt uiBits, Distortion uiDistortion, Bool bFlag, DFunc eDFunc )
 {
-  Double lambda = 1.0;
+  Double dRdCost = 0.0;
+  Double dLambda = 0.0;
 
   switch ( eDFunc )
   {
@@ -64,47 +66,143 @@ Double TComRdCost::calcRdCost( Double numBits, Double distortion, DFunc eDFunc )
       assert(0);
       break;
     case DF_SAD:
-      lambda = m_dLambdaMotionSAD[0]; // 0 is valid, because for lossless blocks, the cost equation is modified to compensate.
+#if RExt__HIGH_BIT_DEPTH_SUPPORT
+      dLambda = m_dLambdaMotionSAD[0]; // 0 is valid, because for lossless blocks, the cost equation is modified to compensate.
+#else
+      dLambda = (Double)m_uiLambdaMotionSAD[0]; // 0 is valid, because for lossless blocks, the cost equation is modified to compensate.
+#endif
       break;
     case DF_DEFAULT:
-      lambda = m_dLambda;
+      dLambda =         m_dLambda;
       break;
     case DF_SSE_FRAME:
-      lambda = m_dFrameLambda;
+      dLambda =         m_dFrameLambda;
       break;
     default:
       assert (0);
       break;
   }
 
-  if (eDFunc == DF_SAD)
+  if (bFlag) //NOTE: this "bFlag" is never true
   {
+    // Intra8x8, Intra4x4 Block only...
     if (m_costMode != COST_STANDARD_LOSSY)
     {
-      return ((distortion * 65536.0) / lambda) + numBits; // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
+      dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
     }
     else
     {
-      return distortion + (((numBits * lambda) ) / 65536.0);
+      dRdCost = (((Double)uiDistortion) + ((Double)uiBits * dLambda));
     }
   }
   else
   {
-    if (m_costMode != COST_STANDARD_LOSSY)
+    if (eDFunc == DF_SAD)
     {
-      return (distortion / lambda) + numBits; // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
+      if (m_costMode != COST_STANDARD_LOSSY)
+      {
+        dRdCost = ((Double(uiDistortion) * 65536) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
+      }
+      else
+      {
+        dRdCost = floor(Double(uiDistortion) + (floor((Double(uiBits) * dLambda) + 0.5) / 65536.0));
+      }
     }
     else
     {
-      return distortion + (numBits * lambda);
+      if (m_costMode != COST_STANDARD_LOSSY)
+      {
+        dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
+      }
+      else
+      {
+        dRdCost = floor(Double(uiDistortion) + (Double(uiBits) * dLambda) + 0.5);
+      }
     }
   }
+
+  return dRdCost;
+}
+
+Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag, DFunc eDFunc )
+{
+  Double dRdCost = 0.0;
+  Double dLambda = 0.0;
+
+  switch ( eDFunc )
+  {
+    case DF_SSE:
+      assert(0);
+      break;
+    case DF_SAD:
+#if RExt__HIGH_BIT_DEPTH_SUPPORT
+      dLambda = m_dLambdaMotionSAD[0]; // 0 is valid, because for lossless blocks, the cost equation is modified to compensate.
+#else
+      dLambda = (Double)m_uiLambdaMotionSAD[0]; // 0 is valid, because for lossless blocks, the cost equation is modified to compensate.
+#endif
+      break;
+    case DF_DEFAULT:
+      dLambda =         m_dLambda;
+      break;
+    case DF_SSE_FRAME:
+      dLambda =         m_dFrameLambda;
+      break;
+    default:
+      assert (0);
+      break;
+  }
+
+  if (bFlag) //NOTE: this "bFlag" is never true
+  {
+    // Intra8x8, Intra4x4 Block only...
+    if (m_costMode != COST_STANDARD_LOSSY)
+    {
+      dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
+    }
+    else
+    {
+      dRdCost = (((Double)(Int64)uiDistortion) + ((Double)(Int64)uiBits * dLambda));
+    }
+  }
+  else
+  {
+    if (eDFunc == DF_SAD)
+    {
+      if (m_costMode != COST_STANDARD_LOSSY)
+      {
+        dRdCost = ((Double(uiDistortion) * 65536) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
+      }
+      else
+      {
+        dRdCost = floor(Double(uiDistortion) + (floor((Double(uiBits) * dLambda) + 0.5) / 65536.0));
+      }
+    }
+    else
+    {
+      if (m_costMode != COST_STANDARD_LOSSY)
+      {
+        dRdCost = (Double(uiDistortion) / dLambda) + Double(uiBits); // all lossless costs would have uiDistortion=0, and therefore this cost function can be used.
+      }
+      else
+      {
+        dRdCost = floor(Double(uiDistortion) + (Double(uiBits) * dLambda) + 0.5);
+      }
+    }
+  }
+
+  return dRdCost;
 }
 
 Void TComRdCost::setLambda( Double dLambda, const BitDepths &bitDepths )
 {
   m_dLambda           = dLambda;
   m_sqrtLambda        = sqrt(m_dLambda);
+  if(getUseColourTrans()&&!getUseLossless())
+  {
+    m_sqrtLambda        = sqrt(m_dLambda* pow(2.0, DELTA_QP_FOR_YCgCo_TRANS/3.0));
+  }
+
+#if RExt__HIGH_BIT_DEPTH_SUPPORT
   m_dLambdaMotionSAD[0] = 65536.0 * m_sqrtLambda;
   m_dLambdaMotionSSE[0] = 65536.0 * m_dLambda;
 #if FULL_NBIT
@@ -114,6 +212,17 @@ Void TComRdCost::setLambda( Double dLambda, const BitDepths &bitDepths )
 #endif
   m_dLambdaMotionSAD[1] = 65536.0 * sqrt(dLambda);
   m_dLambdaMotionSSE[1] = 65536.0 * dLambda;
+#else
+  m_uiLambdaMotionSAD[0] = (UInt)floor(65536.0 * m_sqrtLambda);
+  m_uiLambdaMotionSSE[0] = (UInt)floor(65536.0 * m_dLambda   );
+#if FULL_NBIT
+  dLambda = 0.57 * pow(2.0, ((LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME - 12) / 3.0));
+#else
+  dLambda = 0.57 * pow(2.0, ((LOSSLESS_AND_MIXED_LOSSLESS_RD_COST_TEST_QP_PRIME - 12 - 6 * (bitDepths.recon[CHANNEL_TYPE_LUMA] - 8)) / 3.0));
+#endif
+  m_uiLambdaMotionSAD[1] = (UInt)floor(65536.0 * sqrt(dLambda));
+  m_uiLambdaMotionSSE[1] = (UInt)floor(65536.0 * dLambda   );
+#endif
 }
 
 
@@ -164,7 +273,11 @@ Void TComRdCost::init()
 
   m_costMode                   = COST_STANDARD_LOSSY;
 
-  m_motionLambda               = 0;
+#if RExt__HIGH_BIT_DEPTH_SUPPORT
+  m_dCost                      = 0;
+#else
+  m_uiCost                     = 0;
+#endif
   m_iCostScale                 = 0;
 }
 
@@ -193,11 +306,10 @@ Void TComRdCost::setDistParam( UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc, 
 
   // initialize
   rcDistParam.iSubShift  = 0;
-  rcDistParam.m_maximumDistortionForEarlyExit = std::numeric_limits<Distortion>::max();
 }
 
 // Setting the Distortion Parameter for Inter (ME)
-Void TComRdCost::setDistParam( const TComPattern* const pcPatternKey, const Pel* piRefY, Int iRefStride, DistParam& rcDistParam )
+Void TComRdCost::setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, DistParam& rcDistParam )
 {
   // set Original & Curr Pointer / Stride
   rcDistParam.pOrg = pcPatternKey->getROIY();
@@ -210,7 +322,6 @@ Void TComRdCost::setDistParam( const TComPattern* const pcPatternKey, const Pel*
   rcDistParam.iCols    = pcPatternKey->getROIYWidth();
   rcDistParam.iRows    = pcPatternKey->getROIYHeight();
   rcDistParam.DistFunc = m_afpDistortFunc[DF_SAD + g_aucConvertToBit[ rcDistParam.iCols ] + 1 ];
-  rcDistParam.m_maximumDistortionForEarlyExit = std::numeric_limits<Distortion>::max();
 
   if (rcDistParam.iCols == 12)
   {
@@ -230,7 +341,7 @@ Void TComRdCost::setDistParam( const TComPattern* const pcPatternKey, const Pel*
 }
 
 // Setting the Distortion Parameter for Inter (subpel ME with step)
-Void TComRdCost::setDistParam( const TComPattern* const pcPatternKey, const Pel* piRefY, Int iRefStride, Int iStep, DistParam& rcDistParam, Bool bHADME )
+Void TComRdCost::setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, Int iStep, DistParam& rcDistParam, Bool bHADME )
 {
   // set Original & Curr Pointer / Stride
   rcDistParam.pOrg = pcPatternKey->getROIY();
@@ -245,8 +356,6 @@ Void TComRdCost::setDistParam( const TComPattern* const pcPatternKey, const Pel*
   // set Block Width / Height
   rcDistParam.iCols    = pcPatternKey->getROIYWidth();
   rcDistParam.iRows    = pcPatternKey->getROIYHeight();
-
-  rcDistParam.m_maximumDistortionForEarlyExit = std::numeric_limits<Distortion>::max();
 
   // set distortion function
   if ( !bHADME )
@@ -274,22 +383,21 @@ Void TComRdCost::setDistParam( const TComPattern* const pcPatternKey, const Pel*
   rcDistParam.iSubShift  = 0;
 }
 
-Void TComRdCost::setDistParam( DistParam& rcDP, Int bitDepth, const Pel* p1, Int iStride1, const Pel* p2, Int iStride2, Int iWidth, Int iHeight, Bool bHadamard )
+Void TComRdCost::setDistParam( DistParam& rcDP, Int bitDepth, Pel* p1, Int iStride1, Pel* p2, Int iStride2, Int iWidth, Int iHeight, Bool bHadamard )
 {
-  rcDP.pOrg         = p1;
-  rcDP.pCur         = p2;
-  rcDP.iStrideOrg   = iStride1;
-  rcDP.iStrideCur   = iStride2;
-  rcDP.iCols        = iWidth;
-  rcDP.iRows        = iHeight;
-  rcDP.iStep        = 1;
-  rcDP.iSubShift    = 0;
-  rcDP.bitDepth     = bitDepth;
-  rcDP.DistFunc     = m_afpDistortFunc[ ( bHadamard ? DF_HADS : DF_SADS ) + g_aucConvertToBit[ iWidth ] + 1 ];
-  rcDP.m_maximumDistortionForEarlyExit = std::numeric_limits<Distortion>::max();
+  rcDP.pOrg       = p1;
+  rcDP.pCur       = p2;
+  rcDP.iStrideOrg = iStride1;
+  rcDP.iStrideCur = iStride2;
+  rcDP.iCols      = iWidth;
+  rcDP.iRows      = iHeight;
+  rcDP.iStep      = 1;
+  rcDP.iSubShift  = 0;
+  rcDP.bitDepth   = bitDepth;
+  rcDP.DistFunc   = m_afpDistortFunc[ ( bHadamard ? DF_HADS : DF_SADS ) + g_aucConvertToBit[ iWidth ] + 1 ];
 }
 
-Distortion TComRdCost::calcHAD( Int bitDepth, const Pel* pi0, Int iStride0, const Pel* pi1, Int iStride1, Int iWidth, Int iHeight )
+Distortion TComRdCost::calcHAD( Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iStride1, Int iWidth, Int iHeight )
 {
   Distortion uiSum = 0;
   Int x, y;
@@ -324,7 +432,7 @@ Distortion TComRdCost::calcHAD( Int bitDepth, const Pel* pi0, Int iStride0, cons
   return ( uiSum >> DISTORTION_PRECISION_ADJUSTMENT(bitDepth-8) );
 }
 
-Distortion TComRdCost::getDistPart( Int bitDepth, const Pel* piCur, Int iCurStride,  const Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, const ComponentID compID, DFunc eDFunc )
+Distortion TComRdCost::getDistPart( Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, const ComponentID compID, DFunc eDFunc )
 {
   DistParam cDtParam;
   setDistParam( uiBlkWidth, uiBlkHeight, eDFunc, cDtParam );
@@ -348,6 +456,15 @@ Distortion TComRdCost::getDistPart( Int bitDepth, const Pel* piCur, Int iCurStri
   }
 }
 
+Void TComRdCost::adjustLambdaForColourTrans(Int delta_QP, const BitDepths &bitDepths)
+{
+  Double lamdbaAdjustRate = pow(2.0, delta_QP  / 3.0);
+  Double dLambda = m_dLambda * lamdbaAdjustRate;
+  setLambda( dLambda, bitDepths );
+}
+
+
+
 // ====================================================================================================================
 // Distortion functions
 // ====================================================================================================================
@@ -362,30 +479,26 @@ Distortion TComRdCost::xGetSAD( DistParam* pcDtParam )
   {
     return TComRdCostWeightPrediction::xGetSADw( pcDtParam );
   }
-  const Pel* piOrg           = pcDtParam->pOrg;
-  const Pel* piCur           = pcDtParam->pCur;
-  const Int  iCols           = pcDtParam->iCols;
-  const Int  iStrideCur      = pcDtParam->iStrideCur;
-  const Int  iStrideOrg      = pcDtParam->iStrideOrg;
-  const UInt distortionShift = DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth - 8);
+  const Pel* piOrg   = pcDtParam->pOrg;
+  const Pel* piCur   = pcDtParam->pCur;
+  Int  iRows   = pcDtParam->iRows;
+  Int  iCols   = pcDtParam->iCols;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
 
   Distortion uiSum = 0;
 
-  for(Int iRows = pcDtParam->iRows ; iRows != 0; iRows-- )
+  for( ; iRows != 0; iRows-- )
   {
     for (Int n = 0; n < iCols; n++ )
     {
       uiSum += abs( piOrg[n] - piCur[n] );
     }
-    if (pcDtParam->m_maximumDistortionForEarlyExit < ( uiSum >> distortionShift ))
-    {
-      return ( uiSum >> distortionShift );
-    }
     piOrg += iStrideOrg;
     piCur += iStrideCur;
   }
 
-  return ( uiSum >> distortionShift );
+  return ( uiSum >> DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8) );
 }
 
 Distortion TComRdCost::xGetSAD4( DistParam* pcDtParam )
@@ -1209,7 +1322,7 @@ Distortion TComRdCost::xGetSSE64( DistParam* pcDtParam )
 // HADAMARD with step (used in fractional search)
 // --------------------------------------------------------------------------------------------------------------------
 
-Distortion TComRdCost::xCalcHADs2x2( const Pel *piOrg, const Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
+Distortion TComRdCost::xCalcHADs2x2( Pel *piOrg, Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
 {
   Distortion satd = 0;
   TCoeff diff[4], m[4];
@@ -1231,7 +1344,7 @@ Distortion TComRdCost::xCalcHADs2x2( const Pel *piOrg, const Pel *piCur, Int iSt
   return satd;
 }
 
-Distortion TComRdCost::xCalcHADs4x4( const Pel *piOrg, const Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
+Distortion TComRdCost::xCalcHADs4x4( Pel *piOrg, Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
 {
   Int k;
   Distortion satd = 0;
@@ -1327,7 +1440,7 @@ Distortion TComRdCost::xCalcHADs4x4( const Pel *piOrg, const Pel *piCur, Int iSt
   return satd;
 }
 
-Distortion TComRdCost::xCalcHADs8x8( const Pel *piOrg, const Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
+Distortion TComRdCost::xCalcHADs8x8( Pel *piOrg, Pel *piCur, Int iStrideOrg, Int iStrideCur, Int iStep )
 {
   Int k, i, j, jj;
   Distortion sad = 0;
@@ -1431,13 +1544,13 @@ Distortion TComRdCost::xGetHADs( DistParam* pcDtParam )
   {
     return TComRdCostWeightPrediction::xGetHADsw( pcDtParam );
   }
-  const Pel* piOrg      = pcDtParam->pOrg;
-  const Pel* piCur      = pcDtParam->pCur;
-  const Int  iRows      = pcDtParam->iRows;
-  const Int  iCols      = pcDtParam->iCols;
-  const Int  iStrideCur = pcDtParam->iStrideCur;
-  const Int  iStrideOrg = pcDtParam->iStrideOrg;
-  const Int  iStep      = pcDtParam->iStep;
+  Pel* piOrg   = pcDtParam->pOrg;
+  Pel* piCur   = pcDtParam->pCur;
+  Int  iRows   = pcDtParam->iRows;
+  Int  iCols   = pcDtParam->iCols;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
+  Int  iStep  = pcDtParam->iStep;
 
   Int  x, y;
 

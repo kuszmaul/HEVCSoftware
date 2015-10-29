@@ -54,17 +54,6 @@ static inline Pel weightUnidir( Int w0, Pel P0, Int round, Int shift, Int offset
   return ClipBD( ( (w0*(P0 + IF_INTERNAL_OFFS) + round) >> shift ) + offset, clipBD );
 }
 
-static inline Pel noWeightUnidir( Pel P0, Int round, Int shift, Int offset, Int clipBD)
-{
-  return ClipBD( ( ((P0 + IF_INTERNAL_OFFS) + round) >> shift ) + offset, clipBD );
-}
-
-static inline Pel noWeightOffsetUnidir( Pel P0, Int round, Int shift, Int clipBD)
-{
-  return ClipBD( ( ((P0 + IF_INTERNAL_OFFS) + round) >> shift ), clipBD );
-}
-
-
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -164,6 +153,7 @@ Void TComWeightPrediction::addWeightUni( const TComYuv        *const pcYuvSrc0,
     const Int  clipBD      = bitDepths.recon[toChannelType(compID)];
     const Int  shiftNum    = std::max<Int>(2, (IF_INTERNAL_PREC - clipBD));
     const Int  shift       = wp0[compID].shift + shiftNum;
+    const Int  round       = (shift > 0) ? (1<<(shift-1)) : 0;
     const UInt iSrc0Stride = pcYuvSrc0->getStride(compID);
     const UInt iDstStride  = pcYuvDst->getStride(compID);
     const UInt csx         = pcYuvSrc0->getComponentScaleX(compID);
@@ -171,70 +161,22 @@ Void TComWeightPrediction::addWeightUni( const TComYuv        *const pcYuvSrc0,
     const Int  iHeight     = uiHeight>>csy;
     const Int  iWidth      = uiWidth>>csx;
 
-    if (w0 != 1 << wp0[compID].shift)
+    for (Int y = iHeight-1; y >= 0; y-- )
     {
-      const Int  round       = (shift > 0) ? (1<<(shift-1)) : 0;
-      for (Int y = iHeight-1; y >= 0; y-- )
+      Int x = iWidth-1;
+      for ( ; x >= 3; )
       {
-        Int x = iWidth-1;
-        for ( ; x >= 3; )
-        {
-          pDst[x] = weightUnidir(w0, pSrc0[x], round, shift, offset, clipBD); x--;
-          pDst[x] = weightUnidir(w0, pSrc0[x], round, shift, offset, clipBD); x--;
-          pDst[x] = weightUnidir(w0, pSrc0[x], round, shift, offset, clipBD); x--;
-          pDst[x] = weightUnidir(w0, pSrc0[x], round, shift, offset, clipBD); x--;
-        }
-        for( ; x >= 0; x--)
-        {
-          pDst[x] = weightUnidir(w0, pSrc0[x], round, shift, offset, clipBD);
-        }
-        pSrc0 += iSrc0Stride;
-        pDst  += iDstStride;
+        pDst[x] = weightUnidir(w0, pSrc0[x], round, shift, offset, clipBD); x--;
+        pDst[x] = weightUnidir(w0, pSrc0[x], round, shift, offset, clipBD); x--;
+        pDst[x] = weightUnidir(w0, pSrc0[x], round, shift, offset, clipBD); x--;
+        pDst[x] = weightUnidir(w0, pSrc0[x], round, shift, offset, clipBD); x--;
       }
-    }
-    else
-    {
-      const Int  round       = (shiftNum > 0) ? (1<<(shiftNum-1)) : 0;
-      if (offset == 0)
+      for( ; x >= 0; x--)
       {
-        for (Int y = iHeight-1; y >= 0; y-- )
-        {
-          Int x = iWidth-1;
-          for ( ; x >= 3; )
-          {
-            pDst[x] = noWeightOffsetUnidir(pSrc0[x], round, shiftNum, clipBD); x--;
-            pDst[x] = noWeightOffsetUnidir(pSrc0[x], round, shiftNum, clipBD); x--;
-            pDst[x] = noWeightOffsetUnidir(pSrc0[x], round, shiftNum, clipBD); x--;
-            pDst[x] = noWeightOffsetUnidir(pSrc0[x], round, shiftNum, clipBD); x--;
-          }
-          for( ; x >= 0; x--)
-          {
-            pDst[x] = noWeightOffsetUnidir(pSrc0[x], round, shiftNum, clipBD);
-          }
-          pSrc0 += iSrc0Stride;
-          pDst  += iDstStride;
-        }
+        pDst[x] = weightUnidir(w0, pSrc0[x], round, shift, offset, clipBD);
       }
-      else
-      {
-        for (Int y = iHeight-1; y >= 0; y-- )
-        {
-          Int x = iWidth-1;
-          for ( ; x >= 3; )
-          {
-            pDst[x] = noWeightUnidir(pSrc0[x], round, shiftNum, offset, clipBD); x--;
-            pDst[x] = noWeightUnidir(pSrc0[x], round, shiftNum, offset, clipBD); x--;
-            pDst[x] = noWeightUnidir(pSrc0[x], round, shiftNum, offset, clipBD); x--;
-            pDst[x] = noWeightUnidir(pSrc0[x], round, shiftNum, offset, clipBD); x--;
-          }
-          for( ; x >= 0; x--)
-          {
-            pDst[x] = noWeightUnidir(pSrc0[x], round, shiftNum, offset, clipBD);
-          }
-          pSrc0 += iSrc0Stride;
-          pDst  += iDstStride;
-        }
-      }
+      pSrc0 += iSrc0Stride;
+      pDst  += iDstStride;
     }
   }
 }
@@ -254,10 +196,10 @@ Void TComWeightPrediction::getWpScaling(       TComDataCU *const pcCU,
 
         TComSlice *const pcSlice  = pcCU->getSlice();
   const Bool             wpBiPred = pcCU->getSlice()->getPPS()->getWPBiPred();
-  const Bool             bBiPred  = (iRefIdx0>=0 && iRefIdx1>=0);
-  const Bool             bUniPred = !bBiPred;
+  const Bool             bBiDir   = (iRefIdx0>=0 && iRefIdx1>=0);
+  const Bool             bUniDir  = !bBiDir;
 
-  if ( bUniPred || wpBiPred )
+  if ( bUniDir || wpBiPred )
   { // explicit --------------------
     if ( iRefIdx0 >= 0 )
     {
@@ -285,8 +227,8 @@ Void TComWeightPrediction::getWpScaling(       TComDataCU *const pcCU,
   const UInt numValidComponent                    = pcCU->getPic()->getNumberValidComponents();
   const Bool bUseHighPrecisionPredictionWeighting = pcSlice->getSPS()->getSpsRangeExtension().getHighPrecisionOffsetsEnabledFlag();
 
-  if ( bBiPred )
-  { // Bi-predictive case
+  if ( bBiDir )
+  { // Bi-Dir case
     for ( Int yuv=0 ; yuv<numValidComponent ; yuv++ )
     {
       const Int bitDepth            = pcSlice->getSPS()->getBitDepth(toChannelType(ComponentID(yuv)));
@@ -305,7 +247,7 @@ Void TComWeightPrediction::getWpScaling(       TComDataCU *const pcCU,
     }
   }
   else
-  {  // UniPred
+  {  // Unidir
     WPScalingParam *const pwp = (iRefIdx0>=0) ? wp0 : wp1 ;
 
     for ( Int yuv=0 ; yuv<numValidComponent ; yuv++ )

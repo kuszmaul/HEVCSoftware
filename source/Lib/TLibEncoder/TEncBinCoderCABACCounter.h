@@ -60,7 +60,15 @@ public:
   Void  encodeBinEP       ( UInt  binValue                            );
   Void  encodeBinsEP      ( UInt  binValues, Int numBins              );
   Void  encodeBinTrm      ( UInt  binValue                            );
-
+  UInt64  getNumPartialBits()                    { return m_fracBits; }
+  Void storeNumPartialBits()
+  {
+    m_fracBitsStored = m_fracBits;
+  };
+  Void restoreNumPartialBits()
+  {
+    m_fracBits = m_fracBitsStored;
+  };
   Void  align             ();
 
 private:

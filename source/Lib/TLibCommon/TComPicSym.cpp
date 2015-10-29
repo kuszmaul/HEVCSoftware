@@ -69,8 +69,9 @@ TComPicSym::TComPicSym()
 #endif
 {}
 
-
-Void TComPicSym::create  ( const TComSPS &sps, const TComPPS &pps, UInt uiMaxDepth )
+Void TComPicSym::create  ( const TComSPS &sps, const TComPPS &pps, UInt uiMaxDepth
+  , UInt uiPLTMaxSize, UInt uiPLTMaxPredSize
+  )
 {
   UInt i;
   m_sps = sps;
@@ -111,6 +112,7 @@ Void TComPicSym::create  ( const TComSPS &sps, const TComPPS &pps, UInt uiMaxDep
   {
     m_pictureCtuArray[i] = new TComDataCU;
     m_pictureCtuArray[i]->create( chromaFormatIDC, m_numPartitionsInCtu, uiMaxCuWidth, uiMaxCuHeight, false, uiMaxCuWidth >> m_uhTotalDepth
+      , uiPLTMaxSize, uiPLTMaxPredSize
 #if ADAPTIVE_QP_SELECTION
       , m_pParentARLBuffer
 #endif
@@ -139,20 +141,14 @@ Void TComPicSym::destroy()
 {
   clearSliceBuffer();
 
-  if (m_pictureCtuArray)
+  for (Int i = 0; i < m_numCtusInFrame; i++)
   {
-    for (Int i = 0; i < m_numCtusInFrame; i++)
-    {
-      if (m_pictureCtuArray[i])
-      {
-        m_pictureCtuArray[i]->destroy();
-        delete m_pictureCtuArray[i];
-        m_pictureCtuArray[i] = NULL;
-      }
-    }
-    delete [] m_pictureCtuArray;
-    m_pictureCtuArray = NULL;
+    m_pictureCtuArray[i]->destroy();
+    delete m_pictureCtuArray[i];
+    m_pictureCtuArray[i] = NULL;
   }
+  delete [] m_pictureCtuArray;
+  m_pictureCtuArray = NULL;
 
   delete [] m_ctuTsToRsAddrMap;
   m_ctuTsToRsAddrMap = NULL;

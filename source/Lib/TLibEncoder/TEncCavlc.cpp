@@ -64,24 +64,9 @@ Void  xTraceSliceHeader ()
   fprintf( g_hTrace, "=========== Slice ===========\n");
 }
 
-Void  xTraceAccessUnitDelimiter ()
-{
-  fprintf( g_hTrace, "=========== Access Unit Delimiter ===========\n");
-}
-
 #endif
 
-Void AUDWriter::codeAUD(TComBitIf& bs, const Int pictureType)
-{
-#if ENC_DEC_TRACE
-  xTraceAccessUnitDelimiter();
-#endif
 
-  assert (pictureType < 3);
-  setBitstream(&bs);
-  WRITE_CODE(pictureType, 3, "pic_type");
-  xWriteRbspTrailingBits();
-}
 
 // ====================================================================================================================
 // Constructor / destructor / create / destroy
@@ -244,6 +229,7 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
   Bool pps_extension_flags[NUM_PPS_EXTENSION_FLAGS]={false};
 
   pps_extension_flags[PPS_EXT__REXT] = pcPPS->getPpsRangeExtension().settingsDifferFromDefaults(pcPPS->getUseTransformSkip());
+  pps_extension_flags[PPS_EXT__SCC] = pcPPS->getPpsScreenExtension().settingsDifferFromDefaults();
 
   // Other PPS extension flags checked here.
 
@@ -257,14 +243,14 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
   if (pps_extension_present_flag)
   {
 #if ENC_DEC_TRACE || RExt__DECODER_DEBUG_BIT_STATISTICS
-    static const TChar *syntaxStrings[]={ "pps_range_extension_flag",
-                                          "pps_multilayer_extension_flag",
-                                          "pps_extension_6bits[0]",
-                                          "pps_extension_6bits[1]",
-                                          "pps_extension_6bits[2]",
-                                          "pps_extension_6bits[3]",
-                                          "pps_extension_6bits[4]",
-                                          "pps_extension_6bits[5]" };
+    static const char *syntaxStrings[]={ "pps_range_extension_flag",
+                                         "pps_multilayer_extension_flag",
+                                         "pps_extension_6bits[0]",
+                                         "pps_extension_6bits[1]",
+                                         "pps_extension_6bits[2]",
+                                         "pps_extension_6bits[3]",
+                                         "pps_extension_6bits[4]",
+                                         "pps_extension_6bits[5]" };
 #endif
 
     for(Int i=0; i<NUM_PPS_EXTENSION_FLAGS; i++)
@@ -303,6 +289,40 @@ Void TEncCavlc::codePPS( const TComPPS* pcPPS )
 
               WRITE_UVLC( ppsRangeExtension.getLog2SaoOffsetScale(CHANNEL_TYPE_LUMA),           "log2_sao_offset_scale_luma"   );
               WRITE_UVLC( ppsRangeExtension.getLog2SaoOffsetScale(CHANNEL_TYPE_CHROMA),         "log2_sao_offset_scale_chroma" );
+            }
+            break;
+          case PPS_EXT__SCC:
+            {
+              const TComPPSSCC &ppsScreenExtension = pcPPS->getPpsScreenExtension();
+              WRITE_FLAG( (ppsScreenExtension.getUseIntraBlockCopy() ? 1 : 0), "curr_pic_as_ref_enabled_pps_flag" );
+              WRITE_FLAG( (ppsScreenExtension.getUseColourTrans() ? 1 : 0), "adaptive_colour_trans_flag" );
+              if ( ppsScreenExtension.getUseColourTrans() )
+              {
+                WRITE_FLAG( (ppsScreenExtension.getUseSliceACTOffset() ? 1 : 0), "pps_slice_act_qp_offset_present_flag" );
+
+                WRITE_SVLC( (ppsScreenExtension.getActQpOffset( COMPONENT_Y ) + 5),  "pps_act_y_qp_offset_plus5" );
+                WRITE_SVLC( (ppsScreenExtension.getActQpOffset( COMPONENT_Cb ) + 5), "pps_act_cb_qp_offset_plus5" );
+                WRITE_SVLC( (ppsScreenExtension.getActQpOffset( COMPONENT_Cr ) + 3), "pps_act_cr_qp_offset_plus3" );
+              }
+              WRITE_FLAG( (ppsScreenExtension.getNumPLTPred() ? 1 : 0), "palette_predictor_initializer_flag" );
+              if ( ppsScreenExtension.getNumPLTPred() )
+              {
+                WRITE_FLAG( ppsScreenExtension.getMonochromePaletteFlag(), "monochrome_palette_flag" );
+                WRITE_UVLC( ppsScreenExtension.getPalettePredictorBitDepth( CHANNEL_TYPE_LUMA )  -8, "luma_bit_depth_entry_minus8" );
+                if ( !ppsScreenExtension.getMonochromePaletteFlag() )
+                {
+                  WRITE_UVLC( ppsScreenExtension.getPalettePredictorBitDepth( CHANNEL_TYPE_CHROMA ) - 8, "chroma_bit_depth_entry_minus8" );
+                }
+                WRITE_UVLC( ppsScreenExtension.getNumPLTPred()-1, "num_palette_entries_minus1" );
+
+                for ( Int k=0; k < (ppsScreenExtension.getMonochromePaletteFlag() ? 1 : 3); k++ )
+                {
+                  for ( Int j=0; j<ppsScreenExtension.getNumPLTPred(); j++ )
+                  {
+                    xWriteCode( ppsScreenExtension.getPLTPred( k )[j], ppsScreenExtension.getPalettePredictorBitDepth( toChannelType( ComponentID( k ) ) ) );
+                  }
+                }
+              }
             }
             break;
           default:
@@ -517,7 +537,7 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
   {
     WRITE_UVLC( pcSPS->getMaxDecPicBuffering(i) - 1,       "sps_max_dec_pic_buffering_minus1[i]" );
     WRITE_UVLC( pcSPS->getNumReorderPics(i),               "sps_max_num_reorder_pics[i]" );
-    WRITE_UVLC( pcSPS->getMaxLatencyIncreasePlus1(i),      "sps_max_latency_increase_plus1[i]" );
+    WRITE_UVLC( pcSPS->getMaxLatencyIncrease(i),           "sps_max_latency_increase_plus1[i]" );
     if (!subLayerOrderingInfoPresentFlag)
     {
       break;
@@ -586,6 +606,7 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
   Bool sps_extension_flags[NUM_SPS_EXTENSION_FLAGS]={false};
 
   sps_extension_flags[SPS_EXT__REXT] = pcSPS->getSpsRangeExtension().settingsDifferFromDefaults();
+  sps_extension_flags[SPS_EXT__SCC] = pcSPS->getSpsScreenExtension().settingsDifferFromDefaults();
 
   // Other SPS extension flags checked here.
 
@@ -599,14 +620,14 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
   if (sps_extension_present_flag)
   {
 #if ENC_DEC_TRACE || RExt__DECODER_DEBUG_BIT_STATISTICS
-    static const TChar *syntaxStrings[]={ "sps_range_extension_flag",
-                                          "sps_multilayer_extension_flag",
-                                          "sps_extension_6bits[0]",
-                                          "sps_extension_6bits[1]",
-                                          "sps_extension_6bits[2]",
-                                          "sps_extension_6bits[3]",
-                                          "sps_extension_6bits[4]",
-                                          "sps_extension_6bits[5]" };
+    static const char *syntaxStrings[]={ "sps_range_extension_flag",
+                                         "sps_multilayer_extension_flag",
+                                         "sps_extension_6bits[0]",
+                                         "sps_extension_6bits[1]",
+                                         "sps_extension_6bits[2]",
+                                         "sps_extension_6bits[3]",
+                                         "sps_extension_6bits[4]",
+                                         "sps_extension_6bits[5]" };
 #endif
 
     for(Int i=0; i<NUM_SPS_EXTENSION_FLAGS; i++)
@@ -635,6 +656,33 @@ Void TEncCavlc::codeSPS( const TComSPS* pcSPS )
             WRITE_FLAG( (spsRangeExtension.getCabacBypassAlignmentEnabledFlag() ? 1 : 0),       "cabac_bypass_alignment_enabled_flag" );
             break;
           }
+          case SPS_EXT__SCC:
+            {
+              const TComSPSSCC &spsScreenExtension=pcSPS->getSpsScreenExtension();
+              WRITE_FLAG( (spsScreenExtension.getUseIntraBlockCopy() ? 1 : 0),                           "intra_block_copy_enabled_flag" );
+              WRITE_FLAG( (spsScreenExtension.getUsePLTMode() ? 1 : 0),                                  "palette_mode_enabled_flag" );
+
+              if ( spsScreenExtension.getUsePLTMode() )
+              {
+                WRITE_UVLC( spsScreenExtension.getPLTMaxSize(),                                          "palette_max_size" );
+                WRITE_UVLC( spsScreenExtension.getPLTMaxPredSize() - spsScreenExtension.getPLTMaxSize(), "delta_palette_max_predictor_size" );
+                WRITE_FLAG( (spsScreenExtension.getNumPLTPred() ? 1 : 0),                                "sps_palette_predictor_initializer_flag" );
+                if( spsScreenExtension.getNumPLTPred() )
+                {
+                  WRITE_UVLC( spsScreenExtension.getNumPLTPred()-1,                                      "sps_num_palette_entries_minus1" );
+                  for ( Int k=0; k < (pcSPS->getChromaFormatIdc() == CHROMA_400 ? 1 : 3); k++ )
+                  {
+                    for ( Int j=0; j<spsScreenExtension.getNumPLTPred(); j++ )
+                    {
+                      xWriteCode( spsScreenExtension.getPLTPred( k )[j], pcSPS->getBitDepth( toChannelType( ComponentID( k ) ) ));
+                    }
+                  }
+                }
+              }
+              WRITE_CODE( spsScreenExtension.getMotionVectorResolutionControlIdc(), 2,                   "motion_vector_resolution_control_idc" );
+              WRITE_FLAG( (spsScreenExtension.getDisableIntraBoundaryFilter() ? 1 : 0),                  "intra_boundary_filter_disabled_flag" );
+            }
+            break;
           default:
             assert(sps_extension_flags[i]==false); // Should never get here with an active SPS extension flag.
             break;
@@ -1006,6 +1054,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
         WRITE_UVLC( pcSlice->getColRefIdx(), "collocated_ref_idx" );
       }
     }
+
     if ( (pcSlice->getPPS()->getUseWP() && pcSlice->getSliceType()==P_SLICE) || (pcSlice->getPPS()->getWPBiPred() && pcSlice->getSliceType()==B_SLICE) )
     {
       xCodePredWeightTable( pcSlice );
@@ -1014,6 +1063,10 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     if (!pcSlice->isIntra())
     {
       WRITE_UVLC(MRG_MAX_NUM_CANDS - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
+      if ( pcSlice->getSPS()->getSpsScreenExtension().getMotionVectorResolutionControlIdc() == 2 )
+      {
+        WRITE_FLAG( pcSlice->getUseIntegerMv() ? 1 : 0, "use_integer_mv" );
+      }
     }
     Int iCode = pcSlice->getSliceQp() - ( pcSlice->getPPS()->getPicInitQPMinus26() + 26 );
     WRITE_SVLC( iCode, "slice_qp_delta" );
@@ -1033,6 +1086,13 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     if (pcSlice->getPPS()->getPpsRangeExtension().getChromaQpOffsetListEnabledFlag())
     {
       WRITE_FLAG(pcSlice->getUseChromaQpAdj(), "cu_chroma_qp_offset_enabled_flag");
+    }
+
+    if( pcSlice->getPPS()->getPpsScreenExtension().getUseSliceACTOffset() )
+    {
+      WRITE_SVLC( pcSlice->getSliceActQpDelta(COMPONENT_Y), "slice_act_y_qp_offset");
+      WRITE_SVLC( pcSlice->getSliceActQpDelta(COMPONENT_Cb), "slice_act_cb_qp_offset");
+      WRITE_SVLC( pcSlice->getSliceActQpDelta(COMPONENT_Cr), "slice_act_cr_qp_offset");
     }
 
     if (pcSlice->getPPS()->getDeblockingFilterControlPresentFlag())
@@ -1233,6 +1293,21 @@ Void TEncCavlc::codeCUTransquantBypassFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPa
   assert(0);
 }
 
+Void TEncCavlc:: codePLTModeFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/ )
+{
+  assert(0);
+}
+
+#if SCM_S0043_PLT_DELTA_QP
+Void TEncCavlc::codePLTModeSyntax(TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiNumComp*/, Bool* /*bCodeDQP*/, Bool* /*codeChromaQpAdjFlag*/)
+#else
+Void TEncCavlc::codePLTModeSyntax(TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiNumComp*/)
+#endif
+{
+  assert(0);
+}
+
+
 Void TEncCavlc::codeSkipFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/ )
 {
   assert(0);
@@ -1288,6 +1363,11 @@ Void TEncCavlc::codeIntraDirLumaAng( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/
 }
 
 Void TEncCavlc::codeIntraDirChroma( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/ )
+{
+  assert(0);
+}
+
+Void TEncCavlc::codeColourTransformFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/ )
 {
   assert(0);
 }
@@ -1379,7 +1459,14 @@ Void TEncCavlc::xCodePredWeightTable( TComSlice* pcSlice )
           }
           bDenomCoded = true;
         }
-        WRITE_FLAG( wp[COMPONENT_Y].bPresentFlag, iNumRef==0?"luma_weight_l0_flag[i]":"luma_weight_l1_flag[i]" );
+        if( pcSlice->getRefPic((RefPicList)eRefPicList, iRefIdx)->getPOC() == pcSlice->getPOC() )
+        {
+          assert( !wp[COMPONENT_Y].bPresentFlag );
+        }
+        else
+        {
+          WRITE_FLAG( wp[COMPONENT_Y].bPresentFlag, iNumRef==0?"luma_weight_l0_flag[i]":"luma_weight_l1_flag[i]" );
+        }
         uiTotalSignalledWeightFlags += wp[COMPONENT_Y].bPresentFlag;
       }
       if (bChroma)
@@ -1388,7 +1475,14 @@ Void TEncCavlc::xCodePredWeightTable( TComSlice* pcSlice )
         {
           pcSlice->getWpScaling(eRefPicList, iRefIdx, wp);
           assert(wp[COMPONENT_Cb].bPresentFlag == wp[COMPONENT_Cr].bPresentFlag); // check the channel-type settings are consistent across components.
-          WRITE_FLAG( wp[COMPONENT_Cb].bPresentFlag, iNumRef==0?"chroma_weight_l0_flag[i]":"chroma_weight_l1_flag[i]" );
+          if( pcSlice->getRefPic((RefPicList)eRefPicList, iRefIdx)->getPOC() == pcSlice->getPOC() )
+          {
+            assert( !wp[COMPONENT_Cb].bPresentFlag );
+          }
+          else
+          {
+            WRITE_FLAG( wp[COMPONENT_Cb].bPresentFlag, iNumRef==0?"chroma_weight_l0_flag[i]":"chroma_weight_l1_flag[i]" );
+          }
           uiTotalSignalledWeightFlags += 2*wp[COMPONENT_Cb].bPresentFlag;
         }
       }
@@ -1472,28 +1566,27 @@ Void TEncCavlc::xCodeScalingList(const TComScalingList* scalingList, UInt sizeId
   Int nextCoef = SCALING_LIST_START_VALUE;
   Int data;
   const Int *src = scalingList->getScalingListAddress(sizeId, listId);
-  if( sizeId > SCALING_LIST_8x8 )
-  {
-    WRITE_SVLC( scalingList->getScalingListDC(sizeId,listId) - 8, "scaling_list_dc_coef_minus8");
-    nextCoef = scalingList->getScalingListDC(sizeId,listId);
-  }
-  for(Int i=0;i<coefNum;i++)
-  {
-    data = src[scan[i]] - nextCoef;
-    nextCoef = src[scan[i]];
-    if(data > 127)
+    if( sizeId > SCALING_LIST_8x8 )
     {
-      data = data - 256;
+      WRITE_SVLC( scalingList->getScalingListDC(sizeId,listId) - 8, "scaling_list_dc_coef_minus8");
+      nextCoef = scalingList->getScalingListDC(sizeId,listId);
     }
-    if(data < -128)
+    for(Int i=0;i<coefNum;i++)
     {
-      data = data + 256;
-    }
+      data = src[scan[i]] - nextCoef;
+      nextCoef = src[scan[i]];
+      if(data > 127)
+      {
+        data = data - 256;
+      }
+      if(data < -128)
+      {
+        data = data + 256;
+      }
 
-    WRITE_SVLC( data,  "scaling_list_delta_coef");
-  }
+      WRITE_SVLC( data,  "scaling_list_delta_coef");
+    }
 }
-
 Bool TEncCavlc::findMatchingLTRP ( TComSlice* pcSlice, UInt *ltrpsIndex, Int ltrpPOC, Bool usedFlag )
 {
   // Bool state = true, state2 = false;
@@ -1513,5 +1606,11 @@ Void TEncCavlc::codeExplicitRdpcmMode( TComTU& /*rTu*/, const ComponentID /*comp
  {
    assert(0);
  }
+
+Void TEncCavlc:: codeScanRotationModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+
 
 //! \}

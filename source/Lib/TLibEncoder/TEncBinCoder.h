@@ -63,6 +63,9 @@ public:
 
   virtual Void  resetBits         ()                                          = 0;
   virtual UInt  getNumWrittenBits ()                                          = 0;
+  virtual UInt64  getNumPartialBits ()                                        = 0;
+  virtual Void  storeNumPartialBits ()                                        = 0;
+  virtual Void  restoreNumPartialBits ()                                      = 0;
 
   virtual Void  encodeBin         ( UInt  uiBin,  ContextModel& rcCtxModel )  = 0;
   virtual Void  encodeBinEP       ( UInt  uiBin                            )  = 0;

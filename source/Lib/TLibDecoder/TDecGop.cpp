@@ -99,9 +99,13 @@ Void TDecGop::init( TDecEntropy*            pcEntropyDecoder,
 // ====================================================================================================================
 // Public member functions
 // ====================================================================================================================
-
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic* pcPic, TComPic* pcPicAfterILF)
+{
+#else
 Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic* pcPic)
 {
+#endif
   TComSlice*  pcSlice = pcPic->getSlice(pcPic->getCurrSliceIdx());
   // Table of extracted substreams.
   // These must be deallocated AND their internal fifos, too.
@@ -121,7 +125,11 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic* pcPic)
     ppcSubstreams[ui] = pcBitstream->extractSubstream(ui+1 < uiNumSubstreams ? (pcSlice->getSubstreamSize(ui)<<3) : pcBitstream->getNumBitsLeft());
   }
 
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+  m_pcSliceDecoder->decompressSlice( ppcSubstreams, pcPic, pcPicAfterILF, m_pcSbacDecoder);
+#else
   m_pcSliceDecoder->decompressSlice( ppcSubstreams, pcPic, m_pcSbacDecoder);
+#endif
   // deallocate all created substreams, including internal buffers.
   for (UInt ui = 0; ui < uiNumSubstreams; ui++)
   {
@@ -152,7 +160,8 @@ Void TDecGop::filterPicture(TComPic* pcPic)
   }
 
   pcPic->compressMotion();
-  TChar c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
+  Char c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
+
   if (!pcSlice->isReferenced())
   {
     c += 32;
@@ -210,25 +219,25 @@ static Void calcAndPrintHashStatus(TComPicYuv& pic, const SEIDecodedPictureHash*
   /* calculate MD5sum for entire reconstructed picture */
   TComPictureHash recon_digest;
   Int numChar=0;
-  const TChar* hashType = "\0";
+  const Char* hashType = "\0";
 
   if (pictureHashSEI)
   {
     switch (pictureHashSEI->method)
     {
-      case HASHTYPE_MD5:
+      case SEIDecodedPictureHash::MD5:
         {
           hashType = "MD5";
           numChar = calcMD5(pic, recon_digest, bitDepths);
           break;
         }
-      case HASHTYPE_CRC:
+      case SEIDecodedPictureHash::CRC:
         {
           hashType = "CRC";
           numChar = calcCRC(pic, recon_digest, bitDepths);
           break;
         }
-      case HASHTYPE_CHECKSUM:
+      case SEIDecodedPictureHash::CHECKSUM:
         {
           hashType = "Checksum";
           numChar = calcChecksum(pic, recon_digest, bitDepths);
@@ -243,7 +252,7 @@ static Void calcAndPrintHashStatus(TComPicYuv& pic, const SEIDecodedPictureHash*
   }
 
   /* compare digest against received version */
-  const TChar* ok = "(unk)";
+  const Char* ok = "(unk)";
   Bool mismatch = false;
 
   if (pictureHashSEI)
