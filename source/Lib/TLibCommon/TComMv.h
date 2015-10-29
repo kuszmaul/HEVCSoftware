@@ -88,7 +88,7 @@ public:
   Int   getHor    () const { return m_iHor;          }
   Int   getVer    () const { return m_iVer;          }
   Int   getAbsHor () const { return abs( m_iHor );   }
-  Int   getAbsVer () const { return abs( m_iVer );   }
+  Int   getAbsVer () const { return abs( m_iVer );   }  
 
   // ------------------------------------------------------------------------------------------------------------------
   // operations
@@ -108,14 +108,12 @@ public:
     return  *this;
   }
 
-#if !ME_ENABLE_ROUNDING_OF_MVS
   const TComMv& operator>>= (const Int i)
   {
     m_iHor >>= i;
     m_iVer >>= i;
     return  *this;
   }
-#endif
 
 #if ME_ENABLE_ROUNDING_OF_MVS
   //! shift right with rounding
@@ -155,6 +153,20 @@ public:
   Bool operator!= ( const TComMv& rcMv ) const
   {
     return (m_iHor!=rcMv.m_iHor || m_iVer!=rcMv.m_iVer);
+  }
+
+  TComMv& operator>> (const Int i)
+  {
+    m_iHor >>= i;
+    m_iVer >>= i;
+    return  *this;
+  }
+
+  TComMv& operator<< (const Int i)
+  {
+    m_iHor <<= i;
+    m_iVer <<= i;
+    return  *this;
   }
 
   const TComMv scaleMv( Int iScale ) const

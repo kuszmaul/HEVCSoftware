@@ -127,6 +127,10 @@ Void TAppDecTop::decode()
   Bool openedReconFile = false; // reconstruction file not yet opened. (must be performed after SPS is seen)
   Bool loopFiltered = false;
 
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+  m_cTDecTop.setDPBFullness(0);
+#endif
+
   while (!!bitstreamFile)
   {
     /* location serves to work around a design fault in the decoder, whereby
@@ -219,6 +223,27 @@ Void TAppDecTop::decode()
         m_cTVideoIOYuvReconFile.open( m_reconFileName, true, m_outputBitDepth, m_outputBitDepth, bitDepths.recon ); // write mode
         openedReconFile = true;
       }
+
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+            if (bNewPicture) 
+            {
+                if (m_cTDecTop.getTwoVersionsOfCurrDecPicFlag())
+                {
+                    // remove current picture before ILF
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+                    m_cTDecTop.remCurPicBefILFFromDPBDecDPBFullnessByOne(pcListPic);
+#else
+                    m_cTDecTop.xRemCurPicBefILFFromDPBDecDPBFullnessByOne(pcListPic);
+#endif
+                    m_cTDecTop.updateCurrentPictureFlag(pcListPic);
+                } 
+                else if (m_cTDecTop.isCurrPicAsRef())
+                {
+                    m_cTDecTop.markCurrentPictureAfterILFforShortTermRef(pcListPic);
+                }
+            }
+#endif
+
       // write reconstruction to file
       if( bNewPicture )
       {
@@ -318,7 +343,9 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
 
   TComList<TComPic*>::iterator iterPic   = pcListPic->begin();
   Int numPicsNotYetDisplayed = 0;
+#if !SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
   Int dpbFullness = 0;
+#endif
   const TComSPS* activeSPS = &(pcListPic->front()->getPicSym()->getSPS());
   UInt numReorderPicsHighestTid;
   UInt maxDecPicBufferingHighestTid;
@@ -335,6 +362,17 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
     maxDecPicBufferingHighestTid = activeSPS->getMaxDecPicBuffering(m_iMaxTemporalLayer); 
   }
 
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+  while (iterPic != pcListPic->end())
+  {
+    TComPic* pcPic = *(iterPic);
+    if(pcPic->getOutputMark() && pcPic->getPOC() > m_iPOCLastDisplay)
+    {
+       numPicsNotYetDisplayed++;
+    }
+    iterPic++;
+  }
+#else
   while (iterPic != pcListPic->end())
   {
     TComPic* pcPic = *(iterPic);
@@ -349,6 +387,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
     }
     iterPic++;
   }
+#endif
 
   iterPic = pcListPic->begin();
 
@@ -370,7 +409,12 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
       TComPic* pcPicBottom = *(iterPic);
 
       if ( pcPicTop->getOutputMark() && pcPicBottom->getOutputMark() &&
-          (numPicsNotYetDisplayed >  numReorderPicsHighestTid || dpbFullness > maxDecPicBufferingHighestTid) &&
+          (numPicsNotYetDisplayed >  numReorderPicsHighestTid ||
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+                    m_cTDecTop.getDPBFullness() > maxDecPicBufferingHighestTid) &&
+#else                    
+                    dpbFullness > maxDecPicBufferingHighestTid) &&
+#endif
           (!(pcPicTop->getPOC()%2) && pcPicBottom->getPOC() == pcPicTop->getPOC()+1) &&
           (pcPicTop->getPOC() == m_iPOCLastDisplay+1 || m_iPOCLastDisplay < 0))
       {
@@ -436,14 +480,22 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
       pcPic = *(iterPic);
 
       if(pcPic->getOutputMark() && pcPic->getPOC() > m_iPOCLastDisplay &&
-        (numPicsNotYetDisplayed >  numReorderPicsHighestTid || dpbFullness > maxDecPicBufferingHighestTid))
+        (numPicsNotYetDisplayed >  numReorderPicsHighestTid ||
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+                m_cTDecTop.getDPBFullness() > maxDecPicBufferingHighestTid))
+#else                
+                dpbFullness > maxDecPicBufferingHighestTid))
+#endif
       {
         // write to file
          numPicsNotYetDisplayed--;
+
+#if !SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
         if(pcPic->getSlice(0)->isReferenced() == false)
         {
           dpbFullness--;
         }
+#endif
 
         if ( !m_reconFileName.empty() )
         {

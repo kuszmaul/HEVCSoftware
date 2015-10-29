@@ -120,7 +120,9 @@ private:
   Void               setCtuRsToTsAddrMap( Int ctuRsAddr, Int ctuTsOrder )  { *(m_ctuRsToTsAddrMap + ctuRsAddr) = ctuTsOrder; }
 
 public:
-  Void               create  ( const TComSPS &sps, const TComPPS &pps, UInt uiMaxDepth );
+  Void               create  ( const TComSPS &sps, const TComPPS &pps, UInt uiMaxDepth
+                       , UInt uiPLTMaxSize, UInt uiPLTMaxPredSize
+    );
   Void               destroy ();
 
   TComPicSym  ();

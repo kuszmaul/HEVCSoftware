@@ -40,6 +40,7 @@
 #include <limits>
 #include "TComRom.h"
 #include "TComRdCost.h"
+#include "TComTU.h"
 
 //! \ingroup TLibCommon
 //! \{
@@ -105,6 +106,11 @@ Void TComRdCost::setLambda( Double dLambda, const BitDepths &bitDepths )
 {
   m_dLambda           = dLambda;
   m_sqrtLambda        = sqrt(m_dLambda);
+  if(getUseColourTrans()&&!getUseLossless())
+  {
+    m_sqrtLambda        = sqrt(m_dLambda* pow(2.0, DELTA_QP_FOR_YCgCo_TRANS/3.0));
+  }
+
   m_dLambdaMotionSAD[0] = 65536.0 * m_sqrtLambda;
   m_dLambdaMotionSSE[0] = 65536.0 * m_dLambda;
 #if FULL_NBIT
@@ -347,6 +353,15 @@ Distortion TComRdCost::getDistPart( Int bitDepth, const Pel* piCur, Int iCurStri
     return cDtParam.DistFunc( &cDtParam );
   }
 }
+
+Void TComRdCost::adjustLambdaForColourTrans(Int delta_QP, const BitDepths &bitDepths)
+{
+  Double lamdbaAdjustRate = pow(2.0, delta_QP  / 3.0);
+  Double dLambda = m_dLambda * lamdbaAdjustRate;
+  setLambda( dLambda, bitDepths );
+}
+
+
 
 // ====================================================================================================================
 // Distortion functions

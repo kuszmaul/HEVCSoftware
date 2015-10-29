@@ -69,8 +69,9 @@ TComPicSym::TComPicSym()
 #endif
 {}
 
-
-Void TComPicSym::create  ( const TComSPS &sps, const TComPPS &pps, UInt uiMaxDepth )
+Void TComPicSym::create  ( const TComSPS &sps, const TComPPS &pps, UInt uiMaxDepth
+  , UInt uiPLTMaxSize, UInt uiPLTMaxPredSize
+  )
 {
   UInt i;
   m_sps = sps;
@@ -111,6 +112,7 @@ Void TComPicSym::create  ( const TComSPS &sps, const TComPPS &pps, UInt uiMaxDep
   {
     m_pictureCtuArray[i] = new TComDataCU;
     m_pictureCtuArray[i]->create( chromaFormatIDC, m_numPartitionsInCtu, uiMaxCuWidth, uiMaxCuHeight, false, uiMaxCuWidth >> m_uhTotalDepth
+      , uiPLTMaxSize, uiPLTMaxPredSize
 #if ADAPTIVE_QP_SELECTION
       , m_pParentARLBuffer
 #endif

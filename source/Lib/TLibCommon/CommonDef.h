@@ -49,6 +49,7 @@
 // disable Bool coercion "performance warning"
 #pragma warning( disable : 4800 )
 #endif // _MSC_VER > 1000
+
 #include "TypeDef.h"
 
 #ifdef _MSC_VER
@@ -64,7 +65,7 @@ inline Int64 abs (Int64 x) { return _abs64(x); };
 // Version information
 // ====================================================================================================================
 
-#define NV_VERSION        "16.7"                 ///< Current software version
+#define NV_VERSION        "16.7_SCM5.4"                 ///< Current software version
 
 // ====================================================================================================================
 // Platform information
@@ -114,7 +115,7 @@ inline Int64 abs (Int64 x) { return _abs64(x); };
 static const UInt   MAX_UINT =                            0xFFFFFFFFU; ///< max. value of unsigned 32-bit integer
 static const Int    MAX_INT =                              2147483647; ///< max. value of signed 32-bit integer
 static const Double MAX_DOUBLE =                             1.7e+308; ///< max. value of Double-type value
-
+static const Int64  MAX_INT64 =                  0x7FFFFFFFFFFFFFFFLL; ///< max. value of signed 64-bit integer
 // ====================================================================================================================
 // Coding tool configuration
 // ====================================================================================================================
@@ -241,6 +242,8 @@ static const Int SCALING_LIST_DC =                                16 ; ///< defa
 static const Int CONTEXT_STATE_BITS =                              6 ;
 static const Int LAST_SIGNIFICANT_GROUPS =                        10 ;
 
+
+#define PLT_SIZE_INVALID            0xff
 
 // ====================================================================================================================
 // Macro functions

@@ -49,12 +49,28 @@
 #include "TEncEntropy.h"
 #include "TEncSbac.h"
 #include "TEncCfg.h"
+#include "TLibCommon/TComHash.h"
 
+// ====================================================================================================================
+// Constants 
+// ====================================================================================================================
+
+#define CHROMA_REFINEMENT_CANDIDATES  8
 
 //! \ingroup TLibEncoder
 //! \{
 
 class TEncCu;
+
+#define INTRABC_HASH_DEPTH                     1  ////< Currently used only for 8x8
+#define INTRABC_HASH_TABLESIZE                (1 << 16)
+
+struct IntraBCHashNode
+{
+  Int pos_X;
+  Int pos_Y;
+  IntraBCHashNode * next;
+};
 
 // ====================================================================================================================
 // Class definition
@@ -87,6 +103,17 @@ private:
   TCoeff*         m_ppcQTTempTUArlCoeff[MAX_NUM_COMPONENT];
 #endif
 
+  IntraBCHashNode***      m_pcIntraBCHashTable;                 ///< The hash table used for Intra BC search
+  Bool*           m_puhQTTempACTFlag;
+  TCoeff*         m_pcACTTempTUCoeff[MAX_NUM_COMPONENT];
+  TComYuv         m_pcACTTempTransformSkipTComYuv;
+  TComYuv*        m_pcQTTempTComYuvCS;
+  TComYuv*        m_pcNoCorrYuvTmp;
+#if ADAPTIVE_QP_SELECTION
+  TCoeff*         m_ppcACTTempTUArlCoeff[MAX_NUM_COMPONENT];
+#endif
+  TComACTTURDCost m_sACTRDCostTU[5];
+
 protected:
   // interface to option
   TEncCfg*        m_pcEncCfg;
@@ -115,12 +142,39 @@ protected:
   // UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+1][AMVP_MAX_NUM_CANDS];
   UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+1][AMVP_MAX_NUM_CANDS+1]; //th array bounds
 
+  RefPicList      m_currRefPicList;
+  Int             m_currRefPicIndex;
+  Bool            m_bSkipFracME;
   TComMv          m_integerMv2Nx2N[NUM_REF_PIC_LIST_01][MAX_NUM_REF];
+  TComMv          m_acBVs[SCM_S0067_NUM_CANDIDATES];
+  UInt            m_uiNumBVs, m_uiNumBV16s;
+  Distortion      m_lastCandCost;
+  Bool            m_bBestScanRotationMode;
+  Pel*            m_paOriginalLevel;
+  Pel*            m_paBestLevel[MAX_NUM_COMPONENT];
+  UChar*          m_paBestSPoint;
+  TCoeff*         m_paBestRun;
+  UChar*          m_paBestEscapeFlag;
+  UInt            m_prevPltSize[MAX_PLT_ITER];
+  Pel             m_prevPlt[MAX_PLT_ITER][3][MAX_PLT_SIZE];
+  UInt            m_forcePltSize;
+  Pel             m_forcePlt[3][MAX_PLT_SIZE];
 
-  Bool            m_isInitialized;
+  Pel*            m_paLevelStoreRD[MAX_NUM_COMPONENT];
+  UChar*          m_paSPointStoreRD;
+  TCoeff*         m_paRunStoreRD;
+  UChar*          m_paEscapeFlagStoreRD;
+
+  UInt m_runGolombGroups[32*32];
+
+  pltInfoStruct m_currentPLTElement;
+  pltInfoStruct m_nextPLTElement;
+  Bool          m_isInitialized;
 public:
   TEncSearch();
   virtual ~TEncSearch();
+
+  TComYuv* getTmpYuvPred() {return &m_tmpYuvPred;}
 
   Void init(TEncCfg*       pcEncCfg,
             TComTrQuant*   pcTrQuant,
@@ -161,7 +215,7 @@ protected:
   __inline Void xTZSearchHelp         ( const TComPattern* const pcPatternKey, IntTZSearchStruct& rcStruct, const Int iSearchX, const Int iSearchY, const UChar ucPointNr, const UInt uiDistance );
   __inline Void xTZ2PointSearch       ( const TComPattern* const pcPatternKey, IntTZSearchStruct& rcStruct, const TComMv* const pcMvSrchRngLT, const TComMv* const pcMvSrchRngRB );
   __inline Void xTZ8PointSquareSearch ( const TComPattern* const pcPatternKey, IntTZSearchStruct& rcStruct, const TComMv* const pcMvSrchRngLT, const TComMv* const pcMvSrchRngRB, const Int iStartX, const Int iStartY, const Int iDist );
-  __inline Void xTZ8PointDiamondSearch( const TComPattern* const pcPatternKey, IntTZSearchStruct& rcStruct, const TComMv* const pcMvSrchRngLT, const TComMv* const pcMvSrchRngRB, const Int iStartX, const Int iStartY, const Int iDist, const Bool bCheckCornersAtDist1 );
+  __inline Void xTZ8PointDiamondSearch( const TComPattern* const pcPatternKey, IntTZSearchStruct& rcStruct, const TComMv* const pcMvSrchRngLT, const TComMv* const pcMvSrchRngRB, const Int iStartX, const Int iStartY, const Int iDist, const Bool bCheckCornersAtDist1, Bool bSkipLeftDist2 = false, Bool bSkipTopDist2 = false  );
 
   Void xGetInterPredictionError( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPartIdx, Distortion& ruiSAD, Bool Hadamard );
 
@@ -182,8 +236,34 @@ public:
                                   Pel         resiLuma[NUMBER_OF_STORED_RESIDUAL_TYPES][MAX_CU_SIZE * MAX_CU_SIZE]
                                   DEBUG_STRING_FN_DECLARE(sDebug));
 
+  Void  estIntraPredQTCT        ( TComDataCU*    pcCU,
+                                  TComYuv*       pcOrgYuv,
+                                  TComYuv*       pcPredYuv,
+                                  TComYuv*       pcResiYuv,
+                                  TComYuv*       pcRecoYuv,
+                                  ACTRDTestTypes eACTRDTestType,
+                                  Bool           bReuseIntraMode
+                                  DEBUG_STRING_FN_DECLARE(sDebug)
+                                 );
+
+  Void  estIntraPredLumaQTWithModeReuse ( TComDataCU* pcCU,
+                                          TComYuv*    pcOrgYuv,
+                                          TComYuv*    pcPredYuv,
+                                          TComYuv*    pcResiYuv,
+                                          TComYuv*    pcRecoYuv,
+                                          Pel         resiLuma[NUMBER_OF_STORED_RESIDUAL_TYPES][MAX_CU_SIZE * MAX_CU_SIZE]
+                                    );
+
+  Void  estIntraPredChromaQTWithModeReuse ( TComDataCU* pcCU,
+                                            TComYuv*    pcOrgYuv,
+                                            TComYuv*    pcPredYuv,
+                                            TComYuv*    pcResiYuv,
+                                            TComYuv*    pcRecoYuv,
+                                            Pel         resiLuma[NUMBER_OF_STORED_RESIDUAL_TYPES][MAX_CU_SIZE * MAX_CU_SIZE]
+                                          );
+
   /// encoder estimation - inter prediction (non-skip)
-  Void predInterSearch          ( TComDataCU* pcCU,
+  Bool predInterSearch          ( TComDataCU* pcCU,
                                   TComYuv*    pcOrgYuv,
                                   TComYuv*    pcPredYuv,
                                   TComYuv*    pcResiYuv,
@@ -193,6 +273,179 @@ public:
 #if AMP_MRG
                                  ,Bool        bUseMRG = false
 #endif
+                                , TComMv*     iMVCandList = NULL
+                                );
+
+  Bool isBlockVectorValid( Int xPos, Int yPos, Int width, Int height, TComDataCU *pcCU, UInt uiAbsPartIdx,
+                           Int xStartInCU, Int yStartInCU, Int xBv, Int yBv, Int ctuSize );
+
+  Bool predIntraBCSearch        ( TComDataCU* pcCU,
+                                  TComYuv*    pcOrgYuv,
+                                  TComYuv*&   rpcPredYuv,
+                                  TComYuv*&   rpcResiYuv,
+                                  TComYuv*&   rpcRecoYuv
+                                  DEBUG_STRING_FN_DECLARE(sDebug),
+                                  Bool        bUse1DSearchFor8x8,
+                                  Bool        bUseRes
+                                , Bool        testOnlyPred
+                                );
+
+  Bool predMixedIntraBCInterSearch( TComDataCU* pcCU,
+                                    TComYuv*    pcOrgYuv,
+                                    TComYuv*&   rpcPredYuv,
+                                    TComYuv*&   rpcResiYuv,
+                                    TComYuv*&   rpcRecoYuv
+                                    DEBUG_STRING_FN_DECLARE( sDebug ),
+                                    TComMv*     iMVCandList,
+                                    Bool        bUseRes
+                                    );
+
+  Void xIntraBlockCopyEstimation( TComDataCU*  pcCU,
+                                  TComYuv*     pcYuvOrg,
+                                  Int          iPartIdx,
+                                  TComMv*      pcMvPred,
+                                  TComMv&      rcMv,
+                                  Distortion&  ruiCost,
+                                  Bool         bUse1DSearchFor8x8
+                                , Bool         testOnlyPred
+                                );
+
+  Void addToSortList            ( list<BlockHash>& listBlockHash,
+                                  list<Int>& listCost,
+                                  Int cost,
+                                  const BlockHash& blockHash
+                                );
+
+  Distortion getSAD             ( Pel* pRef,
+                                  Int refStride,
+                                  Pel* pCurr,
+                                  Int currStride,
+                                  Int width,
+                                  Int height,
+                                  const BitDepths& bitDepths
+                                );
+
+  Bool predInterHashSearch      ( TComDataCU* pcCU,
+                                  TComYuv* pcOrg,
+                                  TComYuv*& rpcPredYuv,
+                                  Bool& isPerfectMatch
+                                );
+
+  Bool xHashInterEstimation     ( TComDataCU* pcCU,
+                                  Int width,
+                                  Int height,
+                                  RefPicList& bestRefPicList,
+                                  Int& bestRefIndex,
+                                  TComMv& bestMv,
+                                  TComMv& bestMvd,
+                                  Int& bestMVPIndex,
+                                  Bool& isPerfectMatch
+                                 );
+  
+  Int  xHashInterPredME         ( const TComDataCU* const pcCU,
+                                  Int width,
+                                  Int height,
+                                  RefPicList currRefPicList,
+                                  Int currRefPicIndex,
+                                  TComMv bestMv[5]
+                                );
+
+  Void selectMatchesInter       ( const TComDataCU* const pcCU,
+                                  const MapIterator& itBegin,
+                                  Int count,
+                                  list<BlockHash>& vecBlockHash,
+                                  const BlockHash& currBlockHash
+                                 );
+
+  Void xSetIntraSearchRange     ( TComDataCU*   pcCU,
+                                  TComMv&       cMvPred,
+                                  UInt          uiPartAddr,
+                                  Int           iRoiWidth,
+                                  Int           iRoiHeight,
+                                  TComMv&       rcMvSrchRngLT,
+                                  TComMv&       rcMvSrchRngRB );
+
+  Bool xCIPIBCSearchPruning(    TComDataCU*   pcCU,
+                                Int           refPixlX,
+                                Int           refPixlY,
+                                Int           roiWidth,
+                                Int           roiHeight);
+
+  Bool isValidIntraBCSearchArea(  TComDataCU*   pcCU,
+                                  Int           predX,
+                                  Int           predY,
+                                  Int           roiWidth,
+                                  Int           roiHeight,
+                                  Int           uiPartOffset)
+  {
+    const Int  cuPelX        = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[ uiPartOffset ] ];
+    const Int  cuPelY        = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[ uiPartOffset ] ];
+
+    if ( !isBlockVectorValid(cuPelX,cuPelY,roiWidth,roiHeight,pcCU,uiPartOffset,g_auiRasterToPelX[ g_auiZscanToRaster[ uiPartOffset ] ],g_auiRasterToPelY[ g_auiZscanToRaster[ uiPartOffset ] ],predX,predY,pcCU->getSlice()->getSPS()->getMaxCUWidth()))
+    {
+      return false;
+    }
+
+    const Int uiMaxCuWidth   = pcCU->getSlice()->getSPS()->getMaxCUWidth();
+    const Int uiMaxCuHeight  = pcCU->getSlice()->getSPS()->getMaxCUHeight();
+    const UInt curTileIdx = pcCU->getPic()->getPicSym()->getTileIdxMap( pcCU->getCtuRsAddr() );
+    TComTile* curTile = pcCU->getPic()->getPicSym()->getTComTile( curTileIdx );
+
+    const Int tileAreaRight  = (curTile->getRightEdgePosInCtus() + 1) * uiMaxCuWidth;
+    const Int tileAreaBottom = (curTile->getBottomEdgePosInCtus() + 1) * uiMaxCuHeight;
+
+    const Int tileAreaLeft   = tileAreaRight - curTile->getTileWidthInCtus() * uiMaxCuWidth;
+    const Int tileAreaTop    = tileAreaBottom - curTile->getTileHeightInCtus() * uiMaxCuHeight;
+
+    if( (cuPelX + predX + roiWidth > tileAreaRight) || (cuPelY + predY + roiHeight > tileAreaBottom) ||
+      (cuPelX + predX < tileAreaLeft) || (cuPelY + predY < tileAreaTop) )        
+    {
+      return false;
+    }
+
+    TComSlice *pcSlice = pcCU->getSlice();
+    if( pcSlice->getSliceMode() )
+    {
+      TComPicSym *pcSym = pcCU->getPic()->getPicSym();
+      Int      ctuX = (cuPelX + predX) / uiMaxCuWidth;
+      Int      ctuY = (cuPelY + predY) / uiMaxCuHeight;
+      UInt   refCtu = ctuX + pcSym->getFrameWidthInCtus()*ctuY;
+      UInt startCtu = pcSym->getCtuTsToRsAddrMap( pcCU->getSlice()->getSliceSegmentCurStartCtuTsAddr() );
+      if (refCtu < startCtu) return false;
+    }
+
+    return (!pcCU->getSlice()->getPPS()->getConstrainedIntraPred()) ||
+            xCIPIBCSearchPruning(pcCU, cuPelX + predX, cuPelY + predY, roiWidth, roiHeight);
+  }
+
+  Void xIntraBCSearchMVCandUpdate(Distortion uiSad, Int x, Int y, Distortion* uiSadBestCand, TComMv* cMVCand);
+  
+  Int xIntraBCSearchMVChromaRefine( TComDataCU *pcCU,
+                                    Int         iRoiWidth,
+                                    Int         iRoiHeight,
+                                    Int         cuPelX,
+                                    Int         cuPelY,
+                                    Distortion* uiSadBestCand,
+                                    TComMv*     cMVCand,
+                                    UInt        uiPartAddr,
+                                    Int         iPartIdx
+                                    );
+
+  Void xIntraPatternSearch      ( TComDataCU*  pcCU,
+                                  Int          iPartIdx,
+                                  UInt         uiPartAddr,
+                                  TComPattern* pcPatternKey,
+                                  Pel*         piRefY,
+                                  Int          iRefStride,
+                                  TComMv*      pcMvSrchRngLT,
+                                  TComMv*      pcMvSrchRngRB,
+                                  TComMv&      rcMv,
+                                  Distortion&  ruiSAD,
+                                  Int          iRoiWidth,
+                                  Int          iRoiHeight,
+                                  TComMv*      mvPreds, 
+                                  Bool         bUse1DSearchFor8x8
+                                , Bool         testOnlyPred
                                 );
 
   /// encode residual and compute rd-cost for inter mode
@@ -202,7 +455,9 @@ public:
                                   TComYuv*    pcYuvResi,
                                   TComYuv*    pcYuvResiBest,
                                   TComYuv*    pcYuvRec,
-                                  Bool        bSkipResidual
+                                  Bool        bSkipResidual,
+                                  TComYuv*    pcYuvNoCorrResi,
+                                  ACTRDTestTypes eACTRDTestType
                                   DEBUG_STRING_FN_DECLARE(sDebug) );
 
   /// set ME search range
@@ -210,6 +465,40 @@ public:
 
   Void xEncPCM    (TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piOrg, Pel* piPCM, Pel* piPred, Pel* piResi, Pel* piReco, UInt uiStride, UInt uiWidth, UInt uiHeight, const ComponentID compID );
   Void IPCMSearch (TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* rpcPredYuv, TComYuv* rpcResiYuv, TComYuv* rpcRecoYuv );
+  UInt PLTSearch  (TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv,TComYuv *& rpcResiBestYuv, TComYuv*& rpcRecoYuv, Bool forcePLTPrediction, UInt uiIterNumber, UInt *pltSize);
+
+  Void deriveRunAndCalcBits( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv* pcRecoYuv, UInt& uiMinBits, Bool bReset, PLTScanMode pltScanMode);
+
+  Int xIntraBCHashTableIndex  ( TComDataCU* pcCU,
+                                Int pos_X,
+                                Int pos_Y,
+                                Int width,
+                                Int height,
+                                Bool isRec
+                              );
+
+  Void xIntraBCHashSearch     ( TComDataCU* pcCU,
+                                TComYuv* pcYuvOrg,
+                                Int iPartIdx,
+                                TComMv* pcMvPred,
+                                TComMv& rcMv,
+                                UInt uiIntraBCECost
+                              );
+
+  Void xIntraBCHashTableUpdate( TComDataCU* pcCU,
+                                Bool isRec
+                              );
+
+  Void xClearIntraBCHashTable();
+
+  Void setHashLinklist        ( IntraBCHashNode*& HashLinklist,
+                                UInt uiDepth,
+                                UInt uiHashIdx
+                              );
+
+  IntraBCHashNode* getHashLinklist( UInt uiDepth, Int iHashIdx ) { return m_pcIntraBCHashTable[uiDepth][iHashIdx]; }
+
+
 protected:
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -223,6 +512,8 @@ protected:
   Void  xEncCoeffQT               ( TComTU &rTu,
                                     ComponentID  component,
                                     Bool         bRealCoeff );
+  Void  xEncColorTransformFlagQT  ( TComTU &rTu );
+
   Void  xEncIntraHeader           ( TComDataCU*  pcCU,
                                     UInt         uiTrDepth,
                                     UInt         uiAbsPartIdx,
@@ -248,6 +539,15 @@ protected:
                                     DEBUG_STRING_FN_DECLARE(sTest)
                                          ,Int           default0Save1Load2 = 0
                                    );
+
+  Void  xIntraCodingTUBlockCSC    (       TComYuv*      pcResiYuv,
+                                          Pel           resiLuma[MAX_CU_SIZE * MAX_CU_SIZE],
+                                    const Bool          checkDecorrelation,
+                                    const ComponentID   compID,
+                                          TComTU        &rTu,
+                                          QpParam       &cQP
+                                          DEBUG_STRING_FN_DECLARE(sDebug)
+                                  );
 
   Void  xRecurIntraCodingLumaQT   ( TComYuv*    pcOrgYuv,
                                     TComYuv*    pcPredYuv,
@@ -289,11 +589,33 @@ protected:
                                     TComTU      &rTu
                                     DEBUG_STRING_FN_DECLARE(sDebug));
 
+  Void  xRecurIntraCodingQTTUCSC  ( TComYuv*       pcOrgYuv,
+                                    TComYuv*       pcPredYuv,
+                                    TComYuv*       pcResiYuv,
+                                    Distortion&    uiPUDistY,
+                                    Distortion&    uiPUDistC,
+                                    Double&        dPUCost,
+                                    TComTU&        rTu,
+                                    Bool           bTestMaxTUSize,
+                                    ACTRDTestTypes eACTRDTestType
+                                    DEBUG_STRING_FN_DECLARE(sDebug)
+                                   );
+
+  Void  xRecurIntraCodingQTCSC    ( TComYuv*     pcOrgYuv,
+                                    TComYuv*     pcPredYuv,
+                                    TComYuv*     pcResiYuv,
+                                    Distortion&  uiPUDistY,
+                                    Distortion&  uiPUDistC,
+                                    Double&      dPUCost,
+                                    TComTU&      rTu,
+                                    Bool         bTestMaxTUSize
+                                    DEBUG_STRING_FN_DECLARE(sDebug)
+                                  );
+
   Void  xSetIntraResultChromaQT   ( TComYuv*    pcRecoYuv, TComTU &rTu);
 
-  Void  xStoreIntraResultQT       ( const ComponentID compID, TComTU &rTu);
-  Void  xLoadIntraResultQT        ( const ComponentID compID, TComTU &rTu);
-
+  Void  xStoreIntraResultQT       ( const ComponentID compID, TComTU &rTu, Bool bACTCache = false);
+  Void  xLoadIntraResultQT        ( const ComponentID compID, TComTU &rTu, Bool bACTCache = false);
 
   // -------------------------------------------------------------------------------------------------------------------
   // Inter search (AMP)
@@ -344,7 +666,8 @@ protected:
                                     Distortion&  ruiCost,
                                     TComMvField* cMvFieldNeighbours,
                                     UChar*       uhInterDirNeighbours,
-                                    Int&         numValidMergeCand
+                                    Int&         numValidMergeCand,
+                                    Int          iCostCalcType = 0
                                    );
 
   Void xRestrictBipredMergeCand   ( TComDataCU*     pcCU,
@@ -419,6 +742,7 @@ protected:
 
   Void xPatternSearchFracDIF      (
                                     Bool         bIsLosslessCoded,
+                                    TComDataCU*  pcCU,
                                     TComPattern* pcPatternKey,
                                     Pel*         piRefY,
                                     Int          iRefStride,
@@ -437,7 +761,8 @@ protected:
 
 
   Void xEncodeInterResidualQT( const ComponentID compID, TComTU &rTu );
-  Void xEstimateInterResidualQT( TComYuv* pcResi, Double &rdCost, UInt &ruiBits, Distortion &ruiDist, Distortion *puiZeroDist, TComTU &rTu DEBUG_STRING_FN_DECLARE(sDebug) );
+  Void xEstimateInterResidualQTTUCSC( TComYuv* pcResi, Double &rdCost, UInt &ruiBits, Distortion &ruiDist, TComTU &rTu, TComYuv* pcOrgResi, ACTRDTestTypes eACTRDtype DEBUG_STRING_FN_DECLARE(sDebug) );
+  Void xEstimateInterResidualQT( TComYuv* pcResi, Double &rdCost, UInt &ruiBits, Distortion &ruiDist, Distortion *puiZeroDist, TComTU &rTu DEBUG_STRING_FN_DECLARE(sDebug), TComYuv* pcOrgResi = NULL );
   Void xSetInterResidualQTData( TComYuv* pcResi, Bool bSpatial, TComTU &rTu  );
 
   UInt  xModeBitsIntra ( TComDataCU* pcCU, UInt uiMode, UInt uiPartOffset, UInt uiDepth, const ChannelType compID );
@@ -453,6 +778,19 @@ protected:
   Void  setWpScalingDistParam( TComDataCU* pcCU, Int iRefIdx, RefPicList eRefPicListCur );
   inline  Void  setDistParamComp( ComponentID compIdx )  { m_cDistParam.compIdx = compIdx; }
 
+  Void   xDeriveRun (TComDataCU* pcCU, Pel* pOrg [3],  Pel *pPalette [3],  Pel* pValue, UChar* pSPoint, Pel *pRecoValue[], Pel *pPixelRec[], TCoeff* pRun, UInt uiWidth, UInt uiHeight,  UInt uiStrideOrg, UInt uiPLTSize);
+  Double xGetRunBits(TComDataCU* pcCU, Pel *pValue, UInt uiStartPos, UInt uiRun, PLTRunMode cPltRunMode, UInt64 *allBits, UInt64 *indexBits, UInt64 *runBits);
+  UInt preCalcRD(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiPLTSize, TComRdCost *pcCost, UInt uiIterNumber);
+  Void preCalcRDMerge(TComDataCU* pcCU, Pel *Palette[3], Pel* pSrc[3], UInt uiWidth, UInt uiHeight, UInt uiPLTSize, TComRdCost *pcCost,
+    UInt *errorOrig, UInt *errorNew, UInt calcErrBits);
+  UInt calcPltIndexPredAndBits(Int iMaxSymbol, UInt uiIdxStart, UInt uiWidth, UInt *predIndex, UInt *currIndex);
+  UInt calcPLTEndPosition(UInt copyPixels[], UInt positionInit, UInt run);
+  UInt calcPLTStartCopy(UInt positionInit, UInt positionCurrSegment, UInt uiWidth);
+  UInt findPltSegment(pltInfoStruct *pltElement, TComDataCU* pcCU, UInt uiIdxStart, UInt uiIndexMaxSize, UInt uiWidth, UInt uiTotal,
+    UInt copyPixels[], Int restrictLevelRun, UInt calcErrBits);
+  UInt calcPltErrorCopy(UInt uiIdxStart, UInt run, UInt uiWidth, UInt *mode);
+  UInt64 calcPltErrorLevel(Int idxStart, UInt run, UInt uiPLTIdx);
+  Void modifyPltSegment(UInt uiWidth, UInt uiIdxStart, UInt pltMode, UInt pltIdx, UInt run);
 };// END CLASS DEFINITION TEncSearch
 
 //! \}

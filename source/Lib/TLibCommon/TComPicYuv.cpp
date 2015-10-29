@@ -68,14 +68,26 @@ TComPicYuv::TComPicYuv()
   m_bIsBorderExtended = false;
 }
 
-
-
-
 TComPicYuv::~TComPicYuv()
 {
 }
 
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+TComPicYuv& TComPicYuv::operator= (const TComPicYuv& sComPicYuv)
+{
 
+  m_iPicWidth = sComPicYuv.m_iPicWidth;
+  m_iPicHeight = sComPicYuv.m_iPicHeight;
+  m_chromaFormatIDC = sComPicYuv.m_chromaFormatIDC;
+  m_iMarginX = sComPicYuv.m_iMarginX;
+  m_iMarginY = sComPicYuv.m_iMarginY;
+  m_bIsBorderExtended = sComPicYuv.m_bIsBorderExtended;
+
+  sComPicYuv.copyToPic(this);
+
+  return *this;
+}
+#endif
 
 Void TComPicYuv::createWithoutCUInfo ( const Int picWidth,                 ///< picture width
                                        const Int picHeight,                ///< picture height
@@ -327,6 +339,68 @@ Void TComPicYuv::dump (const std::string &fileName, const BitDepths &bitDepths, 
   }
 
   fclose(pFile);
+}
+
+Void TComPicYuv::DefaultConvertPix(TComPicYuv* pcSrcPicYuv, const BitDepths& bitDepths)
+{
+  assert(m_picWidth       == pcSrcPicYuv->m_picWidth);
+  assert(m_picHeight      == pcSrcPicYuv->m_picHeight);
+  assert(m_chromaFormatIDC == CHROMA_444);
+
+  Int  iMaxLuma   = (1<<bitDepths.recon[CHANNEL_TYPE_LUMA])   - 1;
+  Int  iMaxChroma = (1<<bitDepths.recon[CHANNEL_TYPE_CHROMA]) - 1;
+  Int  iChromaOffset = (1<<(bitDepths.recon[CHANNEL_TYPE_CHROMA]-1));
+  Int maxBitDepth  = std::max(bitDepths.recon[CHANNEL_TYPE_LUMA], bitDepths.recon[CHANNEL_TYPE_CHROMA]);
+  Int iShiftLuma   = maxBitDepth - bitDepths.recon[CHANNEL_TYPE_LUMA];
+  Int iShiftChroma = maxBitDepth - bitDepths.recon[CHANNEL_TYPE_CHROMA];
+  Int iRoundLuma   = 1<<(1+iShiftLuma);
+  Int iRoundChroma = 1<<(1+iShiftChroma);
+
+  Pel* pSrc0  = pcSrcPicYuv->getAddr(COMPONENT_Y);
+  Pel* pSrc1  = pcSrcPicYuv->getAddr(COMPONENT_Cb);
+  Pel* pSrc2  = pcSrcPicYuv->getAddr(COMPONENT_Cr);
+
+  Pel* pDst0  = getAddr(COMPONENT_Y);
+  Pel* pDst1  = getAddr(COMPONENT_Cb);
+  Pel* pDst2  = getAddr(COMPONENT_Cr);
+
+  const Int  iSrcStride0 = pcSrcPicYuv->getStride(COMPONENT_Y);
+  const Int  iSrcStride1 = pcSrcPicYuv->getStride(COMPONENT_Cb);
+  const Int  iSrcStride2 = pcSrcPicYuv->getStride(COMPONENT_Cr);
+
+  const Int  iDstStride0 = getStride(COMPONENT_Y);
+  const Int  iDstStride1 = getStride(COMPONENT_Cb);
+  const Int  iDstStride2 = getStride(COMPONENT_Cr);
+
+  for(Int y = 0; y < m_picHeight; y++) 
+  {
+    for(Int x = 0; x < m_picWidth; x++) 
+    {
+      Int r, g, b;
+      r = pSrc2[x]<<iShiftChroma;
+      g = pSrc0[x]<<iShiftLuma;
+      b = pSrc1[x]<<iShiftChroma;
+
+      pDst0[x] = ((g<<1)+r+b + iRoundLuma)>>(2+iShiftLuma);
+      pDst1[x] = ((g<<1)-r-b + iRoundChroma)>>(2+iShiftChroma);
+      pDst2[x] = (((r-b)<<1) + iRoundChroma)>>(2+iShiftChroma);
+
+      pDst1[x] += iChromaOffset;
+      pDst2[x] += iChromaOffset;
+
+      pDst0[x] = Clip3( 0, iMaxLuma,   Int(pDst0[x]) );
+      pDst1[x] = Clip3( 0, iMaxChroma, Int(pDst1[x]) );
+      pDst2[x] = Clip3( 0, iMaxChroma, Int(pDst2[x]) );
+    }
+
+    pSrc0 += iSrcStride0;
+    pSrc1 += iSrcStride1;
+    pSrc2 += iSrcStride2;
+
+    pDst0 += iDstStride0;
+    pDst1 += iDstStride1;
+    pDst2 += iDstStride2; 
+  }
 }
 
 //! \}

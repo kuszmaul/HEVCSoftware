@@ -88,6 +88,60 @@ Void TEncEntropy::encodeSPS( const TComSPS* pcSPS )
   return;
 }
 
+#if SCM_S0043_PLT_DELTA_QP
+Void TEncEntropy::encodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD, Bool* bCodeDQP, Bool* codeChromaQpAdj )
+{
+  if ( pcCU->getSlice()->getSPS()->getSpsScreenExtension().getUsePLTMode() )
+  {
+    if ( bRD )
+    {
+      uiAbsPartIdx = 0;
+    }
+
+    // Note: the condition is log2CbSize < MaxTbLog2SizeY in 7.3.8.5 of JCTVC-T1005-v2
+    if( !pcCU->isIntra( uiAbsPartIdx ) || pcCU->getWidth(uiAbsPartIdx) == 64 )
+    {
+      return;
+    }
+
+    m_pcEntropyCoderIf->codePLTModeFlag( pcCU, uiAbsPartIdx );
+    if ( pcCU->getPLTModeFlag( uiAbsPartIdx ) )
+    {
+      m_pcEntropyCoderIf->codePLTModeSyntax( pcCU, uiAbsPartIdx, 3, bCodeDQP, codeChromaQpAdj );
+
+      if (!bRD)
+      {
+        pcCU->saveLastPLTInLcuFinal( pcCU, uiAbsPartIdx, MAX_NUM_COMPONENT );
+      }
+    }
+  }
+}
+#else
+Void TEncEntropy::encodePLTModeInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
+{
+  if ( pcCU->getSlice()->getSPS()->getSpsScreenExtension().getUsePLTMode() )
+  {
+    if ( bRD )
+    {
+      uiAbsPartIdx = 0;
+    }
+
+    // Note: the condition is log2CbSize < MaxTbLog2SizeY in 7.3.8.5 of JCTVC-T1005-v2
+    if( pcCU->getWidth(uiAbsPartIdx) == 64)
+    {
+      return;
+    }
+
+    m_pcEntropyCoderIf->codePLTModeFlag( pcCU, uiAbsPartIdx );
+    if ( pcCU->getPLTModeFlag( uiAbsPartIdx ) )
+    {
+      m_pcEntropyCoderIf->codePLTModeSyntax( pcCU, uiAbsPartIdx, 3 );
+    }
+  }
+}
+#endif
+
+
 Void TEncEntropy::encodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   if( bRD )
@@ -149,6 +203,20 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   }
 
   m_pcEntropyCoderIf->codePredMode( pcCU, uiAbsPartIdx );
+
+#if !SCM_S0043_PLT_DELTA_QP
+  if(pcCU->isIntra( uiAbsPartIdx ))
+  {
+    encodePLTModeInfo (pcCU, uiAbsPartIdx);
+    if (pcCU->getPLTModeFlag(uiAbsPartIdx))
+    {
+      if (!bRD)
+      {
+        pcCU->saveLastPLTInLcuFinal( pcCU, uiAbsPartIdx, MAX_NUM_COMPONENT );
+      }
+    }
+  }
+#endif
 }
 
 //! encode split flag
@@ -172,7 +240,6 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
 
   m_pcEntropyCoderIf->codePartSize( pcCU, uiAbsPartIdx, uiDepth );
 }
-
 
 /** Encode I_PCM information.
  * \param pcCU          pointer to CU
@@ -323,6 +390,11 @@ Void TEncEntropy::xEncodeTransform( Bool& bCodeDQP, Bool& codeChromaQpAdj, TComT
 
     if ( bHaveACodedBlock )
     {
+      if ( pcCU->getSlice()->getPPS()->getPpsScreenExtension().getUseColourTrans() && pcCU->hasAssociatedACTFlag(uiAbsPartIdx) )
+      {
+        m_pcEntropyCoderIf->codeColourTransformFlag( pcCU, uiAbsPartIdx );
+      }
+
       // dQP: only for CTU once
       if ( pcCU->getSlice()->getPPS()->getUseDQP() )
       {
@@ -422,7 +494,6 @@ Void TEncEntropy::encodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx 
   }
 #endif
 }
-
 
 Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {

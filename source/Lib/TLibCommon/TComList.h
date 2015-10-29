@@ -108,6 +108,15 @@ public:
   {
     return std::list< C >::find( this->begin(), this->end(), rcT );
   }
+
+#if SCM_U0181_STORAGE_BOTH_VERSIONS_CURR_DEC_PIC
+    TComIterator eraseElement(TComIterator iterPic)
+  {
+        TComIterator iterPicTemp;
+        iterPicTemp = this->erase(iterPic);
+        return iterPicTemp;
+  }
+#endif
 };
 
 //! \}

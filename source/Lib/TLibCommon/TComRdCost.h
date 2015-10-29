@@ -124,9 +124,12 @@ private:
 
   // for motion cost
   TComMv                  m_mvPredictor;
+  TComMv                  m_mvPredictors[2];
   Double                  m_motionLambda;
   Int                     m_iCostScale;
-
+  Bool                    m_bRGBformat;
+  Bool                    m_useColourTrans;
+  Bool                    m_useLL;  
 public:
   TComRdCost();
   virtual ~TComRdCost();
@@ -157,10 +160,67 @@ public:
   // for motion cost
   static UInt    xGetExpGolombNumberOfBits( Int iVal );
   Void    selectMotionLambda( Bool bSad, Int iAdd, Bool bIsTransquantBypass ) { m_motionLambda = (bSad ? m_dLambdaMotionSAD[(bIsTransquantBypass && m_costMode==COST_MIXED_LOSSLESS_LOSSY_CODING) ?1:0] + iAdd : m_dLambdaMotionSSE[(bIsTransquantBypass && m_costMode==COST_MIXED_LOSSLESS_LOSSY_CODING)?1:0] + iAdd); }
+
   Void    setPredictor( TComMv& rcMv )
   {
     m_mvPredictor = rcMv;
   }
+
+  Void    setPredictors( TComMv* pcMv )
+  {
+    for(Int i=0; i<2; i++)
+    {
+      m_mvPredictors[i] = pcMv[i];
+    }
+  }
+
+  __inline Distortion getCostMultiplePreds( Int x, Int y )
+  {
+    return Distortion((m_motionLambda * getBitsMultiplePreds(x, y)) / 65536.0);
+  }
+
+  UInt    getBitsMultiplePreds( Int x, Int y )
+  {
+    Int rmvH[2];
+    Int rmvV[2];
+    rmvH[0] = x - m_mvPredictors[0].getHor();
+    rmvH[1] = x - m_mvPredictors[1].getHor();
+
+    rmvV[0] = y - m_mvPredictors[0].getVer();
+    rmvV[1] = y - m_mvPredictors[1].getVer();
+
+    Int absCand[2];
+    absCand[0] = abs(rmvH[0])+abs(rmvV[0]);
+    absCand[1] = abs(rmvH[1])+abs(rmvV[1]);
+
+
+    if(absCand[0] < absCand[1] )
+    {
+      return getIComponentBits(rmvH[0]) + getIComponentBits(rmvV[0]);
+    }
+    else
+    {
+      return getIComponentBits(rmvH[1]) + getIComponentBits(rmvV[1]);
+    }
+  }
+
+  UInt getIComponentBits( Int iVal )
+  {
+    if( !iVal ) return 1;
+
+    UInt uiLength = 1;
+    UInt uiTemp   = ( iVal <= 0) ? (-iVal<<1)+1: (iVal<<1);
+
+    while ( 1 != uiTemp )
+    {
+      uiTemp >>= 1;
+      uiLength += 2;
+    }
+
+    return uiLength;
+  }
+
+
   Void    setCostScale( Int iCostScale )    { m_iCostScale = iCostScale; }
   Distortion getCost( UInt b )                 { return Distortion(( m_motionLambda * b ) / 65536.0); }
   Distortion getCostOfVectorWithPredictor( const Int x, const Int y )
@@ -204,6 +264,14 @@ private:
 public:
 
   Distortion   getDistPart(Int bitDepth, const Pel* piCur, Int iCurStride, const Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, const ComponentID compID, DFunc eDFunc = DF_SSE );
+
+  Bool      getRGBFormatFlag                  ()                 const { return m_bRGBformat;   } 
+  Void      setRGBFormatFlag                  (const Bool value)       { m_bRGBformat = value;  } 
+  Bool      getUseColourTrans                  ()                 const { return m_useColourTrans;}
+  Void      setUseColourTrans                  (const Bool value)       { m_useColourTrans= value;}
+  Bool      getUseLossless                    ()                 const { return m_useLL;}
+  Void      setUseLossless                    (const Bool value)       { m_useLL= value;}
+  Void      adjustLambdaForColourTrans         (Int delta_QP, const BitDepths &bitDepths);
 
 };// END CLASS DEFINITION TComRdCost
 

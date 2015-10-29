@@ -152,6 +152,7 @@
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComCABACTables.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComChromaFormat.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComDataCU.cpp" />
+    <ClCompile Include="..\..\source\Lib\TLibCommon\TComHash.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComInterpolationFilter.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComLoopFilter.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComMotionInfo.cpp" />
@@ -188,6 +189,7 @@
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComChromaFormat.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComCodingStatistics.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComDataCU.h" />
+    <ClInclude Include="..\..\source\Lib\TLibCommon\TComHash.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComInterpolationFilter.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComList.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComLoopFilter.h" />
