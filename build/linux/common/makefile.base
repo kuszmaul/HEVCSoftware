@@ -46,9 +46,23 @@ endif
 
 # default cpp flags for all configurations
 #CPPFLAGS          = -Wall -fPIC $(DEFS) -I$(CURDIR)/$(INC_DIR) $(USER_INC_DIRS)
+
+# when using gcc and cilk we need to specify -fcilkplus
+ifneq ($(CILK),)
+ifneq ($(CPP),icpc)
+CILKFLAGS = -fcilkplus
+endif
+endif
+
+ifeq ($(CPP),icpc)
+# icc incorrectly complains about a variable being used before it is set.   source/Lib/TLibEncoder/TEncSearch.cpp(3281): error #3656: variable "uiBitsTempL0" may be used before its value is set
+ARRAY_BOUNDS_WARNING = -wd3656
+else
 # gcc 5.1.1 appears to have problems with -Warray-bounds (enabled by -Wall combined with -O2)
 ARRAY_BOUNDS_WARNING = -Wno-array-bounds
-CPPFLAGS          = -fPIC $(DEFS) -I$(CURDIR)/$(INC_DIR) $(USER_INC_DIRS) -Wall -Wshadow -Wno-sign-compare -Werror $(ARRAY_BOUNDS_WARNING)
+endif
+
+CPPFLAGS          = -fPIC $(DEFS) -I$(CURDIR)/$(INC_DIR) $(USER_INC_DIRS) -Wall -Wshadow -Wno-sign-compare -Werror $(ARRAY_BOUNDS_WARNING) $(CILKFLAGS)
 
 ########## 
 # enforce 32-bit build : 1=yes, 0=no
