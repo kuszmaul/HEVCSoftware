@@ -108,11 +108,8 @@ Void TComLoopFilter::destroy()
 {
   for( UInt uiDir = 0; uiDir < 2; uiDir++ )
   {
-    if (m_aapucBS)
-    {
-      delete [] m_aapucBS       [uiDir];
-      m_aapucBS [uiDir] = NULL;
-    }
+    delete [] m_aapucBS       [uiDir];
+    m_aapucBS [uiDir] = NULL;
     if (m_aapbEdgeFilter[uiDir])
     {
       delete [] m_aapbEdgeFilter[uiDir];

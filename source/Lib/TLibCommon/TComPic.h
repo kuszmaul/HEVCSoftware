@@ -122,9 +122,6 @@ public:
   UInt          getMinCUWidth()         { return m_apcPicSym->getMinCUWidth();         }
   UInt          getMinCUHeight()        { return m_apcPicSym->getMinCUHeight();        }
   
-  UInt          getParPelX(UChar uhPartIdx) { return getParPelX(uhPartIdx); }
-  UInt          getParPelY(UChar uhPartIdx) { return getParPelX(uhPartIdx); }
-  
   Int           getStride()           { return m_apcPicYuv[1]->getStride(); }
   Int           getCStride()          { return m_apcPicYuv[1]->getCStride(); }
   

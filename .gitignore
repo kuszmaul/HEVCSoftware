@@ -1,0 +1,6 @@
+# initial / is needed or else x/bin/... will also be ignored
+/bin
+/lib
+/build/linux/app/*/objects
+/build/linux/lib/*/objects
+/build/linux/utils/*/objects
